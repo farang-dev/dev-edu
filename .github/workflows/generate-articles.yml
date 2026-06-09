@@ -1,23 +1,17 @@
 name: Generate Articles
-
 on:
   workflow_dispatch:
     inputs:
-      batch_count:
-        description: 'Generate this many articles (1-10, or 0 for as many as possible)'
+      domain:
+        description: Domain to process
         required: true
-        default: '3'
+        default: backend
         type: choice
         options:
-          - '1'
-          - '3'
-          - '5'
-          - '10'
-          - '0'
-
-  schedule:
-    - cron: '0 6 * * 1'
-
+          - frontend
+          - backend
+          - infrastructure
+          - devops
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -25,12 +19,14 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
       - name: Run OpenCode
         uses: anomalyco/opencode/github@latest
         env:
@@ -40,31 +36,54 @@ jobs:
           model: opencode/big-pickle
           use_github_token: true
           prompt: |
-            You are working in the Dev-Edu project at src/data/curriculum.ts.
+            You are an expert software engineering educator. Your task is to generate master-level educational articles in src/data/curriculum.ts.
 
-            There are 82 topics with placeholder content (`content: "// Content coming soon"`).
-            Your job is to generate full educational articles for them.
+            ## Context
+            The file is a TypeScript file containing a curriculum with 118 topics across 4 domains:
+            - fe-* (Frontend, 36 topics — all have content already but need improvement)
+            - be-* (Backend, 34 topics — most have placeholder content)
+            - infra-* (Infrastructure, 22 topics — all placeholders)
+            - do-* (DevOps, 26 topics — all placeholders)
 
-            ## Reference style (3 completed articles already in the file):
-            - fe-crp: "The Critical Rendering Path"
-            - fe-v8: "V8 Engine: JIT Compilation & Garbage Collection"
-            - fe-event-loop: "The Event Loop, Tasks & Microtasks"
+            ## What to do
+            1. First, read these 3 reference articles to understand the format:
+               - fe-crp (around line 73): "The Critical Rendering Path"
+               - fe-v8 (around line 661): "V8 Engine: JIT Compilation & Garbage Collection"
+               - fe-event-loop (around line 1113): "The Event Loop, Tasks & Microtasks"
 
-            Read these 3 articles to understand the writing style, then:
+            2. Process ONLY the "${{ github.event.inputs.domain }}" domain:
+               - If "frontend": Improve ALL 36 existing fe-* articles to master quality
+               - If "backend": Replace ALL be-* placeholders with master-quality articles
+               - If "infrastructure": Replace ALL infra-* placeholders with master-quality articles
+               - If "devops": Replace ALL do-* placeholders with master-quality articles
 
-            1. Find topics with `content: "// Content coming soon"`
-            2. For each, generate a full article matching the reference style:
-               - Start with "## Why This Matters (Read This First)" — relatable hook/analogy
-               - Use ## and ### headers
-               - Include code examples, tables, ASCII diagrams where relevant
-               - End with "## Practice Questions" (exactly 5 Q&A pairs)
-               - End with "## Summary Cheat Sheet" in a code block
-               - Write in English, no emojis
-            3. Replace the placeholder content in curriculum.ts
+            ## Quality Requirements (CRITICAL)
+            Each article must be **master-level** — a bootcamp student reading it should fully understand the topic afterward:
 
-            Generate at most ${{ github.event.inputs.batch_count || '3' }} articles per run.
-            If batch_count is 0, generate as many as you can in one session.
-            Work through topics in order (be-nodejs first, then be-go-scheduler, etc.).
+            ### Structure (every article)
+            - "## Why This Matters (Read This First)" — A compelling real-world analogy or hook that makes the reader immediately see why this topic is important
+            - Multiple ## and ### sections covering every keyPoint listed in the topic definition
+            - Each concept must include: definition → why it exists → how it works → real-world example
+            - Comprehensive, working code examples with line-by-line explanation
+            - ASCII architecture diagrams where helpful (inside code fences)
+            - Comparison tables when contrasting technologies/approaches
+            - "## Practice Questions" — exactly 5 Q&A pairs that test DEEP UNDERSTANDING, not recall. Include scenario-based questions.
+            - "## Summary Cheat Sheet" in a code block (key commands, patterns, and gotchas)
 
-            After generating, verify the file still compiles with `npx tsc --noEmit`.
-            Do NOT create any new files — only edit curriculum.ts.
+            ### Depth
+            - Cover the "why" behind every concept, not just the "what"
+            - Include edge cases, common pitfalls, and production considerations
+            - Add performance implications and trade-offs
+            - Reference real-world technologies and frameworks by name
+            - Include configuration examples, CLI commands, and debugging tips
+
+            ### Code examples
+            - Every code block must have a real, runnable example
+            - Explain what each line/block does in plain English
+            - Show both the right way AND common mistakes
+
+            ## Important rules
+            - Work through topics in curriculum.ts order
+            - After all edits, verify: run `npx tsc --noEmit` — fix any errors
+            - Do NOT create any new files — only edit curriculum.ts
+            - Write in English, no emojis
