@@ -1,17 +1,8 @@
 name: Generate Articles
 on:
   workflow_dispatch:
-    inputs:
-      domain:
-        description: Domain to process
-        required: true
-        default: backend
-        type: choice
-        options:
-          - frontend
-          - backend
-          - infrastructure
-          - devops
+  schedule:
+    - cron: '0 6 * * 1'
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -40,35 +31,37 @@ jobs:
 
             ## Context
             The file is a TypeScript file containing a curriculum with 118 topics across 4 domains:
-            - fe-* (Frontend, 36 topics — all have content already but need improvement)
-            - be-* (Backend, 34 topics — most have placeholder content)
+            - be-* (Backend, 34 topics — all placeholders: `content: "// Content coming soon"`)
             - infra-* (Infrastructure, 22 topics — all placeholders)
             - do-* (DevOps, 26 topics — all placeholders)
+            - fe-* (Frontend, 36 topics — have existing short content that needs to be rewritten to master quality)
 
             ## What to do
-            1. First, read these 3 reference articles to understand the format:
-               - fe-crp (around line 73): "The Critical Rendering Path"
-               - fe-v8 (around line 661): "V8 Engine: JIT Compilation & Garbage Collection"
-               - fe-event-loop (around line 1113): "The Event Loop, Tasks & Microtasks"
+            1. First, read these 3 reference articles to understand the format and quality bar:
+               - fe-crp: "The Critical Rendering Path" (around line 73)
+               - fe-v8: "V8 Engine: JIT Compilation & Garbage Collection" (around line 661)
+               - fe-event-loop: "The Event Loop, Tasks & Microtasks" (around line 1113)
 
-            2. Process ONLY the "${{ github.event.inputs.domain }}" domain:
-                - If "frontend": Rewrite ALL 36 existing fe-* articles to master quality. Existing content is short — use it as reference but expand each article substantially to match the same depth as backend/infra/devops articles.
-               - If "backend": Replace ALL be-* placeholders with master-quality articles
-               - If "infrastructure": Replace ALL infra-* placeholders with master-quality articles
-               - If "devops": Replace ALL do-* placeholders with master-quality articles
+            2. Process ALL 4 domains in this EXACT order. Do NOT skip any, do NOT reorder:
+               - FIRST: be-* (Backend) — replace all placeholders
+               - SECOND: infra-* (Infrastructure) — replace all placeholders
+               - THIRD: do-* (DevOps) — replace all placeholders
+               - FOURTH: fe-* (Frontend) — rewrite existing content to master quality
+
+            Within each domain, work through topics in curriculum.ts order.
 
             ## Quality Requirements (CRITICAL)
             Each article must be **master-level** — a bootcamp student reading it should fully understand the topic afterward:
 
             ### Structure (every article)
-            - "## Why This Matters (Read This First)" — A compelling real-world analogy or hook that makes the reader immediately see why this topic is important
+            - "## Why This Matters (Read This First)" — A compelling real-world analogy or hook
             - Multiple ## and ### sections covering every keyPoint listed in the topic definition
-            - Each concept must include: definition → why it exists → how it works → real-world example
+            - Each concept: definition → why it exists → how it works → real-world example
             - Comprehensive, working code examples with line-by-line explanation
             - ASCII architecture diagrams where helpful (inside code fences)
             - Comparison tables when contrasting technologies/approaches
-            - "## Practice Questions" — exactly 5 Q&A pairs that test DEEP UNDERSTANDING, not recall. Include scenario-based questions.
-            - "## Summary Cheat Sheet" in a code block (key commands, patterns, and gotchas)
+            - "## Practice Questions" — exactly 5 Q&A pairs testing DEEP understanding (prefer scenario-based questions)
+            - "## Summary Cheat Sheet" in a code block
 
             ### Depth
             - Cover the "why" behind every concept, not just the "what"
@@ -83,7 +76,7 @@ jobs:
             - Show both the right way AND common mistakes
 
             ## Important rules
-            - Work through topics in curriculum.ts order
-            - After all edits, verify: run `npx tsc --noEmit` — fix any errors
+            - Work through topics in curriculum.ts order within each domain
+            - After all edits from all 4 domains, verify: run `npx tsc --noEmit` — fix any errors
             - Do NOT create any new files — only edit curriculum.ts
             - Write in English, no emojis
