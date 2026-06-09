@@ -52,7 +52,7 @@ jobs:
                - fe-event-loop (around line 1113): "The Event Loop, Tasks & Microtasks"
 
             2. Process ONLY the "${{ github.event.inputs.domain }}" domain:
-               - If "frontend": Improve ALL 36 existing fe-* articles to master quality
+                - If "frontend": Rewrite ALL 36 existing fe-* articles to master quality. Existing content is short — use it as reference but expand each article substantially to match the same depth as backend/infra/devops articles.
                - If "backend": Replace ALL be-* placeholders with master-quality articles
                - If "infrastructure": Replace ALL infra-* placeholders with master-quality articles
                - If "devops": Replace ALL do-* placeholders with master-quality articles
