@@ -7021,7 +7021,302 @@ Cross-platform design system    │ Design tokens + platform-specific output
               "Event loop phases: timers → pending callbacks → idle → poll → check (setImmediate) → close.",
               "process.nextTick: runs before any I/O callbacks — can starve the event loop if misused.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Imagine you run a restaurant with one chef. A hundred orders come in. The chef does not cook everything at once — that would burn the food. Instead, he starts a dish, and while the pasta boils (I/O), he chops vegetables for another order. No time is spent waiting.
+
+Node.js is that chef. It uses a **single thread** to handle thousands of concurrent connections. It does not need one thread per connection like traditional servers. The secret is the **Event Loop**, powered by the C library **libuv**.
+
+By the end of this article, you will understand exactly what happens when you call \`fs.readFile\`, \`setTimeout\`, or \`crypto.pbkdf2\` — and why Node can handle 10,000 concurrent connections on a single CPU.
+
+---
+
+## Node.js Is Single-Threaded — What Does That Actually Mean?
+
+In most web servers (Apache, Django with Gunicorn sync workers), each connection gets its own OS thread or process. With 1,000 concurrent connections, that is 1,000 threads. Each thread consumes ~2MB of memory for its stack, totaling 2GB just for thread overhead.
+
+Node.js uses **one main thread** for JavaScript execution. There is exactly one Call Stack. If you never block it, one thread can handle thousands of connections.
+
+\`\`\`javascript
+const http = require("http");
+
+// One thread handles ALL these requests concurrently
+const server = http.createServer((req, res) => {
+  // This callback runs when a request arrives
+  // It does NOT block the thread — it sets up async work and returns
+  res.writeHead(200);
+  res.end("Hello");
+});
+
+server.listen(3000);
+\`\`\`
+
+The callback runs, does its work, and returns immediately. The thread is free to handle the next request.
+
+**Key insight:** Node.js is single-threaded for JavaScript execution, but it uses a **thread pool** (4 threads by default) for operations that cannot be done asynchronously at the OS level (file I/O, DNS, crypto).
+
+---
+
+## Libuv — The Engine Behind the Event Loop
+
+Libuv is a C library originally written for Node.js (now used by Luvit, Julia, and others). It provides:
+
+1. **The Event Loop** — orchestrates callback execution
+2. **The Thread Pool** — for blocking operations
+3. **Async I/O via epoll/kqueue/IOCP** — OS-level async file and network I/O
+
+\`\`\`
+┌─────────────────────────────────────────────────┐
+│                  Node.js Process                  │
+│                                                    │
+│   ┌─────────────────────────────────────┐         │
+│   │        V8 (JavaScript Engine)       │         │
+│   │   Runs your JS code on main thread  │         │
+│   └────────────┬────────────────────────┘         │
+│                │                                   │
+│                ▼                                   │
+│   ┌─────────────────────────────────────┐         │
+│   │        Libuv (Event Loop)           │         │
+│   │   ┌────────┬────────┬──────────┐    │         │
+│   │   │ Timers │  I/O   │ Threads  │    │         │
+│   │   │ Queue  │ Queue  │ Pool (4) │    │         │
+│   │   └────────┴────────┴──────────┘    │         │
+│   └─────────────────────────────────────┘         │
+└─────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## The Event Loop Phases in Detail
+
+The event loop runs in **phases**, each with its own queue of callbacks. The loop processes one phase, then moves to the next.
+
+\`\`\`
+   ┌───────────────────────────┐
+┌─>│          timers           │ ← setTimeout, setInterval callbacks
+│  └─────────────┬─────────────┘
+│  ┌─────────────┴─────────────┐
+│  │     pending callbacks     │ ← I/O callbacks deferred to next iteration
+│  └─────────────┬─────────────┘
+│  ┌─────────────┴─────────────┐
+│  │       idle, prepare       │ ← internal libuv use
+│  └─────────────┬─────────────┘
+│  ┌─────────────┴─────────────┐
+│  │          poll            │ ← new I/O events, executes I/O callbacks
+│  └─────────────┬─────────────┘
+│  ┌─────────────┴─────────────┐
+│  │          check           │ ← setImmediate callbacks
+│  └─────────────┬─────────────┘
+│  ┌─────────────┴─────────────┐
+│  │     close callbacks       │ ← socket close events
+│  └───────────────────────────┘
+└────────────────────────────────── loop back to timers
+\`\`\`
+
+### Phase 1: Timers
+
+Callbacks from \`setTimeout\` and \`setInterval\` are executed here. The timer's **threshold** is the minimum delay — the callback may run later if other phases take longer.
+
+\`\`\`javascript
+const start = Date.now();
+setTimeout(() => {
+  console.log("Ran after", Date.now() - start, "ms");
+}, 100);
+
+// If the poll phase takes 50ms, the timer runs at ~150ms — not exactly 100ms
+\`\`\`
+
+### Phase 2: Pending Callbacks
+
+Certain I/O callbacks that were deferred (like OS-level errors) are executed here.
+
+### Phase 3: Idle/Prepare
+
+Internal bookkeeping — the loop prepares for the poll phase.
+
+### Phase 4: Poll (The Most Important Phase)
+
+This phase does two things:
+1. **Watts** for new I/O events (network data, file reads) if no timers are pending
+2. **Executes** callbacks for I/O events that have completed
+
+If the poll queue is empty and there are timers scheduled, the loop calculates how long to wait before the next timer fires and blocks for I/O up to that time.
+
+\`\`\`javascript
+const fs = require("fs");
+
+// This callback is executed in the POLL phase
+fs.readFile(__filename, () => {
+  console.log("File read complete");
+});
+
+setTimeout(() => console.log("Timer"), 0);
+// If file read completes quickly, both run in the same iteration
+\`\`\`
+
+### Phase 5: Check
+
+\`setImmediate\` callbacks are executed here. Despite the name, \`setImmediate\` runs after I/O callbacks (poll phase), not immediately.
+
+\`\`\`javascript
+setTimeout(() => console.log("timer"), 0);
+setImmediate(() => console.log("immediate"));
+
+// In the main module, the order is non-deterministic — depends on how long the loop setup takes
+// Inside an I/O callback, setImmediate ALWAYS runs before setTimeout:
+fs.readFile(__filename, () => {
+  setImmediate(() => console.log("immediate inside I/O")); // runs first
+  setTimeout(() => console.log("timer inside I/O"), 0);    // runs second
+});
+\`\`\`
+
+### Phase 6: Close Callbacks
+
+Cleanup handlers for closed sockets or handles (e.g., \`socket.on("close")\`).
+
+---
+
+## The Thread Pool
+
+Not everything in Node.js is asynchronous at the OS level. File I/O, DNS lookups, and cryptographic operations are handled by a **thread pool** (default 4 threads, configurable via \`UV_THREADPOOL_SIZE\`).
+
+\`\`\`javascript
+const crypto = require("crypto");
+
+// crypto.pbkdf2 uses the thread pool
+const start = Date.now();
+for (let i = 0; i < 4; i++) {
+  crypto.pbkdf2("password", "salt", 100000, 512, "sha512", () => {
+    console.log("Done in", Date.now() - start, "ms");
+  });
+}
+// With 4 thread pool threads, all 4 complete at roughly the same time
+// With 5 calls, the 5th waits for a thread to free up
+\`\`\`
+
+**What uses the thread pool?**
+
+| Operation | Thread Pool? | Why |
+|-----------|-------------|-----|
+| \`fs.readFile\`, \`fs.writeFile\` | Yes | Disk I/O is not async at the OS level on Linux (only network I/O is) |
+| \`crypto.pbkdf2\`, \`crypto.scrypt\` | Yes | CPU-intensive, would block the event loop |
+| \`crypto.randomBytes\` | Yes | Entropy gathering can block |
+| \`dns.lookup\` | Yes | Uses \`getaddrinfo\` which is blocking |
+| HTTP requests | No | Network sockets use epoll/kqueue — true async I/O |
+| TCP/UDP sockets | No | True async I/O via OS multiplexing |
+
+---
+
+## process.nextTick — The Highest Priority
+
+\`process.nextTick\` is NOT part of the libuv event loop. It has its own queue that is processed **between each phase**, immediately after the current operation completes.
+
+\`\`\`javascript
+setTimeout(() => console.log("timer"), 0);
+setImmediate(() => console.log("immediate"));
+process.nextTick(() => console.log("nextTick"));
+
+// Output: nextTick, (timer or immediate, non-deterministic)
+\`\`\`
+
+**Warning:** Recursive \`process.nextTick\` calls can starve I/O:
+
+\`\`\`javascript
+function doWork() {
+  process.nextTick(() => doWork()); // I/O never gets processed!
+}
+doWork();
+// The poll phase never gets to handle new connections
+\`\`\`
+
+Use \`setImmediate\` instead for recursive async loops — it yields to the poll phase.
+
+---
+
+## Common Mistakes
+
+### Blocking the Event Loop
+
+\`\`\`javascript
+// BAD: CPU-heavy loop blocks everything
+const http = require("http");
+const server = http.createServer((req, res) => {
+  for (let i = 0; i < 1e9; i++) {} // Blocks the event loop for seconds
+  res.end("Done");
+});
+
+// GOOD: Offload to a worker thread
+const { Worker } = require("worker_threads");
+const server = http.createServer((req, res) => {
+  const worker = new Worker("./compute.js");
+  worker.on("message", (result) => res.end(result));
+});
+\`\`\`
+
+### Not Handling Stream Backpressure
+
+\`\`\`javascript
+// BAD: Reads faster than the client can consume
+req.on("data", (chunk) => {
+  res.write(chunk); // No backpressure handling
+});
+
+// GOOD: Use pipe with automatic backpressure
+req.pipe(res);
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** How can Node.js handle 10,000 concurrent connections with a single thread when Apache needs 10,000 threads for the same load?
+   **A:** Node uses non-blocking I/O — the single thread sets up operations and moves on, never waiting. Apache dedicates one OS thread per connection, and each thread blocks waiting for that connection's I/O. Thread overhead (stack memory, context switching) limits Apache's concurrency.
+
+2. **Q:** You call \`fs.readFile\` and \`crypto.pbkdf2\` simultaneously. Both take 100ms. How long do they take to complete with the default thread pool size?
+   **A:** Both finish in ~100ms. \`fs.readFile\` uses one thread, \`crypto.pbkdf2\` uses another. With 4 threads, they run in parallel. If you had 5 such operations, one would wait for a thread to free up.
+
+3. **Q:** Why does \`setTimeout(fn, 0)\` not run immediately?
+   **A:** The timer phase has a minimum threshold of 1ms (clamped by libuv). Even at 0ms, the callback is queued and must wait for the current operation to complete, the poll phase, and potentially other phases before the timer phase runs again.
+
+4. **Q:** What is the difference between \`setImmediate\` and \`process.nextTick\`?
+   **A:** \`process.nextTick\` runs its callbacks before the event loop continues to the next phase — it interrupts the loop. \`setImmediate\` runs its callbacks during the check phase, which is one of the regular phases. Recursive \`nextTick\` can starve I/O; recursive \`setImmediate\` yields to the poll phase.
+
+5. **Q:** Your Express.js app handles JSON parsing, but a client sends a 500MB JSON body. What happens?
+   **A:** The main thread blocks for seconds parsing the JSON, all other requests are delayed. Fix: use streaming JSON parsing or body parser size limits (\`express.json({ limit: "1mb" })\`) with early rejection. For large payloads, parse in a worker thread.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Node.js Architecture:
+────────────────────
+• 1 main thread for JS execution (V8)
+• Libuv provides the Event Loop + Thread Pool
+• 4 thread pool threads (UV_THREADPOOL_SIZE)
+
+Event Loop Phases (in order):
+─────────────────────────────
+1. Timers (setTimeout/setInterval)
+2. Pending callbacks
+3. Idle/Prepare (internal)
+4. Poll (I/O callbacks) ← most important
+5. Check (setImmediate)
+6. Close callbacks
+
+Priority Order (highest to lowest):
+───────────────────────────────────
+1. process.nextTick (between phases)
+2. Promise microtasks (between phases)
+3. Timer/IO/Check callbacks (per phase)
+
+Rules:
+• CPU-heavy work blocks the event loop → use Worker Threads
+• File I/O uses the thread pool (not epoll)
+• setImmediate runs after I/O; nextTick runs before everything
+• Never recursively use nextTick — will starve I/O
+• Use streams.pipe() for automatic backpressure
+• Avoid synchronous APIs (fs.readFileSync) in production servers`,
             tags: ["Node.js", "Runtime", "Concurrency"],
           },
           {
@@ -7037,29 +7332,226 @@ Cross-platform design system    │ Design tokens + platform-specific output
               "Work stealing: idle Ps steal goroutines from busy Ps' run queues.",
               "Preemption: scheduler checks goroutine yield points — cooperative and asynchronous preemption.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "go",
-              filename: "goroutines.go",
-              code: `package main
+            content: `## Why This Matters (Read This First)
+
+Imagine you have 10,000 workers in a factory. Each worker has their own toolbox (memory, state). If you used OS threads, each worker would need a massive toolbox (1MB+ stack), and switching between them would take time. The factory would grind to a halt.
+
+Now imagine each worker carries only a tiny notepad (~2KB). They share a few large tool benches (OS threads). When a worker is idle, another grabs the notepad and starts working instantly. This is **goroutines on the Go scheduler**.
+
+Go lets you start millions of goroutines because they are lightweight user-space threads scheduled by Go's runtime, not the OS kernel. Understanding the **GMP model** (Goroutine, Machine, Processor) is essential for writing high-concurrency Go services.
+
+---
+
+## The GMP Model — Three Abstractions
+
+Go's scheduler maps goroutines to OS threads through three components:
+
+| Component | What It Is | Key Characteristic |
+|-----------|-----------|-------------------|
+| **G (Goroutine)** | A lightweight execution context | ~2KB stack, grows/shrinks dynamically |
+| **M (Machine)** | An OS thread | ~1MB stack, expensive to create, runtime reuses them |
+| **P (Processor)** | A logical CPU context | Holds a local run queue (LRQ) of goroutines; \`GOMAXPROCS\` sets the count |
+
+\`\`\`
+┌──────────────────────────────────────────────────────┐
+│              Go Process (runtime)                      │
+│                                                         │
+│  GOMAXPROCS = 4                                        │
+│                                                         │
+│  P0 ─── M0 ─── (OS Thread) ─── G1 → G2 → G3 (LRQ)   │
+│  P1 ─── M1 ─── (OS Thread) ─── G4 → G5 (LRQ)        │
+│  P2 ─── M2 ─── (OS Thread) ─── G6 (LRQ)              │
+│  P3 ─── M3 ─── (OS Thread) ─── G7 → G8 (LRQ)        │
+│                                                         │
+│  Global Run Queue: G9, G10, G11, ...                   │
+└──────────────────────────────────────────────────────┘
+\`\`\`
+
+By default, \`GOMAXPROCS\` equals the number of CPU cores. Each P is bound to one M (OS thread). When code running on a P blocks (syscall, channel wait), the runtime detaches the M and creates/acquires a new M for that P.
+
+---
+
+## Goroutines Are Cheap
+
+\`\`\`go
+package main
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 )
 
 func main() {
 	var wg sync.WaitGroup
-	for i := 0; i < 10_000; i++ {
+	start := runtime.NumGoroutine()
+
+	for i := 0; i < 100_000; i++ {
 		wg.Add(1)
-		go func(id int) {       // starts a goroutine (~2KB stack)
+		go func(n int) {
 			defer wg.Done()
-			fmt.Println(id)
+			_ = n
 		}(i)
 	}
 	wg.Wait()
-}`,
-            },
+
+	fmt.Printf("Created %d goroutines, leaked: %d\n",
+		100_000, runtime.NumGoroutine()-start)
+}
+\`\`\`
+
+Each goroutine starts with a **2KB stack** (vs ~1MB for an OS thread). The stack grows and shrinks dynamically using **stack copying** — Go moves the stack to a larger/smaller location when needed.
+
+---
+
+## Scheduling — How Goroutines Run
+
+Go implements **M:N scheduling** — M goroutines multiplexed onto N OS threads. The scheduler runs at specific **preemption points**:
+
+1. **Function calls** — entering/exiting a function
+2. **Channel operations** — send/receive
+3. **Mutex operations** — sync.Mutex.Lock/Unlock
+4. **time.Sleep** and timer operations
+5. **Garbage collection** — all goroutines stop at safepoints
+
+Since Go 1.14, the scheduler also uses **asynchronous preemption** — a signal-based mechanism that preempts goroutines running tight loops without function calls.
+
+\`\`\`go
+// Go 1.14+ can preempt this tight loop
+func busyLoop() {
+	for { // No function calls — previously this would block other goroutines forever
+		// But Go 1.14+ sends a signal to preempt it
+	}
+}
+\`\`\`
+
+---
+
+## Work Stealing — Load Balancing
+
+When a P's local run queue is empty, it **steals** goroutines from another P's queue:
+
+\`\`\`go
+// If P0 finishes all its goroutines while P1 has 100 queued:
+// P0 steals ~50 goroutines from P1's LRQ
+// Both Ps stay busy instead of P0 sitting idle
+\`\`\`
+
+Work stealing happens:
+- When a P finds its LRQ empty
+- Every 14th scheduling attempt — the P checks the global run queue (GRQ) to prevent starvation
+- After a goroutine blocks on syscall or channel — the P looks for new work immediately
+
+---
+
+## Network Poller — Async I/O
+
+Go integrates with the OS's I/O multiplexing facility (epoll on Linux, kqueue on macOS, IOCP on Windows). When a goroutine performs network I/O:
+
+\`\`\`go
+conn, _ := net.Dial("tcp", "example.com:80")
+// This goroutine is PARKED — the network poller waits for data
+// The M (OS thread) is freed to run other goroutines
+// When data arrives, the goroutine is placed back on a P's LRQ
+\`\`\`
+
+\`\`\`
+Step 1: Goroutine calls conn.Read()
+Step 2: Runtime sees no data → goroutine is parked, M is released
+Step 3: Network poller (epoll) waits on the fd
+Step 4: Data arrives → epoll wakes up → goroutine is queued on P's LRQ
+Step 5: Goroutine resumes execution
+
+This is how goroutines achieve async I/O without explicit callbacks or await keywords.
+\`\`\`
+
+---
+
+## Practical Patterns
+
+### Limiting Goroutine Count
+
+\`\`\`go
+// BAD: Create unlimited goroutines — can exhaust memory
+for _, item := range items {
+	go process(item)
+}
+
+// GOOD: Use a worker pool with bounded goroutines
+sem := make(chan struct{}, 10) // max 10 concurrent
+for _, item := range items {
+	sem <- struct{}{} // blocks if 10 goroutines are running
+	go func(item Item) {
+		process(item)
+		<-sem
+	}(item)
+}
+\`\`\`
+
+### Avoiding Goroutine Leaks
+
+\`\`\`go
+// BAD: Goroutine leaks if ch is never sent to
+go func() {
+	result := <-ch // blocks forever if ch never receives
+	doWork(result)
+}()
+
+// GOOD: Use context cancellation
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+go func() {
+	select {
+	case result := <-ch:
+		doWork(result)
+	case <-ctx.Done():
+		return // goroutine exits cleanly
+	}
+}()
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens when a goroutine makes a blocking syscall (e.g., \`os.File.Read\`)?
+   **A:** The M (OS thread) blocks with the goroutine. The scheduler detaches the P from the blocked M, creates or wakes a new M (from the idle list), and attaches it to the P. The P continues running other goroutines. When the syscall returns, the goroutine is requeued, and the M goes into the idle pool.
+
+2. **Q:** What is \`GOMAXPROCS\` and what happens if you set it higher than the number of CPU cores?
+   **A:** \`GOMAXPROCS\` limits the number of Ps (logical processors). Setting it higher than CPU cores does not increase parallelism (only N cores run N OS threads simultaneously), but it can increase concurrency — useful when goroutines are frequently blocked on I/O.
+
+3. **Q:** Can one goroutine starve others? How did Go 1.14 fix this?
+   **A:** Before Go 1.14, a tight loop without function calls (e.g., \`for {}\`) could starve other goroutines because the scheduler only ran at function call boundaries. Go 1.14 added asynchronous preemption — a signal (SIGURG on Linux) interrupts the goroutine, giving the scheduler a chance to run.
+
+4. **Q:** How does the Go scheduler know when to schedule a different goroutine?
+   **A:** The scheduler runs at preemption points: function calls, channel operations, mutex operations, time.Sleep, GC safepoints, and (Go 1.14+) via signal-based asynchronous preemption every 10ms.
+
+5. **Q:** Why do goroutines use less memory than OS threads?
+   **A:** Goroutines start with a ~2KB stack that grows/shrinks dynamically via stack copying. OS threads have a fixed 1MB+ stack that cannot shrink. Goroutines also avoid the kernel overhead of thread creation and context switching (no syscall needed to switch goroutines).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+GMP Model:
+  G (Goroutine) = lightweight execution (~2KB stack)
+  M (Machine)   = OS thread (~1MB stack)
+  P (Processor) = scheduling context (GOMAXPROCS count)
+
+Scheduling:
+  • M:N multiplexing — many goroutines on few threads
+  • Function call = preemption point
+  • Work stealing — idle Ps steal from busy Ps
+  • Asynchronous preemption (Go 1.14+)
+
+Key Rules:
+  • GOMAXPROCS = number of CPU cores (default)
+  • Network I/O uses epoll/kqueue — M is freed, goroutine parks
+  • Blocking syscall → M blocks, P gets a new M
+  • Use channel semaphores to limit concurrent goroutines
+  • Use context.WithTimeout to prevent goroutine leaks
+  • Avoid sync.WaitGroup in production — prefer errgroup`,
             tags: ["Go", "Concurrency", "Runtime"],
           },
           {
@@ -7075,7 +7567,269 @@ func main() {
               "Send + Sync: traits marking types safe to transfer between threads or share across threads.",
               "Tokio: async runtime for Rust — cooperative scheduling on a thread pool using Futures.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Most programming languages let you write code without thinking about memory. A **garbage collector** (GC) tracks allocations and frees them when they are no longer reachable. This is convenient, but GC pauses cause latency spikes — bad for games, real-time systems, or high-frequency trading.
+
+Rust takes a different path. It guarantees **memory safety without a garbage collector** using a compile-time system called **ownership**. If your code compiles, it is memory-safe. No dangling pointers, no use-after-free, no double-free. Ever.
+
+The trade-off: you must think about ownership, borrowing, and lifetimes. The compiler enforces rules that in other languages are left to convention (and mistakes).
+
+---
+
+## Ownership — One Owner Per Value
+
+Every value in Rust has exactly **one owner**. When the owner goes out of scope, the value is dropped (freed).
+
+\`\`\`rust
+fn main() {
+    let s = String::from("hello"); // s owns the String
+    println!("{}", s);
+} // s goes out of scope → String is dropped, memory freed
+\`\`\`
+
+### Move Semantics
+
+When you assign a value or pass it to a function, ownership **moves**:
+
+\`\`\`rust
+fn main() {
+    let s1 = String::from("hello");
+    let s2 = s1; // ownership MOVES from s1 to s2
+
+    // println!("{}", s1); // COMPILE ERROR: s1 no longer owns the value
+    println!("{}", s2); // OK — s2 is the owner
+}
+
+fn take_ownership(s: String) { // s takes ownership
+    println!("{}", s);
+} // s is dropped here
+\`\`\`
+
+Primitive types (integers, booleans, floats) implement the \`Copy\` trait — they are **copied** instead of moved:
+
+\`\`\`rust
+let x = 5;
+let y = x; // x is Copy → both x and y are valid
+println!("{} {}", x, y); // works fine
+\`\`\`
+
+---
+
+## Borrowing — References Without Ownership
+
+Instead of transferring ownership, you can **borrow** a reference:
+
+\`\`\`rust
+fn main() {
+    let s = String::from("hello");
+    let len = calculate_length(&s); // &s creates a reference (borrows)
+    println!("'{}' has length {}", s, len); // s is still usable
+}
+
+fn calculate_length(s: &String) -> usize { // s is a reference
+    s.len()
+} // s is NOT dropped — it does not own the value
+\`\`\`
+
+### Two Kinds of References
+
+| Reference | Syntax | What It Allows | Limit |
+|-----------|--------|----------------|-------|
+| Shared (immutable) | \`&T\` | Read the value | Many readers at once |
+| Exclusive (mutable) | \`&mut T\` | Read and write | One writer at a time |
+
+\`\`\`rust
+fn main() {
+    let mut s = String::from("hello");
+
+    let r1 = &s;      // shared borrow — OK
+    let r2 = &s;      // shared borrow — OK (multiple readers)
+    println!("{} and {}", r1, r2);
+
+    let r3 = &mut s;  // mutable borrow — OK, no shared refs in scope
+    r3.push_str(" world");
+    println!("{}", r3);
+}
+\`\`\`
+
+**The borrow checker enforces this rule:** You may have either one mutable reference OR any number of immutable references, but not both at the same time.
+
+\`\`\`rust
+let mut s = String::from("hello");
+let r1 = &s;       // immutable borrow
+let r2 = &s;       // immutable borrow
+let r3 = &mut s;   // COMPILE ERROR: cannot borrow as mutable while immutable borrows exist
+\`\`\`
+
+This prevents **data races** at compile time — the single most common concurrency bug.
+
+---
+
+## Lifetimes — How Long Do References Live?
+
+References must always be valid. The compiler needs to know how long a reference lives relative to the value it points to.
+
+\`\`\`rust
+fn main() {
+    let r;
+    {
+        let x = 5;
+        r = &x; // r borrows x, but x will be dropped...
+    } // x is dropped here
+    // println!("{}", r); // COMPILE ERROR: x does not live long enough
+}
+\`\`\`
+
+Lifetime annotations use the \`'\` prefix:
+
+\`\`\`rust
+// 'a is a lifetime parameter — the return reference lives as long as both inputs
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() { x } else { y }
+}
+
+fn main() {
+    let s1 = String::from("short");
+    let s2 = String::from("longer");
+    let result = longest(&s1, &s2);
+    println!("The longest is: {}", result);
+}
+\`\`\`
+
+In practice, **lifetime elision** rules let you omit most lifetime annotations:
+
+\`\`\`rust
+fn first_word(s: &str) -> &str {
+// The compiler infers: fn first_word<'a>(s: &'a str) -> &'a str
+    s.split_whitespace().next().unwrap_or("")
+}
+\`\`\`
+
+---
+
+## Send + Sync — Safe Concurrency
+
+Rust uses traits to mark types as safe to use across threads:
+
+| Trait | Meaning | Default |
+|-------|---------|---------|
+| \`Send\` | The type can be transferred across threads | Most types are Send |
+| \`Sync\` | The type can be shared across threads (\`&T\` is Send) | Most types are Sync |
+
+\`\`\`rust
+fn main() {
+    let s = String::from("hello");
+
+    // std::thread::spawn requires F: Send + 'static
+    std::thread::spawn(move || {
+        // move transfers ownership of s into the closure
+        println!("{}", s);
+    }).join().unwrap();
+}
+\`\`\`
+
+Types like \`Rc<T>\` (reference counted) are NOT \`Send\` — they use non-atomic reference counting. Use \`Arc<T>\` (atomically reference counted) for shared ownership across threads.
+
+\`\`\`rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let counter = Arc::clone(&counter);
+        handles.push(thread::spawn(move || {
+            let mut num = counter.lock().unwrap();
+            *num += 1;
+        }));
+    }
+
+    for handle in handles {
+        handle.join().unwrap();
+    }
+
+    println!("Result: {}", *counter.lock().unwrap());
+}
+\`\`\`
+
+---
+
+## Tokio — Async Runtime for Rust
+
+Rust's async model uses **cooperative multitasking** based on Futures. Tokio provides the runtime:
+
+\`\`\`rust
+use tokio::net::TcpListener;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+
+    loop {
+        let (socket, addr) = listener.accept().await?;
+        println!("New connection from: {}", addr);
+
+        tokio::spawn(async move {
+            // Each connection runs on the Tokio thread pool
+            handle_connection(socket).await;
+        });
+    }
+}
+
+async fn handle_connection(socket: tokio::net::TcpStream) {
+    // ...
+}
+\`\`\`
+
+Tokio uses **work-stealing** (like Go's scheduler) to balance async tasks across a thread pool. Each \`.await\` is a preemption point where the runtime can switch to another task.
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens when you try to use a value after moving it in Rust?
+   **A:** The compiler rejects it with a "use after move" error. Ownership is transferred to the new binding/function. The original owner's variable is invalidated. This is checked at compile time — zero runtime cost.
+
+2. **Q:** Can you have both an immutable reference and a mutable reference to the same value at the same time?
+   **A:** No. The borrow checker allows either one mutable reference or any number of immutable references, but never both simultaneously. This prevents data races at compile time.
+
+3. **Q:** What is the difference between \`Box<T>\`, \`Rc<T>\`, and \`Arc<T>\`?
+   **A:** \`Box<T>\` is a heap-allocated value with single ownership. \`Rc<T>\` is reference-counted (non-atomic) — allows multiple owners within a single thread. \`Arc<T>\` is atomically reference-counted — safe for multiple owners across threads.
+
+4. **Q:** Why might you want to use \`Pin\` in async Rust?
+   **A:** Async functions can create self-referential structs (where a field points to another field within the same struct). Moving such a struct would invalidate the internal pointer. \`Pin\` guarantees the data will not be moved, which is essential for safe async execution.
+
+5. **Q:** What happens at a \`.await\` point in Tokio?
+   **A:** The future yields control back to the runtime. The runtime parks the current task and can schedule another task on the same thread. When the awaited operation completes (e.g., I/O data arrives), the task is woken and resumed from the await point.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Ownership Rules:
+  1. Each value has exactly one owner
+  2. When the owner goes out of scope, the value is dropped
+  3. Assignment or function call MOVES ownership (unless Copy)
+
+Borrowing Rules:
+  1. Either: one &mut T (mutable reference)
+  2. Or: N &T (immutable references)
+  3. References must always be valid (lifetimes)
+
+Send + Sync:
+  • Send = safe to transfer ownership between threads
+  • Sync = safe to share reference between threads
+  • Rc<T> is !Send; Arc<T> is Send + Sync
+
+Async (Tokio):
+  • .await is a preemption point
+  • Futures are lazily evaluated — nothing happens until polled
+  • Tokio uses work-stealing like Go's scheduler
+  • Pin is needed for self-referential structs in async blocks`,
             tags: ["Rust", "Concurrency", "Memory"],
           },
           {
@@ -7091,7 +7845,232 @@ func main() {
               "epoll: Linux-specific, O(1) event dispatch — used by Node.js, Nginx, Redis.",
               "io_uring: submission ring + completion ring — batches syscalls, reduces kernel/user context switches.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Every backend server reads from disks and networks. How it reads determines how many users it can serve. The evolution of I/O models is the story of avoiding wasted CPU cycles.
+
+Imagine calling a pizza place. With **blocking I/O**, you call and sit by the phone doing nothing until the pizza arrives. With **non-blocking + polling**, you keep calling back every 30 seconds ("Is it ready?"). With **epoll**, you give the pizza place your number and they call you when it's ready — you do other things in the meantime.
+
+This article covers the I/O models that power Node.js, Nginx, Redis, and the cutting-edge io_uring interface.
+
+---
+
+## Blocking I/O — Simple but Wasteful
+
+\`\`\`c
+// Blocking I/O: the thread sleeps until data is available
+char buf[1024];
+int fd = open("file.txt", O_RDONLY);
+read(fd, buf, sizeof(buf)); // Thread BLOCKS here — sleeping, doing nothing
+printf("%s", buf);
+\`\`\`
+
+| Characteristic | Value |
+|---------------|-------|
+| Thread state | **Sleeping** (TASK_INTERRUPTIBLE) |
+| CPU usage | 0% while waiting |
+| Scalability | One thread per connection: ~8MB stack per thread → 1,000 threads = 8GB RAM |
+| Latency | Excellent for low concurrency |
+| Best for | Simple scripts, low-concurrency apps |
+
+---
+
+## Non-Blocking + Polling
+
+The file descriptor is set to non-blocking (\`O_NONBLOCK\`). \`read()\` returns immediately — with data if available, or \`EAGAIN\` if not.
+
+\`\`\`c
+// Non-blocking: spin in a loop checking for data
+int flags = fcntl(fd, F_GETFL, 0);
+fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+char buf[1024];
+while (1) {
+    ssize_t n = read(fd, buf, sizeof(buf));
+    if (n > 0) {
+        // Got data!
+        break;
+    } else if (errno == EAGAIN) {
+        // No data yet — spin again (WASTES CPU)
+        continue;
+    }
+}
+\`\`\`
+
+**Problem:** Busy-looping wastes CPU. \`poll()\` and \`select()\\) fix this by letting you wait on multiple fds at once, but they have O(n) scaling — the kernel scans all fds every call.
+
+---
+
+## I/O Multiplexing — epoll
+
+\`epoll\` is Linux-specific (since 2.6). It is O(1) — it only returns fds that are ready. Node.js, Nginx, Redis, and libuv all use epoll on Linux.
+
+\`\`\`c
+int epfd = epoll_create(1);
+struct epoll_event ev, events[64];
+ev.events = EPOLLIN;
+ev.data.fd = socket_fd;
+epoll_ctl(epfd, EPOLL_CTL_ADD, socket_fd, &ev);
+
+while (1) {
+    int n = epoll_wait(epfd, events, 64, -1); // Blocks until events happen
+    for (int i = 0; i < n; i++) {
+        // Only ready fds are returned — O(1), not O(N)
+        handle_event(events[i].data.fd);
+    }
+}
+\`\`\`
+
+### How epoll Works
+
+\`\`\`
+┌──────────────────────┐
+│  epoll instance       │
+│  ┌──────────────────┐│
+│  │ Interest list    ││ ← fds being monitored (added via epoll_ctl)
+│  └──────────────────┘│
+│  ┌──────────────────┐│
+│  │ Ready list       ││ ← fds with events (returned by epoll_wait)
+│  └──────────────────┘│
+└──────────────────────┘
+\`\`\`
+
+**Edge-triggered (ET) vs Level-triggered (LT):**
+
+| Mode | Behavior | Use Case |
+|------|----------|----------|
+| Level-triggered (default) | epoll_wait returns as long as data exists | Simpler code, compatible with blocking read |
+| Edge-triggered | epoll_wait returns only when NEW data arrives | Higher performance, must read until EAGAIN |
+
+\`\`\`c
+// Edge-triggered: must read all data or loop forever
+struct epoll_event ev;
+ev.events = EPOLLIN | EPOLLET; // Edge-triggered
+epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &ev);
+
+// Read loop until EAGAIN:
+while (1) {
+    ssize_t n = read(fd, buf, sizeof(buf));
+    if (n == -1 && errno == EAGAIN) break; // All data consumed
+    process(buf, n);
+}
+\`\`\`
+
+---
+
+## io_uring — The New Hotness
+
+Introduced in Linux 5.1, io_uring is a ring-buffer interface that drastically reduces syscall overhead.
+
+### The Problem It Solves
+
+epoll still requires **two syscalls** for an I/O operation:
+1. \`epoll_wait\` to know an fd is ready
+2. \`read\` / \`write\` to actually transfer data
+
+Each syscall switches from userspace → kernel → userspace (context switch), which costs ~1-2μs.
+
+### How io_uring Works
+
+\`\`\`
+┌────────────────────────────┐
+│      Userspace              │
+│  ┌────────────────────┐     │
+│  │ Submission Queue   │ →→→ │ ← App writes sqe entries
+│  └────────────────────┘     │
+│  ┌────────────────────┐     │
+│  │ Completion Queue   │ ←←← │ ← Kernel writes cqe entries
+│  └────────────────────┘     │
+└────────────┬───────────────┘
+             │ (shared memory — no copying)
+             ▼
+┌────────────────────────────┐
+│         Kernel              │
+│  Reads SQ entries, performs │
+│  I/O, writes CQ entries     │
+└────────────────────────────┘
+\`\`\`
+
+\`\`\`c
+// io_uring: batch multiple I/O operations in ONE syscall
+struct io_uring ring;
+io_uring_queue_init(64, &ring, 0);
+
+// Submit 3 reads in a single batch
+struct io_uring_sqe *sqe1 = io_uring_get_sqe(&ring);
+io_uring_prep_read(sqe1, fd1, buf1, sizeof(buf1), 0);
+struct io_uring_sqe *sqe2 = io_uring_get_sqe(&ring);
+io_uring_prep_read(sqe2, fd2, buf2, sizeof(buf2), 0);
+
+io_uring_submit(&ring); // ONE syscall for all 3 reads
+
+// Wait for completions
+int ret = io_uring_wait_cqe(&ring, &cqe);
+// ...
+\`\`\`
+
+**Key benefits:**
+- One syscall submits many operations (amortized cost)
+- No polling needed — completion notification is delivered via the ring
+- Supports vectored I/O, buffered writes, fsync, splice, and more
+- Can even accept new connections asynchronously
+
+---
+
+## Comparison Table
+
+| Model | Syscalls per I/O | CPU Efficiency | Concurrency | Code Complexity |
+|-------|-----------------|---------------|-------------|-----------------|
+| Blocking | 1 (plus context switch) | Poor (thread sleeps) | Low (thread per conn) | Simple |
+| Non-blocking + poll | 2+ (poll + read) | Poor (busy loop) | Medium | Medium |
+| select/poll | O(n) scan | Medium | Medium | Medium |
+| epoll (LT) | 2 (epoll_wait + read) | Good | Very high | Medium |
+| epoll (ET) | 2+ (must read until EAGAIN) | Excellent | Very high | Complex |
+| io_uring | 1 for N operations | Excellent (amortized) | Very high | Complex |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why can blocking I/O not scale to 10,000 concurrent connections?
+   **A:** Each blocked thread consumes ~8MB of stack memory (the default on Linux). 10,000 threads would require 80GB of RAM just for stacks, plus the overhead of thread creation/destruction. Context switching between 10,000 threads also wastes significant CPU time.
+
+2. **Q:** What is the fundamental advantage of io_uring over epoll?
+   **A:** io_uring can submit multiple I/O operations in a single syscall (amortized context switch cost), and it uses shared memory rings to avoid copying data between kernel and userspace. It also supports operations that epoll cannot handle, like async readv/writev and accept.
+
+3. **Q:** Why does epoll's edge-triggered mode require reading until EAGAIN?
+   **A:** Edge-triggered mode only notifies once when new data arrives. If you don't read all data, the remaining data stays in the buffer, but you won't get another notification until more data arrives. The application would miss the pending data.
+
+4. **Q:** In Node.js, does \`fs.readFile\` use epoll?
+   **A:** No. File I/O on Linux is not asynchronous at the OS level (only network I/O uses epoll/kqueue). Libuv's thread pool handles file I/O — the fs operation runs on a worker thread in the thread pool.
+
+5. **Q:** Can io_uring be faster than epoll for a single read?
+   **A:** For a single operation, epoll is likely faster because the io_uring submission/completion ring setup overhead exceeds the epoll syscall cost. io_uring's advantage comes from batching multiple operations into one syscall.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+I/O Models (from worst to best):
+─────────────────────────────────
+1. Blocking: thread sleeps for I/O — simple, doesn't scale
+2. Non-blocking + poll: CPU waste from busy-looping
+3. select/poll: O(n) scan of all fds — works, but slow
+4. epoll (Linux): O(1) — returns only ready fds
+   • Level-triggered: simpler, compatible with blocking read
+   • Edge-triggered: more efficient, must read until EAGAIN
+5. io_uring (Linux 5.1+): ring-buffer based
+   • One syscall submits batch of operations
+   • Zero-copy between kernel and userspace
+   • Async everything: read, write, accept, openat, fsync
+
+Real-world mappings:
+  • Node.js: libuv → epoll (I/O) + thread pool (file/crypto)
+  • Nginx: epoll (ET mode)
+  • Redis: epoll / kqueue (single-threaded, multiplexed)
+  • Go netpoller: epoll (goroutines park, M freed)
+  • io_uring: SPDK, RocksDB, QEMU, and new async frameworks`,
             tags: ["Systems", "Linux", "Performance"],
           },
           {
@@ -7108,7 +8087,157 @@ func main() {
               "Permission model: Deno requires explicit flags (--allow-net, --allow-read); Bun follows Node's no-permissions model.",
               "Choosing a runtime: evaluate cold-start latency × API compatibility × built-in tooling × deployment target.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Node.js dominated the 2010s. But as JavaScript fatigue grew and performance demands increased, developers started asking: "Is there a faster way to run JavaScript/TypeScript?"
+
+Enter **Bun** and **Deno** — two modern runtimes that learn from Node.js's mistakes. Bun targets raw speed (4x faster cold start). Deno targets web-standard API compatibility. Both can run your existing Node.js code. But which one should you use?
+
+---
+
+## Bun — Fast by Design
+
+Bun uses **JavaScriptCore** (the engine powering Safari, not Chrome's V8). This alone gives it advantages:
+
+| Aspect | Node.js | Bun |
+|--------|---------|-----|
+| Engine | V8 | JavaScriptCore (JSC) |
+| Cold start | ~200ms | ~40ms |
+| Language | JavaScript | JavaScript + built-in TS/JSX transpiler |
+| Test runner | vitest, jest | Built-in (\`bun test\`) |
+| Package manager | npm/pnpm/yarn | Built-in (Bun's own, 10x faster than npm) |
+| SQLite | third-party | Built-in (\`bun:sqlify\`) |
+
+\`\`\`bash
+# Compare cold start times
+time node -e "console.log('hello')"   # ~200ms
+time bun -e "console.log('hello')"    # ~40ms
+
+# Bun can run TypeScript directly — no ts-node needed
+bun run server.ts
+\`\`\`
+
+### Built-in Tools — No More Webpack
+
+\`\`\`bash
+# Bun bundles TypeScript to a single file
+bun build ./src/index.ts --outdir=./dist
+
+# Bun runs tests
+bun test
+
+# Bun installs dependencies (uses bun.lockb)
+bun install
+
+# Bun starts a simple HTTP server
+bun -e "Bun.serve({port:3000, fetch:()=>new Response('hi')})"
+\`\`\`
+
+### Bun's SQLite Client
+
+\`\`\`typescript
+import { Database } from "bun:sqlify";
+
+const db = new Database(":memory:");
+db.run("CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)");
+db.run("INSERT INTO users (name) VALUES ('Alice'), ('Bob')");
+
+const users = db.query("SELECT * FROM users").all();
+console.log(users); // [{id:1,name:'Alice'},{id:2,name:'Bob'}]
+\`\`\`
+
+---
+
+## Deno — Web Standards First
+
+Deno was created by Ryan Dahl (the original creator of Node.js) to fix Node.js's design regrets. Its philosophy: **be compatible with browser APIs, not Node.js APIs**.
+
+\`\`\`typescript
+// Deno uses web-standard fetch — no 'node-fetch' or 'undici' needed
+const response = await fetch("https://api.github.com/users/octocat");
+const data = await response.json();
+console.log(data);
+
+// Native WebSocket — no 'ws' package
+const ws = new WebSocket("ws://localhost:8080");
+ws.onmessage = (e) => console.log(e.data);
+
+// Web Crypto — no 'crypto' npm package
+const key = await crypto.subtle.generateKey("AES-GCM", true, ["encrypt", "decrypt"]);
+\`\`\`
+
+### Permission Model
+
+Deno requires explicit permissions — no scripts can access the network or filesystem without your consent:
+
+\`\`\`bash
+deno run server.ts          # Error: no network access
+deno run --allow-net server.ts    # Allow network
+deno run --allow-read --allow-write server.ts  # Allow file access
+deno run --allow-all server.ts    # Allow everything (bypass security)
+\`\`\`
+
+### npm Compatibility
+
+Deno can import npm packages using \`npm:\` specifiers:
+
+\`\`\`typescript
+import express from "npm:express@4";
+const app = express();
+app.get("/", (req, res) => res.send("Hello from Deno!"));
+app.listen(3000);
+\`\`\`
+
+This is powered by an **npm compatibility layer** that translates CommonJS and Node APIs to Deno equivalents.
+
+---
+
+## Choosing a Runtime
+
+| Criteria | Choose Node.js | Choose Bun | Choose Deno |
+|----------|---------------|------------|-------------|
+| Ecosystem maturity | Largest npm ecosystem | Growing, good Node compat | Smaller, but growing |
+| Cold start latency | Slowest | Fastest (~40ms) | Medium |
+| Built-in tools | Need separate tools | Bundler, test runner included | Linter, formatter, doc generator |
+| Web standard APIs | Polyfills needed | Partial | Native |
+| Deployment target | Everywhere | Bun hosting, Docker | Deno Deploy, Docker |
+| Team familiarity | Everyone knows it | Growing | Smallest |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why does Bun have faster cold start times than Node.js?
+   **A:** Three reasons: (1) JavaScriptCore's architecture requires less initialization than V8; (2) Bun is written in Zig and optimized for startup; (3) Bun's built-in transpiler eliminates the need for ts-node or tsconfig loading overhead.
+
+2. **Q:** Deno requires \`--allow-net\` for HTTP servers. Why is this better than Node.js's approach?
+   **A:** It follows the principle of least privilege — a script cannot accidentally (or maliciously) send your data to an external server. In Node.js, any \`require()\`'d package can make network requests without your knowledge.
+
+3. **Q:** Can Bun run Express.js applications?
+   **A:** Yes. Bun has Node.js compatibility built-in. Running \`bun run index.js\` with an Express app works in most cases. However, native Node.js addons (C++ .node files) and some edge-case Node APIs may not be supported.
+
+4. **Q:** What is the main trade-off Bun makes by using JavaScriptCore instead of V8?
+   **A:** Chrome DevTools debugging works natively with V8 but requires extra tooling for JavaScriptCore. Some V8-specific optimizations and APIs are not available in JSC. Bun's error stack traces and source maps may differ from what developers are used to with Node.js.
+
+5. **Q:** Why did Deno choose to use URL imports (\`import from "https://..."\`) instead of npm?
+   **A:** URL imports avoid centralized package registries. Each import is an immutable reference to the exact URL content, which can be cached. This aligns with the browser's module system (ES Modules work the same way in browsers).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+┌────────────────┬──────────┬────────┬─────────┐
+│                │ Node.js  │  Bun   │  Deno   │
+├────────────────┼──────────┼────────┼─────────┤
+│ Engine         │ V8       │ JSC    │ V8      │
+│ TS/JSX native  │ ❌       │ ✅     │ ✅      │
+│ Test runner    │ External │ Built  │ Built   │
+│ Package mgr    │ npm/pnpm │ Built  │ npm:    │
+│ Permission     │ None     │ None   │ Granular│
+│ Cold start     │ ~200ms   │ ~40ms  │ ~100ms  │
+│ Node compat    │ Native   │ Good   │ Partial │
+└────────────────┴──────────┴────────┴─────────┘`,
             tags: ["Runtime", "JavaScript", "Benchmark"],
           },
           {
@@ -7128,7 +8257,256 @@ func main() {
               "Celery: distributed task queue — broker-backed (Redis/RabbitMQ), scheduled tasks, chain workflows. Production background job processing.",
               "uv/rye: modern Python package management — uv is Rust-based pip alternative (10-100x faster), rye manages projects like Cargo. Replacing poetry/pipenv.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Python dominates data science and machine learning. For backend web development, it has three major ecosystems: **Django** (batteries-included monolith), **FastAPI** (modern async with automatic docs), and **Flask** (minimalist microframework).
+
+Understanding when to use each and how the async gateway (ASGI) differs from the sync gateway (WSGI) is essential for anyone building Python backends professionally.
+
+---
+
+## WSGI vs ASGI — The Gateway Protocols
+
+| Protocol | Synchronous? | WebSocket? | Frameworks |
+|----------|-------------|------------|------------|
+| WSGI | Yes — one request blocks a thread | No | Django, Flask, Pyramid |
+| ASGI | Async/await native | Yes | FastAPI, Starlette, Django Channels |
+
+### WSGI — The Old Standard
+
+\`\`\`python
+# WSGI application: a callable (function or class)
+def app(environ, start_response):
+    """environ: dict of CGI-style environment variables.
+       start_response: callable to send status + headers."""
+    status = "200 OK"
+    headers = [("Content-Type", "text/plain")]
+    start_response(status, headers)
+    return [b"Hello World"]
+
+# Gunicorn with sync workers:
+# gunicorn app:app -w 4
+# 4 OS threads handling requests — each blocks on I/O
+\`\`\`
+
+WSGI is simple but wasteful — each request ties up a thread even when waiting for a database query.
+
+### ASGI — Async Native
+
+\`\`\`python
+# ASGI application: an async callable
+async def app(scope, receive, send):
+    """scope: connection info dict.
+       receive: async callable to get incoming events.
+       send: async callable to send outgoing events."""
+    await send({
+        "type": "http.response.start",
+        "status": 200,
+        "headers": [(b"content-type", b"text/plain")],
+    })
+    await send({
+        "type": "http.response.body",
+        "body": b"Hello World",
+    })
+\`\`\`
+
+---
+
+## FastAPI — Modern, Fast, Type-Safe
+
+FastAPI uses **Pydantic** for data validation and automatically generates OpenAPI documentation.
+
+\`\`\`python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+    price: float
+    is_offer: Optional[bool] = None
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: Optional[str] = None):
+    """Query parameter q is optional.
+       Path parameter item_id is an int — FastAPI validates it."""
+    return {"item_id": item_id, "q": q}
+
+@app.post("/items/", response_model=Item, status_code=201)
+def create_item(item: Item):
+    """Pydantic validates the request body automatically.
+       Swagger docs are generated from the type annotations."""
+    if item.price < 0:
+        raise HTTPException(status_code=422, detail="Price cannot be negative")
+    return item
+\`\`\`
+
+### Automatic Swagger Docs
+
+Run \`uvicorn main:app --reload\` and visit:
+- \`/docs\` — Swagger UI (interactive API testing)
+- \`/redoc\` — ReDoc UI (cleaner documentation)
+
+Both are generated from Python type annotations — zero configuration.
+
+---
+
+## Django — Batteries Included
+
+Django includes everything for a content-heavy web application: ORM, admin panel, authentication, migrations, middleware, and templates.
+
+\`\`\`python
+# models.py — Django ORM
+from django.db import models
+
+class BlogPost(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey("auth.User", on_delete=models.CASCADE)
+
+    class Meta:
+        indexes = [models.Index(fields=["created_at"])]
+
+# views.py — class-based view
+from django.views.generic import ListView
+
+class BlogListView(ListView):
+    model = BlogPost
+    template_name = "blog/list.html"
+    paginate_by = 20
+    queryset = BlogPost.objects.select_related("author").all()
+\`\`\`
+
+### Django's ORM — Powerful but Dangerous
+
+\`\`\`python
+# BAD: N+1 query problem
+posts = BlogPost.objects.all()
+for post in posts:
+    print(post.author.email)  # ONE query per post!
+
+# GOOD: Use select_related for ForeignKey
+posts = BlogPost.objects.select_related("author").all()
+for post in posts:
+    print(post.author.email)  # Zero extra queries
+\`\`\`
+
+---
+
+## Flask — Minimal and Composable
+
+Flask gives you routing and request handling. Everything else comes from extensions.
+
+\`\`\`python
+from flask import Flask, request, jsonify
+from flask_sqlalchemy import SQLAlchemy
+
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://localhost/mydb"
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+
+@app.route("/users", methods=["GET"])
+def list_users():
+    users = User.query.all()
+    return jsonify([{"id": u.id, "name": u.name} for u in users])
+
+@app.route("/users", methods=["POST"])
+def create_user():
+    data = request.get_json()
+    user = User(name=data["name"])
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({"id": user.id, "name": user.name}), 201
+\`\`\`
+
+---
+
+## SQLAlchemy — The Python ORM Standard
+
+SQLAlchemy has two layers: **Core** (SQL expression language) and **ORM** (declarative models).
+
+\`\`\`python
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
+
+engine = create_engine("postgresql://localhost/mydb")
+
+# Core — write SQL expressions
+with engine.connect() as conn:
+    result = conn.execute(text("SELECT * FROM users WHERE id = :id"), {"id": 1})
+    row = result.fetchone()
+
+# ORM — object-oriented
+with Session(engine) as session:
+    user = session.get(User, 1)
+    print(user.name)
+\`\`\`
+
+---
+
+## Choosing Your Python Web Stack
+
+| Aspect | FastAPI | Django | Flask |
+|--------|---------|--------|-------|
+| Best for | APIs, microservices, async | Content sites, admin panels | Small services, prototyping |
+| Async native | Yes | Via Channels | No |
+| ORM | SQLAlchemy or raw | Built-in ORM | Any (SQLAlchemy common) |
+| Admin panel | No | Built-in | Flask-Admin extension |
+| Learning curve | Medium | Steep | Low |
+| Performance | Highest | Medium | Medium |
+
+---
+
+## Practice Questions
+
+1. **Q:** You have a Django view that queries related models. How do you prevent N+1 queries?
+   **A:** Use \`select_related()\` for ForeignKey and OneToOne relations (SQL JOIN), and \`prefetch_related()\` for ManyToMany and reverse relations (separate query + Python join).
+
+2. **Q:** Why is FastAPI faster than Flask for I/O-heavy workloads?
+   **A:** FastAPI runs on ASGI (using Starlette + Uvicorn), which supports async/await natively. During I/O waits (DB queries, API calls), the event loop switches to another task instead of blocking the thread. Flask (WSGI) blocks the entire thread during I/O.
+
+3. **Q:** What is the difference between Pydantic's \`BaseModel\` and a Python dataclass?
+   **A:** Pydantic validates data at runtime based on type annotations — it coerces types, raises validation errors, and generates JSON Schema. Dataclasses have no validation or coercion.
+
+4. **Q:** When would you use SQLAlchemy Core instead of the ORM?
+   **A:** For complex reporting queries, bulk inserts, or when you need fine-grained control over the generated SQL. The ORM adds overhead from identity maps, session tracking, and lazy loading.
+
+5. **Q:** How do you handle background tasks in FastAPI vs Django?
+   **A:** FastAPI can use \`BackgroundTasks\` (simple) or Celery (complex). Django uses Celery or Django-Q. For production, always use a proper task queue (Celery + Redis/RabbitMQ) — not in-process background threads that might be killed by the server.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Python Backend Ecosystem:
+─────────────────────────
+• WSGI (sync): Django, Flask, Pyramid
+• ASGI (async): FastAPI, Starlette, Django Channels
+
+Framework decision:
+  • FastAPI: APIs, async, auto docs → /docs
+  • Django: Full-featured, admin, ORM, auth
+  • Flask: Minimal, composable extensions
+
+Key tools:
+  • Pydantic: runtime validation → JSON Schema
+  • SQLAlchemy: Core (SQL expressions) + ORM (models)
+  • Alembic: schema migrations from SQLAlchemy models
+  • Celery: distributed task queue (Redis/RabbitMQ)
+  • Gunicorn + Uvicorn: production ASGI/WSGI serving
+  • uv: Rust-based pip alternative (10-100x faster)`,
             tags: ["Python", "Backend", "API", "FastAPI", "Django"],
           },
           {
@@ -7145,7 +8523,218 @@ func main() {
               "Rust Actix Web: actor-based async framework (though actors are optional) — fastest throughput measured by TechEmpower benchmarks.",
               "Choosing criteria: startup latency × throughput × ecosystem maturity × team expertise. Go for operational simplicity; Rust for maximum performance.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Beyond Node.js, the backend world runs on **Go** and **Rust** — two languages that trade developer convenience for raw performance. Go gives you goroutines and fast compilation. Rust gives you memory safety without a GC and zero-cost abstractions.
+
+If you need to handle 100,000 requests per second on a single machine, you are looking at Go or Rust. This article compares the dominant web frameworks in both ecosystems.
+
+---
+
+## Go Web Frameworks
+
+Go's standard library \`net/http\` is surprisingly capable for basic cases. Frameworks add routing, middleware, and validation niceties.
+
+### Gin — The Most Popular
+
+\`\`\`go
+package main
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default() // includes Logger and Recovery middleware
+
+	r.GET("/users/:id", func(c *gin.Context) {
+		id := c.Param("id") // path parameter
+		c.JSON(200, gin.H{
+			"user_id": id,
+			"name":    "Alice",
+		})
+	})
+
+	r.POST("/users", func(c *gin.Context) {
+		var user struct {
+			Name  string \`json:"name" binding:"required"\`
+			Email string \`json:"email" binding:"required,email"\`
+		}
+		if err := c.ShouldBindJSON(&user); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(201, user)
+	})
+
+	r.Run(":8080")
+}
+\`\`\`
+
+Gin uses a **radix tree** router — O(n) where n is path depth, not number of routes. Even with 10,000 routes, routing is instantaneous.
+
+### Echo — Minimal and Fast
+
+\`\`\`go
+import "github.com/labstack/echo/v4"
+
+func main() {
+	e := echo.New()
+	e.Use(middleware.CORS())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(20)))
+
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(200, map[string]string{"status": "ok"})
+	})
+
+	e.Start(":8080")
+}
+\`\`\`
+
+Echo shines with built-in middleware: CORS, CSRF, JWT, rate limiting, request ID, and graceful shutdown.
+
+### Fiber — Express.js for Go Developers
+
+\`\`\`go
+import "github.com/gofiber/fiber/v2"
+
+func main() {
+	app := fiber.New()
+
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
+
+	app.Get("/:name", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"name": c.Params("name"),
+		})
+	})
+
+	app.Listen(":3000")
+}
+\`\`\`
+
+Fiber is a direct port of Express.js syntax. Great for Node.js developers moving to Go.
+
+---
+
+## Rust Web Frameworks
+
+Rust frameworks are built on top of **Tokio** (async runtime) and **Tower** (service abstraction).
+
+### Axum — The Modern Choice
+
+\`\`\`rust
+use axum::{
+    extract::{Path, Query, State},
+    routing::get,
+    Router,
+    Json,
+};
+use serde::Deserialize;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+
+#[derive(Deserialize)]
+struct UserParams {
+    name: Option<String>,
+}
+
+async fn get_user(
+    Path(id): Path<u64>,
+    Query(params): Query<UserParams>,
+) -> Json<serde_json::Value> {
+    Json(serde_json::json!({
+        "id": id,
+        "name": params.name.unwrap_or_else(|| "Anonymous".to_string()),
+    }))
+}
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new()
+        .route("/users/:id", get(get_user));
+
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+\`\`\`
+
+Axum uses **extractors** (\`Path\`, \`Query\`, \`Json\`, \`State\`) — composable types that implement \`FromRequestParts\`. The \`Tower\` middleware ecosystem provides timeouts, rate limiting, tracing, and load balancing.
+
+### Actix Web — The Performance King
+
+\`\`\`rust
+use actix_web::{web, App, HttpServer, Responder};
+
+async fn index(path: web::Path<String>) -> impl Responder {
+    format!("Hello {}!", path)
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    HttpServer::new(|| {
+        App::new()
+            .route("/{name}", web::get().to(index))
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+}
+\`\`\`
+
+Actix Web consistently ranks #1 in TechEmpower benchmarks. It uses an actor-based model (optional) for state management.
+
+---
+
+## Framework Comparison
+
+| Framework | Language | Router | Middleware | Throughput | Startup Time |
+|-----------|----------|--------|------------|------------|--------------|
+| Gin | Go | Radix tree | Chain | ~100K req/s | ~5ms |
+| Echo | Go | Radix tree | Built-in chain | ~120K req/s | ~5ms |
+| Fiber | Go | Radix tree | Express-like | ~130K req/s | ~5ms |
+| Axum | Rust | Trait-based | Tower stack | ~300K req/s | ~3ms |
+| Actix Web | Rust | Regex/custom | Actor/chain | ~400K req/s | ~3ms |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why do Rust web frameworks have higher throughput than Go frameworks?
+   **A:** Rust's zero-cost abstractions mean the async runtime and HTTP parsing compile to near-hand-written machine code. Go has a runtime (goroutines, GC) that adds overhead — garbage collection pauses and goroutine scheduling costs.
+
+2. **Q:** When would you choose Gin over the standard library \`net/http\`?
+   **A:** When you need path parameters (\`/users/:id\`), request body validation, middleware chains (auth, logging, recovery), or JSON response helpers. The stdlib is sufficient for simple APIs with no path parameters.
+
+3. **Q:** What is the Tower ecosystem in Axum?
+   **A:** Tower provides the \`Service\` trait and composable middleware (Timeout, RateLimit, Retry, LoadShed, Buffer). Any Tower middleware can wrap an Axum handler. This is similar to Rack in Ruby or WSGI middleware in Python.
+
+4. **Q:** How does Actix Web's actor model work?
+   **A:** Actors are objects that process messages sequentially in their own mailbox. Actix Web actors can maintain state across requests (like a WebSocket session) without shared mutable state — each actor runs in its own Task.
+
+5. **Q:** Is Go's goroutine-per-request model more efficient than Rust's async tasks?
+   **A:** Not necessarily. Go goroutines are lightweight (~2KB) but still heavier than Rust async tasks (~0 bytes on the heap — they are state machines stored inline). Rust's async tasks have zero heap allocation for the task itself, while goroutines always have a stack.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Go Frameworks:
+  Gin:  radix tree router, JSON binding/validation, middleware chains
+  Echo: minimal API, built-in middleware (CORS, JWT, ratelimit)
+  Fiber: Express.js-port, Node devs migrating to Go
+
+Rust Frameworks:
+  Axum:  Tower-based, strong types via extractors
+  Actix: actor model, #1 TechEmpower benchmarks
+
+Choosing:
+  • Go: simpler deployment, faster compilation, GC-managed
+  • Rust: maximum throughput, memory safe, no GC, complex borrow checker
+  • Both: excellent concurrency models (goroutines vs async/await)`,
             tags: ["Go", "Rust", "Backend", "API", "Performance"],
           },
         ],
@@ -7168,7 +8757,178 @@ func main() {
               "HTTP/3: QUIC (UDP-based) transport — per-stream reliability eliminates HOL blocking.",
               "0-RTT: QUIC can resume connections without a handshake using stored session tickets.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+The web runs on HTTP. Every API call, every webpage load, every microservice communication uses HTTP. Yet most developers do not understand how the protocol actually works.
+
+HTTP/1.1 dominated for 20 years. HTTP/2 brought multiplexing. HTTP/3 rebuilt the transport layer on UDP (QUIC) to eliminate head-of-line blocking. Choosing the right version can cut page load times by 30-50%.
+
+---
+
+## HTTP/1.1 — The Workhorse
+
+| Feature | HTTP/1.1 |
+|---------|----------|
+| Connections | One request per connection (serial) |
+| Multiplexing | Not supported — must use 6 parallel connections |
+| Header compression | None — headers sent as plaintext every request |
+| Server push | Not supported |
+| Transport | TCP |
+
+\`\`\`http
+GET /api/users HTTP/1.1
+Host: example.com
+User-Agent: curl/8.0
+Accept: application/json
+Authorization: Bearer abc123
+(empty line)
+\`\`\`
+
+**Head-of-line blocking (HOL):** If you request \`style.css\` and \`app.js\` in sequence, the second request cannot start until the first response completes. Browsers work around this by opening **6 parallel connections** per origin.
+
+---
+
+## HTTP/2 — Binary Multiplexing
+
+HTTP/2 addresses HTTP/1.1's fundamental problem: it allows multiple concurrent **streams** over a single TCP connection.
+
+\`\`\`
+HTTP/1.1 (one connection):          HTTP/2 (one connection):
+┌──────────────┐                    ┌──────────────────┐
+│ GET style.css│                    │ ┌→ Stream 1: HTML│
+│ ...wait...   │                    │ ├→ Stream 2: CSS │
+│ ← style.css  │                    │ ├→ Stream 3: JS  │
+│ GET app.js   │                    │ └→ Stream 4: img │
+│ ...wait...   │                    │ ALL IN PARALLEL  │
+│ ← app.js     │                    └──────────────────┘
+└──────────────┘
+\`\`\`
+
+### Binary Framing Layer
+
+HTTP/2 is not text-based like HTTP/1.1. It uses **binary frames**:
+
+\`\`\`
+HTTP/2 Frame (binary):
+┌────────────────────────────────┐
+│ Length (24 bits)               │
+├────────────────────────────────┤
+│ Type (8 bits): DATA, HEADERS,  │
+│   PRIORITY, RST_STREAM, SETTINGS│
+├────────────────────────────────┤
+│ Flags (8 bits): END_STREAM,   │
+│   END_HEADERS, PADDED          │
+├────────────────────────────────┤
+│ Stream ID (31 bits)            │
+├────────────────────────────────┤
+│ Payload                        │
+└────────────────────────────────┘
+\`\`\`
+
+**HPACK header compression:** Repeated headers (Cookie, Authorization) are sent once and referenced by index in subsequent requests.
+
+### Server Push
+
+The server can send resources the client hasn't requested yet:
+
+\`\`\`http
+:method = GET
+:path = /index.html
+
+# Server also pushes:
+:method = GET
+:path = /style.css  # Client doesn't need to request this separately
+\`\`\`
+
+In practice, server push was poorly adopted and is being replaced by **103 Early Hints**.
+
+### HTTP/2's Achilles Heel: TCP HOL Blocking
+
+Since all streams share one TCP connection, a single lost packet blocks ALL streams until TCP retransmits the packet. This is **TCP-level head-of-line blocking**.
+
+---
+
+## HTTP/3 — QUIC Changes Everything
+
+HTTP/3 replaces TCP with **QUIC** (Quick UDP Internet Connections), built on UDP.
+
+\`\`\`
+TCP (HTTP/2):                    QUIC (HTTP/3):
+┌────────────────────┐           ┌────────────────────┐
+│ Single TCP conn    │           │ UDP with per-stream│
+│ ┌─ Stream 1: data │           │ reliability        │
+│ ┌─ Stream 2: data │           │ ┌─ Stream 1: data  │
+│ ┌─ Stream 3: data │           │ ├─ Stream 2: (lost)│
+│ ✗ PACKET LOSS!    │           │ └─ Stream 3: data  │
+│ ALL streams block │           │    Only stream 2   │
+│ until retransmit  │           │    waits for retry │
+└────────────────────┘           └────────────────────┘
+\`\`\`
+
+**Why QUIC?**
+- 0-RTT connection establishment (no TCP handshake on repeat visits)
+- Per-stream reliability — packet loss on one stream does not affect others
+- Built-in encryption (TLS 1.3 is mandatory, not optional)
+- Connection migration — change networks (WiFi → 4G) without dropping the connection
+
+\`\`\`
+Connection setup comparison:
+TCP + TLS 1.3:   SYN → SYN-ACK → ACK → ClientHello → ServerHello → ... → Ready = 2-3 RTT
+QUIC (0-RTT):    ClientHello + data → Ready = 0 RTT (if previously connected)
+\`\`\`
+
+---
+
+## Performance Comparison
+
+| Scenario | HTTP/1.1 | HTTP/2 | HTTP/3 |
+|----------|----------|--------|--------|
+| 100 small files (10KB each) | ~6 at a time | All at once | All at once |
+| 1% packet loss | +1 RTT per request | +1 RTT for ALL | +1 RTT for ONE stream |
+| First visit (new user) | TCP + TLS handshake | Same | 1-RTT handshake |
+| Return visit | Same | Same | 0-RTT (immediate data) |
+| Network change (WiFi → 4G) | Connection dies | Connection dies | Survives |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why does HTTP/2's multiplexing not help when there is 2% packet loss?
+   **A:** All multiplexed streams share one TCP connection. TCP delivers bytes in order — a single lost packet stalls the entire connection until retransmission. This is called TCP-level head-of-line blocking.
+
+2. **Q:** How does QUIC avoid TCP's head-of-line blocking?
+   **A:** QUIC implements multiplexing at the transport layer (UDP). Each stream has independent reliability. Packet loss on stream 2 only delays stream 2 — streams 1, 3, and 4 continue delivering data.
+
+3. **Q:** What is 0-RTT and why is it controversial?
+   **A:** 0-RTT allows a client that has previously connected to a server to send data in the first packet (no handshake). The risk: replay attacks — an attacker can re-send the 0-RTT data and the server may process it twice. Idempotent operations (GET, PUT) are safe; non-idempotent operations (POST) are not.
+
+4. **Q:** When would you still use HTTP/1.1 over HTTP/2?
+   **A:** When the server or client does not support HTTP/2 (older browsers, some IoT devices). Also, HTTP/1.1 over a single connection is simpler for debugging — you can read the plaintext with curl or netcat.
+
+5. **Q:** What is HPACK and why does it matter for API performance?
+   **A:** HPACK compresses HTTP/2 headers using a static + dynamic table. Repeated headers (Authorization, Cookie) are replaced with a 1-byte index. This reduces request overhead from ~800 bytes to ~50 bytes — critical for APIs with many small requests.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+        HTTP/1.1    HTTP/2      HTTP/3
+        ────────    ──────      ──────
+Transport: TCP       TCP         QUIC (UDP)
+Multiplex: ❌ (6 conns) ✅       ✅
+HOL blocking: request-level (6 conns workaround)
+                      TCP-level (packet loss blocks ALL)
+                                 Per-stream (only affected stream)
+Headers:  plaintext   HPACK       QPACK
+Push:     ❌          ✅          ✅
+0-RTT:    ❌          ❌          ✅
+Conn migration: ❌    ❌          ✅
+
+When to use:
+• HTTP/1.1: legacy systems, simple tools
+• HTTP/2: modern web apps, many small resources
+• HTTP/3: latency-sensitive apps, mobile (network changes), video streaming`,
             tags: ["HTTP", "Networking", "Protocols"],
           },
           {
@@ -7185,7 +8945,174 @@ func main() {
               "Pagination patterns: cursor-based vs offset-based — cursor scales, offset doesn't.",
               "Versioning: URL path (`/v2/`) vs header (`Accept-Version: 2`) — trade-offs for both.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+APIs are the contracts between services. A well-designed REST API is intuitive, consistent, and predictable. A poorly designed one leads to confused clients, broken integrations, and security holes.
+
+REST (Representational State Transfer) is not a standard — it is a set of architectural constraints. Most APIs are "REST-ish." The key is to make APIs that do not surprise your consumers.
+
+---
+
+## Resources as Nouns
+
+URLs represent **resources** (nouns), not actions (verbs):
+
+\`\`\`
+✅ GOOD (resources):
+  GET    /users          → List users
+  GET    /users/:id      → Get one user
+  POST   /users          → Create a user
+  PUT    /users/:id      → Replace a user
+  PATCH  /users/:id      → Partially update a user
+  DELETE /users/:id      → Delete a user
+
+❌ BAD (actions in URL):
+  GET    /getUser?id=1
+  POST   /createUser
+  POST   /deleteUser?id=1
+  GET    /getUserOrders?id=1  → Should be: GET /users/1/orders
+\`\`\`
+
+---
+
+## HTTP Methods — Semantics Matter
+
+| Method | Safe? | Idempotent? | Use Case |
+|--------|-------|-------------|----------|
+| GET | Yes | Yes | Read data, no side effects |
+| PUT | No | Yes | Full replacement of a resource |
+| DELETE | No | Yes | Remove a resource |
+| POST | No | No | Create or trigger action |
+| PATCH | No | No | Partial update |
+
+**Idempotent** means calling the same request N times has the same effect as calling it once:
+
+\`\`\`
+PUT /users/1 {"name": "Alice"}  → Response: 200
+PUT /users/1 {"name": "Alice"}  → Response: 200 (same result)
+DELETE /users/1                 → Response: 204
+DELETE /users/1                 → Response: 404 (idempotent — same effect: user doesn't exist)
+POST /users {"name": "Alice"}   → Response: 201
+POST /users {"name": "Alice"}   → Response: 201 (CREATES A SECOND USER — NOT idempotent)
+\`\`\`
+
+---
+
+## Status Codes — The Right One Matters
+
+\`\`\`
+2xx Success:
+  200 OK           — GET, PUT, PATCH success
+  201 Created      — POST success (include Location header)
+  204 No Content   — DELETE success or PUT with no body
+
+3xx Redirection:
+  301 Moved Permanently — resource has new URL
+  304 Not Modified      — use cached version (ETag/If-None-Match)
+
+4xx Client Error:
+  400 Bad Request      — malformed request body
+  401 Unauthorized     — missing/invalid authentication
+  403 Forbidden        — authenticated but not allowed
+  404 Not Found        — resource does not exist
+  409 Conflict         — resource state conflict (e.g., duplicate)
+  422 Unprocessable Entity — validation errors
+
+5xx Server Error:
+  500 Internal Server Error — unexpected server failure
+  502 Bad Gateway           — upstream service failed
+  503 Service Unavailable   — server temporarily overloaded
+  504 Gateway Timeout       — upstream didn't respond in time
+\`\`\`
+
+---
+
+## Pagination — Cursor vs Offset
+
+### Offset-Based (Simple, Doesn't Scale)
+
+\`\`\`http
+GET /users?page=1&limit=20
+→ 200 OK
+   Link: <https://api.example.com/users?page=2&limit=20>; rel="next"
+   Content: [...20 users...]
+\`\`\`
+
+**Problem:** \`OFFSET 100000 LIMIT 20\` in SQL still scans 100,020 rows.
+
+### Cursor-Based (Scales to Millions)
+
+\`\`\`http
+GET /users?cursor=eyJpZCI6MTAwMH0&limit=20
+→ 200 OK
+   {
+     "data": [...20 users...],
+     "next_cursor": "eyJpZCI6MTAyMH0",
+     "has_more": true
+   }
+\`\`\`
+
+\`\`\`sql
+-- Behind the scenes: WHERE id > :cursor ORDER BY id LIMIT 20
+-- Always uses the index — O(log N) per page, not O(offset)
+\`\`\`
+
+---
+
+## API Versioning
+
+\`\`\`
+URL path versioning (most common):
+  GET /v1/users    → First version
+  GET /v2/users    → Breaking changes
+
+Header versioning:
+  GET /users
+  Accept-Version: 2
+  Accept: application/vnd.myapi.v2+json
+
+Query parameter (least recommended):
+  GET /users?version=2
+\`\`\`
+
+The URL approach is simplest for clients — they can see the version in every request log.
+
+---
+
+## Practice Questions
+
+1. **Q:** Why is \`PATCH /users/:id\` preferred over overloading \`POST\` for partial updates?
+   **A:** \`PATCH\` explicitly signals "partial update" — the client sends only the fields to change. \`POST\` has no idempotency guarantees. Using \`PATCH\` allows intermediate proxies and caching layers to understand the operation semantics.
+
+2. **Q:** Your GET endpoint returns a 500 error for a specific ID. What is the root cause likely?
+   **A:** The server code is throwing an unhandled exception for that specific resource — possibly a null pointer access, division by zero, or a missing related entity. Always check error logs and add structured error responses (including a request ID for correlation).
+
+3. **Q:** When would you use 201 Created vs 200 OK for a POST?
+   **A:** Use 201 Created when the POST creates a new resource (the standard behavior). Use 200 OK when the POST processes data but does not create a new resource (e.g., a search endpoint that accepts POST to handle complex query parameters).
+
+4. **Q:** Why does cursor-based pagination scale better than offset-based?
+   **A:** Offset-based: \`LIMIT 20 OFFSET 100000\` requires the database to scan and skip 100,000 rows. Cursor-based: \`WHERE id > 100000 LIMIT 20\` uses the primary key index to jump directly to the right position — O(1) per page regardless of total dataset size.
+
+5. **Q:** Should you return 404 or 403 when an authenticated user tries to access a resource they do not have permission to see?
+   **A:** Return 404 (Not Found). This prevents information leakage — if you return 403, the attacker learns the resource EXISTS, just that they cannot access it. 404 hides the existence of the resource entirely.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+REST API Design Rules:
+─────────────────────
+• Resources as nouns, not verbs
+• Use correct HTTP methods (GET, POST, PUT, PATCH, DELETE)
+• Use correct status codes (201, 204, 400, 401, 403, 404, 422)
+• Make GET and DELETE idempotent
+• Use cursor-based pagination for large datasets
+• Version via URL path (/v1/, /v2/)
+• Include error codes + messages in response body
+• Use ETags for conditional requests (304 Not Modified)
+• Always validate input — never trust the client
+• Document with OpenAPI / Swagger`,
             tags: ["API", "Design"],
           },
           {
@@ -7201,7 +9128,204 @@ func main() {
               "DataLoader: batches and deduplicates requests within a single tick — solves N+1.",
               "Persisted queries: send query hash instead of full query string — improves GET caching.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+REST APIs over-fetch and under-fetch. A user profile page might need \`GET /users/:id\`, \`GET /users/:id/posts\`, \`GET /users/:id/followers\` — 3 requests, 3 round trips. GraphQL lets you get all that data in one request, shaped exactly how you need it.
+
+But GraphQL comes with its own challenges: resolver efficiency (the N+1 problem), query cost analysis, and caching complexity.
+
+---
+
+## Schema — The Contract
+
+A GraphQL schema defines what data is available and what types it has:
+
+\`\`\`graphql
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  posts: [Post!]!
+  followers(first: Int = 10): [User!]!
+}
+
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  author: User!
+  createdAt: DateTime!
+}
+
+type Query {
+  user(id: ID!): User
+  users(page: Int, limit: Int): [User!]!
+  search(query: String!): [SearchResult!]!
+}
+
+type Mutation {
+  createUser(input: CreateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+}
+
+union SearchResult = User | Post
+\`\`\`
+
+Every field has a type: \`String\`, \`Int\`, \`ID\`, custom types, or **scalars** (DateTime, JSON). The \`!\` means non-nullable.
+
+---
+
+## Resolvers — The Implementation
+
+Each field in the schema has a corresponding **resolver** function:
+
+\`\`\`typescript
+const resolvers = {
+  Query: {
+    user: async (_, { id }, { db }) => {
+      return db.users.findByPk(id); // Returns one row
+    },
+    search: async (_, { query }, { db }) => {
+      const [users, posts] = await Promise.all([
+        db.users.search(query),
+        db.posts.search(query),
+      ]);
+      return [...users, ...posts];
+    },
+  },
+  User: {
+    posts: async (user, _, { db }) => {
+      // This resolver runs for EVERY User returned
+      return db.posts.findAll({ where: { authorId: user.id } });
+    },
+  },
+};
+\`\`\`
+
+---
+
+## The N+1 Problem
+
+When you query:
+
+\`\`\`graphql
+{
+  users {
+    name
+    posts { title }
+  }
+}
+\`\`\`
+
+The naive resolver runs:
+1. \`SELECT * FROM users\` (1 query)
+2. For each user: \`SELECT * FROM posts WHERE authorId = ?\` (N queries)
+
+If there are 100 users, that is 101 queries. **This is the N+1 problem.**
+
+### Solution: DataLoader
+
+DataLoader batches and deduplicates requests within a single request tick:
+
+\`\`\`typescript
+import DataLoader from "dataloader";
+
+// Create a DataLoader for posts by user ID
+const postLoader = new DataLoader(async (userIds: readonly number[]) => {
+  const posts = await db.posts.findAll({
+    where: { authorId: userIds }, // Single query!
+  });
+  // DataLoader expects results in the same order as userIds
+  return userIds.map(id => posts.filter(p => p.authorId === id));
+});
+
+const resolvers = {
+  User: {
+    posts: (user, _, { postLoader }) => postLoader.load(user.id),
+  },
+};
+\`\`\`
+
+Now the same query runs **2 queries total** (1 for users + 1 for all posts), regardless of how many users are returned.
+
+DataLoader also: (1) deduplicates — if Post.author is the same User referenced twice, it only loads once; (2) caches results within the request — subsequent loads hit the in-memory cache.
+
+---
+
+## Query Cost Analysis
+
+Without protection, a malicious query can bring down your server:
+
+\`\`\`graphql
+# This query could resolve to billions of items:
+query {
+  users {
+    followers {
+      followers {
+        followers {
+          name
+        }
+      }
+    }
+  }
+}
+\`\`\`
+
+Solutions: **query depth limiting**, **query cost analysis** (assign weights to fields), and **timeout**.
+
+\`\`\`typescript
+import { createComplexityRule, simpleEstimator } from "graphql-query-complexity";
+
+const rule = createComplexityRule({
+  estimators: [simpleEstimator({ defaultComplexity: 1 })],
+  maximumComplexity: 1000,
+  onComplete: (complexity) => console.log(\`Query complexity: \${complexity}\`),
+});
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** How does GraphQL differ from REST in terms of versioning?
+   **A:** GraphQL typically avoids versioning — you add new fields and deprecate old ones (\`@deprecated\` directive). Clients request only what they need, so old clients are unaffected by new fields. REST requires URL versioning (\`/v1/\`, \`/v2/\`) for breaking changes.
+
+2. **Q:** What is the difference between a Query and a Mutation in GraphQL?
+   **A:** Queries are side-effect-free reads — they can run in parallel. Mutations have side effects — they run sequentially in the order they are written. This guarantees predictable server state.
+
+3. **Q:** Why does DataLoader use batched loading instead of caching?
+   **A:** DataLoader's primary purpose is batching — collecting individual \`load()\` calls within a single tick and issuing one batched query. The per-request cache is a side effect that also deduplicates. DataLoader does NOT replace a persistent cache like Redis.
+
+4. **Q:** Your GraphQL API is slow for nested queries. What tools do you use to debug?
+   **A:** GraphQL response includes \`extensions\` where you can add resolver timing. Apollo Studio provides per-resolver tracing. Use \`@deprecated\` to guide clients away from expensive fields, and consider implementing **query cost analysis** to reject expensive queries.
+
+5. **Q:** When would you NOT use GraphQL?
+   **A:** (1) Simple CRUD apps where REST's over-fetching is negligible; (2) File upload APIs (GraphQL handles binary data poorly); (3) High-frequency, low-latency RPC-style calls (gRPC is better); (4) When your team is not comfortable with the complexity of resolver management and N+1 prevention.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+GraphQL Architecture:
+────────────────────
+Schema → Type definitions (SDL)
+Resolvers → Functions that fetch each field's data
+DataLoader → Batch + deduplicate per-request
+
+Key Concepts:
+  • Query: parallel, no side effects
+  • Mutation: sequential, has side effects
+  • Subscription: real-time via WebSocket
+  • N+1 problem: resolve with DataLoader
+  • Cost analysis: prevent malicious queries
+  • Persisted queries: send hash instead of full query
+
+Tools:
+  • Apollo Server / Yoga (server)
+  • Apollo Client / urql (client)
+  • GraphQL Code Generator (TS types from schema)
+  • DataLoader (batching/dedup library)`,
             tags: ["GraphQL", "API"],
           },
           {
@@ -7217,7 +9341,136 @@ func main() {
               "gRPC on HTTP/2: multiplexed streams — one TCP connection for all calls.",
               "When to use: internal microservice-to-microservice — not browser-facing APIs.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+For internal microservice communication, JSON over HTTP is wasteful. A simple JSON response like \`{"user": "Alice"}\` might take 20 bytes in JSON but only 4 bytes in a binary format. More importantly, HTTP/1.1 opens a new connection per request. gRPC uses **HTTP/2 multiplexing** — one connection, many concurrent calls.
+
+gRPC is the dominant protocol for server-to-server communication at companies like Google, Netflix, and Uber.
+
+---
+
+## Protocol Buffers — Binary Serialization
+
+Protobuf is a **schema language** + **binary serialization format**:
+
+\`\`\`protobuf
+syntax = "proto3";
+
+service UserService {
+  rpc GetUser (GetUserRequest) returns (User);
+  rpc ListUsers (ListUsersRequest) returns (stream User);
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  repeated Post posts = 4;
+}
+
+message Post {
+  string id = 1;
+  string title = 2;
+}
+\`\`\`
+
+Each field has a **number** (1, 2, 3) — this is the field's tag in the binary encoding. The \`repeated\` keyword means a list.
+
+\`\`\`
+JSON encoding of User: {"id":"1","name":"Alice","email":"alice@example.com"}
+  → ~60 bytes (with whitespace and quotes)
+
+Protobuf encoding of the same User:
+  0A 01 31 12 05 41 6C 69 63 65 1A 11 61 6C 69 63 65 40 65 78 61 6D 70 6C 65 2E 63 6F 6D
+  → ~29 bytes (50% smaller, no parsing needed)
+\`\`\`
+
+---
+
+## gRPC Streaming Types
+
+| Type | Client | Server | Use Case |
+|------|--------|--------|----------|
+| Unary | One request | One response | Standard RPC |
+| Server Streaming | One request | Many responses | Watch/feed endpoints |
+| Client Streaming | Many requests | One response | Upload/file processing |
+| Bidirectional Streaming | Many requests | Many responses | Chat, real-time game |
+
+\`\`\`go
+// Server-side streaming: send multiple messages
+func (s *userServer) ListUsers(req *pb.ListUsersRequest, stream pb.UserService_ListUsersServer) error {
+    for _, user := range users {
+        if err := stream.Send(user); err != nil {
+            return err
+        }
+    }
+    return nil
+}
+
+// Client-side: receive stream
+stream, _ := client.ListUsers(ctx, &pb.ListUsersRequest{})
+for {
+    user, err := stream.Recv()
+    if err == io.EOF { break }
+    fmt.Println(user.Name)
+}
+\`\`\`
+
+---
+
+## When to Use gRPC (and When Not To)
+
+**Use gRPC for:**
+- Internal microservice-to-microservice communication
+- Polyglot environments (one proto → code in 12+ languages)
+- Low-latency, high-throughput RPC
+- Streaming data pipelines
+
+**Do NOT use gRPC for:**
+- Browser-facing APIs (no native browser support — needs gRPC-Web + proxy)
+- Public APIs consumed by diverse clients (REST/GraphQL is more accessible)
+- Simple CRUD apps (overkill)
+
+---
+
+## Practice Questions
+
+1. **Q:** Why is Protobuf more compact than JSON?
+   **A:** Protobuf uses a binary encoding with varints (variable-length integers), field tags instead of field names, and no delimiters like commas or braces. JSON sends field names as strings in every message.
+
+2. **Q:** What is a \`.proto\` file's \`syntax = "proto3"\` and how does it differ from proto2?
+   **A:** proto3 removes custom default values, required/optional keywords, and extension support. It adds map types, any types, and JSON mapping. proto3 is simpler and the current standard.
+
+3. **Q:** How does gRPC handle errors?
+   **A:** gRPC uses a set of well-defined status codes (INVALID_ARGUMENT, NOT_FOUND, UNAVAILABLE, etc.) that are returned as trailing metadata with the response. All errors are structured — no HTTP status codes.
+
+4. **Q:** Can you use gRPC from a browser?
+   **A:** Not directly — browsers lack the HTTP/2 raw frame access that gRPC needs. Solutions: gRPC-Web (a proxy translates gRPC to HTTP/1.1 + base64), or Connect-Web (runs on standard HTTP).
+
+5. **Q:** What is the difference between gRPC and a message queue (Kafka/RabbitMQ)?
+   **A:** gRPC is synchronous RPC — the caller awaits a response. Kafka is asynchronous messaging — the producer sends and forgets, consumers read later. Use gRPC when you need a response; use Kafka for event-driven decoupling.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Protobuf → Binary encoding → smaller & faster than JSON
+One .proto file → generated code in 12+ languages
+
+Streaming Types:
+  • Unary: request → response
+  • Server streaming: request → response stream
+  • Client streaming: request stream → response
+  • Bidirectional: both streams
+
+Pros: efficient binary, HTTP/2 multiplexing, code generation
+Cons: no browser support, complex debugging (binary wire format),
+     larger initial setup than REST`,
             tags: ["gRPC", "API", "Protocols"],
           },
           {
@@ -7233,7 +9486,187 @@ func main() {
               "WebRTC: peer-to-peer data and media — bypasses server after ICE negotiation.",
               "Choosing: SSE for dashboards/feeds; WebSocket for chat/games; WebRTC for video calls.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Most web applications need real-time features: chat, notifications, live dashboards, collaborative editing. The traditional approach — HTTP polling — wastes bandwidth and adds latency.
+
+Three technologies handle real-time data: **WebSockets** (full-duplex, persistent), **SSE** (server-to-client only, simpler), and **WebRTC** (peer-to-peer, media). Choosing the right one determines your architecture's complexity, scalability, and latency.
+
+---
+
+## WebSocket — Full-Duplex, Persistent
+
+WebSocket starts as an HTTP request, then **upgrades** to a persistent TCP connection:
+
+\`\`\`http
+GET /chat HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Version: 13
+
+→ 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+\`\`\`
+
+After the upgrade, both client and server can send data at any time.
+
+\`\`\`javascript
+// Client
+const ws = new WebSocket("wss://chat.example.com");
+
+ws.onopen = () => {
+  ws.send(JSON.stringify({ type: "message", text: "Hello!" }));
+};
+
+ws.onmessage = (event) => {
+  console.log("Received:", JSON.parse(event.data));
+};
+
+ws.onclose = () => console.log("Disconnected");
+\`\`\`
+
+### WebSocket Server (Node.js with ws)
+
+\`\`\`javascript
+const { WebSocketServer } = require("ws");
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on("connection", (ws, req) => {
+  console.log("Client connected from", req.socket.remoteAddress);
+
+  ws.on("message", (data) => {
+    // Broadcast to all connected clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data);
+      }
+    });
+  });
+
+  ws.on("close", () => console.log("Client disconnected"));
+});
+\`\`\`
+
+---
+
+## Server-Sent Events (SSE) — One-Way Push
+
+SSE is **simpler** than WebSocket but **one-directional** — server pushes to client. It uses standard HTTP with a special content type:
+
+\`\`\`javascript
+// Server (Node.js)
+const http = require("http");
+
+http.createServer((req, res) => {
+  if (req.url === "/events") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      "Connection": "keep-alive",
+    });
+
+    // Send an event every 2 seconds
+    setInterval(() => {
+      res.write(\`data: {"time": "\${new Date().toISOString()}"}\\n\\n\`);
+    }, 2000);
+  }
+}).listen(3000);
+
+// Client (browser)
+const evtSource = new EventSource("/events");
+evtSource.onmessage = (event) => {
+  console.log("Server says:", JSON.parse(event.data));
+};
+// SSE auto-reconnects on connection loss — no code needed!
+\`\`\`
+
+---
+
+## Comparison
+
+| Feature | WebSocket | SSE | Long Polling |
+|---------|-----------|-----|-------------|
+| Direction | Bidirectional | Server → Client | Client → Server |
+| Protocol | ws:// / wss:// | HTTP | HTTP |
+| Auto-reconnect | Manual | Built-in | Manual |
+| Browser support | Everywhere | Everywhere (except IE) | Everywhere |
+| Scalability | Stateful server | Lightweight | Low (many open requests) |
+| Binary data | Native | Via base64 | Via base64 |
+| Use case | Chat, games | Dashboards, feeds | Fallback |
+
+---
+
+## WebRTC — Peer-to-Peer Media
+
+WebRTC enables direct browser-to-browser communication for video, audio, and data — no server needed for the data flow:
+
+\`\`\`javascript
+// Peer A: create offer
+const pc = new RTCPeerConnection();
+const offer = await pc.createOffer();
+await pc.setLocalDescription(offer);
+// Send offer to Peer B via signaling server (WebSocket)
+
+// Peer B: receive offer, create answer
+const pc = new RTCPeerConnection();
+await pc.setRemoteDescription(offer);
+const answer = await pc.createAnswer();
+await pc.setLocalDescription(answer);
+// Send answer back via signaling server
+
+// Now data flows directly P2P — server is only needed for signaling
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When should you use SSE instead of WebSocket?
+   **A:** When you only need server-to-client updates (dashboards, notifications, stock tickers). SSE auto-reconnects, works over standard HTTP (through enterprise proxies), and is simpler to implement.
+
+2. **Q:** Why do WebSocket servers need sticky sessions (or a pub/sub layer) when scaling horizontally?
+   **A:** A WebSocket connection is tied to the specific server instance that handled the upgrade. If the client reconnects and hits a different server, that server has no context. Use Redis Pub/Sub or a message broker to broadcast to all server instances.
+
+3. **Q:** What is the WebSocket ping/pong mechanism?
+   **A:** Either side can send a ping frame; the other must respond with a pong frame. This keeps the connection alive through proxies/NATs that time out idle connections. The \`ws\` library does this automatically with \`heartbeatInterval\`.
+
+4. **Q:** Can WebRTC work without a signaling server?
+   **A:** No. The signaling server is needed to exchange SDP offers/answers and ICE candidates. Once the connection is established, media/data flows directly P2P. The signaling server is never in the data path.
+
+5. **Q:** What happens if a WebSocket connection drops mid-message?
+   **A:** The partial message is lost. WebSocket has no built-in message acknowledgment. For reliable delivery, implement your own acknowledgment layer on top of WebSocket, or use a library like Socket.IO that adds it.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Real-Time Communication:
+────────────────────────
+WebSocket: full-duplex, persistent, low latency
+  • Stateful server — sticky sessions or pub/sub for scaling
+  • Raw binary or text frames
+  • Manual reconnection needed
+
+SSE (Server-Sent Events): one-way push, auto-reconnect
+  • Standard HTTP — works through all proxies
+  • text/event-stream content type
+  • Built-in reconnection with Last-Event-ID
+
+Long Polling: works everywhere, inefficient
+  • Client holds request open until server has data
+  • Server responds, client opens next request
+  • High latency, many open connections
+
+WebRTC: peer-to-peer, UDP-based
+  • Video/audio/data direct between browsers
+  • Requires signaling server (WebSocket + STUN/TURN)
+  • ICE for NAT traversal`,
             tags: ["Realtime", "Protocols", "API"],
           },
           {
@@ -7250,7 +9683,175 @@ func main() {
               "Hono middleware ecosystem: JWT auth, CORS, compression, OpenAPI docs generation from Zod schemas.",
               "When to use which: tRPC for full-stack TypeScript apps (monorepos); Hono for multi-runtime edge/API gateways.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Most TypeScript backends follow one of two patterns: REST (client chooses the URL, not the data shape) or GraphQL (flexible queries, complex infrastructure). But what if you could call server functions directly from your client code, with full type safety?
+
+**tRPC** does exactly this — it gives you end-to-end type safety without code generation or schema definition. **Hono** provides an ultra-lightweight router that runs on every runtime (Node, Deno, Bun, Cloudflare Workers). Together, they represent the new generation of API tooling.
+
+---
+
+## tRPC — Type-Safe RPC Without Codegen
+
+With tRPC, your server defines procedures; the client calls them like local functions:
+
+\`\`\`typescript
+// server/router.ts
+import { initTRPC } from "@trpc/server";
+import { z } from "zod";
+
+const t = initTRPC.create();
+
+export const appRouter = t.router({
+  // Query — for reading data (GET semantics)
+  getUserById: t.procedure
+    .input(z.string())
+    .query(async ({ input }) => {
+      const user = await db.user.findUnique({ where: { id: input } });
+      return user;
+    }),
+
+  // Mutation — for writing data (POST semantics)
+  createUser: t.procedure
+    .input(z.object({ name: z.string(), email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      return db.user.create({ data: input });
+    }),
+});
+
+export type AppRouter = typeof appRouter;
+\`\`\`
+
+\`\`\`typescript
+// client.ts
+import { createTRPCClient, httpBatchLink } from "@trpc/client";
+import type { AppRouter } from "./server/router";
+
+const client = createTRPCClient<AppRouter>({
+  links: [httpBatchLink({ url: "http://localhost:3000/trpc" })],
+});
+
+// Full type safety — autocomplete for procedure names and input types
+const user = await client.getUserById.query("user_123");
+//    ^? type: { id: string; name: string; email: string } | null
+
+const newUser = await client.createUser.mutate({
+  name: "Alice",
+  email: "alice@example.com",
+  // TypeScript error if you miss a required field or use wrong type
+});
+\`\`\`
+
+### How tRPC Achieves End-to-End Safety
+
+\`\`\`
+Traditional REST:
+  Server: define route, validate input, return JSON → NO type connection to client
+  Client: manually write fetch(), manually type response → OPPORTUNITY FOR MISMATCH
+
+tRPC:
+  Server: define procedure with Zod schema → INFERRED types exported
+  Client: import AppRouter type → FULL AUTOMATIC type inference
+\`\`\`
+
+---
+
+## Hono — Universal Edge Router
+
+Hono is a ~14KB router that runs everywhere:
+
+\`\`\`typescript
+import { Hono } from "hono";
+
+const app = new Hono();
+
+app.use("*", async (c, next) => {
+  console.log(\`\${c.req.method} \${c.req.url}\`);
+  await next();
+});
+
+app.get("/api/users/:id", (c) => {
+  const id = c.req.param("id");
+  return c.json({ id, name: "Alice" });
+});
+
+// Runs on: Node, Deno, Bun, Cloudflare Workers, Lambda@Edge
+export default app;
+
+// Cloudflare Workers: just export the app
+// Node: serve(app)
+// Bun: export default app
+\`\`\`
+
+### Hono + Zod for OpenAPI
+
+\`\`\`typescript
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+
+const schema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+app.post("/api/users", zValidator("json", schema), (c) => {
+  const { name, email } = c.req.valid("json");
+  return c.json({ created: true });
+});
+
+// Install @hono/swagger-ui to auto-generate OpenAPI docs
+\`\`\`
+
+---
+
+## tRPC vs Hono — When to Use Which
+
+| Aspect | tRPC | Hono |
+|--------|------|------|
+| Type safety | End-to-end (server → client types) | Standard TypeScript |
+| Use case | Full-stack TypeScript monorepo | Any API, edge functions |
+| Client lib | @trpc/client | fetch() or any client |
+| Multi-runtime | Node only (adapters exist) | Node, Deno, Bun, Workers |
+| OpenAPI | Not native | Via @hono/zod-openapi |
+
+---
+
+## Practice Questions
+
+1. **Q:** How does tRPC handle authentication?
+   **A:** tRPC provides middleware that runs before procedures. You extract the user from the request context in middleware, then throw TRPCError if unauthorized. The authenticated user object is available in every procedure's context.
+
+2. **Q:** Can tRPC work with React Server Components?
+   **Q:** Yes. tRPC v11 supports React Server Components — you can call server procedures directly in Server Components without an API call. The same type safety applies.
+
+3. **Q:** Why is Hono only 14KB when Express.js is ~200KB?
+   **A:** Hono is built from scratch for edge runtimes — no Node.js-specific APIs (no fs, no net), minimal abstractions, and tree-shakable middleware. Express carries decades of backward compatibility.
+
+4. **Q:** How does tRPC batch requests?
+   **A:** The \`httpBatchLink\` in @trpc/client collects all procedure calls within a single tick and sends them as one HTTP POST request. The server processes them and returns an array of results. This reduces HTTP overhead significantly.
+
+5. **Q:** When would you use Hono over Express?
+   **A:** When deploying to edge runtimes (Cloudflare Workers, Deno Deploy, Lambda@Edge), when you need the smallest possible bundle size, or when you want a modern middleware pattern with TypeScript-native design.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+tRPC:
+  • Server: router → procedures (query/mutation) → Zod input validation
+  • Client: createTRPCClient<AppRouter> → full type safety
+  • No codegen — types inferred from server implementation
+  • Built-in request batching (httpBatchLink)
+
+Hono:
+  • 14KB, universal (Node/Deno/Bun/Workers)
+  • Built-in JWT, CORS, compression middleware
+  • Zod validation via @hono/zod-validator
+  • OpenAPI generation via @hono/swagger-ui
+
+Choose tRPC for: full-stack TypeScript monorepos
+Choose Hono for: edge APIs, multi-runtime, API gateways`,
             tags: ["API", "TypeScript", "Edge"],
           },
           {
@@ -7267,7 +9868,174 @@ func main() {
               "Rate limiting strategies: token bucket (burst-friendly), sliding window (fair), concurrency-based (for long-lived connections).",
               "Gateway vs mesh: gateway handles north-south (client → service); service mesh handles east-west (service → service) — they complement, not replace.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+As your backend grows from one service to dozens, you need a single entry point that handles authentication, rate limiting, routing, and transformation. This is the **API Gateway** — the front door to your entire system.
+
+A good gateway simplifies client code (one URL to know) and centralizes cross-cutting concerns. A bad gateway becomes a bottleneck and a single point of failure.
+
+---
+
+## What an API Gateway Does
+
+\`\`\`
+                   ┌──────────────┐
+Client ──→        │              │──→ User Service
+                   │  API Gateway  │──→ Order Service
+Client ──→        │  (Kong/Envoy) │──→ Payment Service
+                   │              │──→ Analytics (fire-and-forget)
+                   └──────────────┘
+\`\`\`
+
+**Core responsibilities:**
+1. **Authentication** — validate JWT, OAuth tokens before traffic reaches services
+2. **Rate limiting** — prevent abuse with per-client or per-IP limits
+3. **Request transformation** — inject headers, rewrite paths, validate schemas
+4. **Routing** — path-based or header-based routing to backend services
+5. **Caching** — cache responses for GET endpoints
+6. **Canary routing** — route X% of traffic to a new version
+7. **Analytics** — log request metrics per route and per client
+
+---
+
+## Kong — The Open-Source Standard
+
+Kong uses a plugin architecture — every feature is a plugin:
+
+\`\`\`yaml
+# Kong declarative config (kong.yml)
+_format_version: "3.0"
+services:
+  - name: user-service
+    url: http://user-svc:3000
+    routes:
+      - name: user-route
+        paths:
+          - /api/users
+    plugins:
+      - name: jwt
+        config:
+          secret: "${JWT_SECRET}"
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+      - name: cors
+        config:
+          origins:
+            - "https://myapp.com"
+\`\`\`
+
+---
+
+## Rate Limiting Strategies
+
+| Strategy | How It Works | Best For |
+|----------|-------------|----------|
+| Token Bucket | Tokens refill at a fixed rate, burst allowed | APIs with bursty traffic |
+| Sliding Window | Counts requests in the last N seconds | Fair distribution |
+| Concurrency | Limits parallel in-flight requests | Long-running requests |
+| Fixed Window | Resets counter at the end of window | Simple, but allows spikes at window boundaries |
+
+\`\`\`javascript
+// Token bucket algorithm (simplified)
+class TokenBucket {
+  constructor(capacity, refillRate) {
+    this.capacity = capacity;
+    this.tokens = capacity;
+    this.refillRate = refillRate; // tokens per second
+    this.lastRefill = Date.now();
+  }
+
+  tryConsume(count = 1) {
+    this._refill();
+    if (this.tokens >= count) {
+      this.tokens -= count;
+      return true; // allowed
+    }
+    return false; // rate limited
+  }
+
+  _refill() {
+    const now = Date.now();
+    const elapsed = (now - this.lastRefill) / 1000;
+    this.tokens = Math.min(this.capacity,
+      this.tokens + elapsed * this.refillRate);
+    this.lastRefill = now;
+  }
+}
+\`\`\`
+
+---
+
+## Gateway vs Service Mesh
+
+These two are complementary, not competing:
+
+| Aspect | API Gateway | Service Mesh |
+|--------|-------------|--------------|
+| Traffic direction | North-south (external → service) | East-west (service → service) |
+| Location | Edge of the network | Sidecar alongside each service |
+| Examples | Kong, AWS API Gateway, Cloudflare | Istio, Linkerd, Consul Connect |
+| Features | Auth, rate limit, caching | mTLS, retries, circuit breaking, telemetry |
+
+\`\`\`
+                    ┌─── Service Mesh (east-west) ───┐
+                    │   mTLS between every service    │
+                    │                                 │
+API Gateway         │  ┌──────┐    ┌──────┐          │
+(north-south)──→    │  │ Svc A│←──→│ Svc B│          │
+External clients    │  └──────┘    └──────┘          │
+                    │      ↕           ↕              │
+                    │  ┌──────┐    ┌──────┐          │
+                    │  │ Svc C│←──→│ Svc D│          │
+                    │  └──────┘    └──────┘          │
+                    └────────────────────────────────┘
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a reverse proxy and an API gateway?
+   **A:** A reverse proxy (Nginx, HAProxy) handles TLS termination, routing, and buffering. An API gateway adds higher-level features: authentication, rate limiting, request transformation, API key management, and analytics. Kong and Envoy can act as both.
+
+2. **Q:** Your gateway rate-limits by client IP. What happens when multiple users share the same NAT IP (corporate office)?
+   **A:** They all share the same rate limit bucket. Fix: use API keys or JWT claims (tenant ID) as the rate limit key instead of IP address. Use a combination of IP + API key for defense in depth.
+
+3. **Q:** How does a gateway handle backend service failures?
+   **A:** With circuit breaker pattern — after N consecutive failures, the gateway stops routing to that backend for a timeout period. With health checks — the gateway removes unhealthy backends from the pool.
+
+4. **Q:** When should you NOT use an API gateway?
+   **A:** For simple services with 1-2 backends and no auth/rate limiting needs. Also, if your latency budget is extremely tight (<5ms), the gateway hop adds unavoidable overhead (typically 1-5ms).
+
+5. **Q:** How does AWS API Gateway differ from Kong?
+   **A:** AWS API Gateway is fully managed — no infrastructure to operate, automatic scaling, integrated with IAM and WAF. Kong is self-hosted or SaaS — more plugin options, runs on any cloud, but requires operational expertise.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+API Gateway Responsibilities:
+  • Authentication (JWT, OAuth, API keys)
+  • Rate limiting (token bucket, sliding window)
+  • Request/response transformation
+  • Routing (path, header, weight-based)
+  • Caching
+  • Analytics and logging
+  • Canary / blue-green routing
+
+Popular Gateways:
+  • Kong: plugin-based, Postgres-backed, 200+ plugins
+  • AWS API Gateway: managed, Lambda integration
+  • Envoy: high-performance, L7, used in service mesh
+  • Cloudflare API Gateway: edge-native, near-zero latency
+
+Gateway ≠ Service Mesh:
+  • Gateway: north-south (external → service)
+  • Mesh: east-west (service → service)
+  • Use BOTH in production`,
             tags: ["API Gateway", "Infrastructure", "Security"],
           },
         ],
@@ -7290,7 +10058,185 @@ func main() {
               "Compaction: background merge of SSTables to reclaim space and speed reads.",
               "Index types: primary (clustered), secondary, composite, partial, covering, full-text.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+When your app has 1,000 users, every query is fast. When it has 1,000,000 users, unindexed queries can take seconds. Understanding how databases index data is the difference between a responsive app and one that falls over under load.
+
+B-Tree indexes power PostgreSQL, MySQL, and SQLite. LSM-Tree indexes power Cassandra, RocksDB, and LevelDB. Choosing the right index type for your workload is a core database design skill.
+
+---
+
+## B-Tree — The Universal Index
+
+A B-Tree is a **balanced self-sorting tree** that maintains sorted data for efficient insertions, deletions, and lookups.
+
+\`\`\`
+                  [50]
+                /      \
+            [20, 30]    [70, 80]
+           /    |    \   |   \
+          /     |     \  |    \
+[10,15] [22,25] [35,40] [60] [75,78]
+\`\`\`
+
+### B+Tree — What Databases Actually Use
+
+B+Tree is a variant where **all data is in the leaf nodes**, and internal nodes only contain keys (pointers). Leaf nodes are linked for efficient range scans.
+
+\`\`\`
+B+Tree layout:
+        Internal nodes (routing only):
+              [50, 100]
+             /    |     \
+            /     |      \
+    Leaf nodes (data + next pointer):
+    [10,20,30] → [40,50,60] → [70,80,90] → ...
+     ↑ sorted    ↑ linked     ↑ for range queries
+\`\`\`
+
+\`\`\`sql
+-- PostgreSQL creates a B+Tree index by default
+CREATE INDEX idx_users_email ON users (email);
+
+-- This query uses the B+Tree → O(log N)
+SELECT * FROM users WHERE email = 'alice@example.com';
+
+-- Range query uses the linked leaf nodes → also O(log N) + sequential scan
+SELECT * FROM users WHERE email > 'a@' AND email < 'b@';
+\`\`\`
+
+### When B-Tree Excels
+
+- **Point lookups**: \`WHERE id = 42\` — O(log N) with ~3-4 page reads for 1M rows
+- **Range scans**: \`WHERE date > '2024-01-01'\` — sequential scan of linked leaf nodes
+- **ORDER BY**: tree is already sorted — no separate sort step needed
+
+### B-Tree Weaknesses
+
+- **Random writes**: inserting a row in the middle may cause page splits (expensive)
+- **Write amplification**: each write may touch multiple pages
+
+---
+
+## LSM-Tree — Write-Optimized
+
+Log-Structured Merge Trees optimize for **write-heavy** workloads. They are used by Cassandra, RocksDB, LevelDB, and ScyllaDB.
+
+\`\`\`
+┌────────────────────────────────────────────────────┐
+│ MemTable (in-memory, sorted)                       │
+│ [10, 20, 30, 40]                                   │
+└────────────────────┬───────────────────────────────┘
+                     │ Flush when full
+                     ▼
+┌────────────────────────────────────────────────────┐
+│ SSTable 0 (on disk, sorted, immutable)             │
+│ [5, 10, 15, 20]                                    │
+├────────────────────────────────────────────────────┤
+│ SSTable 1                                          │
+│ [1, 12, 25, 30]                                    │
+├────────────────────────────────────────────────────┤
+│ SSTable 2                                          │
+│ [2, 8, 18, 35]                                     │
+└────────────────────────────────────────────────────┘
+                     │ Compaction (background merge)
+                     ▼
+┌────────────────────────────────────────────────────┐
+│ SSTable (merged)                                   │
+│ [1, 2, 5, 8, 10, 12, 15, 18, 20, 25, 30, 35]     │
+└────────────────────────────────────────────────────┘
+\`\`\`
+
+### How LSM-Tree Writes Work
+
+1. **All writes go to MemTable** (in-memory sorted data structure) — this is fast!
+2. When the MemTable is full, it is flushed to disk as an **SSTable** (immutable, sorted)
+3. **Reads** check MemTable first, then SSTables from newest to oldest
+4. **Compaction** merges SSTables in the background to reclaim space and speed reads
+
+\`\`\`sql
+-- Cassandra INSERT is actually an append — no in-place update
+INSERT INTO users (id, name, email) VALUES (1, 'Alice', 'alice@example.com');
+-- This write goes to the MemTable immediately → extremely fast
+-- The old version of the row (if any) is not touched until compaction
+\`\`\`
+
+### LSM-Tree vs B-Tree
+
+| Aspect | B+Tree | LSM-Tree |
+|--------|--------|----------|
+| Write throughput | Moderate (page splits) | High (append-only) |
+| Read throughput | High (single structure) | Moderate (check multiple SSTables) |
+| Space amplification | Low | High (multiple copies) |
+| Write amplification | Moderate | High (compaction) |
+| Typical use | PostgreSQL, MySQL | Cassandra, RocksDB, LevelDB |
+
+---
+
+## Index Types
+
+| Type | Description | Best For |
+|------|-------------|----------|
+| Primary (clustered) | Table data sorted by primary key | Point lookups by PK |
+| Secondary | Separate structure pointing to rows | Queries by non-PK columns |
+| Composite | Index on multiple columns | Queries filtering by all columns |
+| Partial | Index on a subset of rows (\`WHERE status = 'active'\`) | Filtered queries |
+| Covering | Includes all columns needed by the query | Index-only scans (no table access) |
+| Full-text | Tokenized text search | \`LIKE '%word%'\` or text search |
+| GiST/GIN | PostgreSQL generalized search | JSONB, arrays, geospatial |
+
+\`\`\`sql
+-- Partial index: only index active users
+CREATE INDEX idx_active_users ON users (email)
+  WHERE status = 'active';
+
+-- Covering index: query never touches the table
+CREATE INDEX idx_user_cover ON users (email) INCLUDE (name, avatar_url);
+SELECT email, name, avatar_url FROM users WHERE email = 'alice@example.com';
+-- This reads ONLY the index — no table heap access!
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why does a B+Tree index use linked leaves?
+   **A:** For efficient range scans (\`WHERE age BETWEEN 20 AND 30\`). Once the start of the range is found via the tree (O(log N)), the linked leaves allow sequential traversal — no need to navigate the tree again for each row.
+
+2. **Q:** Cassandra uses LSM-Trees. Why are writes so fast but reads slower than PostgreSQL?
+   **A:** Writes go to an in-memory MemTable (no disk seek). Reads must check the MemTable, then multiple SSTables (newest first). If an SSTable is large, reads may need to search several files. Compaction helps by merging SSTables.
+
+3. **Q:** What happens when a B+Tree page is full and you insert a new row?
+   **A:** The page **splits** — half the entries move to a new page, and a new entry is added to the parent page. This can cascade up the tree. Page splits are expensive and cause write amplification.
+
+4. **Q:** When would you use a partial index over a full index?
+   **A:** When you always query with a specific WHERE condition. For example, if \`WHERE status = 'active'\` appears in 90% of queries, indexing only active rows makes the index smaller and faster.
+
+5. **Q:** What is an index-only scan and why is it fast?
+   **A:** When all columns needed by a query are in the index itself (not the table), PostgreSQL never reads the table. This is called an index-only scan and is 2-5x faster than a regular index scan.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+B+Tree (PostgreSQL, MySQL):
+  • Balanced tree, all data in linked leaf nodes
+  • O(log N) reads, moderate writes
+  • Great for: point lookups, range scans, ORDER BY
+
+LSM-Tree (Cassandra, RocksDB):
+  • Append-only writes to MemTable → flushed to SSTables
+  • Background compaction merges SSTables
+  • Great for: write-heavy workloads
+  • Bad for: point reads (check multiple structures)
+
+Index Types:
+  Primary (clustered) → table data in PK order
+  Secondary → separate B+Tree pointing to heap
+  Composite → (col1, col2, col3) — leftmost prefix rule
+  Partial → WHERE clause restricts indexed rows
+  Covering → INCLUDE extra columns for index-only scans`,
             tags: ["Databases", "Systems", "Performance"],
           },
           {
@@ -7307,7 +10253,179 @@ func main() {
               "2PL (Two-Phase Locking): acquire all locks before releasing any — prevents anomalies, causes deadlocks.",
               "WAL (Write-Ahead Log): changes written to log before applying to pages — enables crash recovery.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Databases lie about consistency. The default isolation level (Read Committed in PostgreSQL, Read Committed in most databases) allows many anomalies. If you write banking software, booking systems, or inventory management, you must understand what **Serializable** actually means — and why you probably accept Read Committed.
+
+This article explains ACID properties, the four isolation levels, the anomalies they prevent, and how **MVCC** (Multi-Version Concurrency Control) makes concurrent reads efficient.
+
+---
+
+## ACID — The Four Guarantees
+
+| Property | What It Means | Violation Example |
+|----------|--------------|-------------------|
+| **Atomicity** | All-or-nothing execution | Partial debit — money removed from account A but not added to account B |
+| **Consistency** | Data obeys all rules (constraints, triggers) | Invalid state after transaction |
+| **Isolation** | Concurrent transactions don't interfere | Reading uncommitted data |
+| **Durability** | Committed data survives crashes | Data lost after power failure |
+
+---
+
+## Isolation Levels and Anomalies
+
+| Level | Dirty Read | Non-Repeatable Read | Phantom Read | Write Skew |
+|-------|-----------|---------------------|--------------|------------|
+| Read Uncommitted | Possible | Possible | Possible | Possible |
+| Read Committed | Prevented | Possible | Possible | Possible |
+| Repeatable Read | Prevented | Prevented | Possible (PG: prevented) | Possible |
+| Serializable | Prevented | Prevented | Prevented | Prevented |
+
+### Dirty Read — Reading Uncommitted Data
+
+\`\`\`sql
+-- Transaction A                    Transaction B
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+                                    SELECT balance FROM accounts WHERE id = 1;
+                                    -- Reads 900 (uncommitted!)
+ROLLBACK;                           -- A's change is rolled back
+                                    -- B read 900 that never actually existed
+\`\`\`
+
+### Non-Repeatable Read — Same Row, Different Values
+
+\`\`\`sql
+-- Transaction A                    Transaction B
+SELECT balance FROM accounts WHERE id = 1;
+-- Returns 1000
+                                    UPDATE accounts SET balance = 500 WHERE id = 1;
+                                    COMMIT;
+SELECT balance FROM accounts WHERE id = 1;
+-- Returns 500 (different from first read!)
+\`\`\`
+
+### Phantom Read — New Rows Appear
+
+\`\`\`sql
+-- Transaction A                    Transaction B
+SELECT COUNT(*) FROM orders WHERE amount > 100;
+-- Returns 5
+                                    INSERT INTO orders (amount) VALUES (200);
+                                    COMMIT;
+SELECT COUNT(*) FROM orders WHERE amount > 100;
+-- Returns 6 (a phantom appeared!)
+\`\`\`
+
+### Write Skew — Two Transactions Write to Different Rows, Breaking a Constraint
+
+\`\`\`sql
+-- Rule: at least one doctor must be on call
+-- Both doctors try to go off call simultaneously
+
+-- Transaction A (Doctor Alice)      Transaction B (Doctor Bob)
+UPDATE doctors SET on_call = false  UPDATE doctors SET on_call = false
+WHERE name = 'Alice';              WHERE name = 'Bob';
+COMMIT;                             COMMIT;
+-- Now zero doctors on call — constraint violated
+\`\`\`
+
+Write skew is not prevented by Read Committed or Repeatable Read. Only **Serializable** prevents it.
+
+---
+
+## MVCC — Multi-Version Concurrency Control
+
+PostgreSQL, Oracle, MySQL (InnoDB), and SQL Server (snapshot isolation) use MVCC to allow **readers never block writers**:
+
+\`\`\`
+┌──────────────────────────────────────────────┐
+│  Row "balance = 1000"                         │
+│                                               │
+│  Version 1 (created by T1): balance = 1000    │
+│    → visible to transactions started before T2 │
+│                                               │
+│  Version 2 (created by T2): balance = 900     │
+│    → visible to transactions started after T2  │
+│                                               │
+│  T3 (started before T2) still sees version 1  │
+│  T4 (started after T2) sees version 2         │
+└──────────────────────────────────────────────┘
+\`\`\`
+
+\`\`\`sql
+-- In PostgreSQL (Read Committed):
+-- T1: BEGIN;
+-- T1: UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+-- T2 (concurrent): SELECT balance FROM accounts WHERE id = 1;
+-- T2 sees the OLD balance (1000) — transaction T1's uncommitted change is invisible
+-- T1: COMMIT;
+-- T2: SELECT balance FROM accounts WHERE id = 1;
+-- T2 sees the NEW balance (900) — T1 is committed
+\`\`\`
+
+---
+
+## WAL — Write-Ahead Log
+
+Before any change is applied to the actual database pages, it is written to the **WAL** (Write-Ahead Log). This enables crash recovery:
+
+\`\`\`
+1. Transaction starts
+2. Changes written to WAL (on disk)
+3. ⚡ Power failure
+4. On restart, database reads WAL
+5. Committed changes are replayed (REDO)
+6. Uncommitted changes are rolled back (UNDO)
+
+WAL fsync is the critical performance bottleneck — every COMMIT must fsync the WAL.
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** In PostgreSQL's Repeatable Read, are phantom reads possible?
+   **A:** No. PostgreSQL implements Repeatable Read using Snapshot Isolation — every statement in the transaction sees a snapshot of committed data taken at the first statement. Phantom reads are not possible because the snapshot is fixed.
+
+2. **Q:** What is the difference between optimistic and pessimistic locking?
+   **A:** Pessimistic locking (\`SELECT ... FOR UPDATE\`) locks rows upfront — prevents conflicts but reduces concurrency. Optimistic locking assumes no conflict and checks at commit time (version column) — higher concurrency but needs retry logic.
+
+3. **Q:** Why does increasing isolation level usually reduce database performance?
+   **A:** Higher isolation requires more locking (or more aggressive MVCC snapshot management). Serializable may need actual lock waits or abort transactions with conflicts. Read Uncommitted has no locking overhead but allows anomalies.
+
+4. **Q:** How do you choose the right isolation level?
+   **A:** Read Committed is the default for most apps — it prevents dirty reads. Use Repeatable Read for financial transactions where you read data twice. Use Serializable for critical constraints (doctor on-call example) where write skew is possible.
+
+5. **Q:** What happens to MVCC versions that are no longer visible to any active transaction?
+   **A:** PostgreSQL's **VACUUM** process cleans up dead tuple versions. Without VACUUM, the table grows indefinitely (bloat). Autovacuum runs automatically but can fall behind under heavy write load.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+ACID:
+  Atomicity: all-or-nothing (WAL-based rollback)
+  Consistency: data obeys all rules
+  Isolation: transactions don't interfere (MVCC)
+  Durability: committed data survives (WAL fsync)
+
+Anomalies by Isolation Level:
+  Read Uncommitted → dirty read, non-repeatable read, phantom, write skew
+  Read Committed   → non-repeatable read, phantom, write skew
+  Repeatable Read  → write skew (PG also prevents phantom)
+  Serializable     → none
+
+MVCC:
+  • Each row has multiple versions
+  • Readers see a snapshot — never block writers
+  • Writers don't block readers (in PostgreSQL)
+  • Old versions cleaned by VACUUM
+
+WAL:
+  • Changes written to log BEFORE data pages
+  • fsync on commit — the main write latency bottleneck
+  • Enables crash recovery (REDO + UNDO)`,
             tags: ["Databases", "Advanced"],
           },
           {
@@ -7323,7 +10441,169 @@ func main() {
               "Join algorithms: nested loop, hash join, merge join — choose based on set sizes and indexes.",
               "N+1 mitigation: use JOINs or eager loading, not a query per row.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+You write a query: \`SELECT * FROM users WHERE email = 'alice@example.com'\`. The database returns the result. But between your query and the result, the **query planner** made dozens of decisions: which index to use, which join algorithm to pick, whether to sort or use a hash.
+
+Understanding how the planner works — and how to read its output — is the difference between writing queries that work and writing queries that work fast on millions of rows.
+
+---
+
+## How the Planner Works
+
+The planner converts your SQL into a **physical execution plan**:
+
+\`\`\`
+SQL query:
+  SELECT u.name, o.total
+  FROM users u
+  JOIN orders o ON u.id = o.user_id
+  WHERE u.email = 'alice@example.com'
+
+Logical plan:
+  Projection [u.name, o.total]
+    └── Join (condition: u.id = o.user_id)
+          ├── Scan users (filter: email = 'alice@example.com')
+          └── Scan orders
+
+Physical plan (planner's choice):
+  Projection [u.name, o.total]
+    └── Nested Loop Join
+          ├── Index Scan: users (idx_users_email)
+          │     → finds 1 user row
+          └── Index Scan: orders (idx_orders_user_id)
+                → finds matching orders for that user
+\`\`\`
+
+---
+
+## EXPLAIN and EXPLAIN ANALYZE
+
+\`\`\`sql
+EXPLAIN (ANALYZE, BUFFERS)
+SELECT u.name, o.total
+FROM users u
+JOIN orders o ON u.id = o.user_id
+WHERE u.email = 'alice@example.com';
+\`\`\`
+
+Output:
+
+\`\`\`
+Nested Loop  (cost=8.30..12.34 rows=5 width=36)
+  (actual time=0.12..0.18 rows=3 loops=1)
+  Buffers: shared hit=4
+  → Index Scan using idx_users_email on users u
+      (cost=0.28..8.29 rows=1 width=17)
+      (actual time=0.05..0.06 rows=1 loops=1)
+      Index Cond: (email = 'alice@example.com')
+      Buffers: shared hit=2
+  → Index Scan using idx_orders_user_id on orders o
+      (cost=0.28..4.05 rows=1 width=19)
+      (actual time=0.06..0.07 rows=3 loops=1)
+      Index Cond: (user_id = u.id)
+      Buffers: shared hit=2
+\`\`\`
+
+**Reading the output:**
+- \`cost=8.30..12.34\` — estimated cost (arbitrary units, first number = startup, second = total)
+- \`actual time=0.12..0.18\` — actual time in milliseconds
+- \`rows=3\` — actual rows returned
+- \`loops=1\` — how many times this node was executed
+- \`shared hit=4\` — 4 pages read from PostgreSQL's shared buffer (cache hit — fast!)
+
+---
+
+## Join Algorithms
+
+| Algorithm | When It's Used | Complexity |
+|-----------|---------------|------------|
+| **Nested Loop** | One table is small (~1 row) | O(N × M) — but with index, O(N log M) |
+| **Hash Join** | No index, one table fits in memory | O(N + M) — build hash table, probe |
+| **Merge Join** | Both tables sorted on join key | O(N + M) — merge two sorted lists |
+
+\`\`\`sql
+-- Forces a hash join (if no index)
+SET enable_nestloop = off;
+EXPLAIN (ANALYZE)
+SELECT * FROM big_table b JOIN small_table s ON b.id = s.id;
+-- → Hash Join
+--   Hash Cond: (s.id = b.id)
+--   → Seq Scan on small_table s
+--   → Hash
+--       → Seq Scan on big_table b
+\`\`\`
+
+---
+
+## Common Query Performance Issues
+
+### Index Not Used
+
+\`\`\`sql
+-- BAD: Function on column prevents index usage
+SELECT * FROM users WHERE LOWER(email) = 'alice@example.com';
+
+-- FIX 1: Index on expression
+CREATE INDEX idx_users_email_lower ON users (LOWER(email));
+
+-- FIX 2: Store lowercase in a separate column
+-- FIX 3: Use case-insensitive collation (PostgreSQL 15+)
+\`\`\`
+
+### Wrong Join Type
+
+\`\`\`sql
+-- If the planner mis-estimates row counts, it picks the wrong join
+-- Fix: UPDATE STATISTICS or ANALYZE to refresh table statistics
+VACUUM ANALYZE users;
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What does \`cost=0.28..8.29\` mean in PostgreSQL's EXPLAIN output?
+   **A:** The first number (0.28) is the startup cost — cost to return the first row. The second (8.29) is the total cost to return all rows. These are arbitrary cost units based on I/O, CPU, and row count estimates.
+
+2. **Q:** Why does the planner sometimes choose a sequential scan when an index exists?
+   **A:** If the table is small (fits in a few pages), a sequential scan is faster than reading the index + table. The planner estimates that reading 100% of a 4-page table via index (random I/O) costs more than scanning 4 pages sequentially.
+
+3. **Q:** What makes the planner's estimate wrong?
+   **A:** Stale statistics (not running ANALYZE), correlated columns (city and zip code are correlated but the planner assumes independence), or lack of statistics for expression indexes.
+
+4. **Q:** How does a database execute \`ORDER BY ... LIMIT 10\` efficiently?
+   **A:** If the ORDER BY column is indexed, the database scans the index in order and stops after 10 rows (top-N sort). Without an index, it must sort the entire result set and then take 10 rows.
+
+5. **Q:** What is the difference between \`EXPLAIN\` and \`EXPLAIN ANALYZE\`?
+   **A:** \`EXPLAIN\` shows the estimated plan only — it does not execute the query. \`EXPLAIN ANALYZE\` actually executes the query and shows actual times and row counts. NEVER run EXPLAIN ANALYZE on a production database for write queries — it will actually write data.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Query Planner:
+  SQL → Logical Plan → Physical Plan → Execution
+
+EXPLAIN output:
+  cost = (startup..total) — arbitrary units
+  actual time = (startup..total) — ms (ANALYZE only)
+  rows = estimated (or actual with ANALYZE)
+  loops = times this node ran
+  Buffers: shared hit = cache, shared read = disk
+
+Join Algorithms:
+  Nested Loop: O(N×M) — good when one side is small
+  Hash Join: O(N+M) — good for large, unsorted data
+  Merge Join: O(N+M) — good for already-sorted data
+
+Performance Tips:
+  • ANALYZE regularly for accurate statistics
+  • No functions on indexed columns in WHERE
+  • Use covering indexes for index-only scans
+  • VACUUM to prevent table bloat (PostgreSQL)
+  • Monitor slow queries with pg_stat_statements`,
             tags: ["Databases", "SQL"],
           },
           {
@@ -7339,7 +10619,177 @@ func main() {
               "Graph (Neo4j): native relationships as first-class citizens — social graphs, fraud detection.",
               "Choosing: think about access patterns first, then pick the model that fits.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Relational databases (PostgreSQL, MySQL) are great for structured data with relationships and strict consistency. But they struggle with: flexible schemas, horizontal scaling, high write throughput, and large-scale time-series data.
+
+NoSQL databases trade away relational guarantees (joins, ACID transactions, strict schemas) for scalability and flexibility. There are 4 main categories, each optimized for different access patterns.
+
+---
+
+## Document Stores (MongoDB)
+
+Store data as **JSON-like documents** — no schema enforcement, nested data is natural.
+
+\`\`\`javascript
+// MongoDB document — each document can have different fields
+{
+  _id: ObjectId("..."),
+  name: "Alice",
+  email: "alice@example.com",
+  address: { city: "NYC", zip: "10001" },  // nested
+  tags: ["premium", "vip"],                  // array
+  metadata: { lastLogin: ISODate("...") }    // mixed types
+}
+\`\`\`
+
+\`\`\`javascript
+// MongoDB query
+db.users.find({ "address.city": "NYC", tags: "premium" })
+  .sort({ name: 1 })
+  .limit(20);
+
+// MongoDB aggregation pipeline (like a query pipeline)
+db.orders.aggregate([
+  { $match: { status: "shipped" } },
+  { $group: { _id: "$customer_id", total: { $sum: "$amount" } } },
+  { $sort: { total: -1 } },
+  { $limit: 10 },
+]);
+\`\`\`
+
+**Best for:** Content management, catalogs, user profiles (nested, evolving data)
+**Avoid when:** Many relations between entities, need multi-object ACID transactions
+
+---
+
+## Key-Value Stores (Redis)
+
+Simple \`{key: value}\` — O(1) lookups, no queries, no relations.
+
+\`\`\`bash
+# Redis CLI
+SET session:abc123 '{"userId": 42, "expires": 1700000000}'
+GET session:abc123
+EXPIRE session:abc123 3600  # auto-expire after 1 hour
+
+# Data structures
+LPUSH queue:notifications "user_42"
+BRPOP queue:notifications 0  # blocking pop — wait for messages
+
+SADD online_users "alice"
+SISMEMBER online_users "alice"  # check membership
+
+ZADD leaderboard 1000 "player1"  # sorted set
+ZREVRANGE leaderboard 0 9        # top 10
+\`\`\`
+
+**Best for:** Caching, sessions, real-time counters, pub/sub, distributed locks
+**Avoid when:** Complex queries, relations, or data larger than available RAM
+
+---
+
+## Wide-Column Stores (Cassandra)
+
+Data is stored in rows, but each row can have different columns. The **partition key** determines which node stores the data — critical for scalability.
+
+\`\`\`sql
+-- Cassandra CQL: looks like SQL but behavior is very different
+CREATE TABLE events (
+  user_id UUID,
+  timestamp TIMESTAMP,
+  event_type TEXT,
+  payload TEXT,
+  PRIMARY KEY ((user_id), timestamp)  -- partition key = user_id, clustering = timestamp
+) WITH CLUSTERING ORDER BY (timestamp DESC);
+
+-- This query is fast — it hits ONE partition
+SELECT * FROM events WHERE user_id = ? ORDER BY timestamp DESC LIMIT 100;
+
+-- This query is SLOW — it needs to SCATTER-GATHER across ALL partitions
+SELECT * FROM events WHERE event_type = 'click';  -- 🚫 No partition key!
+\`\`\`
+
+**Best for:** Time-series data, IoT sensor data, event logging, anything write-heavy
+**Avoid when:** You need joins, secondary indexes on high-cardinality columns, ad-hoc queries
+
+---
+
+## Graph Databases (Neo4j)
+
+Relationships are first-class citizens — each edge is stored natively with its own properties and direction.
+
+\`\`\`cypher
+// Neo4j Cypher query
+CREATE (alice:User {name: "Alice"})
+CREATE (bob:User {name: "Bob"})
+CREATE (alice)-[:FOLLOWS {since: 2024}]->(bob)
+
+// Find who Alice follows, who follows them back
+MATCH (alice:User {name: "Alice"})-[:FOLLOWS]->(followed)<-[:FOLLOWS]-(mutual:User)
+RETURN mutual.name
+\`\`\`
+
+**Best for:** Social networks, fraud detection, recommendation engines, dependency graphs
+**Avoid when:** Simple CRUD, single-entity workloads
+
+---
+
+## Choosing the Right NoSQL Store
+
+| Access Pattern | Best Choice | Why |
+|---------------|-------------|-----|
+| Nested, evolving documents | MongoDB | Flexible schema, nested queries |
+| Simple O(1) lookups | Redis | In-memory, microsecond latency |
+| Time-series writes | Cassandra | Partition key = node, no contention |
+| Relationship-heavy queries | Neo4j | Native edge storage — 1000x faster than SQL joins on deep graphs |
+| Full-text search | Elasticsearch | Inverted index, relevance scoring |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why does MongoDB recommend embedding related data instead of referencing it?
+   **A:** MongoDB does not support joins. Embedding (nested documents within a document) allows fetching all related data in one query. Referencing requires multiple queries (or $lookup aggregation, which is slow).
+
+2. **Q:** Cassandra requires you to specify the partition key in every query. Why?
+   **A:** Cassandra distributes data across nodes by hashing the partition key. Without specifying the partition key, the query must contact all nodes (scatter-gather). This is inefficient and can overwhelm the cluster.
+
+3. **Q:** How does Redis handle data that doesn't fit in RAM?
+   **A:** It doesn't. Redis is an in-memory database — all data must fit in RAM. If it doesn't, configure eviction policies (LFU, LRU) or use Redis Cluster to distribute data across multiple machines.
+
+4. **Q:** When would you use PostgreSQL's JSONB instead of MongoDB?
+   **A:** When you need both flexible JSON documents AND relational features (joins, ACID transactions, foreign keys). PostgreSQL's JSONB supports indexing for JSON fields while maintaining full SQL capabilities.
+
+5. **Q:** What is the CAP trade-off for each NoSQL category?
+   **A:** MongoDB (CP — prefers consistency over availability during partitions), Cassandra (AP — always available, eventual consistency), Redis (CP — single-threaded, strong consistency within a node; AP with Cluster mode).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+NoSQL Categories:
+─────────────────
+Document (MongoDB)
+  • Schema-flexible JSON documents
+  • Embed related data, don't join
+  • Great for: catalogs, profiles, content
+
+Key-Value (Redis)
+  • O(1) operations, in-memory
+  • Data structures: String, Hash, List, Set, Sorted Set
+  • Great for: cache, session, real-time
+
+Wide-Column (Cassandra)
+  • Partition key → data distribution
+  • Must query by partition key
+  • Great for: time-series, IoT, event logs
+
+Graph (Neo4j)
+  • Native relationship storage
+  • Deep traversal queries
+  • Great for: social, fraud, recommendations`,
             tags: ["Databases", "NoSQL"],
           },
           {
@@ -7356,8 +10806,154 @@ func main() {
               "Eventual consistency: replicas converge over time — no global ordering guarantee.",
               "Consensus (Raft/Paxos): leader election + quorum writes for strong consistency.",
             ],
-            content: "// Content coming soon",
-            tags: ["Distributed Systems", "Databases"],
+            content: `## Why This Matters (Read This First)
+
+When your database is in one data center and users are on the other side of the world, network latency adds 100-300ms to every query. When you have 1M simultaneous users, a single PostgreSQL instance cannot handle the load.
+
+Distributed databases solve these problems, but they force trade-offs. The **CAP theorem** states you cannot have all three of: Consistency, Availability, and Partition Tolerance. Understanding this trade-off is essential for designing distributed systems.
+
+But CAP is also over-simplified. **PACELC** provides a more nuanced model.
+
+---
+
+## CAP Theorem Explained
+
+**CAP says:** A distributed data store can provide at most 2 of 3 guarantees:
+
+| Guarantee | What It Means |
+|-----------|---------------|
+| **C**onsistency | Every read returns the most recent write |
+| **A**vailability | Every request gets a (non-error) response |
+| **P**artition tolerance | The system works despite network failures |
+
+\`\`\`
+CP (Consistency + Partition)         AP (Availability + Partition)
+    ┌────┐          ┌────┐                ┌────┐          ┌────┐
+    │Node│←──⛔──→│Node│                │Node│←──⛔──→│Node│
+    │ A  │ network │ B  │                │ A  │ network │ B  │
+    └────┘ failure └────┘                └────┘ failure └────┘
+    B refuses reads                     B accepts reads
+    until synchronized                  with stale data
+    (Consistency)                       (Available but stale)
+
+Examples:                             Examples:
+  MongoDB (default)                     Cassandra
+  PostgreSQL (sync repl)                DynamoDB (default)
+  etcd, Zookeeper                       Riak
+\`\`\`
+
+### Key Insight: Partition Tolerance Is Mandatory
+
+In real-world networks, partitions (network failures) WILL happen. You cannot opt out of partition tolerance. So the real choice is:
+
+**CP (Consistency over Availability):** When a network partition occurs, the system stops accepting writes/reads on the minority side. You get consistency but partial unavailability.
+
+**AP (Availability over Consistency):** When a network partition occurs, both sides accept writes. When the partition heals, data is merged. You get availability but potentially stale reads (eventual consistency).
+
+---
+
+## PACELC — The Better Model
+
+PACELC adds the **partition-free case** to the trade-off:
+
+**P**artition → choose **A**vailability or **C**onsistency
+**E**lse (no partition) → choose **L**atency or **C**onsistency
+
+\`\`\`
+     Is there a partition?
+          /        \
+        YES         NO
+       /              \
+   Choose:           Choose:
+  A or C?           L or C?
+
+  DynamoDB: AP      DynamoDB: L (eventually consistent reads)
+  MongoDB:  CP      MongoDB:  C (strong consistency primary)
+  Cassandra: AP     Cassandra: L (tunable consistency)
+  etcd:     CP      etcd:      C (Raft, strong)
+\`\`\`
+
+---
+
+## Consistency Models From Weak to Strong
+
+| Model | What You Get | Example |
+|-------|-------------|---------|
+| **Eventual** | Replicas converge over time. Reads may return stale data. | DNS, DynamoDB (default) |
+| **Causal** | Related operations are seen in order. Unrelated operations can be concurrent. | MongoDB (causal consistency sessions) |
+| **Read-after-write** | Reading your own writes is immediate. Other writes may be delayed. | DynamoDB (consistent read) |
+| **Strong (Linearizability)** | Every read returns the most recent write across all replicas. | etcd, Spanner, PostgreSQL sync replication |
+
+---
+
+## Consensus Protocols — Raft and Paxos
+
+For **strong consistency** in a distributed system, nodes must agree on a value despite failures. This is consensus.
+
+\`\`\`
+Raft's consensus flow:
+┌─────┐  ┌─────┐  ┌─────┐
+│Leader│→ │Follower│→ │Follower│
+└──┬──┘  └─────┘  └─────┘
+   │
+   │ 1. Client sends write to Leader
+   │ 2. Leader appends to log
+   │ 3. Leader sends AppendEntries to Followers
+   │ 4. Majority acknowledge (quorum = N/2 + 1)
+   │ 5. Leader commits and responds to client
+   │
+   If Leader fails → new election → new Leader takes over
+\`\`\`
+
+**etcd** (used by Kubernetes) is a Raft-based key-value store. It provides linearizable reads and writes at the cost of ~1-5ms write latency (quorum sync).
+
+---
+
+## Practice Questions
+
+1. **Q:** Can a distributed database be both CP and AP simultaneously?
+   **A:** No. During a network partition, you must choose: reject writes (CP) or accept writes on both sides (AP). You can have different behavior per operation (DynamoDB offers eventually consistent reads and strongly consistent reads), but the same operation cannot be both.
+
+2. **Q:** What happens in a CP system (etcd) when a partition occurs?
+   **A:** If the leader is isolated from the majority, it steps down. The majority side elects a new leader and continues. The minority side cannot form a quorum and rejects all writes. Availability is lost on the minority side.
+
+3. **Q:** What is "eventual consistency" in practical terms?
+   **A:** If no new writes are made to a DynamoDB table, all replicas will eventually have the same data. The convergence time depends on the replication latency (typically milliseconds to seconds). If writes keep coming, some replicas may always lag.
+
+4. **Q:** Raft requires a majority (quorum) for writes. Why N/2+1 and not N?
+   **A:** N/2+1 is the smallest subset that overlaps with any other N/2+1 subset. If the leader fails, any new leader must contact a majority to find the latest committed entry. A majority of any two majorities always overlap, guaranteeing that the most recent committed entry is not lost.
+
+5. **Q:** When would you use DynamoDB (AP) vs Spanner (CP)?
+   **A:** Use DynamoDB for global-scale applications where availability during partitions matters more than immediate consistency (e.g., shopping cart, session data). Use Spanner for financial systems where consistency is non-negotiable (e.g., account balances, inventory counts).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+CAP Theorem:
+  Choose 2 of 3: Consistency, Availability, Partition tolerance
+  In practice: partition tolerance is mandatory → CP or AP
+
+PACELC:
+  If Partition → choose Availability or Consistency
+  If no Partition → choose Latency or Consistency
+
+Consistency Models (stronger → slower):
+  Eventual → Causal → Read-after-write → Strong (Linearizable)
+
+Consensus (for strong consistency):
+  Raft: leader-based, log replication, majority quorum
+  Paxos: more complex, no single leader (used in Spanner)
+  Both tolerate N/2 - 1 failures
+
+Real-world choices:
+  etcd, Zookeeper → CP, strong consistency (Raft/Zab)
+  DynamoDB, Cassandra → AP, eventual consistency
+  MongoDB → CP (default), tunable
+  Spanner → CP (TrueTime clock for external consistency)
+  PostgreSQL streaming replication → CP (sync), AP (async)`,
+            tags: ["Databases", "NoSQL"],
           },
           {
             id: "be-redis",
@@ -7373,7 +10969,187 @@ func main() {
               "Distributed lock (Redlock): acquire lock across N independent Redis instances.",
               "Redis Cluster: sharding with consistent hashing across 16,384 hash slots.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Redis is often misunderstood as "just a cache." In reality, it is a multi-model database: a cache, a message broker, a rate limiter, a distributed lock manager, and a real-time analytics engine — all in one.
+
+With sub-millisecond latency and operations like SET, LPUSH, and ZADD, Redis is the Swiss Army knife of backend infrastructure.
+
+---
+
+## Data Structures
+
+\`\`\`bash
+# String — the basic building block
+SET user:42:name "Alice"
+GET user:42:name
+INCR page:visits            # atomic increment — perfect for counters
+SET lock:resource "ok" NX EX 10  # SET If Not Exists, expires in 10s
+
+# List — ordered collection (queue/stack)
+LPUSH notifications:42 "new_message"
+BRPOP notifications:42 0   # blocking pop — wait for next message
+
+# Hash — group related fields
+HSET user:42 name "Alice" email "alice@example.com"
+HGETALL user:42
+
+# Set — unordered unique members
+SADD game:players "alice"
+SISMEMBER game:players "alice"  # O(1) membership check
+SINTER store:1:items store:2:items  # intersection — common items
+
+# Sorted Set — unique members with scores
+ZADD leaderboard 1000 "player1" 500 "player2"
+ZREVRANGE leaderboard 0 2 WITHSCORES  # top 3
+ZINCRBY leaderboard 50 "player1"      # increment score
+
+# Stream — append-only log (like Kafka but simpler)
+XADD sensor:temp * temperature 22.5  # * = auto-generated ID
+XREAD COUNT 10 STREAMS sensor:temp 0  # read from start
+XREADGROUP GROUP mygroup consumer1 COUNT 1 STREAMS sensor:temp >  # consumer group
+\`\`\`
+
+---
+
+## Expiry and Eviction
+
+\`\`\`bash
+# TTL — time-to-live per key
+SET session:abc123 "user_data" EX 3600  # expires in 1 hour
+TTL session:abc123  # how many seconds left
+PERSIST session:abc123  # remove expiry
+
+# When memory is full, Redis evicts keys based on policy:
+# CONFIG SET maxmemory-policy allkeys-lru
+# Policies:
+#   noeviction:        return errors (default)
+#   allkeys-lru:       evict least recently used keys
+#   allkeys-lfu:       evict least frequently used keys (Redis 4+)
+#   volatile-ttl:      evict keys with shortest TTL first
+#   volatile-lru/lfu:  evict keys with expiry set
+\`\`\`
+
+---
+
+## Persistence — RDB vs AOF
+
+| Feature | RDB (Snapshot) | AOF (Append-Only File) |
+|---------|---------------|----------------------|
+| Data format | Binary dump | Redis protocol text |
+| Write trigger | Periodic save | Every write (fsync) |
+| File size | Compact | Larger (records every command) |
+| Recovery speed | Fast (load once) | Slow (replay all commands) |
+| Data loss | Between snapshots | 1 fsync interval (default 1s) |
+
+\`\`\`bash
+# RDB: save every 60 seconds if 1000+ keys changed
+save 60 1000
+
+# AOF: fsync every second (good balance)
+appendonly yes
+appendfsync everysec
+
+# Best practice: use BOTH
+# RDB for fast restarts, AOF for durability
+aof-use-rdb-preamble yes
+\`\`\`
+
+---
+
+## Redis Patterns
+
+### Distributed Lock (Redlock)
+
+\`\`\`javascript
+// This is NOT sufficient for production locks
+const lock = await redis.set("lock:resource", "owner", "NX", "EX", 30);
+
+// Redlock: acquire lock on N independent Redis instances (N=5 minimum)
+// Only if majority succeed → lock acquired
+// Requires: Redis client with Redlock implementation
+\`\`\`
+
+### Rate Limiting
+
+\`\`\`bash
+# Sliding window rate limit: max 100 requests per IP per minute
+INCR rate:{ip}:{current_minute}
+EXPIRE rate:{ip}:{current_minute} 60
+# Then check: if value > 100 → reject
+\`\`\`
+
+### Pub/Sub (Fire-and-Forget)
+
+\`\`\`bash
+# Publisher
+PUBLISH channel:updates "user:42 changed"
+
+# Subscriber
+SUBSCRIBE channel:updates
+# Note: subscribers DO NOT receive messages published before they subscribed
+# Use Streams for persistent messaging
+\`\`\`
+
+---
+
+## Redis Cluster
+
+\`\`\`
+┌──────────────────────────────────────────────────┐
+│  Redis Cluster (16,384 hash slots)               │
+│                                                    │
+│  Node 1 (slots 0-5460)     Node 2 (5461-10922)    │
+│  Node 3 (10923-16383)      Node 4 (replica)       │
+│                                                    │
+│  Key → CRC16(key) % 16384 → pick node             │
+└──────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why is Redis single-threaded and how does it handle concurrent connections?
+   **A:** Redis uses a single-threaded event loop (like Node.js) — one thread processes all commands sequentially using epoll/kqueue. This eliminates locking overhead. I/O is non-blocking, so the thread never waits.
+
+2. **Q:** What happens if a Redis AOF file grows to 10GB?
+   **A:** Redis can rewrite the AOF in the background (BGREWRITEAOF) — it reads the current dataset and writes a minimal AOF that captures only the current state, not the entire command history.
+
+3. **Q:** Can you use Redis as a primary database (not just a cache)?
+   **A:** Yes, with caveats: Redis is in-memory (must fit in RAM), has limited query capabilities (no SQL), and persistence is not as robust as PostgreSQL (potential data loss on crash with default config).
+
+4. **Q:** What is the difference between Redis Pub/Sub and Redis Streams?
+   **A:** Pub/Sub is fire-and-forget — messages are lost if no subscriber is connected. Streams are persistent (stored in memory) — consumers can join anytime and read from any point, with consumer groups for load balancing.
+
+5. **Q:** How does Redis Cluster handle node failures?
+   **A:** If a master node fails and its replica (if configured) takes over, the cluster continues. If a node fails with no replica, the hash slots it owns become unavailable — any request to those slots gets a MOVED error.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Redis Data Structures:
+  String → caching, counters, locks (SET NX EX)
+  List   → queues, stacks (LPUSH, BRPOP)
+  Hash   → object fields (HSET, HGETALL)
+  Set    → tags, membership (SADD, SINTER)
+  Sorted Set → leaderboards, rate limiting (ZADD, ZRANK)
+  Stream → event log, message queue (XADD, XREAD)
+
+Persistence:
+  RDB: periodic snapshots — fast recovery, some data loss
+  AOF: every command logged — durable, slower recovery
+  Best: both (AOF with RDB preamble)
+
+Eviction (when memory full):
+  allkeys-lru: most common — evict least recently used
+  allkeys-lfu: evict least frequently used
+  volatile-ttl: evict shortest TTL first
+  noeviction: return errors (default)
+
+Cluster: 16,384 hash slots, key → CRC16 mod 16384 → node`,
             tags: ["Redis", "Caching"],
           },
         ],
@@ -7396,7 +11172,216 @@ func main() {
               "Interface Adapters: translate data between use cases and external formats (HTTP, DB).",
               "Hexagonal: ports (interfaces) + adapters (implementations) — same idea, different framing.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Most applications start simple and become unmaintainable. Business logic leaks into controllers, SQL queries are scattered across the codebase, and changing a feature breaks three unrelated things.
+
+**Clean Architecture** and **Hexagonal Architecture** solve this by enforcing a **dependency rule**: inner layers (business logic) must NOT depend on outer layers (frameworks, databases, HTTP). This keeps your business rules testable, framework-independent, and long-lived.
+
+---
+
+## The Dependency Rule
+
+\`\`\`
+     ┌─────────────────────────────┐
+     │    Frameworks & Drivers      │  ← Outer layer
+     │  (HTTP, DB, Queue, UI)       │     Changes often
+     │   Depends on ↓               │
+     ├─────────────────────────────┤
+     │    Interface Adapters        │  ← Presenters, Controllers,
+     │   (Controllers, Presenters,  │     Gateways
+     │    Repository implementations)│    Depends on ↓
+     ├─────────────────────────────┤
+     │    Application / Use Cases   │  ← Orchestrate business rules
+     │   (CreateUser, PlaceOrder)   │     Depends on ↓
+     ├─────────────────────────────┤
+     │    Domain / Entities         │  ← Core business rules
+     │   (User, Order, Product)    │     Independent of everything
+     └─────────────────────────────┘
+\`\`\`
+
+### Layer 1: Entities (Domain)
+
+Pure business logic. No framework annotations, no database imports, no HTTP concepts.
+
+\`\`\`typescript
+// domain/entities/User.ts
+export class User {
+  constructor(
+    public readonly id: string,
+    public email: Email, // Value Object — not a string
+    public name: string,
+  ) {}
+
+  changeEmail(newEmail: Email): void {
+    if (this.email.equals(newEmail)) {
+      throw new Error("New email is the same as current email");
+    }
+    this.email = newEmail;
+    // Domain event could be raised here
+  }
+}
+
+// Value Object
+export class Email {
+  private constructor(public readonly value: string) {}
+
+  static create(value: string): Email {
+    if (!value.includes("@")) throw new Error("Invalid email");
+    return new Email(value);
+  }
+
+  equals(other: Email): boolean {
+    return this.value === other.value;
+  }
+}
+\`\`\`
+
+### Layer 2: Use Cases (Application)
+
+Orchestrate entities and call repository interfaces. No database or HTTP code.
+
+\`\`\`typescript
+// application/use-cases/ChangeEmailUseCase.ts
+export class ChangeEmailUseCase {
+  constructor(
+    private userRepository: UserRepository, // INTERFACE — not implementation
+    private emailService: EmailService,      // INTERFACE
+  ) {}
+
+  async execute(userId: string, newEmail: string): Promise<void> {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new Error("User not found");
+
+    const email = Email.create(newEmail);
+
+    if (await this.emailService.isEmailTaken(email)) {
+      throw new Error("Email already in use");
+    }
+
+    user.changeEmail(email);
+    await this.userRepository.save(user);
+  }
+}
+\`\`\`
+
+### Layer 3: Interface Adapters
+
+Translate between the use case and the external world.
+
+\`\`\`typescript
+// infrastructure/controllers/UserController.ts
+// This depends on Express.js — OK, it's the outer layer
+export class UserController {
+  constructor(private changeEmail: ChangeEmailUseCase) {}
+
+  async handle(req: Request, res: Response): Promise<void> {
+    try {
+      await this.changeEmail.execute(req.params.id, req.body.email);
+      res.status(200).json({ message: "Email updated" });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+}
+
+// infrastructure/repositories/PostgresUserRepository.ts
+export class PostgresUserRepository implements UserRepository {
+  constructor(private db: Pool) {}
+
+  async findById(id: string): Promise<User | null> {
+    const result = await this.db.query("SELECT * FROM users WHERE id = $1", [id]);
+    if (result.rows.length === 0) return null;
+    return this.toDomain(result.rows[0]);
+  }
+
+  async save(user: User): Promise<void> {
+    await this.db.query(
+      "UPDATE users SET email = $1 WHERE id = $2",
+      [user.email.value, user.id],
+    );
+  }
+
+  private toDomain(row: any): User {
+    return new User(row.id, Email.create(row.email), row.name);
+  }
+}
+\`\`\`
+
+---
+
+## Hexagonal Architecture (Ports & Adapters)
+
+The same concept, different naming:
+
+\`\`\`
+           ┌──────────────────────┐
+           │  Application Core    │
+           │                      │
+           │   ┌──────────────┐   │
+  ┌────────┼──→│   Inbound    │───┼──→ HTTP Controller (Adapter)
+  │        │   │   Ports      │   │
+  │        │   │(Interfaces)  │   │
+  │        │   └──────────────┘   │
+  │        │                      │
+  │        │   ┌──────────────┐   │
+  │        │   │   Outbound   │   │
+  │        │   │   Ports      │───┼──→ PostgreSQL (Adapter)
+  │        │   │(Interfaces)  │   │
+  │        │   └──────────────┘   │
+  │        └──────────────────────┘
+  │
+  User clicks "Save"
+\`\`\`
+
+| Clean Architecture | Hexagonal Architecture |
+|-------------------|----------------------|
+| Use Case | Inbound Port |
+| Controller | Inbound Adapter |
+| Repository Interface | Outbound Port |
+| Repository Implementation | Outbound Adapter |
+
+---
+
+## Practice Questions
+
+1. **Q:** Why should your domain entities not have framework annotations (e.g., \`@Entity\`, \`@Column\`)?
+   **A:** Framework coupling makes it impossible to test business logic without the framework, and changing the framework requires changing every entity. Domain entities should be plain objects (POJOs/POPOs).
+
+2. **Q:** How do you handle transactions in Clean Architecture?
+   **A:** The transaction boundary should wrap the use case execution. A unit of work pattern starts a transaction at the beginning of a use case and commits it at the end. The domain layer knows nothing about transactions.
+
+3. **Q:** What is the difference between an Entity and a Value Object?
+   **A:** Entities have identity (two Users with the same name are different). Value Objects have no identity — two Email objects with "a@b.com" are equal. Value Objects are immutable.
+
+4. **Q:** Does Clean Architecture mean you cannot use an ORM?
+   **A:** No, but the ORM belongs in the outer layer (Interface Adapters). The domain entities should NOT be ORM entities. You map between domain entities and ORM entities in the repository implementation.
+
+5. **Q:** When is Clean Architecture over-engineering?
+   **A:** For CRUD apps with simple business logic (a blog, a to-do app). The abstraction overhead is not justified. Use Clean Architecture when business rules are complex (financial calculations, compliance logic, multi-step workflows).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Clean Architecture Layers:
+  1. Entities (Domain) — pure business rules, no dependencies
+  2. Use Cases — orchestrate entities, depend on interfaces
+  3. Interface Adapters — translate use case ↔ external world
+  4. Frameworks — HTTP, DB, Queue — the outermost detail
+
+Dependency Rule:
+  • Inner layers NEVER import from outer layers
+  • Dependencies POINT INWARD (interfaces in core, impl in outer)
+
+Hexagonal Naming:
+  • Inbound Port = Use Case interface
+  • Inbound Adapter = Controller
+  • Outbound Port = Repository interface
+  • Outbound Adapter = Repository implementation (Postgres, Redis, etc.)
+
+Benefits: testable without frameworks, swap DB/HTTP without touching logic`,
             tags: ["Architecture", "Patterns"],
           },
           {
@@ -7412,7 +11397,173 @@ func main() {
               "Domain Events: things that happened in the domain — drive integration between contexts.",
               "Repository pattern: abstract data access behind a collection-like interface.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Domain-Driven Design (DDD) is a methodology for modeling complex business domains. It is not about technology — it is about creating a **shared understanding** between developers and domain experts (business people).
+
+When the codebase's model matches the business's mental model, changing the software becomes easier because the business logic is explicit, not hidden in SQL queries or controller methods.
+
+---
+
+## Ubiquitous Language
+
+The most important DDD concept: use the same words in code as the business uses in conversation.
+
+\`\`\`
+Business says:                     Code uses:
+"Submit an order"                  SubmitOrderUseCase
+"Customer is blocked"              Customer.block()
+"Payment was declined"             PaymentDeclined event
+"Refund the line item"             LineItem.refund()
+\`\`\`
+
+If the business says "order" and your code has \`Order\` but also \`Purchase\` and \`Transaction\` — you have a ubiquitous language problem. The code does not match the mental model.
+
+---
+
+## Bounded Context
+
+A **Bounded Context** is an explicit boundary within which a model is valid. The same word ("Customer") can mean different things in different contexts:
+
+\`\`\`
+┌───────────────────────────────────────────────┐
+│ Sales Context              Support Context      │
+│                              │                  │
+│ Customer:                    │ Customer:         │
+│   • name                     │   • name          │
+│   • email                    │   • email         │
+│   • credit limit             │   • ticket count  │
+│   • shipping address         │   • satisfaction  │
+│                              │   • last contact  │
+│ "Customer buys things"       │ "Customer needs   │
+│                              │  help"            │
+└───────────────────────────────────────────────┘
+\`\`\`
+
+Each context has its own model, its own database (optionally), and its own team. Communication between contexts happens via **events** or **anti-corruption layers**.
+
+---
+
+## Aggregate
+
+An **Aggregate** is a cluster of entities that must be consistent together. One entity is the **Aggregate Root** — the only entry point for external access.
+
+\`\`\`typescript
+// Order Aggregate
+class Order {
+  // Aggregate Root — the only way to access OrderItems
+  private items: OrderItem[] = [];
+  private status: OrderStatus;
+
+  addItem(productId: string, quantity: number, price: Money): void {
+    if (this.status !== OrderStatus.DRAFT) {
+      throw new Error("Can only add items to draft orders");
+    }
+    this.items.push(new OrderItem(productId, quantity, price));
+  }
+
+  removeItem(productId: string): void {
+    if (this.status !== OrderStatus.DRAFT) {
+      throw new Error("Can only remove items from draft orders");
+    }
+    this.items = this.items.filter(i => i.productId !== productId);
+  }
+
+  submit(): void {
+    if (this.items.length === 0) {
+      throw new Error("Cannot submit empty order");
+    }
+    this.status = OrderStatus.SUBMITTED;
+    // Raise domain event
+    this.events.push(new OrderSubmittedEvent(this.id, this.items));
+  }
+}
+
+// OrderItem is an Entity within the Order Aggregate
+class OrderItem {
+  constructor(
+    public readonly productId: string,
+    public readonly quantity: number,
+    public readonly price: Money,
+  ) {}
+}
+\`\`\`
+
+**Rule:** External code can only hold a reference to the Aggregate Root (Order), not to internal entities (OrderItem). All changes must go through the Root.
+
+---
+
+## Domain Events
+
+Things that happened in the domain — past tense, immutable.
+
+\`\`\`typescript
+class OrderSubmittedEvent {
+  constructor(
+    public readonly orderId: string,
+    public readonly items: OrderItem[],
+    public readonly occurredAt: Date = new Date(),
+  ) {}
+}
+
+// In the Order aggregate:
+submit(): void {
+  // ...validations...
+  this.status = OrderStatus.SUBMITTED;
+  this.addEvent(new OrderSubmittedEvent(this.id, this.items));
+}
+
+// In the application layer:
+class SubmitOrderUseCase {
+  async execute(orderId: string): Promise<void> {
+    const order = await this.orderRepo.find(orderId);
+    order.submit();
+    await this.orderRepo.save(order); // save dispatches events
+    // Events are published after successful save
+  }
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Bounded Context and a microservice?
+   **A:** A Bounded Context is a DESIGN boundary — it defines where a model applies. A microservice is a DEPLOYMENT boundary. Ideally, one Bounded Context = one microservice, but a context can also contain multiple services if the model is consistent.
+
+2. **Q:** Why should the Aggregate Root be the only way to access internal entities?
+   **A:** To maintain consistency. If external code can directly modify OrderItem's quantity, it might set it to -1 or exceed inventory. By funneling all changes through Order.addItem(), the aggregate enforces invariants.
+
+3. **Q:** What is an anti-corruption layer?
+   **A:** A translation layer between two contexts. If the Support Context calls the Sales Context's API, the Sales API response should be translated into the Support Context's own Customer model — not used directly.
+
+4. **Q:** Can an Aggregate contain other Aggregates?
+   **A:** An aggregate can reference another AGGREGATE by its ID, but it should NOT hold a direct object reference. For example, Order holds userId (not a User object). Loading the entire User aggregate for order operations would conflate boundaries.
+
+5. **Q:** When should you NOT use DDD?
+   **A:** When the domain is simple (CRUD with no complex business rules), when there is no domain expert to collaborate with, or when the team is small and the project has tight deadlines. DDD requires investment in modeling and communication.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+DDD Building Blocks:
+───────────────────
+Ubiquitous Language — same words in code and business
+Bounded Context — model boundary, translation at edges
+Entity — has identity (User, Order)
+Value Object — no identity, immutable (Email, Money)
+Aggregate — consistency boundary with Aggregate Root
+Domain Event — something that happened (past tense)
+Repository — collection-like access to aggregates
+Domain Service — stateless logic not fitting an entity
+
+Strategic Design:
+  • Core Domain — competitive advantage (build yourself)
+  • Supporting Domain — important but not core (build or buy)
+  • Generic Subdomain — commodity (use off-the-shelf)
+  • Context Map — how bounded contexts relate`,
             tags: ["Architecture", "DDD", "Patterns"],
           },
           {
@@ -7429,7 +11580,174 @@ func main() {
               "API Gateway: single entry point — handles routing, auth, rate limiting, aggregation.",
               "Service mesh (Istio/Linkerd): infrastructure-level mTLS, observability, traffic management.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+A monolith starts simple: one codebase, one database, one deploy. As the team grows, deployment coordination becomes painful, a change in any module requires full regression testing, and scaling means scaling the entire application.
+
+Microservices decompose the monolith into independently deployable services. Each service has its own database, its own API, and its own team. The benefits are real, but so is the **distributed systems tax** — network failures, data consistency challenges, and operational complexity.
+
+---
+
+## Decomposition Strategies
+
+### By Business Capability
+
+\`\`\`
+┌──────────────────────────────────────────────────┐
+│                  E-Commerce                        │
+│                                                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐│
+│  │ Catalog  │ │  Cart    │ │  Orders  │ │Payment││
+│  └──────────┘ └──────────┘ └──────────┘ └───────┘│
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌───────┐│
+│  │Shipping  │ │Inventory │ │  Users   │ │Search ││
+│  └──────────┘ └──────────┘ └──────────┘ └───────┘│
+└──────────────────────────────────────────────────┘
+\`\`\`
+
+Each capability owns its data and exposes it through an API.
+
+---
+
+## Communication Patterns
+
+### Synchronous (HTTP/gRPC)
+
+Simple, but creates temporal coupling:
+
+\`\`\`typescript
+// Order Service calls Inventory Service synchronously
+async function placeOrder(order: Order): Promise<void> {
+  // Check inventory — HTTP call to Inventory Service
+  const inventory = await httpClient.post(
+    "http://inventory-service/check", { items: order.items }
+  );
+
+  if (!inventory.available) {
+    throw new Error("Out of stock");
+  }
+
+  // Save order
+  await orderRepo.save(order);
+}
+\`\`\`
+
+**Problem:** If Inventory is down, Order fails too (cascading failure).
+
+### Asynchronous (Message Broker)
+
+Decoupled, but adds eventual consistency:
+
+\`\`\`typescript
+// Order Service publishes event
+async function placeOrder(order: Order): Promise<void> {
+  await orderRepo.save({
+    ...order,
+    status: "PENDING",
+  });
+
+  await eventBus.publish("order.created", {
+    orderId: order.id,
+    items: order.items,
+  });
+  // Order is now PENDING — Payment Service will process it
+}
+
+// Payment Service listens
+eventBus.subscribe("order.created", async (event) => {
+  const payment = await processPayment(event.orderId);
+  if (payment.success) {
+    await eventBus.publish("order.paid", { orderId: event.orderId });
+  } else {
+    await eventBus.publish("order.payment_failed", { orderId: event.orderId });
+  }
+});
+\`\`\`
+
+---
+
+## Saga Pattern — Managing Distributed Transactions
+
+There is no ACID across microservices. A saga is a sequence of local transactions where each step publishes an event triggering the next step. If a step fails, **compensating actions** undo previous steps.
+
+\`\`\`
+Order Saga:
+  1. Order Service: Create order (PENDING)
+  2. Payment Service: Reserve payment
+  3. Inventory Service: Reserve inventory
+  4. Shipping Service: Create shipment
+  5. Order Service: Mark order as CONFIRMED
+
+If step 4 fails:
+  → Compensate step 3: Release inventory
+  → Compensate step 2: Release payment
+  → Step 1: Mark order as FAILED
+\`\`\`
+
+**Choreography (event-based):** Each service publishes events and reacts to others' events.
+**Orchestration (command-based):** A central coordinator (orchestrator) tells each service what to do.
+
+---
+
+## API Gateway
+
+The gateway is the single entry point for all external clients:
+
+\`\`\`
+                      ┌──────────┐
+  Mobile App ───────→ │          │──→ Catalog Service
+                      │  API     │──→ Cart Service
+  Web App ──────────→ │  Gateway │──→ Order Service
+                      │          │──→ User Service
+  Third Party ──────→ │          │──→ Search Service
+                      └──────────┘
+\`\`\`
+
+Gateway handles: auth, rate limiting, routing, response aggregation, protocol translation.
+
+---
+
+## Practice Questions
+
+1. **Q:** When is a monolith actually better than microservices?
+   **A:** When the team is small (<10), the application has clear boundaries within a single codebase, and deployment frequency is low. A well-structured monolith (with module boundaries) is simpler to develop, test, and deploy.
+
+2. **Q:** What is the "distributed monolith" anti-pattern?
+   **A:** When microservices share a database, call each other synchronously in a chain, and cannot be deployed independently. This has all the complexity of microservices with none of the benefits.
+
+3. **Q:** How do you handle schema changes in event-driven microservices?
+   **A:** Use schema registry (Avro, Protobuf Schema Registry) to enforce compatibility. Consumers must handle both old and new event formats during rolling upgrades. Never delete or rename fields — only add optional ones.
+
+4. **Q:** What is the difference between orchestration and choreography sagas?
+   **A:** Orchestration: a central saga manager tells each service what to do — easier to visualize and track but creates a single point of complexity. Choreography: each service reacts to events — more decoupled but harder to understand the overall flow.
+
+5. **Q:** How do you debug a request that spans 5 microservices?
+   **A:** Distributed tracing (OpenTelemetry + Jaeger/Zipkin) — each service propagates a trace ID, and spans are collected and visualized. Without tracing, debugging cross-service issues is nearly impossible.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Microservice Traits:
+  • Independently deployable
+  • Owns its data (database per service)
+  • Communicates via API (sync) or events (async)
+  • Scalable independently
+
+Communication:
+  Synchronous: HTTP/gRPC — simple, temporal coupling
+  Asynchronous: message broker (Kafka/RabbitMQ) — decoupled, eventual consistency
+
+Saga Patterns:
+  Choreography: events drive the flow — decoupled but hard to trace
+  Orchestration: a coordinator drives the flow — centralized but clear
+
+Distributed Systems Tax:
+  1. Network failures (timeouts, retries, circuit breakers)
+  2. Data consistency (eventual consistency, sagas)
+  3. Operational complexity (deploy, monitor, debug 20+ services)
+  4. Team coordination (API contracts, versioning, testing)`,
             tags: ["Architecture", "Distributed Systems"],
           },
           {
@@ -7445,7 +11763,174 @@ func main() {
               "Event Sourcing: store every state change as an immutable event — derive current state by replaying.",
               "CQRS: separate write model (commands → events) from read model (projections).",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Event-Driven Architecture (EDA) changes the fundamental model of communication. Instead of one service calling another (synchronous, blocking), services **publish events** and **react to events**. This decouples producers from consumers — the producer does not know or care who listens.
+
+Kafka is the dominant event store. Unlike traditional message queues (RabbitMQ, SQS), Kafka is a **distributed commit log** — events are persisted and can be replayed.
+
+---
+
+## Kafka — Distributed Commit Log
+
+\`\`\`
+┌────────────────────────────────────────────────────┐
+│  Kafka Cluster                                      │
+│                                                      │
+│  Topic: "orders"                                    │
+│  ┌────────┬────────┬────────┬────────┬────────┐    │
+│  │Part 0  │Part 1  │Part 2  │Part 3  │Part 4  │    │
+│  │┌──────┐│┌──────┐│┌──────┐│┌──────┐│┌──────┐│    │
+│  ││msg 0 │││msg 0 │││msg 0 │││msg 0 │││msg 0 ││    │
+│  ││msg 1 │││msg 1 │││msg 1 │││msg 1 │││      ││    │
+│  ││msg 2 │││msg 2 │││      │││      │││      ││    │
+│  ││msg 3 │││      │││      │││      │││      ││    │
+│  │└──────┘│└──────┘│└──────┘│└──────┘│└──────┘│    │
+│  └────────┴────────┴────────┴────────┴────────┘    │
+│  ↑                                    ↑             │
+│  Producer (writes to end)             Consumer      │
+│                                       (reads from   │
+│                                        offset, can  │
+│                                        replay from  │
+│                                        start)       │
+└────────────────────────────────────────────────────┘
+\`\`\`
+
+### Key Concepts
+
+| Concept | What It Is |
+|---------|------------|
+| **Topic** | A named stream of events |
+| **Partition** | An ordered, immutable sequence of messages (a single log file) |
+| **Offset** | A message's position within a partition (0, 1, 2, ...) |
+| **Producer** | Publishes messages to a topic partition |
+| **Consumer** | Reads messages from a topic at a specific offset |
+| **Consumer Group** | A group of consumers that divide partitions among themselves |
+
+\`\`\`typescript
+// Producer
+import { Kafka } from "kafkajs";
+
+const kafka = new Kafka({ brokers: ["localhost:9092"] });
+const producer = kafka.producer();
+
+await producer.connect();
+await producer.send({
+  topic: "orders",
+  messages: [{ key: "user_42", value: JSON.stringify(order) }],
+});
+await producer.disconnect();
+
+// Consumer
+const consumer = kafka.consumer({ groupId: "payment-service" });
+await consumer.connect();
+await consumer.subscribe({ topic: "orders", fromBeginning: true });
+
+await consumer.run({
+  eachMessage: async ({ topic, partition, message }) => {
+    const order = JSON.parse(message.value.toString());
+    await processPayment(order);
+  },
+});
+\`\`\`
+
+---
+
+## Event Sourcing
+
+Instead of storing the **current state**, store every **state change** as an event.
+
+\`\`\`typescript
+// Traditional: store current balance
+db.accounts.update({ id: accountId }, { balance: 900 });
+
+// Event sourcing: store every event
+events.append("bank", [
+  { type: "AccountCreated", data: { accountId, owner: "Alice" }},
+  { type: "MoneyDeposited", data: { amount: 1000 }},
+  { type: "MoneyWithdrawn", data: { amount: 100 }},
+]);
+
+// Current balance = 1000 - 100 = 900
+function getBalance(events: Event[]): number {
+  return events.reduce((balance, event) => {
+    switch (event.type) {
+      case "MoneyDeposited": return balance + event.amount;
+      case "MoneyWithdrawn": return balance - event.amount;
+      default: return balance;
+    }
+  }, 0);
+}
+\`\`\`
+
+**Benefits:** Full audit trail, temporal queries (what was my balance on Jan 1st?), event replay for debugging
+**Cost:** Event store must be append-only and fast; current state requires rehydration
+
+---
+
+## CQRS — Command Query Responsibility Segregation
+
+Separate the **write model** (commands that produce events) from the **read model** (projections optimized for queries):
+
+\`\`\`
+┌────────────────────────────────────────────────────┐
+│  Write Side                          Read Side        │
+│                                                      │
+│  Command: PlaceOrder            Query: GetOrder      │
+│      → Aggregate processes      → Read from          │
+│      → Events published          pre-computed         │
+│      → Projection updated        projection           │
+│                                                      │
+│  ┌──────────────┐              ┌──────────────┐      │
+│  │ Order Service│──Event──→   │ Read Model   │      │
+│  │ (Write)      │              │ (PostgreSQL) │      │
+│  └──────────────┘              └──────────────┘      │
+\`\`\`
+
+Events flow from write to read asynchronously. The read model is eventually consistent with the write model.
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Kafka and RabbitMQ?
+   **A:** Kafka is a distributed log — messages are persisted, ordered, and can be replayed. RabbitMQ is a message queue — messages are removed after consumption. Kafka scales better for high-throughput event streaming; RabbitMQ is better for complex routing.
+
+2. **Q:** How does Kafka achieve high throughput?
+   **A:** Sequential I/O — writes are appended to the end of a file (no random seeks). Batching — producers batch messages, consumers fetch in batches. Zero-copy — consumers read directly from the page cache.
+
+3. **Q:** In Event Sourcing, how do you handle schema changes to events?
+   **A:** Never delete or rename fields. Add new optional fields. Use a schema registry (Avro, Protobuf) to track versions. Write upcasters (migration functions) that transform old events to the latest schema when rehydrating.
+
+4. **Q:** When would you NOT use Event Sourcing?
+   **A:** When you only need the current state (no audit/history requirement), when storage is constrained (events grow unboundedly), or when the team is not comfortable with the complexity of event replay and projection management.
+
+5. **Q:** What happens if Kafka's disk fills up?
+   **A:** Kafka stops accepting new messages. Configure log retention — time-based (7 days) or size-based (10GB per partition). Cleanup policy can be "delete" (old messages removed) or "compact" (retain latest value per key).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Kafka:
+  Topic → Partition → Message (offset)
+  Producer: append to partition
+  Consumer: read from offset, any partition group
+  Consumer Group: split partitions across consumers
+
+Event Sourcing:
+  Store events, not state
+  Rehydrate current state by replaying events
+
+CQRS:
+  Write model: commands → events
+  Read model: projections of events → optimized queries
+
+When to use:
+  • Event Sourcing: audit trail, temporal queries, event replay
+  • Kafka: high-throughput event streaming, decoupling services
+  • CQRS: different read/write patterns, complex queries need optimization`,
             tags: ["Event-Driven", "Kafka", "Architecture"],
           },
           {
@@ -7461,7 +11946,186 @@ func main() {
               "Cache stampede: many requests miss at once and hammer DB — use probabilistic early expiration.",
               "Cache invalidation: the hardest problem — event-driven invalidation vs TTL trade-off.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Caching is the single highest-impact performance optimization in backend systems. A well-cached endpoint responds in <5ms instead of 50ms. A poorly-cached system serves stale data or collapses under a **cache stampede**.
+
+This article covers the four main caching strategies, their trade-offs, and how to avoid the most common failure modes.
+
+---
+
+## Cache-Aside (Lazy Loading)
+
+The most common pattern — the application manages the cache:
+
+\`\`\`
+1. Check cache
+2. Cache hit → return data (fast path)
+3. Cache miss → read from DB
+4. Store result in cache
+5. Return data
+\`\`\`
+
+\`\`\`typescript
+async function getUser(id: string): Promise<User> {
+  // 1. Check cache
+  const cached = await redis.get(\`user:\${id}\`);
+  if (cached) {
+    return JSON.parse(cached); // Cache hit → fast
+  }
+
+  // 2. Cache miss → read from DB
+  const user = await db.users.findByPk(id);
+  if (!user) return null;
+
+  // 3. Populate cache (with TTL)
+  await redis.set(\`user:\${id}\`, JSON.stringify(user), "EX", 3600);
+
+  return user;
+}
+\`\`\`
+
+**Pros:** Simple, only caches what is requested, resilient to cache failure (falls back to DB)
+**Cons:** Cache miss adds latency (cache → DB round trip), first request is always slow
+
+---
+
+## Write-Through
+
+Write to cache and database simultaneously:
+
+\`\`\`typescript
+async function updateUser(id: string, data: Partial<User>): Promise<void> {
+  // Write to cache first
+  const user = await db.users.findByPk(id);
+  const updated = { ...user, ...data };
+  await redis.set(\`user:\${id}\`, JSON.stringify(updated));
+
+  // Then write to DB (or vice versa)
+  await db.users.update(data, { where: { id } });
+}
+\`\`\`
+
+**Pros:** Cache is always up-to-date (no stale reads)
+**Cons:** Write latency is higher (must write to both), wasted cache space for rarely-read data
+
+---
+
+## Write-Behind (Write-Back)
+
+Write to cache, then asynchronously update the database:
+
+\`\`\`typescript
+async function incrementCounter(id: string): Promise<number> {
+  // Increment in Redis (fast)
+  const count = await redis.incr(\`counter:\${id}\`);
+
+  // Queue async DB update
+  await queue.add({ type: "update_counter", id, count });
+
+  return count;
+}
+\`\`\`
+
+**Pros:** Very fast writes (memory-only), batches DB writes
+**Cons:** Data loss risk if cache fails before DB write completes
+
+---
+
+## Cache Stampede Prevention
+
+A **cache stampede** happens when a cached item expires and MANY concurrent requests all miss the cache simultaneously, hammering the database.
+
+\`\`\`typescript
+// BAD: Stampede-prone
+const cached = await redis.get("expensive_data");
+if (!cached) {
+  // EVERY concurrent request runs this — all hit the DB!
+  const data = await expensiveDBQuery();
+  await redis.set("expensive_data", JSON.stringify(data), "EX", 3600);
+  return data;
+}
+
+// GOOD: Probabilistic early expiration
+// Refresh the cache when it's about to expire, not after
+async function getWithStaleProtection(key: string): Promise<Data> {
+  const cached = await redis.get(key);
+
+  if (!cached) {
+    // Use Redis SET NX to ensure only ONE request computes
+    const lock = await redis.set(\`lock:\${key}\`, "1", "NX", "EX", 5);
+    if (lock) {
+      const data = await expensiveDBQuery();
+      await redis.set(key, JSON.stringify(data), "EX", 60);
+      return data;
+    }
+    // Wait for the one that got the lock
+    await sleep(50);
+    return getWithStaleProtection(key);
+  }
+
+  return JSON.parse(cached);
+}
+\`\`\`
+
+---
+
+## Cache Invalidation
+
+The hardest problem in computer science. Strategies:
+
+| Strategy | How | Best For |
+|----------|-----|----------|
+| TTL | Cache expires after N seconds | Simple, works for most cases |
+| Event-driven | Purge cache when data changes | Real-time accuracy |
+| Write-through | Keep cache in sync on every write | High read-to-write ratio |
+| Manual | Admin panel button to clear cache | Emergency operations |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the cache stampede problem and how does probabilistic early expiration solve it?
+   **A:** When many concurrent requests all miss the cache simultaneously, they all hit the database. Probabilistic early expiration refreshes the cache BEFORE it expires (based on a random probability that increases as TTL approaches), so only one request refreshes instead of all of them.
+
+2. **Q:** Write-through vs write-behind: when would you choose one over the other?
+   **A:** Write-through for data that MUST be consistent immediately (account balance, inventory count). Write-behind for data where eventual consistency is acceptable and write throughput is the priority (page views, analytics events).
+
+3. **Q:** What happens if the cache server (Redis) goes down?
+   **A:** In cache-aside, the application falls back to the database — slower but functional. When Redis recovers, the cache is cold and stampede prevention should kick in. Redis replication (primary-replica) prevents total data loss.
+
+4. **Q:** Why use a distributed cache (Redis) instead of in-process memory (Map)?
+   **A:** In-process caches are duplicated across servers (N servers × N copies of the same data), waste memory, and cause inconsistency when one server updates and another does not. Redis provides a single shared cache with consistent data.
+
+5. **Q:** How do you calculate the optimal TTL for a cached item?
+   **A:** Balance staleness tolerance × read frequency × write frequency. If users accept 5-minute-old data, TTL=300s. If reads are 100x more frequent than writes, longer TTL is beneficial. Monitor cache hit rate and adjust.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Caching Strategies:
+────────────────────
+Cache-Aside (Lazy): app checks cache → DB → populates
+  Pros: simple, resilient  Cons: first request slow
+  Use: general purpose
+
+Write-Through: write to cache + DB simultaneously
+  Pros: always fresh      Cons: slower writes
+  Use: read-heavy, write-light data
+
+Write-Behind: write to cache → async DB write
+  Pros: fast writes       Cons: risk of data loss
+  Use: high write throughput
+
+Cache Stampede Prevention:
+  • Probabilistic early expiration: refresh before TTL ends
+  • SET NX lock: only one request recomputes
+  • Stale-while-revalidate: serve stale data while refreshing
+
+Invalidation:
+  TTL simplest; event-driven most accurate`,
             tags: ["Caching", "Architecture", "Performance"],
           },
           {
@@ -7479,7 +12143,189 @@ func main() {
               "Test pyramid for backends: unit (70%) → integration (20%) → contract (5%) → E2E (5%). Adjust ratios based on service complexity.",
               "Fixture factories: factory_boy (Python) / factory_bot (Ruby) / testfixtures (Go) — build test data declaratively, not spread across tests.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Backend testing requires multiple layers: unit tests for business logic, integration tests for external dependencies (DB, cache, API), and contract tests for API compatibility between services.
+
+The test pyramid guides the ratio: ~70% unit (fast, isolated), ~20% integration (real dependencies via Testcontainers), ~5% contract (Pact), ~5% E2E (critical paths only).
+
+---
+
+## pytest — Python Testing
+
+\`\`\`python
+# conftest.py — shared fixtures
+import pytest
+from testcontainers.postgres import PostgresContainer
+from myapp.db import create_connection
+
+@pytest.fixture(scope="session")
+def postgres():
+    """Start PostgreSQL container once per test session."""
+    with PostgresContainer("postgres:16") as pg:
+        yield pg
+
+@pytest.fixture
+def db(postgres):
+    """Create a fresh connection per test with clean DB."""
+    conn = create_connection(postgres.get_connection_url())
+    run_migrations(conn)  # Apply migrations for each test
+    yield conn
+    conn.close()
+    # Each test starts with a clean database
+
+# test_orders.py — parametrized tests
+@pytest.mark.parametrize("items,coupon,expected", [
+    ([{"price": 100}], {"type": "percentage", "value": 20}, 20),
+    ([{"price": 10}], {"type": "fixed", "value": 50}, 10),
+    ([], {"type": "percentage", "value": 20}, 0),
+])
+def test_calculate_discount(items, coupon, expected):
+    from myapp.pricing import calculate_discount
+    assert calculate_discount(items, coupon) == expected
+\`\`\`
+
+---
+
+## Go Testing
+
+\`\`\`go
+// Table-driven tests in Go
+func TestCalculateDiscount(t *testing.T) {
+    tests := []struct {
+        name     string
+        items    []CartItem
+        coupon   Coupon
+        expected float64
+    }{
+        {"percentage discount", []CartItem{{Price: 100}}, Coupon{Type: "percentage", Value: 20}, 20},
+        {"fixed discount capped", []CartItem{{Price: 10}}, Coupon{Type: "fixed", Value: 50}, 10},
+        {"empty cart", []CartItem{}, Coupon{Type: "percentage", Value: 20}, 0},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            assert.Equal(t, tt.expected, calculateDiscount(tt.items, tt.coupon))
+        })
+    }
+}
+
+// Integration test with Testcontainers
+func TestOrderRepository(t *testing.T) {
+    ctx := context.Background()
+
+    // Start PostgreSQL container
+    pg, err := testcontainers.GenericContainer(ctx,
+        testcontainers.GenericContainerRequest{
+            ContainerRequest: testcontainers.ContainerRequest{
+                Image: "postgres:16",
+                Env: map[string]string{
+                    "POSTGRES_PASSWORD": "test",
+                    "POSTGRES_DB":       "testdb",
+                },
+                ExposedPorts: []string{"5432/tcp"},
+            },
+            Started: true,
+        })
+    require.NoError(t, err)
+    defer pg.Terminate(ctx)
+
+    port, _ := pg.MappedPort(ctx, "5432")
+    dbURL := fmt.Sprintf("postgres://postgres:test@localhost:%s/testdb", port.Port())
+
+    repo := NewOrderRepository(dbURL)
+    order, err := repo.Create(ctx, Order{UserID: "123", Total: 100})
+    assert.NoError(t, err)
+    assert.NotEmpty(t, order.ID)
+}
+\`\`\`
+
+---
+
+## Integration Test Boundaries
+
+\`\`\`typescript
+// Typescript with Testcontainers
+import { PostgreSqlContainer } from "@testcontainers/postgresql";
+import { RedisContainer } from "@testcontainers/redis";
+
+describe("Order Service Integration", () => {
+    let postgres: PostgreSqlContainer;
+    let redis: RedisContainer;
+
+    beforeAll(async () => {
+        // Start real containers — not mocks!
+        postgres = await new PostgreSqlContainer("postgres:16").start();
+        redis = await new RedisContainer("redis:7").start();
+
+        await runMigrations(postgres.getConnectionUri());
+    }, 30000);
+
+    afterAll(async () => {
+        await postgres.stop();
+        await redis.stop();
+    });
+
+    test("create order with cache warmup", async () => {
+        const db = new OrderRepository(postgres.getConnectionUri());
+        const cache = new OrderCache(redis.getConnectionUri());
+
+        const order = await db.create({ userId: "123", total: 50 });
+        await cache.warmup(order);
+
+        const cached = await cache.get(order.id);
+        expect(cached).toBeDefined();
+        expect(cached?.total).toBe(50);
+    });
+});
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When should you use Testcontainers vs mocks?
+   **A:** Testcontainers for integration tests — test against REAL PostgreSQL, Redis, Kafka. Mocks for unit tests — isolate business logic. Use Testcontainers when you need to verify that your SQL queries work, that your cache logic handles connection errors, or that your message format matches Kafka's expectations. The containers are real but disposable.
+
+2. **Q:** What is the advantage of table-driven tests in Go?
+   **A:** Table-driven tests define inputs and expected outputs in a data structure. Adding a new test case is just adding a row to the table — no new function, no copy-paste. Each case runs as a subtest (t.Run), so failures are identified by name. Coverage is visible: you can see which cases are missing.
+
+3. **Q:** How do you handle test data in integration tests?
+   **A:** Use fixture factories (factory_boy in Python, factory_bot in Ruby) to build test objects declaratively. Each test specifies only the relevant fields. Factories handle defaults, associations, and sequences. This keeps tests concise and maintainable — no more sprawling setup code.
+
+4. **Q:** What is the role of consumer-driven contracts (Pact)?
+   **A:** Pact tests verify that microservice API providers satisfy their consumers' expectations. Service A (consumer) publishes its expectations (I need field X, Y, Z on endpoint /orders/123). Service B (provider) runs the Pact test in CI — if a change breaks the contract, the test fails BEFORE deploying. This prevents breaking changes from reaching production.
+
+5. **Q:** How do you test error scenarios with Testcontainers?
+   **A:** Stop the container during the test. Test that your application handles connection loss gracefully (retry, backoff, error response). Start the container again — test that reconnection works. This is much harder with mocks because they rarely simulate real network failures authentically.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Testing Layers:
+  Unit (70%): business logic, fast, isolated — pytest, go test, jest
+  Integration (20%): DB, cache, API — Testcontainers
+  Contract (5%): API compatibility — Pact
+  E2E (5%): critical user flows — Playwright, Cypress
+
+pytest: fixtures, parametrization, conftest.py, 2000+ plugins
+Go testing: table-driven tests, subtests, -race, testify/assert
+
+Testcontainers: real PostgreSQL, Redis, Kafka in Docker
+  Use for integration tests — test against real dependencies
+  Start once per session, cleanup between tests
+
+Pact: consumer-driven contract testing
+  Consumer publishes expectations
+  Provider verifies in CI
+
+Best Practices:
+  Clean DB between tests (truncate, not drop)
+  Use fixture factories for test data
+  Test error scenarios (stop container, network failure)
+  Run integration tests in CI (Docker required)`,
             tags: ["Testing", "pytest", "Integration", "Quality"],
           },
         ],
@@ -7502,7 +12348,171 @@ func main() {
               "OIDC: adds identity to OAuth — ID Token (JWT) carries user info.",
               "Token types: Access Token (short-lived, opaque or JWT), Refresh Token (long-lived, rotate on use).",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Authentication and authorization are the most critical security features in any application. OAuth 2.0 is the industry standard for delegated authorization. OpenID Connect (OIDC) adds identity on top.
+
+Understanding the difference between Authorization Code flow (server-side apps), PKCE (SPAs/mobile), and Client Credentials (machine-to-machine) is essential for building secure applications.
+
+---
+
+## OAuth 2.0 — Delegated Authorization
+
+OAuth allows a third-party app to access a user's data without seeing the user's password. For example, "Allow this app to post to your Twitter feed."
+
+### The Four Roles
+
+| Role | Example |
+|------|---------|
+| **Resource Owner** | The user who owns the data |
+| **Client** | The app requesting access (web, mobile, SPA) |
+| **Authorization Server** | The server that issues tokens (Auth0, Keycloak) |
+| **Resource Server** | The API that serves the data |
+
+---
+
+## Authorization Code Flow (Server-Side Apps)
+
+The most secure flow for apps with a backend:
+
+\`\`\`
+User clicks "Login with Google"
+    │
+    ▼
+1. Browser → Authorization Server
+   ?response_type=code
+   &client_id=MY_APP
+   &redirect_uri=https://myapp.com/callback
+   &scope=openid%20profile%20email
+    │
+    ▼  (User sees Google consent screen)
+User grants permission
+    │
+    ▼
+2. Google redirects to myapp.com/callback?code=AUTH_CODE
+    │
+    ▼
+3. Server → Google Token Endpoint (SERVER-TO-SERVER, never seen by browser)
+   POST /token
+   code=AUTH_CODE
+   client_id=MY_APP
+   client_secret=MY_SECRET  ← only the server knows this
+   redirect_uri=https://myapp.com/callback
+    │
+    ▼
+4. Google returns:
+   {
+     "access_token": "eyJhbG...",     // short-lived (15 min)
+     "refresh_token": "def502...",    // long-lived (days/weeks)
+     "id_token": "eyJhbGci..."       // JWT with user info (OIDC)
+   }
+\`\`\`
+
+The **authorization code** is a one-time-use code exchanged server-to-server for tokens. Even if intercepted, it is useless without the client_secret.
+
+---
+
+## PKCE — Proof Key for Code Exchange (SPAs & Mobile)
+
+SPAs cannot securely store a client_secret. PKCE adds a cryptographic challenge:
+
+\`\`\`
+1. Client generates cryptographically random "code_verifier" (43-128 chars)
+2. Client computes SHA256 hash → "code_challenge"
+3. Authorization request includes code_challenge
+4. Token request includes code_verifier
+5. Server verifies SHA256(verifier) === challenge
+
+Without PKCE: attacker intercepting the auth code could exchange it for tokens
+With PKCE: attacker would also need the code_verifier (which never leaves the client)
+\`\`\`
+
+---
+
+## OpenID Connect (OIDC) — Identity Layer
+
+OIDC adds an **ID Token** (JWT) that contains verified user identity information:
+
+\`\`\`javascript
+// Decoded ID Token (JWT)
+{
+  "iss": "https://accounts.google.com",
+  "sub": "1234567890",           // unique user ID — never changes
+  "aud": "myapp-123.apps.googleusercontent.com",
+  "exp": 1700000000,
+  "iat": 1699996400,
+  "email": "alice@example.com",
+  "email_verified": true,
+  "name": "Alice Smith",
+  "picture": "https://..."
+}
+\`\`\`
+
+The \`/userinfo\` endpoint returns the user's profile — but the info in the ID Token (verified by signature) is often sufficient, saving a round trip.
+
+---
+
+## Token Types
+
+| Token | Lifetime | Purpose | Revocable? |
+|-------|----------|---------|------------|
+| Access Token | 15-60 min | Call APIs (in Authorization header) | Usually no (stateless) |
+| Refresh Token | Days/weeks | Get new access tokens | Yes (server-side) |
+| ID Token | Hours | Know who the user is (OIDC only) | No |
+
+\`\`\`javascript
+// Calling an API with access token
+const response = await fetch("https://api.example.com/users/me", {
+  headers: {
+    "Authorization": "Bearer eyJhbGciOiJSUzI1NiIs..." // access token
+  }
+});
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why is the Authorization Code flow more secure than Implicit Flow (which returns the access token directly in the URL fragment)?
+   **A:** In Implicit Flow, the access token is exposed in the URL fragment, visible to JavaScript, browser history, and referrer headers. In Authorization Code flow, the code is exchanged server-to-server with client_secret authentication — the token never touches the browser.
+
+2. **Q:** What does PKCE protect against and how?
+   **A:** PKCE protects against authorization code interception. The client creates a code_verifier and sends its hash (code_challenge) in the auth request. To exchange the code for tokens, the client must provide the verifier — not just the code. An attacker with the code but not the verifier cannot get tokens.
+
+3. **Q:** Can you revoke a JWT access token?
+   **A:** Not directly — JWTs are stateless. To support revocation, you need a token blacklist (stored in Redis) checked on every request, or use very short TTL + refresh token rotation.
+
+4. **Q:** What is the difference between OAuth 2.0 and OIDC?
+   **A:** OAuth 2.0 handles authorization — "what can this app do?" OIDC adds authentication — "who is the user?" OIDC extends OAuth with the ID Token (JWT containing user identity) and the UserInfo endpoint.
+
+5. **Q:** How do you handle OAuth in mobile apps securely?
+   **A:** Use PKCE + an in-app browser tab (not WebView). WebView can intercept credentials. iOS uses ASWebAuthenticationSession; Android uses Chrome Custom Tabs. Never embed client_secret in a mobile app.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+OAuth 2.0 Flows:
+─────────────────
+Authorization Code (server-side)
+  1. Auth code (browser redirect)
+  2. Exchange code + client_secret for tokens (server-to-server)
+  Most secure — use this when you have a backend.
+
+Authorization Code + PKCE (SPA/mobile)
+  1. Auth code + code_challenge (browser redirect)
+  2. Exchange code + code_verifier for tokens
+  Use for apps without a backend secret.
+
+Client Credentials (machine-to-machine)
+  1. Client sends client_id + client_secret → gets access token
+  No user involved — service accounts.
+
+OIDC adds:
+  • ID Token — JWT with user identity
+  • UserInfo endpoint — get user profile
+  • Standard scopes: openid, profile, email`,
             tags: ["Security", "Authentication", "OAuth"],
           },
           {
@@ -7518,7 +12528,201 @@ func main() {
               "Storage: memory > httpOnly cookie >> localStorage — XSS risk with localStorage.",
               "Revocation: JWTs are stateless — use short TTL + refresh token rotation, or a token blocklist.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+JSON Web Tokens (JWT) are everywhere — OAuth access tokens, session cookies, password reset links, API authentication. They are simple: a base64-encoded JSON payload with a cryptographic signature.
+
+But JWTs are also easy to get wrong. Algorithm confusion attacks, accepting "none" algorithm, storing secrets in client-side code, and not rotating keys are common vulnerabilities. This article covers what you need to do JWT right.
+
+---
+
+## JWT Structure
+
+A JWT has three parts separated by dots:
+
+\`\`\`
+header.payload.signature
+
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.
+eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFsaWNlIn0.
+XbQ8d8G7d6G9Z9e0F3a0B2c4D5e6F7g8H9i0J1k2L3m4
+\`\`\`
+
+### Header
+
+\`\`\`json
+{
+  "alg": "RS256",     // Signing algorithm
+  "typ": "JWT",       // Token type
+  "kid": "key-2024"   // Key ID (for key rotation)
+}
+\`\`\`
+
+### Payload (Claims)
+
+\`\`\`json
+{
+  "sub": "user_123",           // Subject — who the token is about
+  "iss": "https://auth.myapp.com",  // Issuer
+  "aud": "https://api.myapp.com",   // Audience
+  "exp": 1700000000,           // Expiration (UNIX timestamp)
+  "iat": 1699996400,           // Issued at
+  "roles": ["admin", "editor"] // Custom claims
+}
+\`\`\`
+
+### Signature
+
+The signature proves the token has not been tampered with:
+
+\`\`\`
+HMAC-SHA256(
+  base64urlEncode(header) + "." + base64urlEncode(payload),
+  secret  // or private key for RS256
+)
+\`\`\`
+
+---
+
+## Signing Algorithms
+
+| Algorithm | Type | Key | Best For |
+|-----------|------|-----|----------|
+| HS256 | Symmetric | Single shared secret | Internal services (same trust boundary) |
+| RS256 | Asymmetric | Private key signs, public key verifies | Distributed systems, third-party verification |
+| ES256 | Asymmetric (ECC) | Smaller keys than RSA | Mobile apps, limited bandwidth |
+
+\`\`\`typescript
+// HS256 — same secret on both ends (simple but less secure)
+const token = jwt.sign({ userId: "123" }, "my-secret", { algorithm: "HS256" });
+const decoded = jwt.verify(token, "my-secret");
+
+// RS256 — private key signs, public key verifies
+const token = jwt.sign({ userId: "123" }, privateKey, { algorithm: "RS256" });
+const decoded = jwt.verify(token, publicKey);
+// Client-facing APIs use RS256 — anyone can verify with the public key
+\`\`\`
+
+---
+
+## Security Pitfalls
+
+### 1. "alg": "none" Attack
+
+\`\`\`javascript
+// BAD: Not checking the algorithm
+const decoded = jwt.verify(token, secret);
+
+// Attacker sends:
+eyJhbGciOiJub25lIn0.eyJ1c2VySWQiOiJhZG1pbiJ9.
+// This verifies successfully without a signature!
+
+// GOOD: Always specify algorithm
+const decoded = jwt.verify(token, secret, { algorithms: ["HS256"] });
+\`\`\`
+
+### 2. Algorithm Confusion
+
+If the server expects RS256 but the client sends HS256 with the server's PUBLIC key as the secret:
+
+\`\`\`javascript
+// Server expects RS256, but doesn't check:
+const decoded = jwt.verify(token, PUBLIC_KEY); // PUBLIC_KEY is publicly known!
+
+// Attacker creates a token signed with HS256 using the PUBLIC_KEY as the secret:
+const fakeToken = jwt.sign({ admin: true }, PUBLIC_KEY, { algorithm: "HS256" });
+// Server verifies with PUBLIC_KEY, and the signature matches!
+\`\`\`
+
+**Fix:** Always verify \`algorithms: ["RS256"]\` and never accept a token signed with the opposite algorithm type.
+
+### 3. Not Validating Expiration
+
+\`\`\`javascript
+const decoded = jwt.verify(token, secret, { ignoreExpiration: true }); // BAD!
+\`\`\`
+
+### 4. Storing JWTs in localStorage
+
+\`\`\`javascript
+// BAD: XSS can read localStorage
+localStorage.setItem("token", jwt);
+
+// BETTER: httpOnly cookie (not accessible to JS)
+document.cookie = \`token=\${jwt}; HttpOnly; Secure; SameSite=Strict; Path=/\`;
+\`\`\`
+
+---
+
+## Token Revocation
+
+JWTs are stateless — once issued, they cannot be revoked without infrastructure:
+
+\`\`\`typescript
+// Strategy 1: Short TTL + Refresh Token Rotation
+// Access token: 15 minutes
+// Refresh token: 7 days, rotated on each use
+async function refreshTokens(refreshToken: string) {
+  // Verify refresh token
+  const payload = await verifyRefreshToken(refreshToken);
+
+  // Issue new access + refresh tokens
+  const newAccess = signAccessToken(payload.userId);
+  const newRefresh = await generateRefreshToken(payload.userId);
+
+  // Invalidate the old refresh token (rotation!)
+  await invalidateRefreshToken(refreshToken);
+
+  return { accessToken: newAccess, refreshToken: newRefresh };
+}
+
+// Strategy 2: Token Blacklist (for immediate revocation)
+const isBlacklisted = await redis.sismember("token_blacklist", tokenJti);
+if (isBlacklisted) throw new Error("Token revoked");
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the "alg: none" attack and how do you prevent it?
+   **A:** An attacker sets the JWT header's algorithm to "none" and removes the signature. If the server trusts the header without verifying, the token is accepted. Fix: always specify the accepted algorithms in \`jwt.verify()\`.
+
+2. **Q:** Why is RS256 preferred over HS256 for microservices?
+   **A:** With RS256, the signing key (private) and verification key (public) are separate. Only the auth service has the private key. All other services only need the public key to verify — they cannot sign new tokens. If HS256 is used, every service that verifies tokens also has the power to mint them.
+
+3. **Q:** What is the purpose of the \`jti\` (JWT ID) claim?
+   **A:** The \`jti\` is a unique identifier for the token. It enables token blacklisting — if a token needs to be revoked, its \`jti\` is added to a blacklist. It also detects token replay (if the same token is used twice with the same jti, reject).
+
+4. **Q:** Can a JWT be encrypted?
+   **A:** JWT is signed, not encrypted — anyone with the base64-decoded payload can read the claims. For encrypted tokens, use JWE (JSON Web Encryption). Most applications only need JWS (signed), as sensitive data should not be placed in the payload.
+
+5. **Q:** How do you handle JWT expiration for long-running operations?
+   **A:** Use refresh tokens. The API endpoint returns 401 when the access token expires. The client uses the refresh token (stored securely, rotated on use) to get a new access token. For very long operations, use a service account token with longer expiration.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+JWT = base64(header) + "." + base64(payload) + "." + signature
+
+Header: { alg, typ, kid }
+Payload: { sub, iss, aud, exp, iat, jti, custom claims }
+Signature: HMAC(header + "." + payload, secret)
+
+Signing:
+  HS256: shared secret — simple, same trust boundary
+  RS256: private signs, public verifies — distributed systems
+  ES256: ECC-based — smaller keys, mobile-friendly
+
+Security Rules:
+  1. ALWAYS specify algorithms in verify()
+  2. NEVER accept "alg: none"
+  3. NEVER store in localStorage (use httpOnly cookies)
+  4. ALWAYS validate exp (expiration)
+  5. Use RS256 for multi-service architecture
+  6. Rotate refresh tokens on each use`,
             tags: ["Security", "JWT"],
           },
           {
@@ -7534,7 +12738,181 @@ func main() {
               "Forward secrecy: ephemeral keys (ECDHE) ensure past sessions can't be decrypted if private key leaks.",
               "Password hashing: bcrypt, Argon2id — slow by design, with salt and work factor.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Cryptography is the foundation of web security. TLS encrypts every HTTPS connection. Password hashing protects user credentials. Digital signatures verify software integrity.
+
+You should NEVER implement cryptographic algorithms yourself. Use battle-tested libraries. But you MUST understand the concepts to make correct choices.
+
+---
+
+## Symmetric Encryption (AES-GCM)
+
+Same key encrypts and decrypts:
+
+\`\`\`typescript
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+
+// Encryption
+const algorithm = "aes-256-gcm";
+const key = randomBytes(32); // 256-bit key
+const iv = randomBytes(12);  // 96-bit IV (nonce) — MUST be unique per encryption
+
+const cipher = createCipheriv(algorithm, key, iv);
+let encrypted = cipher.update("Sensitive data", "utf8", "hex");
+encrypted += cipher.final("hex");
+const authTag = cipher.getAuthTag().toString("hex");
+
+// Decryption
+const decipher = createDecipheriv(algorithm, key, iv);
+decipher.setAuthTag(Buffer.from(authTag, "hex"));
+let decrypted = decipher.update(encrypted, "hex", "utf8");
+decrypted += decipher.final("utf8");
+console.log(decrypted); // "Sensitive data"
+\`\`\`
+
+**AES-GCM** (Galois/Counter Mode) provides both confidentiality and integrity (authentication tag). Use GCM, not ECB or CBC.
+
+---
+
+## Asymmetric Encryption (RSA, ECC)
+
+Public key encrypts, private key decrypts:
+
+\`\`\`typescript
+import { generateKeyPairSync, publicEncrypt, privateDecrypt } from "node:crypto";
+
+const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+  modulusLength: 4096, // 2048 minimum, 4096 recommended
+});
+
+const encrypted = publicEncrypt(publicKey, Buffer.from("Secret message"));
+const decrypted = privateDecrypt(privateKey, encrypted);
+\`\`\`
+
+RSA is slow — typically used to encrypt a **symmetric key** (hybrid encryption) rather than the full payload. ECC (Elliptic Curve Cryptography) provides equivalent security with smaller keys (256-bit ECC ≈ 3072-bit RSA).
+
+---
+
+## TLS 1.3 Handshake
+
+\`\`\`
+Client                                 Server
+  │                                       │
+  │── ClientHello (key_share + sig_algs) →│
+  │                                       │
+  │← ServerHello + Certificate + Finished │
+  │  (encrypted extensions)               │
+  │                                       │
+  │── Finished ───────────────────────────→│
+  │                                       │
+  │← Application Data (encrypted) ────────│
+  │                                       │
+
+1 RTT (vs TLS 1.2: 2 RTT)
+0-RTT: client can send data IMMEDIATELY if it has cached session ticket
+\`\`\`
+
+**Forward Secrecy:** Ephemeral Diffie-Hellman (ECDHE) keys are generated per-session and discarded. Even if the server's long-term private key leaks, past sessions cannot be decrypted.
+
+---
+
+## Password Hashing
+
+Passwords must NOT be stored as plaintext, MD5, SHA256, or even salted SHA256. Use **adaptive hashing** algorithms:
+
+\`\`\`typescript
+import { hash, compare } from "bcrypt";
+
+// Hash (cost factor 12 = ~250ms on modern hardware)
+const passwordHash = await hash("user_password", 12);
+
+// Verify
+const isValid = await compare("user_password", passwordHash);
+\`\`\`
+
+| Algorithm | Designed By | Cost Factor | Best For |
+|-----------|-------------|-------------|----------|
+| bcrypt | 1999 | Work factor (2^N rounds) | General purpose |
+| Argon2id | 2015 (PHC winner) | Memory + time + parallelism | Modern systems, high security |
+| scrypt | 2009 | Memory + time + parallelism | Cryptocurrency, resource-intensive |
+
+\`\`\`typescript
+// Argon2id (preferred for new systems)
+import { hash, verify } from "@node-rs/argon2";
+
+const hash = await hash("password", {
+  memoryCost: 19456, // 19 MB
+  timeCost: 2,       // iterations
+  parallelism: 1,
+});
+\`\`\`
+
+---
+
+## What NOT to Implement Yourself
+
+| Do NOT Build | Use Instead |
+|-------------|-------------|
+| Custom encryption algorithm | AES-GCM (libsodium, Node crypto) |
+| Custom hash function | SHA-256, SHA-3 |
+| Custom TLS | OpenSSL, BoringSSL, rustls |
+| Custom JWT library | jsonwebtoken, jose |
+| Custom password hashing | bcrypt, Argon2id |
+| Random number generation | crypto.randomBytes (NOT Math.random) |
+
+\`\`\`javascript
+// NEVER use Math.random() for security
+const badToken = Math.random().toString(); // Predictable!
+
+// ALWAYS use crypto.randomBytes
+const goodToken = crypto.randomBytes(32).toString("hex"); // Cryptographically secure
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why should you NEVER use ECB mode for AES encryption?
+   **A:** ECB encrypts each 16-byte block independently. Identical plaintext blocks produce identical ciphertext blocks. This leaks data patterns — the classic example is that an encrypted image still shows the silhouette through the ciphertext.
+
+2. **Q:** What is forward secrecy and why does it matter?
+   **A:** Forward secrecy ensures that if a server's long-term private key is compromised, past sessions cannot be decrypted. TLS 1.3 achieves this with ephemeral Diffie-Hellman (ECDHE) — a one-time key pair per session that is discarded after use.
+
+3. **Q:** Why is bcrypt better than SHA256 for password hashing?
+   **A:** SHA256 is designed to be FAST — you can compute billions of hashes per second on a GPU. bcrypt is designed to be SLOW — it includes a configurable cost factor that increases computation time. This makes brute-force attacks economically infeasible.
+
+4. **Q:** What is a nonce (IV) in AES-GCM and what happens if you reuse it?
+   **A:** The nonce (12 bytes) must be unique for every encryption with the same key. Reusing the nonce allows an attacker to recover the authentication key and forge messages, and also to XOR ciphertexts to recover plaintexts. Never reuse a nonce.
+
+5. **Q:** Can you encrypt with a private key and decrypt with a public key?
+   **A:** No. In asymmetric cryptography, the PUBLIC key encrypts and the PRIVATE key decrypts. However, the private key can SIGN (prove authorship) and the public key verifies the signature. This is the opposite direction and uses a different algorithm (RSA-PSS, ECDSA).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Symmetric: same key → encrypt + decrypt
+  AES-GCM: fast, authenticated encryption
+  Key: 256-bit, IV: 96-bit unique nonce
+
+Asymmetric: public key encrypts, private key decrypts
+  RSA: 2048-4096 bit, slow, large keys
+  ECC: 256-bit = RSA 3072-bit security, smaller keys
+  Use: hybrid encryption (RSA/ECC encrypts AES key)
+
+TLS 1.3:
+  • 1-RTT handshake (0-RTT for repeat connections)
+  • Forward secrecy via ECDHE
+  • Mandatory encryption (no plaintext options)
+
+Password Hashing:
+  bcrypt: cost factor 12+ (industry standard)
+  Argon2id: memory-hard, PHC winner (future standard)
+  NEVER: plaintext, MD5, SHA256, fast hashes
+
+Golden Rule: NEVER implement crypto yourself. Use libraries.`,
             tags: ["Security", "Cryptography"],
           },
         ],
@@ -7559,7 +12937,200 @@ func main() {
               "Drizzle migrations: `drizzle-kit` generates SQL files from schema diffs — full control over migration SQL.",
               "Choosing: Prisma for rapid prototyping and CRUD-heavy apps; Drizzle for complex queries and maximum type safety.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+TypeScript ORMs eliminate entire categories of bugs. If your database schema changes, your TypeScript code will not compile until you update the queries. No more runtime "column not found" errors.
+
+Prisma and Drizzle are the two dominant TypeScript ORMs. They take opposite approaches: Prisma uses a **declarative schema file**; Drizzle uses **code-first TypeScript definitions**.
+
+---
+
+## Prisma — Declarative Schema, Generated Client
+
+Prisma uses a custom schema language (\`schema.prisma\`) and generates a fully typed client.
+
+\`\`\`prisma
+// schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  posts     Post[]
+  createdAt DateTime @default(now())
+}
+
+model Post {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+}
+\`\`\`
+
+Run \`npx prisma generate\` → fully typed client:
+
+\`\`\`typescript
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
+
+// Fully typed — autocomplete for all fields
+const user = await prisma.user.findUnique({
+  where: { email: "alice@example.com" },
+  include: {
+    posts: {
+      select: { title: true, createdAt: true },
+    },
+  },
+});
+// user.posts[0].title — fully typed to string
+\`\`\`
+
+### Prisma Migrations
+
+\`\`\`bash
+# After changing schema.prisma:
+npx prisma migrate dev --name add_bio_field
+# Prisma diffs against the database and generates SQL:
+# ALTER TABLE "User" ADD COLUMN "bio" TEXT;
+\`\`\`
+
+### Prisma Limitations
+
+- **N+1 is easy to trigger accidentally** — \`include\` loads relations in separate queries unless you use \`relationLoadStrategy: "join"\`
+- **Raw queries escape type safety** — \`$queryRaw\` returns \`unknown\`
+- **Codegen step** — you must run \`prisma generate\` after every schema change
+
+---
+
+## Drizzle — Code-First, SQL-Like API
+
+Drizzle defines tables as TypeScript objects — no codegen, no custom schema language:
+
+\`\`\`typescript
+import { pgTable, serial, text, timestamp, uuid, jsonb } from "drizzle-orm/pg-core";
+
+export const users = pgTable("users", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  metadata: jsonb("metadata").$type<{ avatar?: string; timezone?: string }>(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const posts = pgTable("posts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  authorId: uuid("author_id").references(() => users.id),
+});
+\`\`\`
+
+Queries use a SQL-like chaining API:
+
+\`\`\`typescript
+import { db } from "./db";
+import { users, posts } from "./schema";
+import { eq } from "drizzle-orm";
+
+// SELECT with JOIN — fully typed
+const result = await db
+  .select({
+    userName: users.name,
+    postTitle: posts.title,
+  })
+  .from(users)
+  .leftJoin(posts, eq(users.id, posts.authorId))
+  .where(eq(users.email, "alice@example.com"));
+
+// INSERT
+const newUser = await db.insert(users).values({
+  email: "bob@example.com",
+  name: "Bob",
+}).returning();
+
+// UPDATE
+await db.update(users)
+  .set({ name: "Bob Updated" })
+  .where(eq(users.id, "some-uuid"));
+\`\`\`
+
+### Drizzle Migrations
+
+\`\`\`bash
+npx drizzle-kit generate   # generates SQL from schema changes
+npx drizzle-kit migrate    # runs migrations
+\`\`\`
+
+---
+
+## Prisma vs Drizzle
+
+| Aspect | Prisma | Drizzle |
+|--------|--------|---------|
+| Schema | \`schema.prisma\` (DSL) | TypeScript code |
+| Codegen | Required (\`prisma generate\`) | None (types inferred) |
+| Query API | Objects (\`findUnique\`, \`include\`) | SQL-like chaining |
+| Raw SQL | \`$queryRaw\` (untyped) | \`sql\` template tag (partial types) |
+| Migration | Auto-generated (diff-based) | Generated SQL files |
+| Bundle size | Large (big client) | Tiny (tree-shakeable) |
+| Complex queries | Awkward | Natural (SQL-in-type) |
+
+---
+
+## Practice Questions
+
+1. **Q:** When would you choose Prisma over Drizzle?
+   **A:** When rapid prototyping and CRUD-heavy apps are your priority. Prisma's findUnique/create/update API is simpler for basic operations, and the auto-generated migrations require less manual effort.
+
+2. **Q:** When would you choose Drizzle over Prisma?
+   **A:** When you need complex queries (subqueries, CTEs, aggregations), maximum performance, or a minimal bundle. Drizzle's SQL-like API makes complex queries readable, and its tree-shakeable client has near-zero overhead.
+
+3. **Q:** How does Drizzle achieve type safety without code generation?
+   **A:** Drizzle uses TypeScript's type inference on the table definitions. The \`pgTable\` function returns a typed object where column types are inferred. The query builder chains methods and propagates types through operations like \`.select()\`, \`.where()\`, and \`.leftJoin()\`.
+
+4. **Q:** What is the N+1 problem in Prisma and how do you avoid it?
+   **A:** Prisma's \`include\` loads relations with separate queries by default. With 100 users + posts, that is 1 query for users + 100 queries for posts. Use \`relationLoadStrategy: "join"\` to emit a SQL JOIN instead.
+
+5. **Q:** Can you use Drizzle with an existing database that has no TypeScript definitions?
+   **A:** Yes. Use \`drizzle-kit pull\` to introspect the database and generate the TypeScript schema file automatically. This is similar to Prisma's \`db pull\`.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Prisma:
+  • Declarative schema → generated client
+  • Simple CRUD (findUnique, create, update)
+  • Auto-generated migrations
+  • N+1 risk with include
+  • Larger bundle
+
+Drizzle:
+  • TypeScript code = schema (no codegen)
+  • SQL-like API (select, where, join)
+  • Fully tree-shakeable
+  • Complex queries are natural
+  • Smaller bundle
+
+Both:
+  • Full TypeScript type safety
+  • PostgreSQL, MySQL, SQLite support
+  • Migration tooling
+  • Active communities
+
+Choose Prisma for: CRUD-heavy, rapid dev, teams new to TS
+Choose Drizzle for: complex queries, performance, bundle size`,
             tags: ["ORM", "Database", "TypeScript"],
           },
           {
@@ -7574,7 +13145,182 @@ func main() {
               "Type-safe joins, subqueries, CTEs — all checked at compile time, not runtime.",
               "When to use: complex reporting queries, multi-table aggregations, or when you want full SQL control without losing types.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Sometimes you do NOT want an ORM. You want full control over SQL — with all the type safety TypeScript can provide. Kysely fills this gap: it is a **type-safe SQL query builder**, not an ORM.
+
+Kysely does not manage relationships, does not have an identity map, and does not auto-fetch relations. It generates SQL strings with compile-time type checking. Perfect for complex reporting queries, multi-table aggregations, and teams that prefer explicit SQL.
+
+---
+
+## Schema Definition
+
+Kysely defines types from your database schema:
+
+\`\`\`typescript
+import { Generated, ColumnType } from "kysely";
+
+export interface Database {
+  users: UserTable;
+  posts: PostTable;
+}
+
+interface UserTable {
+  id: Generated<string>;      // auto-generated UUID
+  email: string;
+  name: string | null;
+  created_at: ColumnType<Date, string | undefined, never>;
+}
+
+interface PostTable {
+  id: Generated<string>;
+  title: string;
+  content: string | null;
+  author_id: string;
+}
+\`\`\`
+
+---
+
+## Queries
+
+\`\`\`typescript
+import { Kysely, PostgresDialect, sql } from "kysely";
+import { Pool } from "pg";
+
+const db = new Kysely<Database>({
+  dialect: new PostgresDialect({
+    pool: new Pool({ connectionString: process.env.DATABASE_URL }),
+  }),
+});
+
+// SELECT with JOIN — fully typed
+const result = await db
+  .selectFrom("users")
+  .innerJoin("posts", "posts.author_id", "users.id")
+  .select([
+    "users.name",
+    "users.email",
+    "posts.title",
+  ])
+  .where("users.email", "=", "alice@example.com")
+  .execute();
+// result: { name: string | null; email: string; title: string }[]
+
+// INSERT
+const newUser = await db
+  .insertInto("users")
+  .values({ email: "bob@example.com", name: "Bob" })
+  .returningAll()
+  .executeTakeFirst();
+
+// UPDATE with complex WHERE
+await db
+  .updateTable("users")
+  .set({ name: "Bob Updated" })
+  .where("email", "in", ["bob@example.com", "bob2@example.com"])
+  .execute();
+
+// DELETE
+await db
+  .deleteFrom("posts")
+  .where("author_id", "=", "some-uuid")
+  .execute();
+\`\`\`
+
+---
+
+## Complex Queries — Where Kysely Shines
+
+\`\`\`typescript
+// CTE (Common Table Expression)
+const averageRating = db
+  .with("avg_rating", (qb) =>
+    qb
+      .selectFrom("reviews")
+      .select([sql<number>\`AVG(rating)\`.as("avg"), "product_id"])
+      .groupBy("product_id")
+  )
+  .selectFrom("products")
+  .leftJoin("avg_rating", "avg_rating.product_id", "products.id")
+  .select([
+    "products.name",
+    "avg_rating.avg",
+  ])
+  .where("products.category", "=", "electronics")
+  .execute();
+
+// Subquery in WHERE
+const topUsers = await db
+  .selectFrom("users")
+  .selectAll()
+  .where("id", "in",
+    db.selectFrom("orders")
+      .select("user_id")
+      .where("total", ">", 1000)
+      .groupBy("user_id")
+      .having(sql\`COUNT(*)\`, ">", 10)
+  )
+  .execute();
+\`\`\`
+
+---
+
+## Schema Introspection
+
+Use \`kysely-codegen\` to generate TypeScript types from your live database:
+
+\`\`\`bash
+npx kysely-codegen --dialect postgres --out-file src/db/types.ts
+# This reads your database schema and generates:
+#   export interface Database { ... }
+#   export interface UserTable { ... }
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** How is Kysely different from Prisma and Drizzle?
+   **A:** Kysely is a query builder, not an ORM. It has no concept of relations, no identity map, no lazy loading. You write explicit JOINs. This gives you full control over SQL generation with compile-time type checking. Kysely is closer to the SQL than either Prisma or Drizzle.
+
+2. **Q:** When would you use Kysely over Prisma?
+   **A:** For complex reporting queries, CTEs, window functions, bulk operations, or when you want to write SQL directly but with TypeScript types. For CRUD-heavy apps, Prisma or Drizzle require less code.
+
+3. **Q:** How does Kysely handle migrations?
+   **A:** Kysely does not have a built-in migration system. Use a separate tool like \`node-pg-migrate\`, \`umzug\`, or \`db-migrate\`. Or use Drizzle Kit for migrations with Kysely for queries.
+
+4. **Q:** Can Kysely be used with Drizzle migrations?
+   **A:** Yes. Use \`drizzle-kit\` for migration generation and Kysely for query building. They operate at different layers — Drizzle Kit generates SQL, Kysely executes queries.
+
+5. **Q:** Is Kysely production-ready?
+   **A:** Yes. Kysely is mature, extensively tested, and used in production by many teams. It supports PostgreSQL, MySQL, SQLite, and MSSQL.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Kysely:
+  Type-safe SQL query builder (not an ORM)
+  No relations, no identity map, no lazy loading
+
+API style:
+  selectFrom → innerJoin → where → select → execute
+  insertInto → values → returning → executeTakeFirst
+  updateTable → set → where → execute
+  deleteFrom → where → execute
+
+Features:
+  • Full TypeScript type inference
+  • CTEs, subqueries, window functions
+  • Schema introspection via kysely-codegen
+  • Migration-agnostic (use your own)
+  • Transaction support
+  • Raw SQL with sql\`\` template tag
+
+Use when: complex queries, full SQL control, no ORM overhead
+Use instead: Prisma/Drizzle for CRUD-heavy apps`,
             tags: ["SQL", "TypeScript", "Database"],
           },
         ],
@@ -7599,7 +13345,204 @@ func main() {
               "Structured output: request JSON with a schema description — some providers now enforce JSON mode natively.",
               "Streaming: consume tokens as they're generated — reduces perceived latency, enables progressive UI rendering.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Large Language Models (LLMs) like GPT-4, Claude, and Gemini are transforming backend development. Understanding how they work — tokens, context windows, temperature, and prompting — is essential for building AI-powered features.
+
+Every LLM call costs money. Every token matters. This article covers the fundamentals you need to use LLMs effectively in production.
+
+---
+
+## Tokenization
+
+LLMs do not read text character by character. They tokenize it — split into chunks of ~0.75 words each.
+
+\`\`\`
+"Hello, world! How are you today?"
+
+→ ["Hello", ",", " world", "!", " How", " are", " you", " today", "?"]
+→ 9 tokens
+\`\`\`
+
+\`\`\`python
+import tiktoken  # OpenAI's tokenizer
+
+enc = tiktoken.get_encoding("cl100k_base")
+tokens = enc.encode("Hello, world! How are you today?")
+print(len(tokens))  # 9
+print(enc.decode(tokens))  # "Hello, world! How are you today?"
+\`\`\`
+
+**Cost is measured in tokens** — both input (prompt) and output (completion). GPT-4o costs $2.50/1M input tokens, $10/1M output tokens. A 1000-word article is ~1,500 tokens.
+
+---
+
+## Context Window
+
+The **context window** is the maximum number of tokens the LLM can consider at once:
+
+| Model | Context Window |
+|-------|---------------|
+| GPT-4o | 128K tokens |
+| GPT-4 Turbo | 128K tokens |
+| Claude 3.5 Sonnet | 200K tokens |
+| Claude 3 Opus | 200K tokens |
+| Gemini 1.5 Pro | 1M tokens |
+| Llama 3 70B | 8K-32K tokens |
+
+\`\`\`typescript
+// Sending a large document? Stay within context window.
+const prompt = \`
+Document: \${longDocument.substring(0, 100000)}  // truncate to 100K chars
+Question: \${question}
+\`;
+\`\`\`
+
+---
+
+## Temperature, Top-P, and Other Parameters
+
+| Parameter | Range | Effect | Use Case |
+|-----------|-------|--------|----------|
+| temperature | 0-2 | Controls randomness. 0 = deterministic, 2 = very random | 0 for extraction/classification, 0.7 for chat |
+| top_p | 0-1 | Nucleus sampling — only consider tokens with cumulative probability > top_p | 1 for default, 0.9 for slight filtering |
+| max_tokens | 1-N | Maximum output tokens | Set to limit cost and prevent runaway generation |
+| stop | strings[] | Stop generation when any string is encountered | \["\\n\\n", "Human:"\] for structured output |
+
+\`\`\`typescript
+// Deterministic (temperature=0) — for classification
+const response = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "Classify the sentiment as POSITIVE, NEGATIVE, or NEUTRAL. Respond with only one word." },
+    { role: "user", content: "I love this product!" },
+  ],
+  temperature: 0,
+  max_tokens: 10,
+});
+// Response: "POSITIVE"
+\`\`\`
+
+---
+
+## Prompt Engineering Patterns
+
+### System Prompt
+
+The most important prompt — it sets the LLM's behavior:
+
+\`\`\`typescript
+const messages = [
+  {
+    role: "system",
+    content: \`You are a helpful customer support assistant for Acme Corp.
+    - Be concise and professional
+    - If you don't know the answer, say "I don't know" — do not make up information
+    - Never share internal policies or pricing unless asked
+    - Format responses in markdown\`,
+  },
+  { role: "user", content: userMessage },
+];
+\`\`\`
+
+### Few-Shot Prompting
+
+Provide examples in the prompt — more reliable than instructions alone:
+
+\`\`\`typescript
+const response = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "Extract structured data from text." },
+    {
+      role: "user",
+      content: \`Text: "My name is Alice and I live in New York"
+      Output: {"name": "Alice", "city": "New York"}
+
+      Text: "\${userText}"
+      Output:\`,
+    },
+  ],
+  temperature: 0,
+});
+\`\`\`
+
+### Structured Output
+
+Most providers now support **JSON mode**:
+
+\`\`\`typescript
+const response = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [
+    { role: "system", content: "Extract information as JSON." },
+    { role: "user", content: \`Extract: \${userText}\` },
+  ],
+  response_format: { type: "json_object" }, // Guarantees valid JSON
+});
+\`\`\`
+
+---
+
+## Streaming
+
+Streaming reduces perceived latency — the user sees the first token in milliseconds instead of waiting for the full response:
+
+\`\`\`typescript
+const stream = await openai.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Write a short poem" }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || "");
+  // Token by token: "The" → " sun" → " sets" → " slow"...
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens when the input exceeds the context window?
+   **A:** The LLM cannot process tokens beyond its context window. Most providers truncate from the beginning (losing earlier context) or reject the request. Choose a model with sufficient context length for your use case.
+
+2. **Q:** Temperature 0 guarantees deterministic output, right?
+   **A:** No. Even at temperature 0, floating-point arithmetic and GPU non-determinism can produce different outputs. For truly deterministic output, set seed parameter (supported by OpenAI) and use temperature 0.
+
+3. **Q:** Why is the system prompt the most important part of the API call?
+   **A:** The system prompt sets the LLM's behavior, tone, and constraints. It is processed first and has the most influence on the model's response style. A good system prompt reduces hallucination, enforces format, and defines boundaries.
+
+4. **Q:** How do you estimate the cost of an LLM API call?
+   **A:** Count input + output tokens. Input: \`tiktoken\` the prompt. Output: estimate based on expected response length. Multiply by per-token price. For GPT-4o, a 2000-token prompt + 500-token response costs (2000 × $2.50/1M) + (500 × $10/1M) = $0.01.
+
+5. **Q:** What is the difference between temperature and top_p?
+   **A:** Temperature scales the log probabilities before sampling — higher temperature makes low-probability tokens more likely. Top_p (nucleus sampling) selects from the smallest set of tokens whose cumulative probability exceeds p. Use one or the other, not both (set the unused to 1).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+LLM Fundamentals:
+────────────────
+Tokenization: ~0.75 words/token
+Context window: max tokens the model can process
+Temperature: 0 (deterministic) → 2 (very random)
+Top-p: nucleus sampling threshold
+Max tokens: limit output length and cost
+
+Prompting:
+  System prompt → sets behavior (most important)
+  Few-shot → examples in context
+  Structured output → JSON mode
+  Streaming → first token faster, progressive rendering
+
+Cost:
+  Input tokens × price + output tokens × price
+  Use token counting libraries (tiktoken)
+  Set max_tokens to prevent runaway generation`,
             tags: ["AI", "LLM", "Prompt Engineering"],
           },
           {
@@ -7617,7 +13560,210 @@ func main() {
               "RAG evaluation: hit rate, MRR (Mean Reciprocal Rank), faithfulness — does the generated answer actually match the retrieved context?",
               "Production RAG: caching (embedding + generation), rate limiting, content moderation guardrails, cost tracking per query.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+LLMs know a lot, but they do not know YOUR data. They cannot answer questions about your internal documentation, your product catalog, or your user's specific account. This is where **Retrieval-Augmented Generation (RAG)** comes in.
+
+RAG retrieves relevant chunks from your database and injects them into the LLM's context. The LLM generates answers grounded in your data — not from its training. This is how companies build customer support bots, internal knowledge assistants, and AI-powered search.
+
+---
+
+## RAG Architecture
+
+\`\`\`
+                      ┌──────────────────┐
+                      │    Documents      │ (PDFs, wikis, code repos)
+                      └────────┬─────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────┐
+│                Ingestion Pipeline              │
+│  1. Chunk (split documents into pieces)       │
+│  2. Embed (convert chunks to vectors)         │
+│  3. Index (store vectors in vector DB)        │
+└──────────────────────────────────────────────┘
+                               ▲
+                               │
+┌──────────────────────────────────────────────┐
+│                Query Pipeline                  │
+│  1. User question                              │
+│  2. Embed question → query vector              │
+│  3. Vector DB → top-K similar chunks           │
+│  4. Add chunks to LLM context                  │
+│  5. LLM generates answer grounded in chunks    │
+└──────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Chunking — The Most Important Ingestion Step
+
+Split documents into chunks that are:
+- **Small enough** to fit in the context window
+- **Semantically coherent** (paragraph boundaries, not 500-char splits)
+- **Overlapping** (50-100 char overlap between chunks to avoid boundary loss)
+
+\`\`\`typescript
+function chunkDocument(text: string): string[] {
+  // Simple approach: split by paragraphs, group into ~500-token chunks
+  const paragraphs = text.split("\\n\\n");
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const para of paragraphs) {
+    if ((currentChunk + para).length > 2000) {
+      chunks.push(currentChunk.trim());
+      currentChunk = para;
+    } else {
+      currentChunk += "\\n\\n" + para;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+\`\`\`
+
+**Better chunking:** Use semantic chunkers (LangChain's RecursiveCharacterTextSplitter, Unstructured.io) that split on natural boundaries.
+
+---
+
+## Embedding Models
+
+Convert text to vectors (arrays of floats):
+
+\`\`\`typescript
+import { OpenAI } from "openai";
+
+const openai = new OpenAI();
+
+async function embed(text: string): Promise<number[]> {
+  const response = await openai.embeddings.create({
+    model: "text-embedding-3-small",  // 1536 dimensions
+    input: text,
+  });
+  return response.data[0].embedding;
+}
+
+// Store in pgvector:
+// INSERT INTO embeddings (content, embedding) VALUES ($1, $2::vector)
+\`\`\`
+
+| Model | Dimensions | Cost | Quality |
+|-------|-----------|------|---------|
+| text-embedding-3-small | 1536 | $0.02/1M tokens | Good |
+| text-embedding-3-large | 3072 | $0.13/1M tokens | Better |
+| voyage-2 | 1024 | $0.10/1M tokens | Good |
+
+---
+
+## Vector Database — pgvector
+
+\`\`\`sql
+-- Enable pgvector extension
+CREATE EXTENSION vector;
+
+-- Create table with vector column
+CREATE TABLE document_chunks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  embedding vector(1536),  -- matches text-embedding-3-small dimensions
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create index for fast similarity search
+CREATE INDEX idx_embedding ON document_chunks
+  USING hnsw (embedding vector_cosine_ops);  -- HNSW index (fast, approximate)
+
+-- Query: find top-5 most similar chunks
+SELECT content, 1 - (embedding <=> $1::vector) as similarity
+FROM document_chunks
+ORDER BY embedding <=> $1::vector  -- cosine distance (<=>)
+LIMIT 5;
+\`\`\`
+
+---
+
+## Generation — The LLM Call
+
+\`\`\`typescript
+async function answerQuestion(question: string): Promise<string> {
+  // 1. Embed question
+  const queryVector = await embed(question);
+
+  // 2. Retrieve relevant chunks
+  const chunks = await findSimilarChunks(queryVector, 5);
+
+  // 3. Build context
+  const context = chunks.map(c => c.content).join("\\n\\n---\\n\\n");
+
+  // 4. Generate answer grounded in context
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content: \`Answer the question based ONLY on the provided context.
+        If the context does not contain the answer, say "I don't know."
+        Cite the relevant parts of the context.\`,
+      },
+      {
+        role: "user",
+        content: \`Context:
+\${context}
+
+Question: \${question}\`,
+      },
+    ],
+    temperature: 0,
+  });
+
+  return response.choices[0].message.content;
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why chunk documents instead of embedding the entire document?
+   **A:** Long documents exceed context windows and produce poor embeddings (the vector averages out specific information). Smaller chunks match specific queries better. 500-1000 token chunks are the standard sweet spot.
+
+2. **Q:** What is hybrid search and why use it?
+   **A:** Hybrid search combines vector similarity (semantic meaning) with keyword search (exact term matching). Vector search finds concepts; keyword search finds exact phrases. Together they outperform either alone. Use BM25 + vector search with weighted scoring.
+
+3. **Q:** How do you evaluate RAG quality?
+   **A:** Measure (1) Hit rate — does the relevant chunk appear in the top-5 results? (2) MRR (Mean Reciprocal Rank) — how high is the relevant chunk ranked? (3) Faithfulness — does the generated answer match the retrieved context? (4) Answer relevance — does the answer address the question?
+
+4. **Q:** What happens when the retrieved context is irrelevant?
+   **A:** The LLM should say "I don't know" if instructed properly. Without the instruction, it may hallucinate based on its training data. Always instruct the LLM to answer only based on the provided context.
+
+5. **Q:** How do you handle real-time data updates in RAG?
+   **A:** When a document is updated: re-chunk → re-embed → update the vector database. For near-real-time, use CDC (Change Data Capture) to trigger reindexing. For batch updates, run the ingestion pipeline on a schedule.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+RAG Pipeline:
+  Ingest:  Document → Chunk → Embed → Index (Vector DB)
+  Query:   Question → Embed → Retrieve (top-K) → Context → LLM → Answer
+
+Key Components:
+  Chunking: 500-1000 tokens, overlap, semantic boundaries
+  Embedding: text-embedding-3-small (1536 dims), voyage-2
+  Vector DB: pgvector, Pinecone, Weaviate, Qdrant
+  Retrieval: vector search + keyword search (hybrid = best)
+  Generation: system prompt + context + question → answer
+
+Evaluation:
+  Hit rate, MRR, faithfulness, answer relevance
+  Always test on your domain-specific data`,
             tags: ["AI", "RAG", "Vector Database"],
           },
           {
@@ -7634,7 +13780,189 @@ func main() {
               "Observability: trace LLM calls with OpenTelemetry — log prompts, responses, token counts, latency per request.",
               "Fallback chains: try cheap model first, escalate to expensive model on low confidence — reduces average cost per query.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+LLMs are expensive and unpredictable. A single unconstrained request can cost $1+ in compute and take 30 seconds to respond. Without guardrails, users can extract sensitive information or make your AI say things you will regret.
+
+Production AI engineering is about controlling quality, managing costs, and ensuring safety — all while delivering a great user experience.
+
+---
+
+## Provider Landscape
+
+| Provider | Best Model | Strengths | Weaknesses |
+|----------|-----------|-----------|------------|
+| OpenAI | GPT-4o | Best overall, function calling, JSON mode | Most expensive, rate limits |
+| Anthropic | Claude 3.5 Sonnet | Long context (200K), safety, coding | Slower than GPT-4o |
+| Google | Gemini 2.0 | 1M context, multi-modal, cheap | Less mature API |
+| Meta | Llama 3 70B | Open source, self-host | Needs GPU infrastructure |
+| Mistral | Mistral Large | European, open-weight | Smaller ecosystem |
+
+---
+
+## Cost Optimization
+
+### Prompt Caching
+
+Anthropic and OpenAI automatically cache repeated prompt prefixes:
+
+\`\`\`typescript
+// The system prompt is cached after the first request
+// Subsequent requests pay ~50% less for the cached prefix
+const messages = [
+  { role: "system", content: VERY_LONG_SYSTEM_PROMPT }, // cached!
+  { role: "user", content: userQuestion },
+];
+\`\`\`
+
+### Model Tiering
+
+Use different models for different tasks:
+
+\`\`\`typescript
+// Classification → cheap model
+async function classifyIntent(text: string): Promise<string> {
+  return cheapModel.call(text); // e.g., GPT-4o-mini: $0.15/1M tokens
+}
+
+// Complex generation → expensive model
+async function generateReport(intent: string, context: string): Promise<string> {
+  return expensiveModel.call(\`Generate a report for \${intent}...\`);
+  // e.g., GPT-4o: $2.50/1M tokens
+}
+\`\`\`
+
+### Fallback Chain
+
+Try cheap model first, escalate to expensive on low confidence:
+
+\`\`\`typescript
+async function answer(query: string): Promise<string> {
+  // Try fast/cheap model first
+  const quickAnswer = await fastModel.call(query);
+
+  // Request confidence score from the model
+  if (quickAnswer.confidence > 0.9) return quickAnswer.text;
+
+  // Escalate to expensive model for complex queries
+  return expensiveModel.call(query);
+}
+\`\`\`
+
+---
+
+## Guardrails
+
+### Input Guardrails — Prompt Injection Detection
+
+\`\`\`typescript
+// Check for prompt injection before the LLM call
+function isPromptInjection(text: string): boolean {
+  const injectionPatterns = [
+    /ignore (all )?(previous|above) instructions/i,
+    /system prompt/i,
+    /you are (now |actually )/i,
+    /forget everything/i,
+  ];
+  return injectionPatterns.some(p => p.test(text));
+}
+
+if (isPromptInjection(userInput)) {
+  return { error: "Invalid input" };
+}
+\`\`\`
+
+### Output Guardrails — Content Moderation
+
+\`\`\`typescript
+// Check LLM output before sending to user
+async function moderateOutput(text: string): Promise<boolean> {
+  const response = await openai.moderations.create({ input: text });
+  return response.results[0].flagged; // true if content violates policy
+}
+\`\`\`
+
+---
+
+## Observability
+
+Trace every LLM call:
+
+\`\`\`typescript
+import { trace } from "@opentelemetry/api";
+
+async function tracedLLMCall(prompt: string): Promise<string> {
+  const tracer = trace.getTracer("llm");
+  const span = tracer.startSpan("openai.chat");
+
+  span.setAttributes({
+    "llm.model": "gpt-4o",
+    "llm.prompt": prompt,
+    "llm.prompt_tokens": countTokens(prompt),
+  });
+
+  const start = Date.now();
+  const response = await openai.chat.completions.create({ /* ... */ });
+  const duration = Date.now() - start;
+
+  span.setAttributes({
+    "llm.response": response.choices[0].message.content,
+    "llm.duration_ms": duration,
+    "llm.total_tokens": response.usage.total_tokens,
+  });
+  span.end();
+
+  return response.choices[0].message.content;
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** How do you handle prompt injection attacks in production?
+   **A:** (1) Input validation — detect known injection patterns; (2) Separate system prompt from user input — never concatenate user input into the system prompt; (3) Output validation — check LLM responses before sending to users; (4) Use instruction-tuned models that are better at following the system prompt.
+
+2. **Q:** What is model tiering and why use it?
+   **A:** Route simple queries to cheap models (GPT-4o-mini: $0.15/1M) and complex queries to expensive models (GPT-4o: $2.50/1M). Classification, simple Q&A, and extraction can use cheap models. Complex reasoning, creative writing, and code generation need expensive models.
+
+3. **Q:** How do you estimate cloud costs for an LLM feature?
+   **A:** (Average daily requests × avg input tokens × input price) + (avg daily requests × avg output tokens × output price) + embedding costs + vector DB costs. For a chatbot with 10K requests/day, 3000 input + 1000 output tokens using GPT-4o: ~$125/month in LLM costs.
+
+4. **Q:** What is the role of a content moderation layer?
+   **A:** It filters both input (user prompts) and output (LLM responses) for harmful content — hate speech, violence, sexual content, PII leaks, and policy violations. OpenAI's Moderation API or Azure AI Content Safety can be used.
+
+5. **Q:** Why should you always set max_tokens on production LLM calls?
+   **A:** Without max_tokens, an LLM can generate indefinitely — runaway responses can cost thousands of dollars and degrade user experience. Always set a reasonable limit based on your use case (e.g., 500 tokens for Q&A, 2000 for code generation).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Production AI Checklist:
+────────────────────────
+Cost:
+  • Prompt caching (cache system prompt)
+  • Model tiering (cheap → expensive escalation)
+  • Max tokens set on every call
+  • Monitor token usage per user/session
+
+Safety:
+  • Input guardrails (prompt injection detection)
+  • Output guardrails (content moderation)
+  • PII redaction
+  • Rate limiting per user
+
+Observability:
+  • Trace every LLM call (OpenTelemetry)
+  • Log: prompt, response, tokens, latency, model
+  • Monitor: error rate, latency p50/p99, cost per user
+
+Reliability:
+  • Retries with exponential backoff
+  • Fallback to cheaper model on timeout
+  • Circuit breaker for provider outages`,
             tags: ["AI", "API", "Production"],
           },
         ],
@@ -7673,7 +14001,158 @@ func main() {
               "CFS (Completely Fair Scheduler): assigns CPU time proportionally using a red-black tree.",
               "Nice values and cgroups: controlling CPU priority and limits.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Every application runs as one or more **processes**. The operating system (Linux) manages which process runs when, how much CPU it gets, and ensures isolation between processes.
+
+Understanding processes, threads, and the Linux scheduler is essential for diagnosing performance issues, configuring CPU limits in containers, and writing efficient multi-threaded applications.
+
+---
+
+## Processes vs Threads
+
+| Aspect | Process | Thread (LWP) |
+|--------|---------|---------------|
+| Address space | Separate (isolated) | Shared with siblings |
+| Creation | fork() — COW copy | clone() — shares memory |
+| Overhead | High (full address space copy on write) | Low (shares address space) |
+| Communication | IPC (pipes, sockets, shared memory) | Shared memory (direct) |
+| Crash impact | Only that process dies | Can crash the entire process |
+
+\`\`\`bash
+# See all processes
+ps aux
+ps auxf  # tree view — shows parent-child relationships
+
+# See threads within a process
+ps -eLf | grep nginx
+top -H -p <PID>
+\`\`\`
+
+---
+
+## fork() and exec()
+
+Creating a new process in Unix happens in two steps:
+
+\`\`\`c
+#include <unistd.h>
+#include <sys/wait.h>
+
+pid_t pid = fork();  // Step 1: copy this process
+
+if (pid == 0) {
+    // Child process — pid is 0 here
+    execvp("/usr/bin/python3", args);  // Step 2: replace with new program
+    // If exec fails, we reach here
+    _exit(1);
+} else {
+    // Parent process — pid is the child's PID
+    int status;
+    waitpid(pid, &status, 0);  // Wait for child to finish
+}
+\`\`\`
+
+**COW (Copy-on-Write):** \`fork()\` does NOT copy all memory immediately. Both parent and child share the same physical pages marked read-only. When either writes, a page fault triggers a copy. This makes fork() fast — ~1μs per 1MB of address space (only page tables are copied).
+
+---
+
+## CFS — Completely Fair Scheduler
+
+The CFS is Linux's default scheduler since kernel 2.6.23:
+
+\`\`\`
+CFS maintains a red-black tree of runnable tasks, keyed by vruntime:
+                     [vruntime=100]
+                    /              \
+          [vruntime=80]          [vruntime=120]
+          /           \          /           \
+[vruntime=70]  [vruntime=85]  [vruntime=110] [vruntime=130]
+
+The leftmost node (lowest vruntime) is selected to run next.
+vruntime increases based on the task's priority (nice value):
+  • nice=0: vruntime runs at real time
+  • nice=+19: vruntime runs at ~1/10 real time (low priority)
+  • nice=-20: vruntime runs at ~10x real time (high priority)
+\`\`\`
+
+---
+
+## Nice Values and Cgroups
+
+### Nice Values (Process-Level Priority)
+
+\`\`\`bash
+# Start with low priority
+nice -n 19 ./slow-task.sh
+
+# Change priority of running process
+renice -n 10 -p 1234
+
+# Range: -20 (highest priority) to +19 (lowest)
+# Normal users can only INCREASE nice value (lower priority)
+# Root can set any value
+\`\`\`
+
+### Cgroups (Container-Level Limits)
+
+Cgroups control resource limits for groups of processes — the foundation of container resource constraints:
+
+\`\`\`bash
+# Cgroup v2: limit a group to 0.5 CPU cores
+echo "50000 100000" > /sys/fs/cgroup/cpu/mygroup/cpu.max
+# 50ms CPU time per 100ms period = 0.5 core
+
+# Limit memory to 512MB
+echo "536870912" > /sys/fs/cgroup/memory/mygroup/memory.max
+\`\`\`
+
+Kubernetes resource requests and limits map directly to cgroup settings.
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens when a process calls \`fork()\`?
+   **A:** The kernel creates a new process (child) that is an almost exact copy of the parent. Both continue executing from the same point after fork(). The child gets a new PID, and fork() returns 0 to the child and the child's PID to the parent.
+
+2. **Q:** Why is \`fork()\` fast despite copying the entire process?
+   **A:** Copy-on-Write (COW). \`fork()\` copies only page tables and marks all pages read-only. Physical pages are shared. When either process writes, a page fault triggers a copy of just that page. If the child immediately calls \`exec()\`, the address space is replaced and no write happens — zero physical page copies.
+
+3. **Q:** What is the difference between nice -20 and nice +19?
+   **A:** nice -20 is the highest priority — the process gets more CPU time relative to others. nice +19 is the lowest priority — the process runs only when nothing else needs the CPU. Both run, but the scheduler allocates CPU proportionally.
+
+4. **Q:** How does a container (Docker) limit CPU usage?
+   **A:** Docker sets cgroup cpu.max (v2) or cpu.cfs_quota_us/cpu.cfs_period_us (v1). The container's processes, regardless of how many, cannot exceed the quota. A limit of 0.5 cores means the container gets 50ms of CPU per 100ms period.
+
+5. **Q:** What is a zombie process and how does it occur?
+   **A:** A child process exits but the parent has not called wait()/waitpid() to read its exit status. The child remains as a "zombie" in the process table (shown as "Z" in ps). Zombies consume only a PID — no memory or CPU. They are cleaned up when the parent calls wait() or exits.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Process Lifecycle:
+  fork() → create copy (COW)
+  exec() → replace program
+  exit() → terminate, signal parent
+  wait() → reap exit status, clean up zombie
+
+Scheduling (CFS):
+  Red-black tree of tasks by vruntime
+  Leftmost = next to run
+  nice -20 → 10x priority
+  nice +19 → 0.1x priority
+
+Cgroups v2:
+  cpu.max → max CPU time per period
+  memory.max → max memory usage
+  io.max → max I/O bandwidth
+
+Thread vs Process:
+  Thread: shares address space, fast creation, vulnerable
+  Process: isolated address space, slow creation, robust`,
             tags: ["Linux", "OS", "Kernel"],
           },
           {
@@ -7690,7 +14169,174 @@ func main() {
               "mmap: map files or anonymous memory into the address space — used for fast I/O.",
               "OOM Killer: when memory is exhausted, kernel kills processes scored by heuristics.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Memory is the fastest storage tier. Understanding how virtual memory, paging, and the MMU work is essential for performance debugging, configuring database memory limits, and avoiding the OOM killer.
+
+Every \`malloc()\` returns a **virtual address**, not a physical one. The MMU (Memory Management Unit) translates virtual addresses to physical addresses on the fly, enabling isolation, overcommit, and file-backed memory (mmap).
+
+---
+
+## Virtual Address Space
+
+Each process sees its own flat 64-bit address space:
+
+\`\`\`
+Typical process address space (x86-64 Linux):
+┌──────────────────────┐ 0xFFFFFFFFFFFFFFFF
+│      Kernel space     │ ← Inaccessible from user code
+├──────────────────────┤ 0x7FFFFFFFFFFF (TASK_SIZE)
+│       Stack           │ ← Grows downward
+│          ↓            │
+│                      │
+│          ↑            │
+│         Heap          │ ← Grows upward (brk/sbrk)
+│      Data segment     │ ← Global/static variables
+│      Text segment     │ ← Program code (read-only)
+├──────────────────────┤
+│  Memory-mapped files  │ ← mmap() regions
+└──────────────────────┘ 0x0
+\`\`\`
+
+\`\`\`bash
+# Inspect memory map of a process
+cat /proc/1234/maps
+# 555555554000-555555555000 r-xp 00000000 ... /usr/bin/ls  (text)
+# 7ffff7ff7000-7ffff7ffa000 rw-p 00000000 ... [stack]
+\`\`\`
+
+---
+
+## Page Tables and TLB
+
+Virtual pages (4KB each) are mapped to physical frames via a multi-level page table:
+
+\`\`\`
+Virtual Address (48 bits):
+┌─────────┬──────────┬──────────┬──────────┬──────────┐
+│  PML4   │  PDPT    │   PD     │   PT     │  Offset  │
+│ (9 bits)│ (9 bits) │ (9 bits) │ (9 bits) │ (12 bits)│
+└────┬────┴────┬─────┴────┬─────┴────┬─────┴────┬─────┘
+     │         │         │         │          │
+     ▼         ▼         ▼         ▼          ▼
+   Level 4 → Level 3 → Level 2 → Level 1 → Physical Frame (4KB)
+\`\`\`
+
+**TLB (Translation Lookaside Buffer)** — a cache of recent virtual→physical translations. TLB misses are expensive (~10-100 cycles). Modern CPUs have 64-1536 TLB entries.
+
+\`\`\`bash
+# Check TLB miss rate (requires perf)
+perf stat -e dTLB-loads,dTLB-load-miss ./myapp
+\`\`\`
+
+---
+
+## Page Faults
+
+When a process accesses a virtual address with no valid page table entry:
+
+| Fault Type | Cause | Kernel Action |
+|------------|-------|---------------|
+| Minor | Page is in memory but not in the page table | Add entry to TLB (fast ~1μs) |
+| Major | Page must be loaded from disk (swap or mmap) | Read from disk (slow ~10ms) |
+| Segmentation | Access to unmapped or forbidden address | Send SIGSEGV, kill process |
+
+\`\`\`bash
+# Monitor major page faults
+pidstat -p 1234 -r 1  # page faults and memory stats
+\# Or: /usr/bin/time -v ./myapp  (shows major/minor faults)
+\`\`\`
+
+---
+
+## mmap — Memory-Mapped Files
+
+\`mmap()\` maps a file or anonymous memory into the address space:
+
+\`\`\`c
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+int fd = open("data.bin", O_RDONLY);
+
+// Map the entire file into memory
+void *addr = mmap(NULL,            // let kernel choose address
+                  file_size,       // length
+                  PROT_READ,       // read-only
+                  MAP_PRIVATE,     // COW on write
+                  fd,              // file descriptor
+                  0);              // offset
+
+// Now we can access the file as a byte array:
+char first_byte = ((char*)addr)[0];
+
+// The kernel lazily loads pages on demand — much faster than read()
+munmap(addr, file_size);
+\`\`\`
+
+---
+
+## OOM Killer
+
+When memory is exhausted, Linux invokes the **Out-Of-Memory Killer**:
+
+\`\`\`bash
+# Check OOM score for a process
+cat /proc/1234/oom_score
+# Higher score = more likely to be killed
+
+# Adjust OOM score (lower = less likely to be killed)
+echo -1000 > /proc/1234/oom_score_adj  # never kill (requires root)
+echo 1000 > /proc/1234/oom_score_adj   # always kill first
+
+# Tune vm.overcommit_ratio — percentage of RAM + swap available for overcommit
+sysctl vm.overcommit_ratio=50  # default 50%
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a minor page fault and a major page fault?
+   **A:** Minor fault: the page is in RAM but not mapped in the process's page table (e.g., shared library pages, COW). Resolved in ~1μs by updating the page table. Major fault: the page is on disk (swap or mmap'd file). Requires a disk read — takes ~10ms, 10,000x slower.
+
+2. **Q:** Why does \`mmap()\` outperform \`read()\` for large files?
+   **A:** \`mmap()\` maps pages on demand — avoids copying data from kernel space to user space. \`read()\` copies data: disk → kernel buffer → user buffer. \`mmap()\` gives direct access to the kernel page cache, eliminating the copy.
+
+3. **Q:** What happens when a process allocates more memory than physical RAM?
+   **A:** Linux uses overcommit by default — \`malloc()\` succeeds even if the total allocated exceeds RAM+swap. Pages are not backed by physical frames until they are actually written. When real memory runs out, the OOM killer terminates a process to free memory.
+
+4. **Q:** What is the TLB and why does it matter for performance?
+   **A:** The TLB caches virtual→physical address translations. Modern CPUs access memory in 4KB pages. Without the TLB, every memory access would require walking a multi-level page table (4 memory accesses). With a 95% TLB hit rate, most accesses cost 0 extra cycles.
+
+5. **Q:** What is huge pages (2MB/1GB) and when should you use them?
+   **A:** Huge pages use larger page sizes, reducing TLB pressure (fewer entries needed for the same memory). A 2MB huge page covers 512 regular 4KB pages with one TLB entry. Use for databases, JVM heaps, and high-performance computing. Configure via \`/sys/kernel/mm/hugepages/\`.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Virtual Memory:
+  • Each process has its own virtual address space
+  • MMU translates virtual → physical via page tables
+  • TLB caches recent translations (~1 cycle hit, ~100 cycles miss)
+
+Page Faults:
+  Minor: page in RAM, update page table (~1μs)
+  Major: page on disk, load from swap/file (~10ms)
+  SIGSEGV: invalid access (segmentation fault)
+
+Memory Mapping:
+  mmap: file → address space — page-fault-driven loading
+  MAP_SHARED: changes visible to other processes
+  MAP_PRIVATE: COW — changes not visible
+
+OOM Killer:
+  Scored by oom_score (memory usage + oom_score_adj)
+  SYStem kills highest-scoring process when memory exhausted
+  Tune with vm.overcommit_memory = 2 (disable overcommit)`,
             tags: ["Linux", "Memory", "Kernel"],
           },
           {
@@ -7707,7 +14353,191 @@ func main() {
               "Dirty pages: written but not yet flushed to disk — `fsync()` forces a flush.",
               "Journaling: filesystem records intent before writing — protects against corruption on crash.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Every file you read, every program you run, involves a filesystem. The **Virtual File System (VFS)** is the Linux kernel's elegant abstraction that makes all filesystems look the same to user-space programs.
+
+Understanding inodes (the metadata behind every file), the page cache (why reads are fast after the first time), and journaling (how filesystems survive crashes) is essential for systems programming and database configuration.
+
+---
+
+## VFS — Virtual File System
+
+VFS provides a uniform interface to any filesystem:
+
+\`\`\`
+User-space:  open()  read()  write()  close()
+                ↓       ↓       ↓       ↓
+            ┌──────────────────────────────────┐
+            │         VFS Layer                 │
+            │  (vfs_open, vfs_read, vfs_write)  │
+            └──────┬──────┬──────┬──────┬──────┘
+                   │      │      │      │
+              ┌────┘  ┌───┘  ┌───┘  ┌──┘
+              ▼       ▼      ▼      ▼
+           ext4     XFS    tmpfs   ntfs3
+\`\`\`
+
+---
+
+## Inodes — File Metadata
+
+Every file and directory on disk has an **inode** — a metadata record:
+
+\`\`\`bash
+# View inode information
+stat myfile.txt
+# Output:
+#   File: myfile.txt
+#   Size: 1024        Blocks: 8        Inode: 123456
+#   Access: 2024-01-15  (permissions)
+#   Uid: 1000 (user)   Gid: 1000 (group)
+#   Links: 1           (hard link count)
+
+# Find inode number
+ls -li myfile.txt  # -l = long, -i = show inodes
+# 123456 -rw-r--r-- 1 user user 1024 Jan 15 10:00 myfile.txt
+\`\`\`
+
+**What an inode contains:**
+- File size, permissions, owner, timestamps (atime, mtime, ctime)
+- Pointers to data blocks (direct, indirect, double indirect, triple indirect)
+- File type (regular, directory, symlink, device, socket)
+- Link count (number of hard links to this inode)
+
+**What an inode does NOT contain:**
+- The filename! Filenames are stored in directory entries (dentry).
+
+---
+
+## Directories
+
+A directory is a **file** that maps names to inodes:
+
+\`\`\`
+Directory file (contents):
+┌────────────┬──────────┐
+│ "file.txt" │ inode 123│
+│ "script.sh"│ inode 456│
+│ "subdir"   │ inode 789│
+│ "."        │ inode 123│  ← current directory
+│ ".."       │ inode 2  │  ← parent directory
+└────────────┴──────────┘
+\`\`\`
+
+\`\`\`bash
+# Hard link: same inode, different names
+ln myfile.txt myhardlink.txt  # both point to inode 123
+ls -li myfile.txt myhardlink.txt  # same inode number!
+
+# Symlink: different inode containing path string
+ln -s myfile.txt mysymlink.txt
+# mysymlink.txt has its OWN inode, containing "myfile.txt"
+\`\`\`
+
+---
+
+## Page Cache
+
+The kernel caches disk blocks in RAM — the **page cache**:
+
+\`\`\`
+Process reads /etc/passwd:
+1. Kernel checks page cache
+2. Cache MISS → read from disk (slow, ~10ms)
+3. Store in page cache
+4. Copy to user buffer
+5. Next read → cache HIT → zero disk I/O (fast, ~1μs)
+\`\`\`
+
+\`\`\`bash
+# Check page cache usage
+free -h
+#              total   used   buff/cache
+# Mem:         16G     4G     10G         ← 10GB of page cache!
+
+# Clear page cache (for benchmarking)
+echo 3 > /proc/sys/vm/drop_caches  # 1=pagecache, 2=dentries, 3=all
+
+# Monitor page cache for a file
+finfo myfile.txt  # or use mincore() system call
+\`\`\`
+
+---
+
+## Journaling
+
+Journaling prevents filesystem corruption after a crash:
+
+\`\`\`
+Without journaling (ext2):
+  Writing file: write inode → write data blocks → ⚡ CRASH
+  → Filesystem state: metadata and data inconsistent → fsck on next boot
+
+With journaling (ext4, XFS):
+  1. Write intent to journal ("about to write inode + data")
+  2. ⚡ CRASH
+  3. On reboot: replay journal → complete or rollback the operation
+  → Filesystem is always consistent
+\`\`\`
+
+\`\`\`bash
+# Check filesystem features
+tune2fs -l /dev/sda1 | grep features
+# Filesystem features: has_journal extents ...
+
+# Journal modes (ext4):
+# data=ordered (default): metadata journaled, data written before metadata
+# data=writeback: metadata journaled, data not (fastest, least safe)
+# data=journal: both metadata and data journaled (slowest, safest)
+mount -o data=ordered /dev/sda1 /mnt
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a hard link and a symbolic link?
+   **A:** A hard link shares the same inode — it is literally the same file with a different name. A symbolic link is a separate file containing the path to the target. Hard links cannot span filesystems or directories. If the target of a symlink is deleted, the symlink is broken.
+
+2. **Q:** How does the page cache speed up repeated file reads?
+   **A:** The first read is slow (disk → kernel page cache → user buffer). Subsequent reads hit the page cache (memory → user buffer, no disk I/O). The kernel uses read-ahead to predictively cache sequential access patterns.
+
+3. **Q:** Why does Linux show 10GB "used" by buff/cache but the system is not OOM?
+   **A:** The page cache is reclaimable. When an application needs memory, the kernel evicts clean pages from the page cache. The page cache uses "free" memory that would otherwise be wasted — it improves performance without hurting availability.
+
+4. **Q:** What happens during \`fsync()\`?
+   **A:** \`fsync()\` flushes the file's dirty pages (modified in page cache but not yet on disk) and the filesystem metadata to the storage device. It blocks until the device confirms the data is persistent. This is why databases call fsync after every transaction.
+
+5. **Q:** What is a dentry (directory entry) cache?
+   **A:** The kernel caches parsed directory entries (filename → inode mappings) in the dentry cache. This avoids re-reading directory data from disk. \`ls -l\` on a warm cache has zero disk I/O. The dentry cache is separate from the page cache.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+VFS: uniform interface → ext4, XFS, tmpfs, btrfs, FUSE
+
+Inode:
+  Metadata: size, permissions, timestamps, block pointers
+  Does NOT store filename — filenames are in dentries
+
+Page Cache:
+  Caches disk blocks in RAM
+  Clean pages = disk data (reclaimable)
+  Dirty pages = modified (need fsync)
+
+Journaling:
+  Records intent before writing — crash-safe
+  ext4 default: data=ordered
+  XFS: metadata journaling only
+
+Key syscalls:
+  read/write → page cache (buffered I/O)
+  mmap → map file into memory
+  fsync → flush dirty pages to disk
+  sync → fsync all dirty pages`,
             tags: ["Linux", "File Systems"],
           },
           {
@@ -7724,7 +14554,171 @@ func main() {
               "Congestion Control (CUBIC, BBR): grows send rate until packet loss or delay, then backs off.",
               "Nagle's algorithm: batches small writes — disable with TCP_NODELAY for low-latency apps.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+TCP is the reliable transport layer that carries HTTP, SSH, databases, and most internet traffic. Understanding its mechanisms — the 3-way handshake, flow control, congestion control — is essential for diagnosing network performance and configuring systems for low latency.
+
+A page load involves one or more TCP connections. Each new connection adds 1 round trip (the handshake). Combined with TLS, that is 2-3 round trips before any data flows.
+
+---
+
+## Sockets: The Unix I/O Abstraction
+
+In Unix, everything is a file — including network connections:
+
+\`\`\`c
+int server_fd = socket(AF_INET, SOCK_STREAM, 0); // TCP socket
+int enable = 1;
+setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(enable));
+
+struct sockaddr_in addr;
+addr.sin_family = AF_INET;
+addr.sin_port = htons(8080);
+addr.sin_addr.s_addr = INADDR_ANY;
+
+bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
+listen(server_fd, SOMAXCONN);
+
+while (1) {
+    int client_fd = accept(server_fd, NULL, NULL);
+    // handle client — same read/write/close API as files
+}
+\`\`\`
+
+---
+
+## 3-Way Handshake
+
+\`\`\`
+Client (browser)                   Server (nginx)
+    │                                   │
+    │ ── SYN (seq=1000) ──────────────→ │  Step 1: Client sends SYN
+    │                                   │
+    │ ← SYN-ACK (seq=5000, ack=1001) ── │  Step 2: Server responds
+    │                                   │
+    │ ── ACK (seq=1001, ack=5001) ────→ │  Step 3: Client acknowledges
+    │                                   │
+    │ ── [HTTP GET /] ────────────────→ │  Now data can flow!
+    │                                   │
+    1 round trip before data (RTT)
+\`\`\`
+
+Every HTTP request on a new TCP connection adds 1 RTT. For a user in Sydney connecting to a server in New York (~150ms RTT), that is 150ms just for the handshake.
+
+---
+
+## Flow Control — Sliding Window
+
+The receiver advertises a **window** — how much data it is willing to receive:
+
+\`\`\`
+Sender (window=14600 bytes):               Receiver
+    │                                            │
+    │ ── segment 1 (1460 bytes) ──────────────→  │
+    │ ── segment 2 (1460 bytes) ──────────────→  │
+    │ ── segment 3 (1460 bytes) ──────────────→  │
+    │ ... up to 10 segments (14,600 bytes)       │
+    │                                            │
+    │ ← ACK (ack=8761, window=29200) ──────────  │
+    │   "Received up to byte 8760, I can take    │
+    │    29200 more bytes"                       │
+    │                                            │
+\`\`\`
+
+The window prevents the sender from overwhelming the receiver's buffer.
+
+---
+
+## Congestion Control
+
+While flow control protects the receiver, **congestion control** protects the network. Linux uses CUBIC (default) or BBR:
+
+\`\`\`
+CUBIC Congestion Control:
+                          ── packet loss!
+                          │
+  Congestion window   ────┘
+  (cwnd)                   ┌── multiplicative decrease (halve cwnd)
+                          │
+                         ┌┘ exponential growth ←─ additive increase ──→
+                         │ (slow start)          (congestion avoidance)
+                         └──────────────►         ────────────────►
+                            Time ────────────────────────────────────>
+\`\`\`
+
+\`\`\`bash
+# Check which congestion control algorithm is in use
+sysctl net.ipv4.tcp_congestion_control
+# net.ipv4.tcp_congestion_control = bbr
+
+# Available algorithms
+sysctl net.ipv4.tcp_available_congestion_control
+\`\`\`
+
+---
+
+## Nagle's Algorithm and TCP_NODELAY
+
+Nagle's algorithm delays small writes to batch them into larger segments:
+
+\`\`\`javascript
+// BAD: Nagle delays interactive data
+socket.write("H"); // Delayed — waits for more data or ACK
+socket.write("i");
+
+// FIX: Disable Nagle for low-latency apps
+socket.setNoDelay(true); // TCP_NODELAY in Node.js
+
+// In C:
+int flag = 1;
+setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between flow control and congestion control?
+   **A:** Flow control prevents the sender from overwhelming the RECEIVER's buffer (advertised window). Congestion control prevents the sender from overwhelming the NETWORK (cwnd — congestion window). TCP uses the minimum of both windows.
+
+2. **Q:** What happens during TCP's slow start phase?
+   **A:** The congestion window (cwnd) starts at 10 segments (~14KB) and doubles every RTT (exponential growth). When a packet is lost or cwnd reaches the slow start threshold, it switches to congestion avoidance (additive increase).
+
+3. **Q:** What is the TIME_WAIT state and why is it necessary?
+   **A:** When a TCP connection closes, the side that sends the last ACK enters TIME_WAIT (typically 60 seconds). It ensures the other side received the ACK (retransmits if not) and prevents delayed packets from a closed connection being mistaken for a new connection.
+
+4. **Q:** How does TCP handle out-of-order packets?
+   **A:** TCP uses sequence numbers to reorder packets on the receiving side. The receiver acknowledges the highest in-order byte received. Out-of-order packets are buffered. If packets are lost, TCP retransmits after a timeout.
+
+5. **Q:** What does TCP_NODELAY do and when should you use it?
+   **A:** It disables Nagle's algorithm, which batches small writes into larger packets. Use TCP_NODELAY for low-latency interactive applications (SSH, real-time games, chat). Do NOT use it for bulk transfers where batching improves throughput.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+TCP Key Concepts:
+  3-Way Handshake: SYN → SYN-ACK → ACK (1 RTT before data)
+  Sliding Window: receiver's buffer capacity (flow control)
+  Congestion Window: network capacity (congestion control)
+  Sequence Numbers: detect loss, reorder packets
+  Checksum: detect corruption
+
+Congestion Control (CUBIC):
+  Slow Start: double cwnd every RTT (exponential)
+  Congestion Avoidance: +1 MSS per RTT (linear)
+  Packet Loss: halve cwnd (multiplicative decrease)
+
+Socket Options:
+  TCP_NODELAY: disable Nagle (low latency)
+  SO_REUSEADDR: reuse port after TIME_WAIT
+  TCP_QUICKACK: send ACKs immediately (not delayed)
+
+Monitoring:
+  ss -ti  → TCP socket info (window, cwnd, RTT)
+  netstat -s  → TCP statistics (retransmits, resets)
+  tcpdump → packet-level inspection`,
             tags: ["Networking", "Linux", "TCP"],
           },
           {
@@ -7740,7 +14734,151 @@ func main() {
               "DNSSEC: signs records with asymmetric crypto — prevents DNS spoofing.",
               "DNS-over-HTTPS (DoH): encrypts DNS queries — prevents eavesdropping.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+DNS is the phonebook of the internet. When you type \`example.com\`, DNS translates it to an IP address like \`93.184.216.34\`. This translation involves a chain of servers, each caching results to make subsequent lookups faster.
+
+A slow DNS lookup adds 50-200ms to every page load. A misconfigured DNS record can take down your email delivery or redirect traffic to the wrong server.
+
+---
+
+## Resolution Chain
+
+\`\`\`
+Your browser needs to connect to "www.example.com"
+
+1. Browser cache → miss
+2. OS stub resolver → checks /etc/hosts → miss
+3. Recursive resolver (usually your ISP or 8.8.8.8):
+   a. Root server → "who manages .com?"
+   b. .com TLD server → "who manages example.com?"
+   c. Authoritative server for example.com → "www.example.com = 93.184.216.34"
+4. Returns IP to browser
+
+Each step may be cached by the recursive resolver.
+\`\`\`
+
+\`\`\`bash
+# Trace the full resolution chain
+dig +trace www.example.com
+
+# Quick lookup
+nslookup www.example.com
+host www.example.com
+
+# Check which resolver your system uses
+cat /etc/resolv.conf
+# nameserver 8.8.8.8
+# nameserver 1.1.1.1
+\`\`\`
+
+---
+
+## Record Types
+
+| Record | Purpose | Example |
+|--------|---------|---------|
+| A | Maps hostname to IPv4 address | \`www.example.com → 93.184.216.34\` |
+| AAAA | Maps hostname to IPv6 address | \`www.example.com → 2606:2800:220:1:248:1893:25c8:1946\` |
+| CNAME | Alias — maps one name to another | \`blog.example.com → example.github.io\` |
+| MX | Mail server for the domain | \`example.com → mail.example.com (priority 10)\` |
+| TXT | Arbitrary text — used for verification | \`SPF, DKIM, DMARC, domain verification\` |
+| NS | Authoritative nameserver | \`example.com → ns1.example.com\` |
+| SOA | Start of Authority — zone metadata | Admin email, serial, refresh intervals |
+
+\`\`\`bash
+# View all DNS records for a domain
+dig example.com ANY
+
+# Check mail servers
+dig example.com MX
+
+# Check CNAME chain
+dig www.example.com CNAME +short
+\`\`\`
+
+---
+
+## TTL — Time To Live
+
+TTL controls how long a resolver caches a record:
+
+\`\`\`bash
+# Short TTL (60 seconds) — for fast propagation during changes
+example.com. 60 IN A 93.184.216.34
+
+# Long TTL (86400 seconds = 24 hours) — for stable records
+example.com. 86400 IN MX 10 mail.example.com
+\`\`\`
+
+**Trade-off:**
+- Short TTL (60s): changes propagate fast, but more DNS queries = higher resolver load
+- Long TTL (86400s): fewer queries, but changes take 24 hours to propagate
+
+For DNS migrations: lower TTL to 60 seconds 48 hours BEFORE the change, then make the change.
+
+---
+
+## DNSSEC
+
+DNSSEC signs DNS records with cryptographic keys:
+
+\`\`\`bash
+# Check if a domain has DNSSEC
+dig example.com DNSSEC
+
+# Verify the DNSSEC chain
+delv example.com
+
+# Without DNSSEC: an attacker could intercept the DNS response
+# and send you to a fake IP address (DNS spoofing / cache poisoning)
+# With DNSSEC: the resolver verifies the signature before using the record
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a recursive resolver and an authoritative nameserver?
+   **A:** A recursive resolver (8.8.8.8, your ISP) does the work of following the chain from root → TLD → authoritative to find an IP. An authoritative nameserver (ns1.example.com) hosts the actual DNS records for a domain and responds with the definitive answer.
+
+2. **Q:** Why can CNAME records not coexist with other record types at the same name?
+   **A:** Per RFC, if a CNAME record exists for a name, no other record types are allowed at that name. The CNAME is an alias that redirects to another name where all other records exist. If you need both, use the root domain (example.com → A record) and CNAME www to the root.
+
+3. **Q:** What is DNS prefetching and how does it improve page load time?
+   **A:** Browsers use \`<link rel="dns-prefetch" href="//api.example.com">\` to resolve the domain to an IP before the user clicks the link. This saves the DNS lookup latency (typically 20-120ms) from the critical path.
+
+4. **Q:** What happens when a DNS query returns multiple A records?
+   **A:** The client typically picks one at random (round-robin DNS) or uses the first one. This is a simple form of load balancing. However, it does not account for server health — if one server goes down, clients may still try to connect to it.
+
+5. **Q:** What is DNS-based failover and how does it work?
+   **A:** A DNS provider monitors your servers and automatically updates A records to point only to healthy servers. If the primary server goes down, the DNS record changes to the secondary server's IP. The failover speed is limited by the TTL — records with shorter TTL fail over faster.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+DNS Resolution:
+  Stub resolver → Recursive resolver → Root → TLD → Authoritative
+
+Record Types:
+  A/AAAA: IPv4/IPv6 address
+  CNAME: alias (no other records at same name)
+  MX: mail server with priority
+  TXT: text (SPF, DKIM, DMARC, verification)
+  NS: authoritative nameserver
+  SOA: zone metadata (serial, refresh, retry, expire, ttl)
+
+TTL: cache duration — short TTL for fast propagation, long for stability
+
+DNSSEC: cryptographic signing — prevents spoofing
+
+Best Practices:
+  • Use CNAME for www → root domain
+  • Set TTL low before planned changes
+  • Use separate TXT records for SPF, DKIM, DMARC
+  • Monitor DNS resolution time in RUM (Real User Monitoring)`,
             tags: ["Networking", "DNS"],
           },
         ],
@@ -7763,7 +14901,119 @@ func main() {
               "Health checks: LB removes unhealthy backends — active (probes) vs passive (error rate).",
               "Session affinity (sticky sessions): routes same client to same backend — complicates horizontal scaling.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+A single server can handle only so much traffic. Load balancers distribute requests across a pool of backend servers, improving both capacity and reliability.
+
+Two types exist: **L4** (transport layer, faster) and **L7** (application layer, smarter). Choosing between them depends on whether you need to inspect HTTP headers or just route packets.
+
+---
+
+## L4 (Transport Layer) Load Balancing
+
+Operates at TCP/UDP level — does not inspect the payload:
+
+\`\`\`
+Client → L4 LB (IP: 10.0.0.1:443)
+                │
+        ┌───────┼───────┐
+        ▼       ▼       ▼
+    Server A  Server B  Server C
+    10.0.0.2  10.0.0.3  10.0.0.4
+
+L4 LB forwards TCP segments without looking at the HTTP request.
+\`\`\`
+
+**Uses:** TCP/UDP traffic where payload inspection is not needed.
+**Pros:** Very fast (kernel-level), low overhead, protocol-agnostic.
+**Cons:** Cannot route based on URL, headers, or cookies.
+
+---
+
+## L7 (Application Layer) Load Balancing
+
+Operates at HTTP level — can inspect and modify requests:
+
+\`\`\`
+Client → L7 LB (nginx/haproxy)
+  GET /api/users → Server A
+  POST /api/orders → Server B
+  Host: admin.example.com → Server C
+\`\`\`
+
+**Uses:** HTTP APIs, microservices routing, TLS termination, canary deployments.
+**Pros:** URL-based routing, header rewriting, session affinity (sticky cookies).
+**Cons:** Higher overhead per request (parses HTTP).
+
+---
+
+## Load Balancing Algorithms
+
+| Algorithm | How It Works | Best For |
+|-----------|-------------|----------|
+| Round Robin | Distributes requests in order | Equal-capacity servers |
+| Weighted Round Robin | Servers with more weight get more requests | Unequal-capacity servers |
+| Least Connections | Sends to server with fewest active connections | Varying request durations |
+| IP Hash | Hash of client IP → same server | Sticky sessions (no cookie) |
+| Random | Pick randomly | Simple, works well with many requests |
+
+---
+
+## Health Checks
+
+Health checks remove unhealthy backends:
+
+\`\`\`yaml
+# HAProxy health check config
+backend web-servers
+    server web1 10.0.0.2:80 check inter 3000 fall 3 rise 2
+    #         lb      addr:port  check every 3s, fail after 3, recover after 2
+    server web2 10.0.0.3:80 check
+    server web3 10.0.0.4:80 check
+\`\`\`
+
+**Active:** LB sends periodic probes (HTTP GET /health, TCP connect).
+**Passive:** LB detects failures from actual traffic errors (503 responses, connection timeouts). Slower but zero overhead.
+
+---
+
+## Practice Questions
+
+1. **Q:** When would you use L4 load balancing instead of L7?
+   **A:** For non-HTTP protocols (gRPC, WebSocket, MQTT, database connections), or when raw performance is the priority and no content-based routing is needed. L4 has lower overhead because it does not parse the application protocol.
+
+2. **Q:** What is session affinity (sticky sessions) and why is it problematic?
+   **A:** Session affinity routes the same client to the same backend server. It is needed if session data is stored in-memory on the server. Problem: if that server goes down, the user loses their session. Fix: store sessions in a shared cache (Redis) so any server can handle any request.
+
+3. **Q:** How does a load balancer handle a server that is "slow" but not down?
+   **A:** Least Connections algorithm helps — the slow server has more active connections (because it processes requests slowly), so it gets fewer new requests. The LB should also set timeouts to detect slow responses.
+
+4. **Q:** Can an L7 load balancer terminate TLS?
+   **A:** Yes. TLS termination is a primary function of L7 LBs. The LB handles the TLS handshake (decrypts), forwards plain HTTP to backends, and encrypts the response if needed. This offloads CPU-intensive crypto from application servers.
+
+5. **Q:** What is the difference between a load balancer and a reverse proxy?
+   **A:** A reverse proxy (Nginx, HAProxy in proxy mode) routes to a single backend or set of backends but is primarily about security, caching, and TLS. A load balancer specifically distributes traffic across multiple backends for capacity and reliability. Most modern LBs are also reverse proxies.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+L4 LB: TCP/UDP level, fast, protocol-agnostic
+L7 LB: HTTP level, inspect/modify requests, TLS termination
+
+Algorithms:
+  Round Robin → equal distribution
+  Least Connections → balance by load
+  IP Hash → sticky sessions without cookies
+
+Health Checks:
+  Active → periodic probe (detect failure quickly)
+  Passive → observe traffic errors (zero overhead)
+
+Session Affinity:
+  stick-table (HAProxy) or cookies (nginx)
+  Use shared session store (Redis) instead`,
             tags: ["Networking", "Infrastructure"],
           },
           {
@@ -7779,7 +15029,152 @@ func main() {
               "API Gateway: reverse proxy with added features — auth, rate limiting, transformation, analytics.",
               "Service mesh vs gateway: mesh handles east-west (service-to-service); gateway handles north-south (client-to-service).",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+A reverse proxy sits between clients and your servers. It is the first line of defense — handling TLS, buffering, and routing before traffic reaches your application.
+
+Nginx is the most popular reverse proxy. Envoy is the modern, high-performance proxy used in service meshes. Kong adds API gateway features on top of a reverse proxy.
+
+---
+
+## What a Reverse Proxy Does
+
+\`\`\`
+Client                    Reverse Proxy               Backend
+  │                            │                        │
+  │── HTTPS ─────────────────→│── HTTP ────────────────→│
+  │  (TLS handshake)          │  (plain HTTP)            │
+  │  (slow connection)        │  (fast connection)       │
+  │                            │                        │
+  │←──────────────────────────│←────────────────────────│
+       buffered response          response from app
+\`\`\`
+
+### TLS Termination
+
+The proxy handles SSL/TLS, freeing backends from crypto overhead:
+
+\`\`\`nginx
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://backend:3000;  # plain HTTP to backend
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+\`\`\`
+
+### Buffering
+
+The proxy buffers slow clients so fast backends are not held up:
+
+\`\`\`nginx
+location /api/ {
+    proxy_buffering on;
+    proxy_buffers 8 16k;
+    proxy_buffer_size 32k;
+    client_body_buffer_size 128k;
+    # Backend sends data quickly → proxy buffers it → slow client reads at its pace
+}
+\`\`\`
+
+---
+
+## Nginx vs Envoy vs Kong
+
+| Feature | Nginx | Envoy | Kong |
+|---------|-------|-------|------|
+| Language | C | C++ | Lua (on Nginx) / Go |
+| Config reload | Reload signal | Hot reload via API | Admin API + DB |
+| Plugin system | Limited (3rd party modules) | HTTP/gRPC filters | 200+ plugins |
+| Service mesh | Not designed | Primary mesh proxy | Via Kong Mesh |
+| Dynamic config | No (reload needed) | Yes (xDS API) | Yes (Admin API) |
+| Use case | Traditional reverse proxy | Modern mesh/proxy | API Gateway |
+
+---
+
+## Envoy — Modern L7 Proxy
+
+Envoy uses a **listener + filter chain** architecture:
+
+\`\`\`yaml
+static_resources:
+  listeners:
+  - name: main
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: ingress_http
+          route_config:
+            virtual_hosts:
+            - name: backend
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/api/" }
+                route: { cluster: api_backend }
+          http_filters:
+          - name: envoy.filters.http.router
+  clusters:
+  - name: api_backend
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    endpoints:
+    - lb_endpoints:
+      - endpoint:
+          address:
+            socket_address: { address: api.example.com, port_value: 3000 }
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is TLS termination and why offload it to the proxy?
+   **A:** TLS termination means the proxy handles the SSL/TLS handshake and decryption. Offloading it saves backend servers from CPU-intensive crypto operations, centralizes certificate management (one place to rotate certs), and allows the proxy to inspect request content for routing and caching.
+
+2. **Q:** What does Nginx's proxy_buffering do and when would you disable it?
+   **A:** \`proxy_buffering\` collects the entire response from the backend before sending it to the client. Disable it for streaming responses (Server-Sent Events, WebSocket, large file downloads) where the client should receive data immediately as it is produced.
+
+3. **Q:** How does Envoy's hot reload differ from Nginx's reload?
+   **A:** Nginx requires a SIGHUP signal to reload config, which forks new worker processes (brief connection disruption). Envoy supports true hot reload via the xDS API — listeners, routes, clusters can be added/removed without any connection interruption.
+
+4. **Q:** What is X-Forwarded-For and why is it important?
+   **A:** When a reverse proxy forwards requests, the backend sees the proxy's IP, not the client's IP. X-Forwarded-For is a header inserted by the proxy containing the original client IP. The backend uses this for logging, rate limiting, and geo-location.
+
+5. **Q:** When would you use a reverse proxy vs an API gateway?
+   **A:** A reverse proxy for simple needs: TLS, routing, buffering, caching. An API gateway for complex needs: authentication, rate limiting, request transformation, API key management, analytics. A gateway is a reverse proxy with added features.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Reverse Proxy Functions:
+  • TLS termination — offload SSL from backends
+  • Buffering — slow clients don't tie up fast backends
+  • Routing — path/host-based → different backends
+  • Caching — serve cached responses (not just pass-through)
+  • Compression — gzip/brotli before sending to client
+  • Access control — IP whitelist/blacklist, basic auth
+
+Nginx: classic proxy, static config
+Envoy: modern proxy, dynamic config via xDS API
+Kong: API gateway built on Nginx + OpenResty
+
+Headers the proxy adds:
+  X-Forwarded-For: original client IP
+  X-Forwarded-Proto: http or https
+  X-Real-IP: client IP (simpler alternative)`,
             tags: ["Networking", "Proxy"],
           },
           {
@@ -7795,8 +15190,158 @@ func main() {
               "Edge functions: JS/WASM executed in the CDN PoP — near-zero latency, limited compute.",
               "Origin shield: a single CDN node designated as origin-facing — reduces origin load.",
             ],
-            content: "// Content coming soon",
-            tags: ["Networking", "CDN", "Edge"],
+            content: `## Why This Matters (Read This First)
+
+A Content Delivery Network (CDN) serves your static assets from servers physically close to your users. Instead of every user in the world connecting to your single server in Virginia, they get files from a CDN edge server in their city.
+
+CDNs reduce latency, offload traffic from your origin server, and absorb DDoS attacks. Cloudflare, Fastly, and AWS CloudFront are the major players.
+
+---
+
+## How a CDN Works
+
+\`\`\`
+User in Tokyo ───→ CDN Edge (Tokyo)
+                        │
+                        │ cache miss? fetch from origin
+                        │
+User in London ───→ CDN Edge (London)
+                        │
+                        │ cache miss? fetch from origin
+                        │
+                  ┌─────┴──────┐
+                  │  Origin     │
+                  │  Server     │
+                  │  (Virginia) │
+                  └────────────┘
+
+Cache hit: file served from edge (5-20ms)
+Cache miss: file fetched from origin (100-300ms)
+\`\`\`
+
+---
+
+## Cache Control — The Critical Header
+
+The origin server tells the CDN how long to cache:
+
+\`\`\`javascript
+// Server response headers (set by your nginx/app):
+
+// Long cache — versioned assets (fingerprinted in URL)
+Cache-Control: public, max-age=31536000, immutable
+// "Cache for 1 year, never revalidate, never change URL"
+
+// Short cache — HTML pages (may update)
+Cache-Control: public, max-age=300, s-maxage=600
+// "Browser caches 5min, CDN caches 10min"
+
+// No cache — sensitive/user-specific data
+Cache-Control: no-cache, no-store, private
+\`\`\`
+
+**CDN Cache Invalidation:** Purge by URL, tag, or regex:
+
+\`\`\`bash
+# Cloudflare — purge by URL
+curl -X POST "https://api.cloudflare.com/client/v4/zones/ZONE/purge_cache" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"files":["https://example.com/style.css","https://example.com/app.js"]}'
+
+# Purge everything (use sparingly — expensive)
+curl -X POST ... -d '{"purge_everything":true}'
+\`\`\`
+
+---
+
+## CDN Features
+
+### DDoS Protection
+CDNs absorb traffic across thousands of edge servers, making it hard to overwhelm any single point. Cloudflare blocks 100+ Gbps attacks daily.
+
+### Edge Computing
+Run code at the edge — no origin round trip:
+
+\`\`\`javascript
+// Cloudflare Worker — rewrite response at the edge
+addEventListener("fetch", (event) => {
+    event.respondWith(handleRequest(event.request));
+});
+
+async function handleRequest(request) {
+    const url = new URL(request.url);
+
+    // A/B test at the edge (no origin server involved)
+    if (url.pathname === "/landing") {
+        const variant = Math.random() < 0.5 ? "A" : "B";
+        return new Response(
+            \`<html><body><h1>Variant \${variant}</h1></body></html>\`,
+            { headers: { "Content-Type": "text/html" } }
+        );
+    }
+
+    return fetch(request); // fallback to origin
+}
+\`\`\`
+
+### Image Optimization
+CDNs resize/convert images on-the-fly:
+
+\`\`\`html
+<!-- Original request -->
+<img src="https://cdn.example.com/photo.jpg">
+<!-- CDN can convert to WebP, resize to 300px, adjust quality -->
+<!-- Query params trigger transformations -->
+<img src="https://cdn.example.com/photo.jpg?width=300&format=webp&quality=80">
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Cache-Control max-age and s-maxage?
+   **A:** \`max-age\` sets cache duration for the browser. \`s-maxage\` overrides \`max-age\` specifically for shared caches (CDNs and proxies). This lets the browser cache for a short time (e.g. 5 minutes) while the CDN caches for longer (e.g. 60 minutes).
+
+2. **Q:** What is cache hit ratio and how do you improve it?
+   **A:** Cache hit ratio = percentage of requests served from edge cache vs forwarded to origin. Improve by: setting longer TTLs, using URL fingerprinting for immutable assets, warming cache after deployment, normalizing query parameters, avoiding cookies/cache-busting patterns.
+
+3. **Q:** What is a CDN purge and why can it be slow?
+   **A:** A purge removes cached content from edge servers. It can take seconds to minutes because the purge request must propagate to all edge servers globally. Fastly handles purges in <150ms via soft purge (invalidate via surrogate keys). Cloudflare takes ~30s for full purge.
+
+4. **Q:** How does a CDN handle dynamic content (user-specific)?
+   **A:** Dynamic content is either excluded from caching (Set-Cookie, Cache-Control: private) or cached with variation. Variation uses Vary header (e.g., "Vary: Cookie, Accept-Encoding") or Cloudflare workers to cache per-user/per-language. Most CDNs can cache dynamic HTML for short periods.
+
+5. **Q:** What is origin pull vs push zones?
+   **A:** Origin pull (most common): CDN fetches content from your origin on demand (cache miss → fetch → serve). Push zone: you upload content to the CDN proactively before any requests. Pull is simpler, push gives you control over exactly what is cached.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+CDN Key Concepts:
+  Edge: server physically close to user (5-20ms)
+  Origin: your main server (100-300ms)
+  Cache Hit: served from edge (fast, cheap)
+  Cache Miss: fetched from origin (slow, expensive)
+
+Cache Headers:
+  Cache-Control: max-age → browser cache duration
+  Cache-Control: s-maxage → CDN/proxy cache duration
+  Cache-Control: immutable → file never changes
+  Cache-Control: public/private → shared vs browser-only
+  Expires: <date> → older alternative to Cache-Control
+
+Invalidation:
+  URL purge → delete specific URL
+  Tag purge → delete by tag (surrogate-key)
+  Wildcard purge → regex match URLs
+
+Edge Computing:
+  Cloudflare Workers, Fastly Compute@Edge, AWS Lambda@Edge
+  Rewrite, redirect, A/B test, auth, modify HTML at edge`,
+            tags: ["Networking", "CDN"],
           },
           {
             id: "infra-bgp",
@@ -7811,8 +15356,131 @@ func main() {
               "Route hijacking: malicious or accidental BGP announcements re-routing traffic.",
               "RPKI (Resource Public Key Infrastructure): cryptographic validation of BGP route origins.",
             ],
-            content: "// Content coming soon",
-            tags: ["Networking", "Advanced"],
+            content: `## Why This Matters (Read This First)
+
+BGP is the routing protocol that runs the internet. Every ISP and cloud provider uses BGP to announce which IP ranges they control and to learn which paths exist to reach other networks.
+
+When you deploy a service, your cloud provider announces your IP range via BGP. When a user in another part of the world connects to your server, BGP determines the path their packets take.
+
+---
+
+## How BGP Works
+
+\`\`\`
+BGP is a path-vector protocol:
+- Each AS (Autonomous System) announces prefixes it can reach
+- Announcements include the AS path (list of AS numbers)
+- Routers choose the shortest AS path (fewest AS hops)
+
+Announcement: "AS 15169 can reach 8.8.8.0/24"
+  Path: [15169]
+
+After propagation:
+  "To reach 8.8.8.0/24, go through AS 1239 → 15169"
+  Path: [1239, 15169]
+\`\`\`
+
+---
+
+## BGP Peering
+
+Routers establish BGP sessions (TCP port 179):
+
+\`\`\`bash
+# Example: BGP config on a Cisco/JunOS router
+router bgp 64501                # Your AS number
+  neighbor 10.0.0.1 remote-as 64502  # Peer AS number
+  neighbor 10.0.0.1 description "Peering with ISP-A"
+
+  # Advertise your prefix
+  network 203.0.113.0 mask 255.255.255.0
+
+  # Receive routes from peer
+  address-family ipv4 unicast
+    neighbor 10.0.0.1 activate
+    neighbor 10.0.0.1 prefix-list ISP-A-IN in
+    neighbor 10.0.0.1 prefix-list ISP-A-OUT out
+\`\`\`
+
+---
+
+## BGP in Cloud — Anycast
+
+Cloudflare, AWS, and Google use **anycast** — the same IP prefix is announced from multiple locations:
+
+\`\`\`
+Cloudflare's DNS (1.1.1.1) is announced from:
+  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐
+  │  London  │  │  Tokyo  │  │  Mumbai │  │  Sydney │
+  └─────────┘  └─────────┘  └─────────┘  └─────────┘
+     all announcing 1.1.1.0/24 via BGP
+
+  User in Tokyo → packets routed to Tokyo edge (closest)
+  User in London → packets routed to London edge
+
+  BGP chooses the shortest path, which is usually the nearest location.
+\`\`\`
+
+---
+
+## Route Selection — Tiebreakers
+
+BGP picks one best route from many options:
+
+| Priority | Criterion | Why |
+|----------|-----------|-----|
+| 1 | Highest local preference | Prefer routes you configured |
+| 2 | Shortest AS path | Fewer AS hops = simpler path |
+| 3 | Lowest origin type | IGP < EGP < Incomplete |
+| 4 | Lowest MED | Multi-exit discriminator |
+| 5 | eBGP preferred over iBGP | External > internal |
+| 6 | Lowest IGP metric to next-hop | Physical distance |
+| 7 | Oldest route | Stability |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is an Autonomous System (AS)?
+   **A:** An AS is a network under a single administrative control, identified by an AS number (ASN). ISPs, cloud providers, and large companies each have their own AS. Internal routing within an AS uses IGP (OSPF, IS-IS). Routing between ASes uses BGP.
+
+2. **Q:** What is BGP hijacking?
+   **A:** An attacker (or misconfigured router) announces an IP prefix they do not own. If the bogus announcement has a shorter AS path, BGP prefers it and traffic goes to the attacker. Example: 2018 — someone hijacked AWS DNS servers via BGP and redirected traffic to their own server.
+
+3. **Q:** What is the difference between eBGP and iBGP?
+   **A:** eBGP runs between different ASes (e.g., your network to your ISP). iBGP runs within the same AS. eBGP has a default administrative distance of 20, iBGP has 200 (less preferred). eBGP propagates routes with TTL=1 (directly connected peers).
+
+4. **Q:** What is MED and when is it used?
+   **A:** MED (Multi-Exit Discriminator) is a metric sent to a neighboring AS to tell them "please prefer this path over others." It is used when you have multiple connections to the same ISP and want traffic to come in through a specific link.
+
+5. **Q:** What is the role of BGP in Kubernetes? (MetalLB, Cilium)
+   **A:** Kubernetes CNI plugins (Cilium, Calico) and load balancers (MetalLB) announce Service IPs via BGP to the physical network. This makes Service IPs routable from outside the cluster without a cloud LB — the network routers learn the Service IPs via BGP.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+BGP Basics:
+  AS: Autonomous System (your network)
+  ASN: AS Number (16-bit or 32-bit)
+  Prefix: IP range (e.g., 203.0.113.0/24)
+  AS Path: list of ASNs the route traverses
+
+Route Selection (top 3):
+  Highest local preference → shortest AS path → lowest MED
+
+Security:
+  RPKI: cryptographically verify prefix ownership
+  BGP Flowspec: BGP-based DDoS mitigation
+  Prefix lists: filter what you accept/advertise
+  Max prefix: limit routes from peers
+
+BGP in Cloud:
+  Anycast: same IP from multiple locations
+  MetalLB: BGP for Kubernetes LoadBalancer IPs
+  Cilium: BGP-based Service routing`,
+            tags: ["Networking", "BGP"],
           },
           {
             id: "infra-ebpf",
@@ -7829,8 +15497,174 @@ func main() {
               "Hubble: Cilium's observability layer — captures flow logs at the kernel level, no sidecars needed.",
               "Use cases beyond networking: security auditing (Falco), profiling (bpftrace), storage (BIO latency), Scheduler (EEVDF).",
             ],
-            content: "// Content coming soon",
-            tags: ["eBPF", "Networking", "Kernel", "Cilium"],
+            content: `## Why This Matters (Read This First)
+
+eBPF (extended Berkeley Packet Filter) lets you run sandboxed programs in the Linux kernel without changing kernel code or loading kernel modules. It is the technology behind Cilium (Kubernetes networking), Pixie (observability), Tracee (security), and many modern infrastructure tools.
+
+Before eBPF, adding custom kernel logic meant writing a kernel module (risky, hard to maintain) or modifying the kernel source. eBPF lets you safely program the kernel at runtime.
+
+---
+
+## eBPF Architecture
+
+\`\`\`
+User Space                    Kernel
+    │                            │
+    │──(1) Load eBPF bytecode───→│
+    │    (via bpf() syscall)     │
+    │                            │──(2) Verifier checks safety
+    │                            │    - No loops (before v5.3)
+    │                            │    - No out-of-bounds access
+    │                            │    - All paths must reach exit
+    │                            │
+    │──(3) Attach to hook ──────→│
+    │                            │──(4) Kernel event fires → eBPF runs
+    │                            │
+    │←──(5) Read maps ──────────│    (shared data structures)
+    │       or perf buffers      │
+\`\`\`
+
+---
+
+## eBPF Programs — Hooks
+
+eBPF programs attach to kernel events:
+
+| Hook Type | What It Captures | Example Use |
+|-----------|-----------------|-------------|
+| XDP | Network packets before kernel stack | DDoS filtering at line rate |
+| TC (Traffic Control) | Packets in the kernel's network stack | Load balancing (Cilium) |
+| kprobe/kretprobe | Kernel function entry/return | Trace syscalls, detect malware |
+| tracepoint | Pre-defined kernel tracepoints | File operations, TCP events |
+| uprobe | User-space function hooks | Profile application code |
+| perf_event | Hardware performance counters | CPU profiling, PMC monitoring |
+
+---
+
+## Example: XDP Drop Program
+
+Drop packets from an attacker at the NIC driver level (before any kernel processing):
+
+\`\`\`c
+// xdp_drop.c — compile with clang to eBPF bytecode
+#include <linux/bpf.h>
+#include <linux/if_ether.h>
+#include <linux/ip.h>
+#include <linux/in.h>
+
+#define SEC(NAME) __attribute__((section(NAME), used))
+
+SEC("xdp")
+int xdp_drop_attacker(struct xdp_md *ctx) {
+    void *data = (void *)(long)ctx->data;
+    void *data_end = (void *)(long)ctx->data_end;
+
+    struct ethhdr *eth = data;
+    if ((void *)(eth + 1) > data_end) return XDP_PASS;
+
+    struct iphdr *ip = data + sizeof(*eth);
+    if ((void *)(ip + 1) > data_end) return XDP_PASS;
+
+    // Drop packets from attacker IP 10.0.0.99
+    if (ip->saddr == 0x6300000a) { // 10.0.0.99 in network byte order
+        return XDP_DROP;  // Packet is dropped at the NIC driver level
+    }
+
+    return XDP_PASS;
+}
+\`\`\`
+
+\`\`\`bash
+# Compile and load
+clang -O2 -target bpf -c xdp_drop.c -o xdp_drop.o
+ip link set dev eth0 xdp obj xdp_drop.o sec xdp
+
+# Remove
+ip link set dev eth0 xdp off
+
+# Check loaded programs
+bpftool prog list | grep xdp
+bpftool prog show id <id> --pretty
+\`\`\`
+
+---
+
+## Cilium — eBPF-Based Kubernetes CNI
+
+Cilium replaces kube-proxy and the standard CNI with eBPF:
+
+\`\`\`yaml
+# CiliumNetworkPolicy — eBPF enforces at the kernel level
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: api-server
+spec:
+  endpointSelector:
+    matchLabels:
+      app: api
+  ingress:
+  - fromEndpoints:
+    - matchLabels:
+        app: frontend
+    toPorts:
+    - ports:
+      - port: "3000"
+        protocol: TCP
+---
+# The policy is enforced by eBPF programs in the kernel.
+# No iptables rules. No kernel conntrack. Pure eBPF maps.
+# Result: 10x faster service routing than kube-proxy.
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What makes eBPF safe compared to kernel modules?
+   **A:** The eBPF verifier checks the program before loading: it verifies finite loop bounds, checks memory access bounds, ensures all code paths reach exit, and prevents unreachable instructions. A kernel module has none of these checks — a bug causes a kernel panic.
+
+2. **Q:** What is the difference between XDP and tc hooks?
+   **A:** XDP processes packets at the NIC driver level (before SKB allocation), making it the fastest hook — capable of processing millions of packets per second. tc hook (Traffic Control) processes packets after the SKB is allocated, giving access to socket metadata and higher-level protocol parsing.
+
+3. **Q:** How does eBPF improve Kubernetes networking?
+   **A:** eBPF replaces iptables (which has O(n) rule evaluation with thousands of services) with BPF maps (O(1) lookup). Services, endpoints, and routing rules are stored in maps rather than as iptables chains. Cilium uses eBPF for service routing, network policy, and observability.
+
+4. **Q:** What is bpftool and what can it do?
+   **A:** \`bpftool\` is the CLI tool for inspecting and managing eBPF programs and maps. It can list loaded programs (\`bpftool prog list\`), show map contents (\`bpftool map dump\`), pin/unpin programs, and show the control flow graph of loaded programs.
+
+5. **Q:** Can eBPF be used for security? Give an example.
+   **A:** Yes — Falco and Tracee use eBPF for runtime security. They attach kprobes to syscalls (execve, open, connect) and check against security rules. If a container tries to run a shell or read /etc/shadow, the eBPF program can send an alert to userspace.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+eBPF Key Concepts:
+  Verifier: checks safety before loading
+  JIT Compiler: converts to native machine code
+  Maps: kernel↔userspace shared data (hash, array, ringbuf)
+  Hooks: XDP, TC, kprobe, tracepoint, uprobe, perf_event
+
+Common Uses:
+  Cilium: K8s networking & security (CNI)
+  Pixie: Continuous profiling & tracing
+  Falco/Tracee: Runtime security
+  Cloudflare: DDoS mitigation
+  Netflix: Performance monitoring
+
+XDP Actions:
+  XDP_DROP — discard packet (fastest)
+  XDP_PASS — send to kernel
+  XDP_TX — bounce back to same NIC
+  XDP_REDIRECT — send to another NIC/CPU
+
+Commands:
+  bpftool prog list — list loaded programs
+  bpftool map dump — inspect map contents
+  bpftool net show — show attached programs`,
+            tags: ["Networking", "eBPF"],
           },
           {
             id: "infra-service-mesh",
@@ -7847,15 +15681,166 @@ func main() {
               "Observability: mesh captures golden signals (latency, traffic, errors, saturation) per service pair — no code changes, no agents.",
               "Mesh vs API Gateway: mesh for east-west (service-to-service); gateway for north-south (external → service). Use both in production.",
             ],
-            content: "// Content coming soon",
-            tags: ["Service Mesh", "Istio", "Networking"],
+            content: `## Why This Matters (Read This First)
+
+A service mesh adds a layer of infrastructure for microservices communication — handling retries, timeouts, traffic splitting, observability, and encryption. It uses a sidecar proxy (sidecar container injected into each pod) to intercept all network traffic.
+
+Service meshes are useful when you have many microservices (20+) and need consistent traffic management, mutual TLS, and distributed tracing across all services without modifying application code.
+
+---
+
+## Istio Architecture
+
+\`\`\`
+┌──────────────────────────────────────────────────┐
+│  Control Plane (istiod)                           │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │
+│  │ Pilot    │  │ Citadel  │  │ Galley        │   │
+│  │ (routing)│  │ (certs)  │  │ (config)      │   │
+│  └──────────┘  └──────────┘  └──────────────┘   │
+└──────────────────────────────────────────────────┘
+           │               │
+           ▼               ▼
+┌─────────────────┐  ┌─────────────────┐
+│ Data Plane      │  │ Data Plane      │
+│ Service A       │  │ Service B       │
+│ ┌───────┐       │  │ ┌───────┐       │
+│ │ Envoy │◄──────┼──┼─►│ Envoy │       │
+│ │(proxy)│       │  │ │(proxy)│       │
+│ └───────┘       │  │ └───────┘       │
+│ ┌───────┐       │  │ ┌───────┐       │
+│ │ App   │       │  │ │ App   │       │
+│ └───────┘       │  │ └───────┘       │
+└─────────────────┘  └─────────────────┘
+  Pod A                Pod B
+\`\`\`
+
+All traffic from Service A to Service B goes through their Envoy proxies. The proxies do the TLS, load balancing, retries, tracing, and metrics collection — the application code just sends plain HTTP.
+
+---
+
+## Traffic Splitting (Canary Deployments)
+
+\`\`\`yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-service
+spec:
+  hosts:
+  - api
+  http:
+  - route:
+    - destination:
+        host: api
+        subset: stable
+      weight: 90
+    - destination:
+        host: api
+        subset: canary
+      weight: 10
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: api-destination
+spec:
+  host: api
+  subsets:
+  - name: stable
+    labels:
+      version: v1
+  - name: canary
+    labels:
+      version: v2
+---
+# Result: 10% of traffic goes to version v2 (canary).
+# Envoy proxies do the splitting — no app-level load balancer needed.
+\`\`\`
+
+---
+
+## Mutual TLS (mTLS)
+
+Every Envoy-to-Envoy connection is encrypted and authenticated:
+
+\`\`\`yaml
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT  # All services must use mTLS
+---
+# Without mTLS: traffic encrypted between pods? ❌
+# With mTLS: each Envoy has a certificate (Citadel CA)
+#            → all inter-service traffic is TLS encrypted
+#            → each service identity is verified (cert CN = service account)
+\`\`\`
+
+---
+
+## LinkerD vs Istio vs Cilium Service Mesh
+
+| Feature | Istio | LinkerD | Cilium |
+|---------|-------|---------|--------|
+| Proxy | Envoy (C++) | LinkerD-proxy (Rust) | eBPF (no sidecar) |
+| Complexity | High | Medium | Low |
+| Performance | ~5% overhead | ~2% overhead | ~1% overhead |
+| Features | Full set (mTLS, routing, tracing, retries) | Core features + tap | Networking + policy |
+| Control Plane | istiod (Go) | Controller (Go) | Cilium agent |
+
+---
+
+## Practice Questions
+
+1. **Q:** What problem does a service mesh solve that a load balancer does not?
+   **A:** A load balancer distributes traffic from external clients to servers. A service mesh handles INTERNAL service-to-service traffic across all services — adding mTLS, retries, timeouts, circuit breaking, distributed tracing, and traffic splitting between versions. These features would need to be built into every microservice without a mesh.
+
+2. **Q:** What is the sidecar proxy pattern and why is it useful?
+   **A:** A sidecar is a container deployed alongside the main application container in the same pod. It intercepts all network traffic via iptables rules. The app never needs to know about the sidecar — it sends plain HTTP and the sidecar handles encryption, routing, and metrics. Benefits: no app code changes, language-agnostic, centralized control.
+
+3. **Q:** How does Istio issue certificates for mTLS?
+   **A:** Citadel (Istio's CA component) issues certificates to each Envoy proxy. The certificate's SAN identifies the service account of the pod. Envoys verify each other's certificates during the TLS handshake. Certificates are rotated every 24 hours. All of this happens transparently to the application.
+
+4. **Q:** What is the difference between STRICT and PERMISSIVE mTLS mode?
+   **A:** STRICT: all traffic must be mTLS — plain HTTP is rejected. PERMISSIVE: the proxy accepts both mTLS and plain HTTP. Use PERMISSIVE during migration (gradually roll out sidecars) and switch to STRICT once all services have sidecars.
+
+5. **Q:** How does a service mesh handle observability (tracing)?
+   **A:** The sidecar proxy generates tracing spans for every request. Envoy propagates trace context (x-request-id, x-b3-traceid, x-datadog-trace-id) to the next service. Traces are collected and sent to Zipkin, Jaeger, or Datadog. The app does not need to instrument tracing — but it improves when it propagates the trace headers.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Service Mesh Concepts:
+  Control Plane: configures proxies (istiod, LinkerD controller)
+  Data Plane: proxies handling application traffic (Envoy, LinkerD-proxy)
+
+Key Features:
+  mTLS: mutual TLS between all services (encrypted + authenticated)
+  Traffic Splitting: canary, blue-green, weighted routing
+  Retries + Timeouts: configurable per-service
+  Circuit Breaking: stop sending to failing services
+  Tracing: distributed tracing via proxy (Zipkin, Jaeger)
+  Metrics: RED metrics (Rate, Errors, Duration) for every request
+
+Istio resources:
+  VirtualService: traffic routing rules
+  DestinationRule: subset definitions + load balancing
+  PeerAuthentication: mTLS settings
+  ServiceEntry: external services`,
+            tags: ["Service Mesh", "Networking"],
           },
         ],
       },
       {
-        id: "infra-virtualization",
-        title: "Virtualization & Containers",
-        description: "The kernel primitives that make containers possible, and how they differ from VMs.",
+        id: "infra-container",
+        title: "Containerization & Orchestration",
+        description: "Containers, images versus processes, and container runtime internals.",
         topics: [
           {
             id: "infra-namespaces",
@@ -7870,15 +15855,115 @@ func main() {
               "Cgroups (v2): limit and account for CPU, memory, I/O, network bandwidth per group.",
               "OverlayFS: combines read-only image layers with a writable container layer — COW.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "bash",
-              filename: "namespace.sh",
-              code: `# Create a shell with its own PID and mount namespace
-sudo unshare --fork --pid --mount-proc bash
-# Inside this shell:
-ps aux  # shows only this shell and its children`,
-            },
+            content: `## Why This Matters (Read This First)
+
+Linux namespaces are the kernel feature that makes containers possible. Each container gets its own view of the system — its own process tree, network interfaces, mount points, hostname, and user IDs. Without namespaces, containers are just processes with cgroup limits.
+
+Docker creates 7 namespaces when starting a container. Kubernetes runs containers, which are processes with namespaces.
+
+---
+
+## The 7 Linux Namespaces
+
+| Namespace | What It Isolates | Created By |
+|-----------|-----------------|------------|
+| PID | Process tree — container sees only its own processes | \`CLONE_NEWPID\` |
+| Network | Network interfaces, IP, routing table, ports | \`CLONE_NEWNET\` |
+| Mount | Filesystem mount points | \`CLONE_NEWNS\` |
+| UTS | Hostname and domain name | \`CLONE_NEWUTS\` |
+| IPC | System V IPC, POSIX message queues | \`CLONE_NEWIPC\` |
+| User | User and group IDs (isolate root) | \`CLONE_NEWUSER\` |
+| Cgroup | Cgroup root directory | \`CLONE_NEWCGROUP\` |
+
+---
+
+## Creating a Namespace — \`unshare\`
+
+\`\`\`bash
+# Create a new UTS + PID + mount namespace with a bash shell
+sudo unshare --fork --pid --mount --uts --mount-proc /bin/bash
+
+# Inside the namespace:
+hostname my-container
+ps aux
+mount -t proc none /proc
+
+# Check which namespaces a process uses
+ls -la /proc/$$/ns/
+# Each namespace has an inode number — same number = same namespace
+\`\`\`
+
+---
+
+## Building a Container by Hand
+
+\`\`\`bash
+CONTAINER=/tmp/mycontainer
+mkdir -p $CONTAINER/rootfs
+
+docker export $(docker create alpine) | tar -C $CONTAINER/rootfs -xf -
+
+sudo unshare --fork \
+  --pid --mount --uts --ipc --net \
+  --mount-proc=$CONTAINER/rootfs/proc \
+  --root=$CONTAINER/rootfs /bin/sh
+
+# This is essentially what Docker does internally
+\`\`\`
+
+---
+
+## User Namespace — Rootless Containers
+
+User namespaces map container uid/gid to non-root uids on the host:
+
+\`\`\`bash
+# /etc/subuid — user namespace mapping
+# 1000:100000:65536
+# "UID 1000 on the host can map container UIDs 100000-165535"
+
+# Rootless containers are increasingly popular:
+# - podman runs rootless by default
+# - Docker rootless mode
+# - Kubernetes user namespace support (alpha)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a namespace and a cgroup?
+   **A:** A namespace makes a process SEE only its own view of the system (PID 1, own network stack). A cgroup LIMITS resource usage (CPU, memory, I/O). Containers need both.
+
+2. **Q:** What is the veth pair in container networking?
+   **A:** A veth (virtual Ethernet) pair connects the container's network namespace to the host's. One end is inside the container (eth0), the other is in the host namespace. The host end is connected to a Linux bridge (docker0) or overlay network.
+
+3. **Q:** Can a container share the host's network namespace?
+   **A:** Yes — Docker supports \`--network host\`. Use for: network diagnostics tools, performance-sensitive applications, daemon agents needing host-level network observation.
+
+4. **Q:** Why can't you kill PID 1 from inside a PID namespace?
+   **A:** PID 1 reaps orphaned child processes. The kernel prevents PID 1 from being killed via SIGKILL. When PID 1 exits, the kernel terminates all processes in the namespace.
+
+5. **Q:** What are cgroup v2 and how are they different from v1?
+   **A:** cgroup v2 has a single unified hierarchy (vs. multiple in v1), supports pressure stall information (PSI), and is the default in modern Linux distributions. All resource controllers are managed under a single tree.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+7 Namespaces:
+  PID: process tree → each container has PID 1
+  NET: network stack → interfaces, IP, ports
+  MNT: mount points → each container has its own /
+  UTS: hostname → each container has its own hostname
+  IPC: inter-process communication
+  USER: uid/gid mapping → rootless containers
+  CGROUP: cgroup hierarchy → resource limits
+
+Commands: unshare (create), nsenter (enter), ls -la /proc/\$\$/ns (list)
+Docker uses: namespaces (isolation) + cgroups (limits) + overlayfs (layers)
+Podman: rootless containers via user namespaces`,
             tags: ["Linux", "Containers", "Kernel"],
           },
           {
@@ -7894,7 +15979,191 @@ ps aux  # shows only this shell and its children`,
               "MicroVM (Firecracker): stripped-down KVM VM — boots in 125ms, ~5MB memory overhead.",
               "Firecracker + containers: each Lambda function / Fargate task gets its own microVM for isolation.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Hypervisors enable multiple virtual machines to run on a single physical machine. They are the foundation of cloud computing — AWS EC2, GCP Compute Engine, and Azure VMs all run on hypervisors.
+
+There are three types: **Type-1** (bare-metal hypervisors for production), **Type-2** (hosted hypervisors for development), and **MicroVMs** (lightweight VMs for serverless).
+
+---
+
+## Type-1 Hypervisors — Bare-Metal
+
+Run directly on the hardware (no host OS):
+
+\`\`\`
+Type-1 (KVM, Xen, VMware ESXi):
+  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+  │   VM 1       │ │   VM 2       │ │   VM 3       │
+  │   Linux       │ │   Windows    │ │   FreeBSD     │
+  └──────────────┘ └──────────────┘ └──────────────┘
+  ┌──────────────────────────────────────────────────┐
+  │          Hypervisor (KVM/Xen/ESXi)               │
+  │          Directly on hardware                     │
+  └──────────────────────────────────────────────────┘
+  ┌──────────────────────────────────────────────────┐
+  │              Physical Hardware                    │
+  │        CPU (VT-x/AMD-V), RAM, NIC, Disk          │
+  └──────────────────────────────────────────────────┘
+\`\`\`
+
+### KVM (Kernel-based Virtual Machine)
+
+KVM turns Linux into a Type-1 hypervisor:
+
+\`\`\`bash
+# Check if CPU supports virtualization
+grep -E '(vmx|svm)' /proc/cpuinfo
+
+# Load KVM modules
+modprobe kvm
+modprobe kvm_intel    # or kvm_amd
+
+# Create a VM with qemu-kvm
+qemu-system-x86_64 \
+  -enable-kvm \
+  -m 2048 \
+  -smp 2 \
+  -drive file=ubuntu.qcow2,format=qcow2 \
+  -netdev user,id=net0 \
+  -device e1000,netdev=net0
+
+# List running VMs
+virsh list
+#  Id   Name       State
+#  ---  ---------  -----------
+#  2    ubuntu-vm  running
+\`\`\`
+
+KVM uses hardware virtualization extensions (Intel VT-x, AMD-V) to run guest code directly on the CPU, making it near-native performance.
+
+---
+
+## Type-2 Hypervisors — Hosted
+
+Run as an application on top of an OS:
+
+\`\`\`
+Type-2 (VirtualBox, VMware Workstation):
+  ┌──────────────────────────────────────────────────┐
+  │   VM 1    │   VM 2    │   VM 3                   │
+  └───────────┴───────────┴──────────┘               │
+  ┌──────────────────────────────────────────────────┐
+  │         VirtualBox / VMware Workstation          │
+  ├──────────────────────────────────────────────────┤
+  │             Host OS (macOS, Windows)             │
+  ├──────────────────────────────────────────────────┤
+  │              Physical Hardware                    │
+  └──────────────────────────────────────────────────┘
+\`\`\`
+
+Type-2 adds an OS layer → more overhead. Used for development and testing, not production.
+
+---
+
+## MicroVMs — Firecracker
+
+Firecracker is an AWS-built VMM (Virtual Machine Manager) using KVM:
+
+\`\`\`
+Firecracker MicroVM:
+  ┌────────────────────────────────┐
+  │  Memory: ~5MB per VM           │
+  │  Boot time: ~125ms (without    │
+  │  network initialization)        │
+  │  First request: ~200ms (1ms     │
+  │  to get network + DHCP)         │
+  │  Guest kernel: 4.14+ stripped  │
+  │  Devices: virtio-net, virtio-blk│
+  │  No BIOS, no ACPI, no VGA      │
+  └────────────────────────────────┘
+\`\`\`
+
+\`\`\`bash
+# Start a Firecracker microVM
+# 1. Set up the jailer (security)
+firecracker --no-api --id my-vm \
+  --boot-timer \
+  --seccomp-level 2
+
+# 2. Configure via API
+curl --unix-socket /tmp/firecracker.sock -i \
+  -X PUT 'http://localhost/boot-source' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "kernel_image_path": "/path/to/vmlinux",
+    "boot_args": "console=ttyS0 reboot=k panic=1 pci=off"
+  }'
+
+# 3. Add rootfs
+curl --unix-socket /tmp/firecracker.sock -i \
+  -X PUT 'http://localhost/drives/rootfs' \
+  -H 'Accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "drive_id": "rootfs",
+    "path_on_host": "/path/to/rootfs.ext4",
+    "is_root_device": true,
+    "is_read_only": false
+  }'
+\`\`\`
+
+AWS Lambda and Fargate use Firecracker — each function runs in its own microVM for strong isolation without the overhead of a full VM.
+
+---
+
+## Container vs VM Performance
+
+\`\`\`
+                       Container (Namespace)      VM (KVM)      MicroVM
+Boot time:             <100ms                     30-60s        125ms
+Memory overhead:       ~5MB                       1-2GB         ~5MB
+Isolation boundary:    Kernel (shared)             Hardware      Hardware
+Performance:           Native                      ~95% native   ~98% native
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Type-1 and Type-2 hypervisors?
+   **A:** Type-1 runs directly on hardware (KVM, Xen, ESXi) — better performance, used in production. Type-2 runs as an application on a host OS (VirtualBox, VMware Workstation) — convenient for development, but has more overhead due to the extra OS layer.
+
+2. **Q:** How does KVM achieve near-native performance?
+   **A:** KVM uses Intel VT-x or AMD-V hardware virtualization extensions. Guest code executes directly on the CPU (no emulation). Only privileged instructions trap to the hypervisor. This gives ~95% of native performance for CPU-intensive workloads.
+
+3. **Q:** What makes Firecracker different from a full VM (e.g., QEMU)?
+   **A:** Firecracker is a stripped-down VMM with no BIOS, no ACPI, no VGA, no USB, no PCI emulation (except virtio). It boots in ~125ms and uses ~5MB RAM. QEMU emulates a full PC with BIOS boot, ACPI power management, multiple device models — taking 30-60s to boot and 1-2GB of memory.
+
+4. **Q:** When would you choose containers vs VMs vs microVMs?
+   **A:** Containers for multi-tenant (less isolation, more density). VMs for strong isolation (different OS, untrusted tenants). MicroVMs for serverless/FaaS — where you need VM-level isolation but containers-like fast boot.
+
+5. **Q:** What is the role of virtio in virtualization?
+   **A:** virtio provides paravirtualized drivers for disk and network in KVM VMs. The guest VM knows it is virtualized and uses special drivers that communicate with the host via shared memory — much faster than emulating real hardware devices.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Type-1 (bare-metal): KVM, Xen, VMware ESXi
+Type-2 (hosted): VirtualBox, VMware Workstation
+MicroVM: Firecracker (AWS), Cloud Hypervisor
+
+KVM: Linux kernel module + QEMU userspace
+  - Uses VT-x/AMD-V hardware extensions
+  - Near-native performance
+  - virsh/qemu-system-x86_64 for management
+
+Firecracker:
+  - ~125ms boot, ~5MB memory overhead
+  - virtio-net + virtio-blk only
+  - No BIOS/ACPI/VGA
+  - Used by AWS Lambda + Fargate
+
+Performance: Container (native) ≈ MicroVM (~98%) > VM (~95%)
+Isolation: VM ≈ MicroVM >> Container`,
             tags: ["Virtualization", "Containers"],
           },
         ],
@@ -7917,7 +16186,182 @@ ps aux  # shows only this shell and its children`,
               "Role assumption: workloads assume roles at runtime — no static credentials needed.",
               "OIDC federation: CI/CD pipelines get short-lived tokens without storing any secrets.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+IAM is the security model for all cloud platforms. Every API call to AWS/GCP/Azure passes through IAM — if the caller is not authenticated and authorized, the request is denied.
+
+The principle of **least privilege** means granting only the permissions needed. Too broad policies (AdministratorAccess, "owner" role) are the root cause of most cloud breaches.
+
+---
+
+## AWS IAM — Core Concepts
+
+\`\`\`
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  User        │     │  Group       │     │  Role        │
+│  (person)    │     │  (developers)│     │  (service)   │
+└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+       │                    │                    │
+       └────────────────────┼────────────────────┘
+                            ▼
+                   ┌────────────────┐
+                   │  Policy        │
+                   │  (JSON doc)    │
+                   └────────────────┘
+                            │
+                            ▼
+                   ┌────────────────┐
+                   │  Effect: Allow │
+                   │  Action: s3:* │ (too broad!)
+                   │  Resource: *  │ (too broad!)
+                   └────────────────┘
+\`\`\`
+
+---
+
+## IAM Policy — Least Privilege Example
+
+\`\`\`json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::my-app-assets/images/*"
+        },
+        {
+            "Effect": "Deny",
+            "Action": "s3:DeleteObject",
+            "Resource": "*"
+        }
+    ]
+}
+// This policy:
+// - Allows only GetObject and PutObject on images/ in one bucket
+// - Explicitly denies any delete operation
+// - This is the principle of least privilege in practice
+\`\`\`
+
+---
+
+## IAM Roles — No Static Credentials
+
+Applications should never use long-lived access keys. Instead, they **assume a role**:
+
+\`\`\`python
+import boto3
+
+# ECS task or EC2 instance with attached IAM role
+# No credentials in code, no .env file
+session = boto3.Session()
+sts = session.client("sts")
+
+# The EC2 metadata service provides temporary credentials
+# Automatically rotated by AWS every ~6 hours
+credentials = sts.assume_role(
+    RoleArn="arn:aws:iam::123456789012:role/my-app-role",
+    RoleSessionName="my-app-session"
+)
+\`\`\`
+
+---
+
+## OIDC Federation — CI/CD Without Secrets
+
+GitHub Actions can assume an AWS role using OIDC:
+
+\`\`\`yaml
+# .github/workflows/deploy.yml
+name: Deploy to AWS
+permissions:
+  id-token: write  # Needed for OIDC
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-actions
+          aws-region: us-east-1
+
+      - name: Deploy
+        run: aws s3 sync dist/ s3://my-app-website/
+# No AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY stored anywhere
+\`\`\`
+
+---
+
+## GCP IAM — Roles and Members
+
+\`\`\`bash
+# GCP IAM: bind roles to members
+gcloud projects add-iam-policy-binding my-project \
+  --member="serviceAccount:deployer@my-project.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Predefined roles (recommended over primitive):
+# roles/storage.objectAdmin → full control over objects
+# roles/storage.objectViewer → read-only objects
+# roles/storage.objectCreator → write-only (create new objects)
+
+# Custom roles: fine-grained control
+gcloud iam roles create CustomStorageWriter \
+  --project=my-project \
+  --title="Custom Storage Writer" \
+  --permissions=storage.objects.create,storage.objects.get
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between an IAM user and an IAM role?
+   **A:** A user represents a person with long-term credentials (password, access keys). A role is assumed by a trusted entity (EC2 instance, Lambda, another AWS account) and gets temporary credentials via STS. Roles rotate credentials automatically; users do not.
+
+2. **Q:** What is a service control policy (SCP) and how does it differ from an IAM policy?
+   **A:** SCPs are applied at the AWS Organization level — they set permission guardrails that affect ALL accounts in the org. IAM policies are applied to individual users/roles. SCPs cannot grant permissions (they only restrict), while IAM policies can both grant and restrict.
+
+3. **Q:** Why should you use OIDC federation for CI/CD instead of storing access keys?
+   **A:** OIDC gives short-lived tokens (1 hour) that are automatically generated when the workflow runs. No secrets to rotate, no risk of leaked keys in logs or repos. GitHub Actions requests a token, AWS validates it based on the OIDC provider configuration.
+
+4. **Q:** What is the difference between identity-based and resource-based policies?
+   **A:** Identity-based policies are attached to the user/role and specify what actions that identity can take. Resource-based policies are attached to the resource (S3 bucket, Lambda function) and specify who can access it. Resource-based policies enable cross-account access without role assumption.
+
+5. **Q:** What does the condition element do in an IAM policy?
+   **A:** Conditions add extra constraints beyond "allow action X on resource Y". Examples: \`IpAddress\` (only allow from specific IPs), \`StringEquals\` (require tags), \`Bool\` (require MFA), \`DateLessThan\` (time-bound access). Conditions are critical for least privilege.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+IAM Components:
+  User → person with long-term credentials
+  Group → collection of users
+  Role → assumed by services, temporary credentials
+  Policy → JSON document with allow/deny rules
+
+Policy Structure:
+  Effect: Allow or Deny
+  Action: specific API calls (s3:GetObject, ec2:RunInstances)
+  Resource: ARN of the resource (* too broad!)
+  Condition: IP, time, MFA, tags
+
+Best Practices:
+  • Use roles not users for applications
+  • Use OIDC federation for CI/CD (no secrets)
+  • Apply SCPs for guardrails at org level
+  • Use conditions to scope access
+  • Tag resources and use tags in policies`,
             tags: ["Cloud", "Security"],
           },
           {
@@ -7934,7 +16378,174 @@ ps aux  # shows only this shell and its children`,
               "VPC Peering / Transit Gateway: connect VPCs — peering is 1:1, TGW is a hub.",
               "PrivateLink: access AWS services without traversing the internet.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+A VPC is your private network in the cloud. Everything — EC2, RDS, Lambda, ECS — runs inside a VPC. How you design subnets, routing, and gateways determines your application's security, latency, and cost.
+
+A poorly designed VPC leads to: public exposure of private resources, high data transfer costs, inability to connect services, and difficult compliance audits.
+
+---
+
+## VPC Architecture
+
+\`\`\`
+AWS Region (us-east-1)
+┌──────────────────────────────────────────────────────┐
+│  VPC (10.0.0.0/16)                                    │
+│                                                        │
+│  ┌─────────────── Availability Zone A ────────────────┐ │
+│  │  Public Subnet (10.0.1.0/24)                       │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐       │ │
+│  │  │  NAT Gateway     │  │  Load Balancer   │       │ │
+│  │  │  (public IP)     │  │  (public IP)     │       │ │
+│  │  └──────────────────┘  └──────────────────┘       │ │
+│  │                                                     │ │
+│  │  Private Subnet (10.0.2.0/24)                      │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐       │ │
+│  │  │  EC2 (app)       │  │  RDS (database)   │       │ │
+│  │  │  (no public IP)  │  │  (no public IP)   │       │ │
+│  │  └──────────────────┘  └──────────────────┘       │ │
+│  └─────────────────────────────────────────────────────┘ │
+│                                                        │
+│  ┌─────────────── Availability Zone B ────────────────┐ │
+│  │  Public Subnet (10.0.3.0/24)                       │ │
+│  │  ... (replicated for HA)                           │ │
+│  └─────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Subnet Types
+
+| Subnet | Route to Internet Gateway | Can have public IP | Use case |
+|--------|--------------------------|-------------------|----------|
+| Public | Yes | Yes | Load balancers, NAT Gateways, bastion hosts |
+| Private | No | No | Application servers, databases |
+| Isolated | No | No | No internet access at all (air-gapped) |
+
+\`\`\`bash
+# Create a VPC with AWS CLI
+aws ec2 create-vpc --cidr-block 10.0.0.0/16 --region us-east-1
+
+# Create subnets
+aws ec2 create-subnet \
+  --vpc-id vpc-12345 \
+  --cidr-block 10.0.1.0/24 \
+  --availability-zone us-east-1a
+
+# Create internet gateway
+aws ec2 create-internet-gateway
+aws ec2 attach-internet-gateway --vpc-id vpc-12345 --internet-gateway-id igw-12345
+
+# Create route table for public subnets
+aws ec2 create-route-table --vpc-id vpc-12345
+aws ec2 create-route \
+  --route-table-id rtb-12345 \
+  --destination-cidr-block 0.0.0.0/0 \
+  --gateway-id igw-12345
+\`\`\`
+
+---
+
+## Security Groups vs NACLs
+
+| Feature | Security Group | Network ACL (NACL) |
+|---------|---------------|-------------------|
+| State | Stateful (return traffic allowed) | Stateless (must allow both directions) |
+| Rule types | Allow only | Allow and Deny |
+| Scope | Attached to ENI (instance-level) | Attached to subnet (subnet-level) |
+| Evaluation | All rules evaluated together | Rules evaluated in order (lowest number first) |
+| Default | Deny all inbound, allow all outbound | Allow all inbound and outbound |
+
+\`\`\`json
+// Security Group: allows HTTP from anywhere, SSH from office
+{
+    "IpPermissions": [
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 80,
+            "ToPort": 80,
+            "IpRanges": [{"CidrIp": "0.0.0.0/0"}]
+        },
+        {
+            "IpProtocol": "tcp",
+            "FromPort": 22,
+            "ToPort": 22,
+            "IpRanges": [{"CidrIp": "203.0.113.0/24"}]
+        }
+    ]
+}
+// Stateful: if inbound HTTP is allowed, outbound response is automatically allowed
+\`\`\`
+
+---
+
+## VPC Endpoints — PrivateLink
+
+Access AWS services without internet:
+
+\`\`\`bash
+# Gateway Endpoint (S3, DynamoDB) — free, uses route table
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-12345 \
+  --service-name com.amazonaws.us-east-1.s3 \
+  --route-table-ids rtb-12345
+
+# Interface Endpoint (everything else) — uses ENI with private IP
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-12345 \
+  --service-name com.amazonaws.us-east-1.kms \
+  --subnet-id subnet-12345
+
+# Benefits:
+# - Traffic never leaves AWS network
+# - No NAT Gateway needed for AWS service access
+# - No public IPs needed
+# - IAM policies can restrict which endpoints can be used
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why should databases be placed in private subnets?
+   **A:** Private subnets have no direct route to the internet. Even if the RDS instance has a public IP (which should be disabled), the route table does not allow public traffic. The database can only be reached via the application servers (through security group rules) or through a bastion host.
+
+2. **Q:** What is a NAT Gateway and why do private subnets need one?
+   **A:** A NAT Gateway sits in a public subnet with an Elastic IP. Private subnets route 0.0.0.0/0 traffic to the NAT Gateway. This allows instances in private subnets to make outbound connections (yum updates, API calls) but prevents inbound connections from the internet.
+
+3. **Q:** What is the difference between a Gateway Endpoint and an Interface Endpoint?
+   **A:** Gateway Endpoints (S3, DynamoDB) are free and work by adding routes to the route table. Interface Endpoints (everything else) create an ENI in your subnet with a private IP and cost per hour + per GB. Both keep traffic within the AWS network.
+
+4. **Q:** How does a security group reference another security group?
+   **A:** Instead of allowing an IP range, you can reference another SG: \`sg-12345\` as the source. This allows any resource in that SG to connect — no IPs to manage. Used for: app SG allows DB SG to access port 5432. The DB SG references the app SG.
+
+5. **Q:** What is a Transit Gateway and when would you use it?
+   **A:** Transit Gateway (TGW) is a hub that connects VPCs, VPNs, and Direct Connect. Instead of VPC peering (1:1, non-transitive, hard to manage at scale), TGW provides a star topology — connect each VPC once. Use when you have 10+ VPCs that need to communicate.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+VPC Design:
+  CIDR: IP range (10.0.0.0/16 gives 65536 IPs)
+  Subnets: /24 per AZ (256 IPs, ~251 usable)
+  AZ: at least 2 for HA
+  Public LB → private app → private DB
+
+Networking Components:
+  IGW (Internet Gateway) → public internet access
+  NAT Gateway → outbound internet from private
+  VPC Endpoint → AWS services without internet
+  Peering → connect VPC to VPC (1:1)
+  Transit Gateway → hub for many VPCs
+
+Security:
+  Security Group: stateful, allow rules, instance-level
+  NACL: stateless, allow+deny, subnet-level
+  Flow Logs: capture IP traffic metadata`,
             tags: ["Cloud", "Networking"],
           },
           {
@@ -7951,7 +16562,167 @@ ps aux  # shows only this shell and its children`,
               "Warm Standby: fully functional but reduced capacity replica — faster RTO than Pilot Light.",
               "Multi-Site Active-Active: traffic splits across regions normally — no manual failover needed.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Every service needs to survive failures. High Availability (HA) means your service stays up when a component fails. Disaster Recovery (DR) means your service can be restored in another region if the entire region goes down.
+
+HA targets 99.99% uptime ("four nines" — ~52 minutes downtime per year). DR targets minutes-to-hours RTO depending on the strategy.
+
+---
+
+## Multi-AZ vs Multi-Region
+
+\`\`\`
+Multi-AZ (within a region):
+  ┌───────────────────────────────────────┐
+  │  Region (us-east-1)                    │
+  │  ┌──────────┐   ┌──────────┐          │
+  │  │ AZ A     │   │ AZ B     │          │
+  │  │ App + DB ├───┤ App + DB │          │
+  │  │ Active   │   │ Standby  │          │
+  │  └──────────┘   └──────────┘          │
+  │  AZ failure → DNS/health check fails  │
+  │  → traffic routes to AZ B             │
+  │  RTO: minutes, RPO: zero (sync repl)  │
+  └───────────────────────────────────────┘
+
+Multi-Region DR:
+  ┌──────────────┐   ┌──────────────┐
+  │ us-east-1    │   │ us-west-2    │
+  │ Active       │───│ DR Standby   │
+  │ (primary)    │   │ (secondary)  │
+  └──────────────┘   └──────────────┘
+  Region failure → Route53 failover → traffic to us-west-2
+  RTO: depends on DR strategy (minutes to hours)
+  RPO: depends on replication (seconds to hours)
+\`\`\`
+
+---
+
+## Four DR Strategies
+
+\`\`\`
+Cost                        RTO          RPO
+  ▲                            ▲           ▲
+  │  Active-Active             minutes     seconds
+  │    (traffic split across    <1min       <1s
+  │     regions)
+  │
+  │  Warm Standby              minutes     minutes
+  │    (reduced capacity        ~10min      ~5min
+  │     replica)
+  │
+  │  Pilot Light               hours       minutes
+  │    (core infra running,     ~1h         ~15min
+  │     scale up on disaster)
+  │
+  │  Backup & Restore          hours       hours
+  │    (restore from backup)    ~4h+        ~1h
+  │
+  └──────────────────────────────────────────────
+\`\`\`
+
+---
+
+## AWS Multi-AZ Services
+
+\`\`\`bash
+# RDS Multi-AZ — synchronous replication, automatic failover
+aws rds create-db-instance \
+  --db-instance-identifier my-db \
+  --multi-az \
+  --db-instance-class db.r6g.large
+
+# When AZ A fails:
+# 1. RDS detects DB instance is unreachable
+# 2. DNS record updated to standby in AZ B
+# 3. Application reconnects (transparent, ~60-120s)
+# 4. Standby promoted to primary
+# 5. New standby created in another AZ
+\`\`\`
+
+\`\`\`yaml
+# ECS Service with multi-AZ spread
+services:
+  app:
+    deployment_configuration:
+      minimum_healthy_percent: 100
+      maximum_percent: 200
+    capacity_provider_strategy:
+      - capacity_provider: FARGATE_SPOT
+        weight: 2
+        base: 10
+    # Service auto-heals: if a task fails, ECS replaces it
+    # Spread across AZs: tasks distributed across 3 AZs
+    placement_strategy:
+      - type: spread
+        field: attribute:ecs.availability-zone
+\`\`\`
+
+---
+
+## Health Checks and Auto Recovery
+
+\`\`\`yaml
+# ALB Target Group — health check config
+health_check:
+  protocol: HTTP
+  path: /healthz
+  interval_seconds: 10
+  timeout_seconds: 5
+  healthy_threshold_count: 3
+  unhealthy_threshold_count: 3
+  # If 3 consecutive health checks fail:
+  # → ALB marks target as unhealthy
+  # → Stops sending traffic to that target
+  # → Auto Scaling replaces the unhealthy instance
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between RTO and RPO?
+   **A:** RTO (Recovery Time Objective) is how long you can be down after a failure — determines the speed of recovery. RPO (Recovery Point Objective) is how much data you can lose — determines the frequency of backups/replication. A bank might have RTO=5min, RPO=1sec. A blog might have RTO=4h, RPO=24h.
+
+2. **Q:** What is the cheapest DR strategy and what are its tradeoffs?
+   **A:** Backup & Restore: backup data to S3 in the DR region, restore when disaster strikes. Cheapest (no running infrastructure in DR region), but highest RTO (hours to restore) and RPO (hours of data loss). Suitable for non-critical workloads.
+
+3. **Q:** Why does Multi-AZ not protect against region failure?
+   **A:** Multi-AZ protects against an AZ (datacenter) failure within a single region. But if the entire region fails (earthquake, power grid, AWS service outage), all AZs in that region fail together. Only multi-region DR protects against region failure.
+
+4. **Q:** What is a "blast radius" in the context of HA?
+   **A:** Blast radius is the scope of impact when a component fails. Design principles: smaller blast radii = better. Use multiple AZs (blast radius = one AZ), multiple regions (blast radius = one region), cell-based architecture (blast radius = one cell).
+
+5. **Q:** What is the difference between active-passive and active-active DR?
+   **A:** Active-Passive: primary region serves all traffic; DR region is standby. On failover, DR region becomes active. Simpler, but DR infra costs money while idle. Active-Active: both regions serve traffic. No failover needed (traffic just shifts). More complex (data sync between regions) but better resource utilization.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+HA (in-region): Multi-AZ, auto scaling, health checks
+DR (cross-region): Backup & Restore, Pilot Light, Warm Standby, Active-Active
+
+Metrics:
+  RTO: max acceptable downtime
+  RPO: max acceptable data loss
+
+Design Principles:
+  • Deploy across ≥2 AZs
+  • Use health checks (application-level /healthz)
+  • Set minimum healthy percent = 50-100
+  • Use auto scaling groups with min/max/desired
+  • Test failover regularly (chaos engineering)
+  • Store data redundantly (RDS Multi-AZ, S3 11x9s)
+
+AWS Services for HA:
+  Route53: DNS failover, health checks
+  ALB/NLB: health check-based routing
+  RDS Multi-AZ: automatic DB failover
+  Auto Scaling: replace failed instances
+  ECS/EKS: reschedule failed tasks`,
             tags: ["Cloud", "HA", "Reliability"],
           },
           {
@@ -7967,7 +16738,181 @@ ps aux  # shows only this shell and its children`,
               "CloudTrail / Audit Logs: every API call recorded — essential for compliance investigations.",
               "Compliance frameworks: SOC 2, ISO 27001, PCI-DSS, GDPR — what they require of your infrastructure.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Cloud security encompasses data encryption (KMS), secrets management, and compliance certifications. A data breach can cost millions — both in fines and customer trust.
+
+Key concepts: **encryption at rest** (data is encrypted when stored), **encryption in transit** (TLS for data in motion), **secrets rotation** (regularly change credentials), and **audit logging** (record every API call).
+
+---
+
+## KMS — Key Management Service
+
+KMS manages encryption keys and uses **envelope encryption**:
+
+\`\`\`
+Envelope Encryption (AWS KMS):
+                    ┌──────────────┐
+  Plaintext data ──→│  Encrypt     │──→ Ciphertext
+    (large, any)    │  (DEK + KMS) │    (stored on disk)
+                    └──────────────┘
+                          ▲
+                         DEK (Data Encryption Key)
+                          ▲
+                    ┌──────────────┐
+                    │  KMS Master  │── Encrypts DEK
+                    │  Key (CMK)   │   (key rotation = re-wrap DEK)
+                    └──────────────┘
+\`\`\`
+
+\`\`\`python
+import boto3
+
+kms = boto3.client("kms")
+
+# Encrypt a small secret (<4KB — use envelope encryption for larger)
+response = kms.encrypt(
+    KeyId="alias/my-key",
+    Plaintext=b"my-secret-password"
+)
+ciphertext = response["CiphertextBlob"]
+
+# Decrypt
+response = kms.decrypt(CiphertextBlob=ciphertext)
+plaintext = response["Plaintext"].decode()
+\`\`\`
+
+### Key Rotation
+
+\`\`\`bash
+# AWS KMS automatic rotation (once per year)
+aws kms enable-key-rotation --key-id alias/my-key
+
+# Manual rotation — create new key, update aliases
+aws kms create-key --description "my-key-v2"
+aws kms create-alias \
+  --alias-name alias/my-key \
+  --target-key-id new-key-id
+
+# Old data encrypted with old key can still be decrypted
+# (KMS keeps old backing keys)
+# But new data uses the new key
+\`\`\`
+
+---
+
+## Secrets Manager
+
+\`\`\`python
+import boto3
+from botocore.exceptions import ClientError
+
+sm = boto3.client("secretsmanager")
+
+
+def get_db_password():
+    try:
+        response = sm.get_secret_value(SecretId="prod/db/password")
+        return response["SecretString"]
+    except ClientError as e:
+        # Secrets Manager rotates automatically
+        # If rotation fails → CloudWatch alarm
+        # Access logged to CloudTrail
+        raise
+\`\`\`
+
+\`\`\`bash
+# Store a secret with automatic rotation
+aws secretsmanager create-secret \
+  --name prod/db/password \
+  --secret-string '{"username":"admin","password":"MyP@ssw0rd!"}' \
+  --rotation-rules '{"AutomaticallyRotateAfterDays": 30}'
+\`\`\`
+
+---
+
+## CloudTrail — Audit Logging
+
+Every API call recorded:
+
+\`\`\`bash
+# Look up recent API calls
+aws cloudtrail lookup-events \
+  --lookup-attributes AttributeKey=EventName,AttributeValue=CreateKeyPair
+
+# Output:
+# {
+#     "Events": [{
+#         "EventName": "CreateKeyPair",
+#         "Username": "alice@company.com",
+#         "EventTime": "2024-03-15T10:30:00Z",
+#         "SourceIPAddress": "203.0.113.42",
+#         "Resources": [{"ResourceName": "my-key", "ResourceType": "AWS::EC2::KeyPair"}]
+#     }]
+# }
+
+# Stream to S3 for long-term retention
+aws cloudtrail create-trail --name org-trail --s3-bucket-name my-cloudtrail-logs
+\`\`\`
+
+---
+
+## Compliance Frameworks
+
+| Framework | Focus | Key Requirements |
+|-----------|-------|-----------------|
+| SOC 2 | Controls for service organizations | Audit log, encryption, access control |
+| ISO 27001 | Information security management | Risk assessment, incident response |
+| PCI-DSS | Payment card data | Encryption, network segmentation, quarterly scans |
+| HIPAA | Healthcare data (US) | BAA with provider, encryption, audit controls |
+| GDPR | Personal data (EU) | Data processing records, breach notification, right to deletion |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is envelope encryption and why does KMS use it?
+   **A:** Envelope encryption encrypts your data with a Data Encryption Key (DEK), then encrypts the DEK with a KMS master key. This allows encrypting arbitrary-sized data (KMS limits individual API calls to 4KB) and enables key rotation (rotate the master key, re-wrap the DEK — data stays encrypted with the same DEK).
+
+2. **Q:** What is the difference between AWS Secrets Manager and Parameter Store?
+   **A:** Secrets Manager supports automatic rotation (Lambda-based), cross-region replication, and costs $0.40/secret/month. Parameter Store is cheaper (free tiers), supports plain text and secure strings, but requires custom tooling for rotation. Use Secrets Manager for database passwords, Parameter Store for config values.
+
+3. **Q:** How do you encrypt data at rest for EBS volumes?
+   **A:** Enable EBS encryption by default using a KMS customer managed key. When you create an EC2 instance, its EBS volumes are encrypted. The EC2 instance reads/writes normally — encryption/decryption happens transparently at the hypervisor level. Snapshots and AMIs inherit the encryption.
+
+4. **Q:** What logs does CloudTrail capture and what does it miss?
+   **A:** CloudTrail captures management events (CreateInstance, DeleteBucket) by default. Data events (GetObject, PutObject) require additional configuration. It does NOT capture operating system logs — those need CloudWatch Agent. CloudTrail is for who-did-what in AWS; OS logs are for who-did-what in the instance.
+
+5. **Q:** What is a compliance "scope" and why does it matter?
+   **A:** The scope defines which systems, processes, and data are covered by a compliance certification. If your database is in scope for PCI-DSS, it must meet PCI requirements. You can reduce scope by using managed services (RDS handles encryption, patching) or by isolating cardholder data to specific systems.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+KMS:
+  Envelope encryption: DEK + KMS Master Key
+  Key rotation: automatic (yearly) or manual
+  Key types: AWS managed (free), Customer managed ($1/month)
+
+Secrets Manager:
+  Automatic rotation (30, 60, 90 days)
+  Cross-region replication
+  CloudTrail logging for all access
+
+Encryption:
+  At rest: EBS (KMS), S3 (SSE-S3/KMS/C), RDS (KMS)
+  In transit: TLS everywhere (VPC-internal or internet)
+
+Compliance:
+  SOC 2: controls and monitoring
+  ISO 27001: ISMS framework
+  PCI-DSS: payment data
+  HIPAA: healthcare data
+  GDPR: personal data of EU citizens
+
+Audit: CloudTrail (management + data events)`,
             tags: ["Cloud", "Security"],
           },
           {
@@ -7984,7 +16929,170 @@ ps aux  # shows only this shell and its children`,
               "Cost allocation: tag everything (env, team, service) — enables chargeback/showback to business units.",
               "Tooling: AWS Cost Explorer, Vantage, CloudHealth, Infracost — each has different granularity and automation capabilities.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Cloud costs are the second-largest expense for most tech companies after payroll. Without FinOps practices, costs grow unpredictably — unused resources, over-provisioned instances, forgotten volumes, and expensive data transfer.
+
+FinOps is not just "spend less" — it is "spend effectively." The goal is to get maximum value from every cloud dollar.
+
+---
+
+## The FinOps Lifecycle
+
+\`\`\`
+      ┌─────────────┐
+      │  INFORM     │
+      │  Visibility │
+      │  + Tagging  │
+      └──────┬──────┘
+             │
+      ┌──────▼──────┐
+      │  OPTIMIZE   │
+      │  Right-size │
+      │  + Commit   │
+      └──────┬──────┘
+             │
+      ┌──────▼──────┐
+      │  OPERATE   │
+      │  Governance │
+      │  + Culture  │
+      └──────┬──────┘
+             │
+      └──────┘ (continuous cycle)
+\`\`\`
+
+---
+
+## Compute Optimization
+
+### Right-Sizing
+
+\`\`\`bash
+# CloudWatch metrics — find over-provisioned instances
+# CPU < 20% for 14 days → downsize
+# Memory < 40% for 14 days → downsize
+
+# Example: m5.xlarge → m5.large saves 50% cost
+# Before: m5.xlarge (4 vCPU, 16 GB) ~$0.192/hr → ~$140/month
+# After:  m5.large  (2 vCPU,  8 GB) ~$0.096/hr → ~$70/month
+\`\`\`
+
+### Reserved Instances / Savings Plans
+
+\`\`\`
+                       On-Demand    1yr Reserved    3yr Reserved     Spot
+EC2 (m5.xlarge)        $0.192/hr    $0.122/hr        $0.087/hr       $0.057/hr
+Savings vs On-Demand:   —            36%              55%             70%
+
+AWS Savings Plan: commit to $X/hr compute spend
+  - Covers EC2, Fargate, Lambda
+  - 1yr: ~30% savings
+  - 3yr: ~50% savings
+  - Compute Savings Plan: flexible across instance family, region, OS
+\`\`\`
+
+### Spot Instances
+
+\`\`\`yaml
+# ECS with Spot + On-Demand mix
+services:
+  worker:
+    capacity_provider_strategy:
+      - capacity_provider: FARGATE_SPOT
+        weight: 3   # 75% of tasks on Spot
+        base: 5
+      - capacity_provider: FARGATE
+        weight: 1   # 25% on On-Demand
+
+# Spot interruption: 2-minute warning before termination
+# Handle graceful shutdown:
+# - Task drains connections
+# - Saves progress to SQS/S3
+# - Another Spot task picks up the work
+\`\`\`
+
+---
+
+## Storage Tiering
+
+\`\`\`
+S3 Storage Classes:
+  Standard:    $0.023/GB   — frequent access, <30 days
+  Intelligent: $0.023/GB   — auto-tiering (monitoring fee)
+  Standard IA: $0.0125/GB  — infrequent, 30-90 days
+  One Zone IA: $0.01/GB    — recreatable data
+  Glacier:     $0.004/GB   — archives, retrieval 1-12h
+  Deep Archive:$0.001/GB   — long-term, retrieval 12-48h
+
+Example: 10TB of data, 50% >90 days old
+Before: 10TB in Standard = $230/month
+After:  5TB Standard + 5TB Glacier = $115 + $20 = $135/month
+Savings: ~41%
+\`\`\`
+
+---
+
+## Cost Allocation Tags
+
+\`\`\`bash
+# Assign tags to all resources
+aws ec2 create-tags \
+  --resources i-12345 \
+  --tags Key=Environment,Value=production \
+         Key=Team,Value=backend \
+         Key=Service,Value=api \
+         Key=CostCenter,Value=CC-1234
+
+# View costs by tag in Cost Explorer
+# Without tags: "I don't know who spent what"
+# With tags: "Team backend spent $12,400 on production this month"
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a Reserved Instance and a Savings Plan?
+   **A:** RI: commit to a specific instance family in a specific region (m5.xlarge, us-east-1). Savings Plan: commit to a dollar amount of compute ($100/hour) — covers EC2, Fargate, Lambda. Savings Plan is more flexible because savings apply regardless of instance family, size, OS, or region.
+
+2. **Q:** When should you use Spot instances vs On-Demand?
+   **A:** Spot for: fault-tolerant, stateless, batch jobs, CI/CD runners, canary deployments. On-Demand for: stateful services, databases, critical real-time APIs, services that cannot tolerate interruption. Best practice: use a mix of Spot + On-Demand with a diversification strategy.
+
+3. **Q:** What is the biggest hidden cost in cloud?
+   **A:** Data transfer out (egress). Ingress is free (usually). Egress costs $0.05-0.09/GB. Common sources: cross-AZ traffic, direct-to-internet serving (instead of CloudFront), NAT Gateway data processing ($0.045/hr + $0.045/GB). Solution: use CloudFront for egress, keep traffic within same AZ when possible, use VPC endpoints.
+
+4. **Q:** How do you detect unused resources?
+   **A:** AWS Trusted Advisor, Cost Explorer Rightsizing Recommendations, and custom scripts check for: stopped instances, unattached EBS volumes (>30 days), unassociated Elastic IPs, idle load balancers (no traffic for 7 days), old snapshots, underutilized RDS instances.
+
+5. **Q:** What is the FinOps "unit economics" metric?
+   **A:** Instead of tracking total cloud spend, track cost per unit (cost per API request, cost per user, cost per transaction). As the business grows, total spend naturally goes up — but unit cost should go down (efficiency). If unit cost stays flat or increases, optimization efforts are not keeping up.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+FinOps Lifecycle: Inform → Optimize → Operate
+
+Compute Savings (vs On-Demand):
+  Spot: 60-90% (interruptible)
+  1yr Savings Plan: ~30%
+  3yr Savings Plan: ~50%
+  Right-sizing: 20-50%
+
+Storage:
+  Use S3 Lifecycle Policies (Standard → IA → Glacier)
+  Delete unused EBS volumes and snapshots
+
+Cost Allocation:
+  Tag everything: Environment, Team, Service, CostCenter
+  Use Cost Explorer + Budgets + Anomaly Detection
+
+Biggest Cost Levers:
+  1. Compute: Spot + Savings Plans + Right-sizing
+  2. Storage: lifecycle policies, delete unused
+  3. Data Transfer: CloudFront, keep traffic in AZ
+  4. Networking: NAT Gateway costs, VPC endpoints`,
             tags: ["Cloud", "FinOps", "Cost"],
           },
           {
@@ -8001,7 +17109,170 @@ ps aux  # shows only this shell and its children`,
               "mTLS: mutual TLS between services — each side presents a certificate, both sides verify. Service mesh does this at scale.",
               "ZTNA vs VPN: VPN gives full network access; ZTNA gives app-level access — dramatically reduces blast radius.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Zero Trust eliminates the concept of a "trusted internal network." In traditional security, being inside the corporate network means you are trusted. In Zero Trust, every request must authenticate and be authorized — regardless of where it comes from.
+
+COVID-era remote work accelerated Zero Trust adoption. VPNs gave full network access to every device (including infected ones). Zero Trust gives app-level access based on user identity and device health.
+
+---
+
+## Core Principles
+
+\`\`\`
+Traditional (Castle-and-Moat):
+  ┌──────────────────────────┐
+  │  Corporate Network        │
+  │  ┌──────────────────┐    │
+  │  │  Everything is    │    │
+  │  │  trusted inside    │    │
+  │  │  the perimeter     │    │
+  │  └──────────────────┘    │
+  └──────────────────────────┘
+         │ Firewall │
+         └──────────┘
+  ┌──────────────────────────┐
+  │  Internet (untrusted)    │
+  └──────────────────────────┘
+  Problem: once inside, attacker has full access
+
+Zero Trust (BeyondCorp):
+  ┌──────────────────────────┐
+  │  Every request:          │
+  │  • Who is the user?      │
+  │  • What device?          │
+  │  • What app?             │
+  │  • Is device healthy?    │
+  │  • Is location allowed?  │
+  │  → Allow or Deny         │
+  └──────────────────────────┘
+           │ │ │
+           ▼ ▼ ▼
+  ┌──────────────────────────┐
+  │  Apps (no VPN needed)    │
+  │  All apps are public-    │
+  │  facing but protected    │
+  │  by Identity-Aware Proxy │
+  └──────────────────────────┘
+\`\`\`
+
+---
+
+## Identity-Aware Proxy (IAP)
+
+Google's BeyondCorp, Cloudflare Access, and Pomerium use IAP:
+
+\`\`\`yaml
+# Cloudflare Access — protect an internal app
+# Before Access: anyone can reach app.internal.com
+# After Access: user must authenticate via SSO + device check
+
+# Access policy
+policies:
+  - name: "Internal App Access"
+    decision: allow
+    include:
+      - email_domain: company.com
+    require:
+      - device_posture: "OS Version ≥ macOS 14 / Windows 11"
+      - country: ["US", "GB", "DE"]
+
+# How it works at network level:
+# 1. User → cloudflare.com/app → Cloudflare edge
+# 2. Cloudflare checks JWT token (set by Access)
+# 3. If valid → forwards to origin server
+# 4. Origin verifies JWT signature (optional)
+\`\`\`
+
+---
+
+## Microsegmentation
+
+Divide the network into small zones — each connection authenticated:
+
+\`\`\`
+Without Microsegmentation:
+  ┌──────────────────────────────┐
+  │  All workloads in same subnet │
+  │  ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐   │
+  │  │DB│ │FE│ │BE│ │CV│ │RD│   │
+  │  └──┘ └──┘ └──┘ └──┘ └──┘   │
+  │  Any workload can reach any   │
+  │  other — one breach = all     │
+  └──────────────────────────────┘
+
+With Microsegmentation:
+  ┌──────────────────────────────┐
+  │  ┌─────┐    ┌─────┐          │
+  │  │ FE  │───→│ BE  │───→ DB   │
+  │  └─────┘    └─────┘          │
+  │    │                          │
+  │    └──→ CV (only scm->cv)    │
+  │                              │
+  │  Each connection:            │
+  │  • Authenticated (mTLS)      │
+  │  • Authorized (policy)       │
+  │  • Logged                    │
+  └──────────────────────────────┘
+\`\`\`
+
+---
+
+## ZTNA vs VPN
+
+| Feature | VPN | ZTNA (Cloudflare Access, Zscaler) |
+|---------|-----|-----------------------------------|
+| Access scope | Full network | App-level only |
+| Auth frequency | Once (on connect) | Every request |
+| Device posture | Rarely checked | Checked per session |
+| User experience | Requires client software | Browser-based |
+| Lateral movement | Full access after breach | Contained to one app |
+| Audit | IP-level | User + device + app-level |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the fundamental difference between VPN and ZTNA?
+   **A:** VPN grants access to the NETWORK (subnet, IP range) — once connected, the user can reach any resource. ZTNA grants access to specific APPLICATIONS — even if authenticated, the user can only reach the apps they are authorized for. ZTNA eliminates lateral movement.
+
+2. **Q:** How does Google's BeyondCorp work in practice?
+   **A:** BeyondCorp removes the VPN entirely. All applications are deployed publicly (accessible from the internet), but protected by an Identity-Aware Proxy. When a user tries to access an app, the proxy checks: user identity (SSO), device inventory (corporate-managed?), device posture (OS patched? disk encrypted?), and context (location, time). If all checks pass, access is granted.
+
+3. **Q:** What is mTLS and how does it support Zero Trust?
+   **A:** mTLS (mutual TLS) requires both the client and server to present certificates. The client verifies the server's cert (standard TLS) AND the server verifies the client's cert. This ensures both sides know who they are talking to. In a service mesh, mTLS ensures every service-to-service connection is authenticated.
+
+4. **Q:** What is the "blast radius" benefit of Zero Trust?
+   **A:** In Zero Trust, even if a user's credentials are compromised, the attacker can only access the specific apps that user has access to — not the entire network. With VPN, a compromised credential gives access to the full internal network. Zero Trust also enables microsegmentation, where each service can only reach specific other services.
+
+5. **Q:** How does device posture verification work in Zero Trust?
+   **A:** Device posture checks are done by an agent or browser-based check when the user authenticates. Checks include: OS version (not end-of-life?), disk encryption enabled?, antivirus running?, no known malware?, firewall enabled?, recent security patches applied? For managed devices, the device inventory is checked to ensure the device is corporate-registered.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Zero Trust Principles:
+  Never trust, always verify
+  Least privilege access
+  Assume breach
+  Verify every request
+
+Key Technologies:
+  IAP (Identity-Aware Proxy): Cloudflare Access, Google IAP, Pomerium
+  mTLS: mutual TLS for service-to-service auth
+  Microsegmentation: smallest possible network zones
+  Device Posture: OS version, encryption, AV, patches
+
+ZTNA vs VPN:
+  ZTNA: app-level, browser-based, per-request auth, no lateral movement
+  VPN: network-level, client software, one-time auth, full access
+
+Implementation:
+  User → IAP → App (authenticated + authorized)
+  Service → mTLS → Service (authenticated + authorized)
+  All access logged and audited`,
             tags: ["Security", "Networking", "Zero Trust"],
           },
           {
@@ -8019,7 +17290,183 @@ ps aux  # shows only this shell and its children`,
               "Serverless patterns: event-driven (S3 → Lambda → DynamoDB), API + Lambda (API Gateway), stream processing (Kinesis → Lambda).",
               "When NOT to use: long-running processes, WebSocket-heavy apps, predictable high load, latency-sensitive real-time systems.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Serverless means you focus on code, not servers. No provisioning, no patching, no capacity planning — the cloud provider handles all infrastructure.
+
+There are two serverless models: **FaaS** (functions — Lambda, Cloud Functions) for event-driven, short-lived work, and **Container Serverless** (Fargate, Cloud Run) for running any containerized application without managing servers.
+
+---
+
+## FaaS: AWS Lambda
+
+\`\`\`python
+import json
+import boto3
+
+def handler(event, context):
+    # event: API Gateway request, S3 event, SQS message, etc.
+    # context: runtime info (function name, timeout remaining, request ID)
+
+    # S3 trigger example: resize image when uploaded
+    bucket = event["Records"][0]["s3"]["bucket"]["name"]
+    key = event["Records"][0]["s3"]["object"]["key"]
+
+    # Process image (max 15 min execution time)
+    s3 = boto3.client("s3")
+    response = s3.get_object(Bucket=bucket, Key=key)
+    # ... resize, transform ...
+
+    return {"statusCode": 200, "body": json.dumps({"processed": key})}
+\`\`\`
+
+\`\`\`json
+// Lambda configuration
+{
+    "functionName": "image-resizer",
+    "runtime": "nodejs20.x",
+    "memorySize": 512,       // 128MB - 10GB
+    "timeout": 300,          // max 900 seconds (15 min)
+    "reservedConcurrency": 100,  // limit concurrent executions
+    "provisionedConcurrency": 10, // keep 10 warm to avoid cold starts
+    "snapStart": { "Enabled": true }  // Java only: restore from snapshot
+}
+\`\`\`
+
+---
+
+## Cold Starts
+
+\`\`\`
+Function Execution Timeline (cold start):
+  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌────────┐
+  │ Download │ │ Extract  │ │ Init     │ │ Handler │
+  │ code     │ │ runtime  │ │ (static  │ │ runs    │
+  │ (S3)     │ │ (Node/   │ │  init)   │ │         │
+  │ 50ms     │ │ Python)  │ │ 30ms     │ │         │
+  │          │ │ 100ms    │ │          │ │         │
+  └─────────┘ └──────────┘ └──────────┘ └────────┘
+  Cold start total: ~200ms-1s
+  Warm start: ~1-5ms (handler only — no init)
+
+Mitigations:
+  • Provisioned Concurrency: keep N instances warm (pay per instance)
+  • SnapStart (Java): snapshot of init phase → restore in <200ms
+  • Keep functions warm: periodic pings (crude but cheap)
+  • Smaller package size: fewer code to download
+  • Increase memory: more CPU = faster startup
+\`\`\`
+
+---
+
+## Container Serverless: Fargate
+
+Run any Docker container without managing EC2:
+
+\`\`\`yaml
+# ECS with Fargate — no EC2 instances
+services:
+  api:
+    image: my-api:latest
+    cpu: 512       # 0.25-16 vCPU
+    memory: 1024   # 512MB-120GB
+    network:
+      vpc: my-vpc
+      subnets: [private-subnet-1, private-subnet-2]
+    scaling:
+      min: 0       # Scale to zero when idle
+      max: 100
+      target: cpu=70  # Auto-scale based on CPU
+    health_check:
+      path: /healthz
+      interval: 30s
+\`\`\`
+
+### Fargate vs Lambda
+
+| Feature | Lambda | Fargate |
+|---------|--------|---------|
+| Unit | Function | Container |
+| Max memory | 10GB | 120GB |
+| Max timeout | 15 min | Unlimited |
+| Cold start | ~200ms-1s | ~30s-2min |
+| Scaling | Instant (burst) | Slower (new task) |
+| State | Stateless | Can be stateful |
+| Pricing | Per invocation + duration | Per vCPU-hour + memory-hour |
+| Best for | Event-driven, bursty | Long-running, any container |
+
+---
+
+## Cloud Run (GCP)
+
+Serverless containers with auto-scaling to zero:
+
+\`\`\`yaml
+# cloudbuild.yaml — deploy to Cloud Run
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/my-app", "."]
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "gcr.io/$PROJECT_ID/my-app"]
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - my-app
+      - --image=gcr.io/$PROJECT_ID/my-app
+      - --region=us-central1
+      - --min-instances=0   # Scale to zero
+      - --max-instances=100
+      - --concurrency=80    # 80 concurrent requests per container
+      - --cpu-boost         # More CPU during cold start
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Lambda and Fargate in terms of pricing?
+   **A:** Lambda charges per invocation + per GB-second of execution. For a function that runs 100ms, 1M invocations costs ~$0.20 + compute. Fargate charges per vCPU-hour + GB-hour. For a container running 24/7, Fargate costs ~$20/month. Lambda is cheaper for spiky workloads, Fargate is cheaper for steady-state.
+
+2. **Q:** How do you handle database connections in Lambda?
+   **A:** Open the connection outside the handler function (in the INIT phase). The connection is reused across invocations on the same warm execution environment. Use connection pooling (RDS Proxy) to avoid overwhelming the database when many concurrent Lambdas start.
+
+3. **Q:** What is SnapStart and when should you use it?
+   **A:** SnapStart takes a snapshot of the Lambda execution environment after the INIT phase (but before the handler runs). On cold start, the snapshot is restored instead of re-running INIT — reducing cold start from ~6s to ~200ms for Java functions. Only available for Java 11+ runtimes.
+
+4. **Q:** When would you choose Fargate over Lambda?
+   **A:** Fargate when: you need more than 15 minutes of execution, more than 10GB memory, GPU workloads, WebSocket servers, or when you want to run an existing containerized app without rewriting it as functions. Fargate also gives you a VPC IP for each task (Lambda needs a VPC config).
+
+5. **Q:** What is the "scale to zero" concept in serverless?
+   **A:** When there is no traffic, no containers are running — you pay nothing. When a request comes in, the provider starts a container (cold start). This is great for cost but adds latency on the first request. Cloud Run and Fargate support min=0 instances. Lambda scales to zero natively.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Serverless Models:
+  FaaS (Lambda, Cloud Functions): event-driven, short-lived, per-invocation pricing
+  Container (Fargate, Cloud Run): any container, auto-scaling, per-hour pricing
+
+Lambda Constraints:
+  Memory: 128MB-10GB
+  Timeout: max 15 min
+  Disk: 512MB-10GB (/tmp)
+  Payload: 256KB (sync), 256KB (async)
+
+Cold Start Mitigation:
+  Provisioned Concurrency (pay to keep warm)
+  SnapStart (Java snapshot restore)
+  Minimize deployment package size
+  Use faster runtimes (Python/Node > Java/.NET)
+
+When to use serverless:
+  Variable/spiky traffic, event processing, APIs, background jobs
+When NOT to use:
+  Steady high load, long-running, latency-sensitive,
+  GPU workloads, stateful services`,
             tags: ["Serverless", "Lambda", "Cloud"],
           },
           {
@@ -8038,7 +17485,141 @@ ps aux  # shows only this shell and its children`,
               "Decision framework: if you use Microsoft ecosystem → Azure; need best data/ML → GCP; need most services/partners → AWS. Multi-cloud is increasingly common.",
               "Multi-cloud strategy: avoid provider lock-in for critical layers (Kubernetes, Terraform, OpenTelemetry), but accept lock-in for differentiated services.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Choosing a cloud provider is a long-term architectural decision. Each provider has strengths: AWS has the deepest service catalog, GCP excels at data/ML, and Azure integrates best with Microsoft enterprise tools.
+
+Multi-cloud is increasingly common — use each provider for what it does best, with Kubernetes and Terraform as the common layer.
+
+---
+
+## Compute Comparison
+
+\`\`\`
+                  AWS                     GCP                  Azure
+VMs               EC2                     Compute Engine        Virtual Machines
+Serverless FaaS   Lambda                  Cloud Functions       Azure Functions
+Serverless Ctr    Fargate                 Cloud Run             Container Instances
+Orchestration     ECS + EKS               GKE (Autopilot)       AKS
+Edge              Lambda@Edge + CF        Cloud Functions       Azure Front Door
+                  Workers
+
+Kubernetes:
+EKS:   $0.10/hr per cluster control plane (managed)
+GKE:   $0.10/hr per cluster (Autopilot) or free (Standard) + $0.10/node
+AKS:   Free control plane (pay only for worker nodes)
+\`\`\`
+
+---
+
+## Data & AI
+
+| Service Category | AWS | GCP | Azure |
+|-----------------|-----|-----|-------|
+| Relational DB | RDS / Aurora | Cloud SQL | Azure SQL |
+| NoSQL | DynamoDB | Firestore | Cosmos DB |
+| Data Warehouse | Redshift | BigQuery | Synapse |
+| Data Streaming | Kinesis | Pub/Sub | Event Hubs |
+| ML Platform | SageMaker | Vertex AI | Azure ML |
+| Vector DB | OpenSearch (vect.) | Vertex AI Vector | Azure AI Search |
+| Object Storage | S3 | Cloud Storage | Blob Storage |
+
+### Key Differentiators
+
+**AWS DynamoDB:** single-digit ms at any scale, auto-scaling, DAX cache, global tables. Best for: session store, game leaderboards, IoT event storage.
+
+**GCP BigQuery:** serverless data warehouse, no cluster management, SQL:2011, real-time streaming, separates compute and storage. Best for: analytics, BI, data exploration.
+
+**Azure Cosmos DB:** multi-model (document, key-value, graph, columnar), global distribution with multi-region writes, 99.999% read availability. Best for: globally distributed apps.
+
+---
+
+## Networking
+
+\`\`\`
+VPC:
+  AWS: VPC (regional), subnet (AZ), IGW, NAT, TGW, VPC Peering
+  GCP: VPC (global — spans regions), subnet (regional), Cloud NAT, VPC Peering
+  Azure: VNet (regional), subnet (AZ), Azure Firewall, VPN Gateway, ExpressRoute
+
+CDN:
+  AWS: CloudFront (410+ POPs, Lambda@Edge, Origin Shield)
+  GCP: Cloud CDN (150+ POPs, integrated with HTTP(S) LB)
+  Azure: Azure CDN (130+ POPs, + Front Door + Verizon/Akamai)
+
+DNS:
+  Route53 (AWS) — fully managed, health checks, routing policies
+  Cloud DNS (GCP) — global anycast, low latency
+  Azure DNS — integrated with Azure AD, RBAC
+\`\`\`
+
+---
+
+## Decision Framework
+
+\`\`\`
+Your primary ecosystem:
+  Microsoft (.NET, Active Directory, SQL Server) → Azure
+  Google (Kubernetes, BigQuery, Android/chrome) → GCP
+  Everything else → AWS (largest ecosystem, most services)
+
+Your requirements:
+  Best ML/AI infrastructure → GCP (Vertex AI, TPUs)
+  Best serverless ecosystem → AWS (Lambda + 200+ event sources)
+  Best hybrid/on-prem → Azure (Azure Arc, Stack, Active Directory)
+  Best Kubernetes → GKE (Autopilot, multi-cluster, Anthos)
+  Most compliance certs → AWS (143+ certs) / Azure (90+) / GCP (50+)
+  Lowest egress cost → GCP ($0.08-0.12/GB) / AWS ($0.05-0.09/GB)
+
+Multi-cloud strategy:
+  • Use Kubernetes as the portable orchestration layer
+  • Use Terraform for infrastructure as code (provider-agnostic)
+  • Use OpenTelemetry for observability (vendor-neutral)
+  • Accept lock-in for differentiated services (DynamoDB, BigQuery)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When would you choose GCP over AWS?
+   **A:** When data/ML workloads are the primary use case (BigQuery, Vertex AI, TPUs), when you want simple networking (global VPC — no peering), when you prefer Kubernetes-first (GKE Autopilot is the most mature managed K8s), or when your team is experienced with Google's tools.
+
+2. **Q:** What is the biggest difference between AWS and Azure for enterprise?
+   **A:** Azure's native integration with Microsoft enterprise tools: Active Directory (same identity for on-prem and cloud), SQL Server licensing, Power Platform, Office 365 integration, and hybrid scenarios with Azure Arc. AWS requires third-party tools for most enterprise integrations.
+
+3. **Q:** How do you choose between DynamoDB, Firestore, and Cosmos DB?
+   **A:** DynamoDB for: AWS-native workloads, high-traffic gaming/ads/IoT (provisioned throughput model), predictable performance at any scale. Firestore for: GCP-native, real-time sync (mobile apps), serverless (auto-scales). Cosmos DB for: multi-region writes (global apps), multi-model (one DB for document + graph + key-value).
+
+4. **Q:** What is the cost comparison for data egress across providers?
+   **A:** All providers charge for data leaving their network. AWS: $0.09/GB first 10TB (lower with volume). GCP: $0.12/GB first 10TB. Azure: $0.087/GB. Use CDNs (CloudFront, Cloud CDN) to reduce egress costs — CDN egress is $0.085/GB (AWS) vs direct egress $0.09/GB. Multi-cloud egress can be expensive — keep data within one provider when possible.
+
+5. **Q:** What is the role of Terraform in multi-cloud?
+   **A:** Terraform provides a single declarative language (HCL) to manage resources across all cloud providers. You define infrastructure in code, version it in git, and apply it anywhere. This reduces the mental overhead of learning three different CLIs and makes infrastructure reviewable. However, Terraform cannot abstract away provider-specific concepts (IAM roles vs service accounts) — those are still different in each provider.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+AWS Strengths: most services (200+), serverless (Lambda), DynamoDB
+GCP Strengths: data/ML (BigQuery, Vertex AI), Kubernetes (GKE)
+Azure Strengths: enterprise (AD, SQL Server), hybrid
+
+Compute:
+  VMs: EC2 → Compute Engine → Virtual Machines
+  K8s: EKS → GKE → AKS
+  Serverless: Lambda → Cloud Functions → Azure Functions
+
+Data:
+  NoSQL: DynamoDB → Firestore → Cosmos DB
+  Warehouse: Redshift → BigQuery → Synapse
+  Streaming: Kinesis → Pub/Sub → Event Hubs
+
+Multi-cloud:
+  Common layer: K8s + Terraform + OpenTelemetry
+  Accept lock-in on differentiated services
+  Watch egress costs`,
             tags: ["Cloud", "AWS", "GCP", "Azure"],
           },
           {
@@ -8055,7 +17636,199 @@ ps aux  # shows only this shell and its children`,
               "Event streaming: Kinesis (AWS, real-time, 1MB/s per shard) vs Pub/Sub (GCP, global, 1GB/s project) vs Event Hubs (Azure, Kafka-compatible, 1MB/s per TU).",
               "Choosing a messaging strategy: SQS + SNS for simple decoupling, Kafka/Kinesis for event sourcing, Pub/Sub for global event routing, EventBridge for SaaS integration.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Managed cloud services let you use powerful infrastructure without managing servers. Databases, queues, and event buses are the backbone of modern applications — and each cloud provider offers multiple options with different tradeoffs.
+
+Choosing the wrong managed service leads to: vendor lock-in, unexpected costs (especially with NoSQL), scalability pain, operational complexity, or missing features you need (transactions, ordering, exactly-once delivery).
+
+---
+
+## Relational Databases
+
+\`\`\`yaml
+# AWS RDS — managed MySQL/PostgreSQL
+Database:
+  engine: aurora-mysql   # 5x throughput vs standard MySQL
+  instance: db.r6g.large # $0.25/hr
+  storage: 100GB         # auto-scaling up to 128TB
+  multi_az: true         # synchronous standby replica
+  backup: 35 days        # automated backups + PITR
+  replicas:              # read replicas for read scaling
+    - read-replica-1     # cross-region for DR
+    - read-replica-2
+
+# GCP Cloud SQL — managed MySQL/PostgreSQL/SQL Server
+# Features: automatic replication, failover, backups, update
+# No auto-scaling storage (unlike Aurora)
+
+# Azure SQL — fully managed SQL Server
+# Features: built-in AI, serverless tier (pause when idle)
+# Geo-replication: active geo-replication up to 4 regions
+\`\`\`
+
+---
+
+## NoSQL — DynamoDB, Firestore, Cosmos DB
+
+\`\`\`javascript
+// AWS DynamoDB — key-value + document
+// Single-digit ms latency at any scale
+
+// Table design (single table design pattern):
+// PK: userId  SK: sortKey
+// One table = all access patterns
+
+const AWS = require("aws-sdk");
+const dynamo = new AWS.DynamoDB.DocumentClient();
+
+// Put item — automatically replicates across 3 AZs
+await dynamo.put({
+    TableName: "my-app",
+    Item: {
+        pk: "user#123",
+        sk: "profile",
+        name: "Alice",
+        email: "alice@example.com",
+        ttl: Math.floor(Date.now() / 1000) + 86400 // auto-expire
+    }
+}).promise();
+
+// Query by PK + SK range
+const result = await dynamo.query({
+    TableName: "my-app",
+    KeyConditionExpression: "pk = :pk AND begins_with(sk, :sk)",
+    ExpressionAttributeValues: {
+        ":pk": "user#123",
+        ":sk": "order#"
+    }
+}).promise();
+
+// DynamoDB capacities:
+// On-Demand: pay per request (auto-scales, no capacity planning)
+// Provisioned: specify RCU/WCU (25-50% cheaper, needs planning)
+// DAX cache: in-memory cache for hot data (microsecond latency)
+\`\`\`
+
+---
+
+## Message Queues
+
+\`\`\`
+SQS (AWS) — Simple Queue Service:
+  • Pull-based (consumer polls)
+  • At-least-once delivery (duplicates possible)
+  • 256KB max message size
+  • 14-day max retention
+  • Dead-letter queue for failed messages
+  • Delay queues (up to 15 min)
+  • FIFO queues: exactly-once, ordered ($3.50/GB vs $0.40 Standard)
+
+Pub/Sub (GCP) — Global messaging:
+  • Push or pull delivery
+  • Exactly-once delivery (per region)
+  • 10MB max message size
+  • 7-day max retention
+  • Global: messages can be published anywhere, consumed anywhere
+  • Filtering: subscribers filter by attributes (server-side)
+
+Service Bus (Azure) — Enterprise messaging:
+  • Sessions (group related messages)
+  • Dead-letter + auto-forward
+  • Scheduled delivery
+  • Duplicate detection
+  • FIFO ordering
+  • AMQP + HTTP protocols
+\`\`\`
+
+### Choosing the Right Queue
+
+\`\`\`
+Simple decoupling: SQS Standard (cheapest, 0.40/GB)
+Ordered + exactly-once: SQS FIFO (3.50/GB)
+Global event routing: GCP Pub/Sub (best global delivery)
+Enterprise features: Azure Service Bus (sessions, dead-letter, scheduled)
+High throughput streaming: Kinesis / Kafka / Event Hubs
+Event-driven workflows: AWS EventBridge (SaaS integration, filtering, archiving)
+\`\`\`
+
+---
+
+## Event Streaming — Kinesis vs Kafka
+
+\`\`\`
+AWS Kinesis:
+  • Shard: 1MB/s write, 2MB/s read per shard
+  • Records: up to 1MB
+  • Retention: 24h (default) to 365d (extended)
+  • Replay: from any position (like Kafka)
+  • Consumers: Lambda, KCL (Kinesis Client Library), Firehose
+
+GCP Pub/Sub (streaming):
+  • Topic: 1GB/s throughput (auto-scaling)
+  • Messages: up to 10MB
+  • Retention: 7 days (configurable up to 31 days)
+  • No shards or partitions to manage
+  • Exactly-once delivery (per region)
+
+Azure Event Hubs:
+  • Throughput Unit (TU): 1MB/s ingress, 2MB/s egress
+  • Kafka-compatible protocol
+  • Capture to Azure Data Lake / Blob Storage
+  • Geo-disaster recovery
+  • Schema Registry
+
+Apache Kafka (self-managed or MSK):
+  • Highest throughput and control
+  • Requires expertise to operate
+  • MSK (AWS Managed Kafka) handles the control plane
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When should you use SQS vs Kinesis?
+   **A:** SQS for: simple message queue, decoupling microservices, async processing with variable throughput, where each message is independent. Kinesis for: event streaming, real-time analytics, ordered processing across shards, where messages need to be replayed/reprocessed. Kinesis consumers maintain their position — SQS deletes consumed messages.
+
+2. **Q:** What is the DynamoDB single-table design pattern?
+   **A:** Instead of one table per entity, store all entities in one table using composite keys (PK = entity type, SK = identifier + sort key). This enables querying related data in a single request (no joins). Example: PK="user#1", SK="order#2024-01-01" stores the order; PK="user#1", SK="profile" stores the profile. One table, one query fetches all data for a user.
+
+3. **Q:** How does Pub/Sub's exactly-once delivery work?
+   **A:** Pub/Sub assigns a unique ID to each message and tracks acknowledgments. If a subscriber receives a message but crashes before acknowledging, Pub/Sub redelivers it. With exactly-once mode (available per region), Pub/Sub deduplicates based on the message ID, ensuring each message is delivered exactly once to the subscriber.
+
+4. **Q:** What is a dead-letter queue and when should you use one?
+   **A:** A DLQ receives messages that could not be processed successfully after N retries. Configure a DLQ for each queue — when a consumer fails to process a message (exhausts retries), the message moves to the DLQ. This prevents "poison pill" messages from blocking the main queue. Monitor the DLQ for undeliverable messages.
+
+5. **Q:** What is the difference between SQL and NoSQL in terms of scalability?
+   **A:** SQL databases (Aurora, Cloud SQL) scale vertically (bigger instance) and with read replicas. NoSQL databases (DynamoDB, Cosmos DB) scale horizontally — add partitions/shards automatically. NoSQL handles higher throughput and larger datasets, but sacrifices query flexibility and ACID transactions (though both DynamoDB and Cosmos DB support transactions now).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Relational DB:
+  AWS: RDS (multi-engine), Aurora (MySQL/PG-compatible, 5x throughput)
+  GCP: Cloud SQL (MySQL, PG, SQL Server)
+  Azure: Azure SQL (fully managed SQL Server)
+
+NoSQL:
+  DynamoDB: key-value + document, single-digit ms, auto-scaling
+  Firestore: real-time sync, mobile-friendly, serverless
+  Cosmos DB: multi-model, global distribution, multi-region writes
+
+Queues:
+  SQS: pull-based, at-least-once, 256KB, 14-day retention
+  Pub/Sub: push/pull, exactly-once, 10MB, global routing
+  Service Bus: sessions, dead-letter, enterprise features
+
+Streaming:
+  Kinesis: shard-based, 1MB/s per shard, replayable
+  Pub/Sub: auto-scaling, 1GB/s, global
+  Event Hubs: Kafka-compatible, TUs
+
+Event-Driven: EventBridge (SaaS integration, filtering, archiving)`,
             tags: ["Cloud", "Databases", "Messaging"],
           },
         ],
@@ -8093,25 +17866,166 @@ ps aux  # shows only this shell and its children`,
               "Image layers: each Dockerfile instruction creates a layer — layers are content-addressed and cached.",
               "BuildKit: modern builder for Docker — parallel layer resolution, cache mounts, secret handling.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "dockerfile",
-              filename: "Dockerfile",
-              code: `# Multi-stage build: builder stage has all dev deps, final has only runtime
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci                    # install deps (cached layer)
-COPY . .
-RUN npm run build
+            content: `## Why This Matters (Read This First)
 
-FROM node:20-alpine AS final
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-EXPOSE 3000
-CMD ["node", "dist/index.js"] # distroless or Alpine for minimal surface area`,
-            },
+Docker revolutionized deployment by packaging applications with their dependencies. Understanding Docker's architecture helps you debug container issues, optimize image builds, and choose the right container runtime for production.
+
+The call chain for \`docker run\`: Docker CLI → Docker daemon (dockerd) → containerd → runc. Each layer has a specific responsibility.
+
+---
+
+## Docker Architecture
+
+\`\`\`
+┌─────────────────────────────────────────────┐
+│  docker CLI                                 │
+│  $ docker run --name myapp nginx:latest     │
+└──────────────────┬──────────────────────────┘
+                   │ REST API (Unix socket)
+                   ▼
+┌─────────────────────────────────────────────┐
+│  Docker Daemon (dockerd)                    │
+│  • Receives API requests                     │
+│  • Manages images, networks, volumes         │
+│  • Talks to containerd via gRPC              │
+│  • NOT running in rootless setups            │
+└──────────────────┬──────────────────────────┘
+                   │ gRPC (containerd socket)
+                   ▼
+┌─────────────────────────────────────────────┐
+│  containerd                                  │
+│  • OCI-compliant container runtime           │
+│  • Pulls images, manages snapshots/overlayfs │
+│  • Starts/stop containers via runc           │
+│  • Can be used standalone (no Docker CLI)    │
+└──────────────────┬──────────────────────────┘
+                   │ OCI runtime spec (bundle.json)
+                   ▼
+┌─────────────────────────────────────────────┐
+│  runc                                        │
+│  • The lowest-level OCI runtime              │
+│  • Creates cgroups + namespaces              │
+│  • Calls clone() syscall → new process       │
+│  • The actual container process              │
+└─────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Image Layers
+
+\`\`\`dockerfile
+FROM node:20-alpine       # Layer A: base OS (~120MB)
+WORKDIR /app              # Layer B: metadata
+COPY package*.json ./     # Layer C: dependency manifest
+RUN npm ci                # Layer D: node_modules (~40MB)
+COPY . .                  # Layer E: app code (~5MB)
+RUN npm run build         # Layer F: compiled output (~10MB)
+RUN rm -rf /tmp/*         # Layer G: cleanup (creates empty layer!)
+
+# Total: 7 layers, ~175MB
+# Cache: change package.json? Layer C+ are rebuilt
+#        change app code? Layer E+ are rebuilt
+\`\`\`
+
+\`\`\`bash
+# Inspect layers of an image
+docker history nginx:latest
+# IMAGE          CREATED       CREATED BY                                      SIZE
+# c316d5a335a7   2 weeks ago   CMD ["nginx" "-g" "daemon off;"]               0B
+# <missing>      2 weeks ago   STOPSIGNAL SIGQUIT                             0B
+# <missing>      2 weeks ago   EXPOSE port 80                                 0B
+# <missing>      2 weeks ago   ENTRYPOINT ["/docker-entrypoint.sh"]           0B
+# <missing>      2 weeks ago   COPY ... /docker-entrypoint.sh ...             1.17kB
+# <missing>      2 weeks ago   RUN /bin/sh -c ... # buildkit                  59.4MB
+
+# Size of each layer
+docker image history nginx:latest --no-trunc --format '{{.Size}}\t{{.CreatedBy}}'
+\`\`\`
+
+---
+
+## BuildKit — Modern Builder
+
+\`\`\`bash
+# Enable BuildKit (Docker v18.09+)
+export DOCKER_BUILDKIT=1
+
+# Features:
+# • Parallel builds (separate stages in parallel)
+# • Cache mounts (apt, npm, maven)
+# • Secret mounts (no baked-in secrets)
+# • SSH agent forwarding (private repo access)
+# • Better cache layer inspection
+
+docker build \
+  --secret id=npmrc,src=$HOME/.npmrc \
+  --cache-from myapp:cache \
+  --output type=image,name=myapp:latest,push=true \
+  .
+
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  --tag myrepo/myapp:latest \
+  --push .
+\`\`\`
+
+---
+
+## containerd vs runc vs CRI-O
+
+| Runtime | Description | Used by |
+|---------|-------------|---------|
+| runc | OCI low-level runtime — direct kernel calls | containerd, CRI-O |
+| containerd | High-level runtime — image management + lifecycle | Docker, Kubernetes (containerd) |
+| CRI-O | CRI-compliant runtime, optimized for K8s | OpenShift, Kubernetes |
+| gVisor | User-space kernel — stronger isolation (syscall interception) | GKE Sandbox |
+| Kata | Lightweight VM for each container — hardware isolation | Kata Containers |
+| Youki | Rust-based runc alternative — faster, safer | Soon: K8s |
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens when you run \`docker run nginx\`?
+   **A:** 1) Docker CLI sends REST API request to dockerd. 2) dockerd requests containerd to create the container. 3) containerd pulls the image (if not cached), creates the rootfs via overlayfs, generates an OCI bundle. 4) containerd calls runc with the OCI bundle. 5) runc creates cgroups, namespaces, and calls clone() to start the nginx process.
+
+2. **Q:** What is the difference between BuildKit's cache mount and a normal RUN layer?
+   **A:** A normal RUN layer (apt install) persists the package cache IN the image layer — increasing image size permanently. BuildKit's \`--mount=type=cache,target=/var/cache/apt\` uses a host-side cache directory — the cache is NOT in the image, so package downloads are cached between builds but the image stays small.
+
+3. **Q:** Why does \`docker history\` show <missing> for some layers?
+   **A:** \`<missing>\` layers are intermediate layers from a multi-stage build or an image built with BuildKit. They exist in the local build cache but were not pushed to a registry. The final image has all the content, but the intermediate layers are only available locally for caching.
+
+4. **Q:** When would you use containerd directly instead of Docker?
+   **A:** Kubernetes uses containerd directly (via CRI). Google uses containerd directly for internal container management. Tools like nerdctl and ctr provide CLI access to containerd. Benefits: no Docker daemon dependency, smaller footprint, fewer moving parts.
+
+5. **Q:** How does gVisor differ from runc for security?
+   **A:** runc creates isolated processes using namespaces + cgroups (shared kernel). If the host kernel has a vulnerability, a container escape can compromise the host. gVisor intercepts system calls and runs them in a userspace kernel — even if the app is compromised, the attacker cannot exploit host kernel bugs. gVisor is slower (~50% performance) but more secure.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Docker Architecture:
+  docker CLI → dockerd → containerd → runc → isolated process
+
+Image Layers:
+  Each Dockerfile instruction = 1 layer
+  Layers are cached by content hash
+  COPY/ADD changes = cache invalidated from that layer on
+
+BuildKit:
+  DOCKER_BUILDKIT=1
+  Parallel builds, cache mounts, secret mounts
+  docker buildx for multi-platform builds
+
+Container Runtimes:
+  runc: low-level, kernel namespaces + cgroups
+  containerd: high-level, manages image + lifecycle
+  CRI-O: K8s-focused runtime
+  gVisor: security-focused (userspace kernel)
+  Kata: VM-level isolation`,
             tags: ["Docker", "Containers"],
           },
           {
@@ -8127,7 +18041,180 @@ CMD ["node", "dist/index.js"] # distroless or Alpine for minimal surface area`,
               "Multi-stage builds: dev toolchain never ships to production.",
               "Vulnerability scanning: Trivy, Grype, Snyk — scan in CI before pushing.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Every package in your image is a potential vulnerability. The Ubuntu base image has ~600 packages — Alpine has ~60, distroless has ~5. Smaller images mean fewer CVEs, faster deployments, and simpler security audits.
+
+Image hardening is the process of: minimizing the base image, running as non-root, never baking secrets, and scanning for known vulnerabilities.
+
+---
+
+## Minimal Base Images
+
+\`\`\`
+Image Size Comparison:
+  ubuntu:22.04      → ~77MB (600+ packages)
+  node:20-bookworm  → ~350MB (includes OS + Node + build tools)
+  node:20-alpine    → ~126MB (musl libc + Node)
+  node:20-slim      → ~240MB (Debian slim + Node)
+  gcr.io/distroless/nodejs20 → ~180MB (just Node + minimal OS)
+  scratch           → 0MB   (nothing — you bring everything)
+
+Vulnerabilities:
+  ubuntu:22.04      → ~150 CVEs (many unfixable due to kernel)
+  node:20-alpine    → ~10 CVEs
+  distroless        → ~0 CVEs (no shell, no package manager)
+\`\`\`
+
+\`\`\`dockerfile
+# Best practice: distroless for production
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Distroless — minimal attack surface
+FROM gcr.io/distroless/nodejs20-debian12
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+USER 1000
+CMD ["dist/index.js"]
+# No shell, no apt, no curl, no wget
+# Even if attacker gets RCE, they cannot install tools
+\`\`\`
+
+---
+
+## Non-Root User
+
+\`\`\`dockerfile
+FROM node:20-alpine
+
+# BAD: runs as root
+# If attacker gets RCE, they can modify binaries, install packages
+RUN npm install
+
+# GOOD: create and use non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+WORKDIR /app
+COPY --chown=appuser:appgroup . .
+RUN npm install
+
+# Kubernetes PodSecurityContext:
+securityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+\`\`\`
+
+---
+
+## Secrets — Never Bake Into Images
+
+\`\`\`dockerfile
+# BAD: secret is in the image layer
+RUN echo "API_KEY=abc123" > /app/.env
+
+# BAD: secret is in build args (visible in docker history)
+ARG NPM_TOKEN
+RUN echo //registry.npmjs.org/:_authToken=$NPM_TOKEN > .npmrc
+
+# GOOD: BuildKit secret mount (not stored in image)
+RUN --mount=type=secret,id=npmrc \
+    cp /run/secrets/npmrc .npmrc && \
+    npm ci
+
+# GOOD: Runtime env vars (injected at container start)
+docker run -e DB_PASSWORD=secret myapp
+
+# BEST: Secrets Manager (no env vars at all — fetch at runtime)
+# The app fetches DB_PASSWORD from AWS Secrets Manager on startup
+\`\`\`
+
+---
+
+## Vulnerability Scanning
+
+\`\`\`bash
+# Trivy — fast scanner, works without a registry
+trivy image myapp:latest
+
+# Output:
+# myapp:latest (debian 12)
+# ==========================
+# Total: 3 (UNKNOWN: 0, LOW: 1, MEDIUM: 1, HIGH: 1, CRITICAL: 0)
+#
+# ┌──────────────┬────────────────┬──────────┬──────────────┐
+# │   Library    │ Vulnerability  │ Severity │  Installed   │
+# ├──────────────┼────────────────┼──────────┼──────────────┤
+# │ libcrypto3   │ CVE-2024-1234  │ HIGH     │ 3.0.8-r4     │
+# │ openssl      │ CVE-2024-1234  │ HIGH     │ 3.0.8-r4     │
+# └──────────────┴────────────────┴──────────┴──────────────┘
+
+# Scan in CI — fail on critical/high
+trivy image --exit-code 1 --severity CRITICAL,HIGH myapp:latest
+
+# Compare before/after:
+# Ubuntu base: 150+ vulnerabilities (many false positives)
+# Distroless: 0-5 vulnerabilities (near zero)
+# Alpine: 10-30 vulnerabilities (mostly medium/low)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why does distroless have fewer vulnerabilities than Ubuntu?
+   **A:** Distroless images contain only the application runtime and its direct dependencies — no shell, no package manager, no utilities (curl, wget, tar), no system daemons. Ubuntu ships with 600+ packages. Each package is a potential attack vector. Distroless typically has <5 CVEs vs 150+ for Ubuntu.
+
+2. **Q:** What is the problem with building secrets into images?
+   **A:** Secrets baked into image layers persist permanently. Anyone with access to the registry can pull the image and inspect its layers via \`docker history\` or \`dive\`. Secrets can be exposed if the image is pushed to a public registry, shared with a partner, or stored in a CI cache.
+
+3. **Q:** Why use \`USER 1000\` instead of a named user?
+   **A:** Named users require an entry in /etc/passwd, which adds an attack surface. Using \`USER 1000\` avoids needing user management infrastructure. However, for clarity, using \`USER nonroot\` (with RUN adduser) is common. Either is better than root.
+
+4. **Q:** What is a "mount from secret" in BuildKit?
+   **A:** BuildKit's \`--mount=type=secret\` provides a temporary file with the secret during the RUN instruction, but the file is NOT included in the final image layer. This allows using secrets (NPM tokens, SSH keys) during build without storing them in any layer.
+
+5. **Q:** How often should you scan images for vulnerabilities?
+   **A:** Every build (in CI). Scans should run before pushing to the registry. If a new CVE is discovered in a base image, rebuild and redeploy. Use tools that monitor registry images for new CVEs (Docker Scout, Snyk Monitor, Trivy Operator in K8s).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Image Size:
+  distroless < Alpine < slim < Ubuntu < full OS
+
+Image Security:
+  • Use distroless or Alpine — minimize packages
+  • Run as non-root (USER 1000)
+  • Never bake secrets into layers
+  • Scan every build (Trivy, Grype, Docker Scout)
+  • Multi-stage builds (dev tools separate from runtime)
+  • Read-only root filesystem in K8s
+  • Drop all capabilities
+
+BuildKit Secrets:
+  --mount=type=secret,id=npm: secure build-time secrets
+  --mount=type=ssh: SSH agent forwarding
+
+Scanning Tools:
+  Trivy: fast, no registry needed, K8s scanning
+  Grype: from Anchore, Syft for SBOM
+  Docker Scout: integrated with Docker Hub
+  Snyk: developer-friendly, GitHub integration`,
+            tags: ["Docker", "Security"],
+          },
             tags: ["Docker", "Security"],
           },
         ],
@@ -8151,7 +18238,111 @@ CMD ["node", "dist/index.js"] # distroless or Alpine for minimal surface area`,
               "kubelet: agent on each node — pulls Pod specs, manages containers via CRI.",
               "kube-proxy: programs iptables/IPVS for Service IP → Pod IP routing.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Kubernetes is the standard for container orchestration. Understanding its architecture is essential for operating production clusters.
+
+The control plane manages the cluster. The worker nodes run your applications. All state is stored in etcd.
+
+---
+
+## Control Plane Components
+
+\`\`\`
+Control Plane:
+  etcd → persistent key-value store (Raft consensus)
+  API Server → REST API, authn/authz, validation (ONLY component touching etcd)
+  Scheduler → watches for unscheduled Pods, picks best node
+  Controller Manager → reconciliation loops (Deployment, ReplicaSet, Node, etc.)
+  cloud-controller-manager → cloud-specific LBs, storage, nodes
+
+Worker Node:
+  kubelet → node agent, manages Pods via CRI (Container Runtime Interface)
+  kube-proxy → Service networking (iptables/IPVS)
+  Container Runtime → containerd / CRI-O
+
+All components talk to API Server. No direct component-to-component communication.
+\`\`\`
+
+---
+
+## etcd — The Source of Truth
+
+\`\`\`bash
+# etcd stores everything as key-value pairs
+# /registry/pods/default/my-pod → {full pod spec + status}
+# /registry/deployments/default/app → {deployment spec + status}
+# /registry/services/default/svc → {service spec + status}
+
+# Backup etcd (critical for DR):
+ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot-$(date +%Y%m%d).db
+
+# Restore:
+ETCDCTL_API=3 etcdctl snapshot restore /backup/etcd-snapshot-20240101.db \
+  --data-dir /var/lib/etcd-restored
+
+# 3 or 5 nodes for HA (odd number — Raft consensus)
+# SSDs strongly recommended (etcd is I/O-sensitive)
+\`\`\`
+
+---
+
+## Scheduler Algorithm
+
+\`\`\`
+Scheduler: Filters → Scores → Bind
+
+Filtering (Predicates) — which nodes CAN run the Pod:
+  • Resource requests (CPU/memory must fit)
+  • Node selector and affinity/anti-affinity
+  • Taints and tolerations
+  • Port conflicts
+
+Scoring (Priorities) — rank eligible nodes:
+  • Most requested resources (bin packing) or least requested (spreading)
+  • Pod topology spread constraints
+  • Node scoring plugins
+
+Binding: write the Pod-to-Node assignment to etcd via API Server.
+kubelet watches its assigned Pods and starts containers.
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What happens if etcd goes down?
+   **A:** API Server cannot read/write state — no new Pods, no updates. EXISTING containers continue running (kubelet does not depend on etcd). Cluster is frozen until etcd recovers.
+
+2. **Q:** Why is API Server the only etcd client?
+   **A:** Consistency. All state changes go through authn/authz, admission webhooks, and validation. Direct etcd access would bypass these checks.
+
+3. **Q:** What happens when a node fails?
+   **A:** kubelet stops heartbeats (5s interval). After 40s, node marked Unhealthy. After 5 minutes, Pods are evicted and rescheduled on healthy nodes.
+
+4. **Q:** How does a custom scheduler differ from the default scheduler?
+   **A:** Multiple schedulers can run simultaneously. Each Pod specifies \`schedulerName\`. Custom schedulers implement their own Filter/Score plugins while the default scheduler continues for other Pods.
+
+5. **Q:** What does the cloud-controller-manager do?
+   **A:** It runs cloud-provider-specific controllers: Node controller (detects nodes terminated in cloud), Route controller (sets up cloud network routes), Service controller (creates cloud LBs for LoadBalancer Services).
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Control Plane: etcd, API Server, Scheduler, Controller Manager
+Workers: kubelet, kube-proxy, container runtime
+
+Flow:
+  kubectl apply → API Server (authn → authz → admission → etcd)
+  Controller watches etcd changes → creates dependent resources
+  Scheduler assigns Pods → kubelet starts containers via CRI
+
+etcd: 3/5 nodes, SSDs, regular backups
+API Server: REST gateway, the only etcd writer
+Scheduler: Filter → Score → Bind
+Controller Manager: Deployment → ReplicaSet → Pod`,
             tags: ["Kubernetes", "Architecture"],
           },
           {
@@ -8167,16 +18358,65 @@ CMD ["node", "dist/index.js"] # distroless or Alpine for minimal surface area`,
               "DaemonSet: one Pod per node — for node-level agents (logging, monitoring, networking).",
               "Job / CronJob: run-to-completion workloads — batch processing, scheduled tasks.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "yaml",
-              filename: "deployment.yaml",
-              code: `apiVersion: apps/v1
+            content: `## Why This Matters (Read This First)
+
+Kubernetes workloads are not just "run a container." Each workload type exists for a specific use case: stateless apps (Deployment), stateful services (StatefulSet), node agents (DaemonSet), and batch jobs (Job/CronJob).
+
+Choosing the wrong workload type causes real problems: databases get deleted on reschedule, monitoring agents miss nodes, batch jobs never complete.
+
+---
+
+## Pod — The Atomic Unit
+
+\`\`\`yaml
+# Pod: smallest deployable unit in K8s
+# One or more containers sharing:
+#   • Network namespace (same IP, localhost)
+#   • IPC namespace
+#   • Volumes (shared storage)
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-app
+  labels:
+    app: web
+spec:
+  containers:
+  - name: app
+    image: myapp:v1.2.3
+    ports:
+    - containerPort: 3000
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi    # OOM-kill if exceeded
+    readinessProbe:
+      httpGet: { path: /health, port: 3000 }
+  - name: sidecar
+    image: sidecar:latest
+    # Pod containers share the same IP — sidecar can reach app on localhost:3000
+\`\`\`
+
+---
+
+## Deployment — Stateless Workloads
+
+\`\`\`yaml
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api-server
 spec:
-  replicas: 3
+  replicas: 5
+  revisionHistoryLimit: 3          # keep 3 old ReplicaSets for rollback
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1                  # can have 1 extra Pod during update
+      maxUnavailable: 0            # must always have 5 available
   selector:
     matchLabels:
       app: api-server
@@ -8184,16 +18424,153 @@ spec:
     spec:
       containers:
       - name: api
-        image: myapp:v1.2.3          # always use explicit tags
+        image: myapp:v1.2.3
         resources:
           requests:
             cpu: 100m
             memory: 128Mi
           limits:
-            memory: 256Mi            # no CPU limit — avoid throttling
-        readinessProbe:
-          httpGet: { path: /health, port: 3000 }`,
-            },
+            memory: 256Mi
+---
+# Deployment creates ReplicaSet → ReplicaSet creates Pods
+# Rolling update: new ReplicaSet created, old one scaled down
+# Rollback: kubectl rollout undo deployment/api-server
+\`\`\`
+
+---
+
+## StatefulSet — Stateful Workloads
+
+\`\`\`yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres  # Headless Service for stable DNS: postgres-0.postgres
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:   # Dynamic PVC per Pod (postgres-data-postgres-0)
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 100Gi
+
+# StatefulSet guarantees:
+#   • Stable network identity (pod-N, not random hash)
+#   • Ordered creation (0, 1, 2...)
+#   • Ordered termination (...2, 1, 0)
+#   • Each Pod gets its own PVC (data persists even if Pod is rescheduled)
+\`\`\`
+
+---
+
+## DaemonSet and Job
+
+\`\`\`yaml
+# DaemonSet: one Pod per node (logging, monitoring, CNI)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fluentd
+spec:
+  selector:
+    matchLabels:
+      name: fluentd
+  template:
+    spec:
+      tolerations:          # Run on all nodes, including control-plane
+      - operator: Exists
+      containers:
+      - name: fluentd
+        image: fluentd:latest
+        volumeMounts:
+        - name: varlog
+          mountPath: /var/log
+      terminationGracePeriodSeconds: 30
+
+# Job: run-to-completion (batch processing)
+apiVersion: batch/v1
+kind: Job
+spec:
+  backoffLimit: 4           # retry on failure
+  completions: 1            # how many Pods must succeed
+  parallelism: 1            # concurrent Pods
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migration
+        image: myapp-migration:v1
+
+# CronJob: scheduled Job
+apiVersion: batch/v1
+kind: CronJob
+spec:
+  schedule: "0 2 * * *"    # daily at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: cleanup
+            image: cleanup-script
+          restartPolicy: OnFailure
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When would you use StatefulSet instead of Deployment?
+   **A:** StatefulSet when: each Pod needs stable identity (DNS name like postgres-0.postgres), ordered startup/scaling, and persistent storage that survives rescheduling (each Pod gets its own PVC). Databases, message queues, key-value stores — anything where Pod identity must persist across restarts.
+
+2. **Q:** What is the difference between a Probe and a Service?
+   **A:** Readiness probe tells the Service when the Pod is ready to receive traffic (probe passes → endpoint added). Liveness probe tells kubelet when to restart the container (probe fails → restart). Startup probe delays liveness checks for slow-starting containers. Service uses readiness probe results to route traffic.
+
+3. **Q:** What happens during a rolling update?
+   **A:** 1) New ReplicaSet created with desired count=0. 2) One new Pod created in new RS. 3) One old Pod deleted from old RS (maxUnavailable=0, maxSurge=1). 4) New Pod passes readiness → old Pod fully removed. 5) Repeat until all Pods are in new RS. Old RS kept for rollback (revisionHistoryLimit).
+
+4. **Q:** Why would a Pod restart but not be recreated?
+   **A:** If the restartPolicy is Always (default for Deployments), the container restarts in-place (same Pod, same IP). If the Pod is deleted (kubectl delete pod), the ReplicaSet creates a new Pod with a new IP. Containers restart when: liveness probe fails, container exits, OOM-killed.
+
+5. **Q:** What happens when a CronJob misses its scheduled time?
+   **A:** CronJob controller looks back for missed runs within the startingDeadlineSeconds window (default: no limit). If the cluster was down, missed schedules are caught up on restart. If startingDeadlineSeconds is set and exceeded, the run is skipped — useful to prevent a backlog of missed jobs.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Workload Types:
+  Deployment: stateless apps, rolling updates, replicas
+  StatefulSet: stateful services, stable identity, ordered ops, per-Pod PVC
+  DaemonSet: one per node (logging, monitoring, networking)
+  Job: run once to completion
+  CronJob: scheduled jobs
+
+Probes:
+  Readiness: traffic on/off (Service endpoints)
+  Liveness: restart if unhealthy
+  Startup: delay liveness checks (slow start)
+
+Scaling:
+  RollingUpdate: gradual replacement (maxSurge, maxUnavailable)
+  Recreate: delete all, then create (downtime)
+  HPA: auto-scale replicas by CPU/memory/custom metrics`,
             tags: ["Kubernetes", "Workloads"],
           },
           {
@@ -8210,7 +18587,182 @@ spec:
               "Ingress: HTTP/HTTPS routing rules — hostname and path-based routing to Services.",
               "Ingress Controller: the implementation (nginx, Traefik, AWS ALB) that watches Ingress objects.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Kubernetes networking has four distinct problems to solve: Pod-to-Pod (same node), Pod-to-Pod (across nodes), Service-to-Pod, and External-to-Service. Each layer has its own solution.
+
+Without understanding these layers, you will be lost debugging network issues — why Pods cannot reach each other, why Services return connection refused, or why Ingress returns 503.
+
+---
+
+## Pod Networking (CNI)
+
+\`\`\`
+Pod-to-Pod communication (same node):
+  Pod A (10.0.1.5) ── veth0 ──┐
+                               ├── Linux Bridge (cbr0) ── veth1 ── Pod B (10.0.1.6)
+  Both Pods on the same bridge → ARP → direct L2 communication
+
+Pod-to-Pod communication (different nodes):
+  Pod A (Node 1, 10.0.1.5) → cbr0 → eth0 → Node 2 → cbr0 → Pod B (10.0.2.6)
+
+  How do packets get from Node 1 to Node 2?
+  • Flannel: overlay network (VXLAN tunnel) — wraps packet in UDP
+  • Calico: pure L3 routing (BGP) — no overlay, uses host routing table
+  • Cilium: eBPF-based — replaces kube-proxy + CNI, faster routing
+  • AWS VPC CNI: assigns ENI IPs directly — Pod IP = VPC IP (no NAT)
+\`\`\`
+
+---
+
+## Services — Stable Endpoints
+
+\`\`\`yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app
+spec:
+  type: ClusterIP        # Default: cluster-internal virtual IP
+  selector:
+    app: my-app          # Routes to Pods with this label
+  ports:
+  - protocol: TCP
+    port: 80             # Service port
+    targetPort: 3000     # Pod container port
+---
+# kube-proxy watches Service + EndpointSlice changes
+# Programs iptables rules:
+
+# Example iptables rule (simplified):
+# -A KUBE-SERVICES -d 10.96.0.1/32 -p tcp --dport 80 -j KUBE-SVC-XXXX
+# -A KUBE-SVC-XXXX -m statistic --mode random --probability 0.333 -j KUBE-SEP-AAAA
+# -A KUBE-SEP-AAAA -p tcp -j DNAT --to-destination 10.0.1.5:3000
+
+# With eBPF (Cilium): no iptables, BPF maps for O(1) lookup
+\`\`\`
+
+---
+
+## Service Types
+
+\`\`\`yaml
+# ClusterIP: internal virtual IP (default)
+spec:
+  type: ClusterIP
+  # Service reachable only within the cluster (e.g., for inter-service communication)
+
+# NodePort: expose on each node's IP at a specific port
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30080       # Listen on all nodes:30080 → Service:80 → Pod:3000
+
+# LoadBalancer: cloud LB + NodePort
+spec:
+  type: LoadBalancer
+  # Creates cloud LB (ALB/NLB) → forwards to NodePort → Service → Pods
+  # AWS: NLB or ALB (via AWS Load Balancer Controller)
+  # GCP: TCP/UDP LB
+  # On-prem: MetalLB (BGP) or private cloud solution
+
+# Headless Service: no cluster IP, direct Pod DNS
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  # DNS query for postgres-0.postgres → Pod IP
+  # Used by StatefulSet for stable identity
+\`\`\`
+
+---
+
+## Ingress — HTTP Routing
+
+\`\`\`yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: api.example.com
+    http:
+      paths:
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: api-v1
+            port:
+              number: 80
+      - path: /v2
+        pathType: Prefix
+        backend:
+          service:
+            name: api-v2
+            port:
+              number: 80
+  - host: admin.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: admin-ui
+            port:
+              number: 80
+
+# Ingress Controller (nginx-ingress, Traefik, AWS ALB Ingress Controller):
+# Watches Ingress resources → configures the LB/proxy accordingly
+# Nginx: reloads nginx.conf when Ingress changes
+# AWS ALB: creates ALB rules per Ingress path
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** How does a Service route traffic to Pods on different nodes?
+   **A:** The Service has a stable ClusterIP (virtual IP). kube-proxy on each node programs iptables/IPVS rules that DNAT the Service IP to the Pod IP. Regardless of which node the Pod runs on, the iptables rule sends traffic to the correct node. With overlay CNIs (Calico, Flannel), cross-node traffic goes through the overlay tunnel.
+
+2. **Q:** What is the difference between Ingress and LoadBalancer Service?
+   **A:** LoadBalancer Service creates a L4 load balancer (NLB/ELB) per Service — each Service gets its own public IP and port (e.g., myapp.com:443). Ingress is a L7 HTTP router — one public IP, multiple hostnames/paths → different Services. Ingress is cheaper (one LB for many apps) and smarter (path-based, header-based routing).
+
+3. **Q:** What is a headless Service and when would you use it?
+   **A:** A headless Service (clusterIP: None) returns Pod IPs directly instead of a virtual IP. Used by StatefulSet (each Pod gets a stable DNS name like postgres-0.postgres). Also used by Kafka/ZooKeeper where clients need to discover individual Pod IPs. DNS query returns all Pod IPs.
+
+4. **Q:** How does Calico implement network policies?
+   **A:** Calico uses iptables rules on each node to enforce NetworkPolicy objects. Each node has a Felix agent that programs iptables based on K8s NetworkPolicy resources. Cilium uses eBPF instead of iptables. Both provide: ingress/egress rules, pod selector-based rules, IP block rules.
+
+5. **Q:** What happens when a Pod IP changes?
+   **A:** When a Pod is recreated, it gets a new IP. EndpointSlice (the list of Pod IPs for each Service) is updated by the EndpointSlice controller when the Pod changes. kube-proxy watches EndpointSlice changes and updates iptables rules. Traffic briefly goes to the old IP (until rules update) — TCP connections to the old Pod break.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Networking Layers:
+  CNI: Pod-to-Pod (Calico, Cilium, Flannel, AWS VPC)
+  kube-proxy: Service-to-Pod (iptables, IPVS, eBPF)
+  Ingress: External-to-Service (host/path routing)
+
+Service Types:
+  ClusterIP: internal virtual IP
+  NodePort: expose on node IP:port
+  LoadBalancer: cloud LB + NodePort
+  Headless: direct Pod DNS (for StatefulSet)
+
+Ingress: one LB, multiple apps (hostname + path routing)
+  Nginx Ingress: most common, feature-rich
+  Traefik: dynamic config, auto TLS
+  AWS ALB Ingress: AWS-native ALB per Ingress`,
             tags: ["Kubernetes", "Networking"],
           },
           {
@@ -8227,7 +18779,181 @@ spec:
               "VPA (Vertical Pod Autoscaler): right-size resource requests — useful for recommendation mode.",
               "Cluster Autoscaler / Karpenter: provision new nodes when pods can't be scheduled.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+The scheduler determines where Pods run. If you set wrong resource requests, your cluster can be over- or under-provisioned. HPA and VPA automate scaling decisions. Cluster Autoscaler and Karpenter automate infrastructure.
+
+Without understanding these, you will: overpay for idle nodes, get OOM-killed apps, or have Pods stuck in Pending state.
+
+---
+
+## Resource Requests and Limits
+
+\`\`\`yaml
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: app
+    resources:
+      requests:
+        cpu: 250m          # 0.25 CPU core — guaranteed by scheduler
+        memory: 256Mi      # 256 MB — guaranteed
+      limits:
+        memory: 512Mi      # Hard limit — OOM-kill at 512MB
+                           # No CPU limit: avoids CPU throttling
+---
+# Scheduling decision:
+# Node has 4 CPUs, 16 GB RAM
+# Pod requests 250m CPU, 256Mi RAM
+# Scheduler checks: remaining CPU > 250m AND remaining memory > 256Mi
+
+# QoS classes:
+#   Guaranteed: limits == requests (both set, both equal)
+#   Burstable: requests < limits (requests set)
+#   BestEffort: no requests, no limits
+
+# Eviction order (when node runs out of memory):
+#   BestEffort killed first → Burstable → Guaranteed last
+\`\`\`
+
+---
+
+## Horizontal Pod Autoscaler (HPA)
+
+\`\`\`yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-server
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300  # Wait 5 min before scaling down
+      policies:
+      - type: Pods
+        value: 1          # Scale down 1 Pod at a time
+        periodSeconds: 60
+---
+# How HPA works:
+# 1. HPA controller queries metrics-server for Pod CPU/memory usage
+# 2. desiredReplicas = currentReplicas × (currentUtilization / targetUtilization)
+# 3. If CPU = 90%, target = 70%: desired = 3 × (90/70) = 3.85 → 4 replicas
+# 4. Scales Deployment to 4 replicas
+# 5. Re-evaluates every 15 seconds
+
+# Custom metrics (KEDA, Prometheus Adapter):
+# metrics:
+# - type: Pods
+#   pods:
+#     metric:
+#       name: requests_per_second
+#     target:
+#       type: AverageValue
+#       averageValue: "1000"
+\`\`\`
+
+---
+
+## Cluster Autoscaler vs Karpenter
+
+\`\`\`
+Cluster Autoscaler (AWS):
+  • Watches for unschedulable Pods (Pending)
+  • Creates new node group / ASG instances
+  • Cannot change instance type — uses predefined node groups
+  • Slow: creates EC2 → joins cluster → schedules Pods (2-5 min)
+  • Downsizes when nodes are underutilized (removable nodes)
+
+Karpenter (AWS):
+  • Watches for unschedulable Pods
+  • Directly calls EC2 API — selects optimal instance type
+  • Faster: creates EC2 → joins cluster → schedules Pods (30-60s)
+  • Consolidates: continuously optimizes instance types
+  • Supports spot + on-demand with flexible instance types
+
+# Karpenter provisioner:
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      requirements:
+        - key: "karpenter.sh/capacity-type"
+          operator: In
+          values: ["on-demand", "spot"]
+        - key: "kubernetes.io/arch"
+          operator: In
+          values: ["amd64"]
+      nodeClassRef:
+        name: default
+  limits:
+    cpu: 1000
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: 720h
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why should you set CPU requests but NOT CPU limits?
+   **A:** CPU is a compressible resource — if a Pod tries to use more than its request, it gets throttled (slowed down). CPU limits cause throttling that can be worse than letting the Pod use CPU when available. Memory is incompressible — a limit is necessary because exceeding it kills the Pod (OOM). Best practice: CPU request = what you need; CPU limit = none; memory request + limit = the same for Guaranteed QoS.
+
+2. **Q:** What happens if HPA and VPA are used together?
+   **A:** HPA and VPA should NOT target the same metrics simultaneously — they conflict (HPA adds Pods, VPA resizes Pods). Common pattern: VPA in "recommendation" mode (no actual changes) to suggest resource requests, then apply those recommendations to the HPA target manually or via a mutating webhook.
+
+3. **Q:** How does Cluster Autoscaler decide when to scale down?
+   **A:** A node is considered "removable" if: all Pods on the node can be scheduled elsewhere, and the node has been underutilized (CPU/memory < 50%) for more than 10 minutes. Some Pods block scale-down: PodDisruptionBudget-protected, local storage, not managed by controller.
+
+4. **Q:** What is the difference between Karpenter and Cluster Autoscaler?
+   **A:** CA manages node groups (ASG) — you choose instance types upfront. Karpenter directly calls EC2 — it picks the optimal type per workload. Karpenter is faster (30s vs 2-5min) and cheaper (finds cheaper instance types, consolidates). Karpenter is AWS-only; CA works on any cloud.
+
+5. **Q:** Why would a Pod stay in "Pending" state?
+   **A:** Scheduler cannot find a node that satisfies all constraints: insufficient CPU/memory resources, node selector labels not matching, taints not tolerated, persistent volume cannot be bound, port conflicts, affinity/anti-affinity rules. Check with \`kubectl describe pod <name>\` for events.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Resources:
+  Requests: guaranteed amount — scheduler uses for placement
+  Limits: hard ceiling (CPU throttles, memory OOM)
+
+QoS:
+  Guaranteed: limits = requests (most reliable)
+  Burstable: requests < limits
+  BestEffort: no requests (first to evict)
+
+HPA: scale replicas by CPU/memory/custom metrics
+  desiredReplicas = current × (current / target)
+
+VPA: recommend/set resource requests
+Cluster Autoscaler: add nodes via ASG (slow but multi-cloud)
+Karpenter: add nodes via EC2 API (fast, AWS-only)`,
             tags: ["Kubernetes", "Scaling"],
           },
           {
@@ -8243,7 +18969,195 @@ spec:
               "Access modes: ReadWriteOnce, ReadOnlyMany, ReadWriteMany — not all drivers support all modes.",
               "CSI (Container Storage Interface): standard interface for storage plugins.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Containers are ephemeral — when a Pod restarts, local storage is lost. Persistent volumes let Pods store data that survives restarts, rescheduling, and node failures.
+
+Stateful workloads (databases, message queues) need persistent storage. Understanding PV/PVC/StorageClass is essential for running them on Kubernetes.
+
+---
+
+## PV, PVC, and StorageClass
+
+\`\`\`
+┌────────────────────────────────────────────────────┐
+│  Cluster Storage                                    │
+│                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐ │
+│  │ PV (100GB)   │  │ PV (50GB)    │  │ PV (250GB)│ │
+│  │ EBS gp3      │  │ EBS gp3      │  │ EBS io2   │ │
+│  └──────┬───────┘  └──────┬───────┘  └─────┬─────┘ │
+│         │                 │                │        │
+│         │     bind        │                │        │
+│    ┌────▼─────┐           │                │        │
+│    │ PVC (10GB)│           │                │        │
+│    │ app-data  │           │                │        │
+│    └────┬─────┘           │                │        │
+│         │  mount          │                │        │
+│    ┌────▼─────┐           │                │        │
+│    │ Pod      │           │                │        │
+│    │ app-data  │           │                │        │
+│    │ /data    │           │                │        │
+│    └──────────┘           │                │        │
+└────────────────────────────┼────────────────┼────────┘
+                             │                │
+             StorageClass "fast"   StorageClass "archive"
+             provisioner: ebs.csi.aws.com
+             parameters: type=io2, iops=10000
+\`\`\`
+
+---
+
+## StorageClass — Dynamic Provisioning
+
+\`\`\`yaml
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer  # Create volume on the same node as Pod
+parameters:
+  type: io2
+  iopsPerGB: "10"
+  fsType: ext4
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: standard
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+parameters:
+  type: gp3
+  encrypted: "true"
+---
+# When a PVC references "fast" StorageClass:
+# • CSI driver creates the EBS volume
+# • Kubernetes creates a PV object representing the volume
+# • PVC binds to the new PV
+# • Pod mounts the volume
+
+# Default StorageClass: annotate with:
+#   storageclass.kubernetes.io/is-default-class: "true"
+\`\`\`
+
+---
+
+## PVC and Pod
+
+\`\`\`yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes:
+    - ReadWriteOnce       # Single node read-write
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast  # Use "fast" StorageClass
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: postgres
+spec:
+  containers:
+  - name: postgres
+    image: postgres:16
+    volumeMounts:
+    - name: data
+      mountPath: /var/lib/postgresql/data
+    - name: config
+      mountPath: /etc/postgresql/config
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: postgres-data   # Reference the PVC
+  - name: config
+    configMap:
+      name: postgres-config    # ConfigMap mounted as file
+---
+# When Pod is deleted and recreated:
+# Same PVC → same PV → same data persists
+# When StatefulSet manages it:
+# volumeClaimTemplates creates per-Pod PVCs that survive rescheduling
+\`\`\`
+
+---
+
+## CSI — Container Storage Interface
+
+\`\`\`
+CSI is the standard plugin interface for storage in Kubernetes:
+
+  CSI Driver Components:
+  • Controller Plugin: creates/deletes volumes in cloud API (runs as Deployment)
+  • Node Plugin: attaches/mounts volumes on worker nodes (runs as DaemonSet)
+  • Identity Plugin: advertises driver capabilities
+
+  Popular CSI Drivers:
+  • aws-ebs-csi-driver (EBS volumes)
+  • aws-efs-csi-driver (EFS — ReadWriteMany)
+  • gce-pd-csi-driver (GCP Persistent Disk)
+  • csi-hostpath-driver (local storage for testing)
+
+  Before CSI: in-tree cloud providers (AWS, GCP, Azure in kubelet code)
+  After CSI: out-of-tree drivers (separate containers, faster updates)
+
+  # Check CSI drivers in cluster:
+  kubectl get csidrivers
+  # NAME                        ATTACHREQUIRED   PODINFOONMOUNT
+  # ebs.csi.aws.com             true             true
+  # efs.csi.aws.com             false            true
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between ReadWriteOnce and ReadWriteMany?
+   **A:** RWO: one node can mount the volume as read-write (used by most block storage — EBS, GCE PD). RWX: multiple nodes can mount as read-write simultaneously (used by network filesystems — EFS, NFS). Most databases need RWO (postgres, mysql, redis). File storage (media, logs) can use RWX.
+
+2. **Q:** What does volumeBindingMode: WaitForFirstConsumer do?
+   **A:** The PV (volume) is NOT created until the first Pod using the PVC is scheduled. This ensures the volume is created in the same AZ as the Pod. Without it, the volume might be created in us-east-1a while the Pod is scheduled in us-east-1b — causing a scheduling delay.
+
+3. **Q:** What happens when a PVC is deleted?
+   **A:** By default, reclaimPolicy is "Delete" — the PV and the underlying storage (EBS volume, GCE disk) are deleted. If reclaimPolicy is "Retain", the PV remains (in Released state) and the underlying storage is preserved for manual recovery. Use Retain for critical data.
+
+4. **Q:** How does StatefulSet use volumeClaimTemplates?
+   **A:** Each Pod in a StatefulSet gets its own PVC created from the template: postgres-data-postgres-0, postgres-data-postgres-1, postgres-data-postgres-2. When a Pod is rescheduled (e.g., to another node), it reuses its PVC → same data → same disk. The PVC survives Pod deletion.
+
+5. **Q:** What is the difference between in-tree and CSI storage drivers?
+   **A:** In-tree drivers are compiled into kubelet (requires Kubernetes version upgrade to update). CSI drivers run as separate containers (can be updated independently). All cloud providers are migrating to CSI. In-tree drivers were deprecated in v1.21 and removed in v1.25+.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Storage Flow:
+  StorageClass → (dynamic provisioning) → PV → PVC → Pod mount
+
+Access Modes:
+  RWO: one node (block storage — EBS, PD)
+  ROX: one node read-only
+  RWX: many nodes (file storage — EFS, NFS)
+
+Reclaim Policy:
+  Delete: PV + cloud storage deleted when PVC deleted
+  Retain: PV released, admin must recover manually
+  Recycle: deprecated (was: scrub + re-use)
+
+Volume Binding:
+  Immediate: PV created when PVC created (may mismatch AZ)
+  WaitForFirstConsumer: PV created on Pod schedule (matches AZ)
+
+CSI:
+  Standard plugin interface, out-of-tree drivers
+  Controller (create/delete) + Node (attach/mount)`,
             tags: ["Kubernetes", "Storage"],
           },
           {
@@ -8259,7 +19173,203 @@ spec:
               "Hooks: run jobs at lifecycle points (pre-install, post-upgrade) — database migrations.",
               "Helm vs Kustomize: Helm is a template engine; Kustomize is a patch overlay system.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Helm packages multiple Kubernetes manifests into a single deployable unit (a Chart). Instead of maintaining 10+ YAML files per service, you maintain one chart with values that customize it per environment.
+
+Helm is the standard package manager for K8s. Most open-source projects (Prometheus, nginx-ingress, cert-manager) distribute as Helm charts.
+
+---
+
+## Chart Structure
+
+\`\`\`
+my-chart/
+├── Chart.yaml          # Metadata: name, version, dependencies
+├── values.yaml         # Default configuration values
+├── charts/             # Sub-chart dependencies
+├── templates/          # Go template YAML files
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── ingress.yaml
+│   ├── _helpers.tpl    # Reusable template functions
+│   └── tests/
+│       └── test-connection.yaml
+└── crds/               # CRDs installed before templates
+
+# Chart.yaml
+apiVersion: v2
+name: my-app
+description: My application Helm chart
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+dependencies:
+  - name: postgresql
+    version: 12.x.x
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+\`\`\`
+
+---
+
+## Templating Basics
+
+\`\`\`yaml
+# templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "my-app.name" . }}
+    helm.sh/chart: {{ include "my-app.chart" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "my-app.name" . }}
+  template:
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        ports:
+        - containerPort: {{ .Values.service.port }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        env:
+          {{- range $key, $value := .Values.env }}
+          - name: {{ $key }}
+            value: {{ $value | quote }}
+          {{- end }}
+---
+# values.yaml (defaults)
+replicaCount: 1
+image:
+  repository: nginx
+  tag: ""
+service:
+  type: ClusterIP
+  port: 80
+resources: {}
+env: {}
+postgresql:
+  enabled: false
+---
+# Install with overrides:
+helm install my-release ./my-chart \
+  --set replicaCount=3 \
+  --set image.tag=v1.2.3 \
+  --set env.DB_HOST=postgres-prod \
+  -f prod-values.yaml
+\`\`\`
+
+---
+
+## Helm Hooks
+
+\`\`\`yaml
+# templates/migration-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migration
+  annotations:
+    helm.sh/hook: pre-upgrade       # Run BEFORE upgrade
+    helm.sh/hook-weight: "-5"       # Run first (lower = earlier)
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migration
+        image: myapp-migration:{{ .Values.image.tag }}
+---
+# Available hooks:
+#   pre-install, post-install
+#   pre-upgrade, post-upgrade
+#   pre-rollback, post-rollback
+#   pre-delete, post-delete
+#   test (helm test)
+
+# Hook resource lifecycle:
+# 1. pre-upgrade job creates
+# 2. Job runs migration
+# 3. Job succeeds → hook-delete-policy removes it
+# 4. Chart templates applied (upgrade continues)
+\`\`\`
+
+---
+
+## Helm vs Kustomize
+
+| Feature | Helm | Kustomize |
+|---------|------|-----------|
+| Approach | Template engine (Go templates) | Patch overlay (strategic merge) |
+| Learning curve | Higher (template syntax) | Lower (plain YAML patches) |
+| State tracking | Yes — releases in Secrets | No — stateless |
+| Rollback | Built-in (\`helm rollback\`) | No — requires git revert |
+| Dependencies | Chart dependencies, subcharts | No built-in dependency mgmt |
+| Package distribution | Chart repositories (OCI, HTTP) | Git repos |
+| Best for | Complex apps, sharing packages, state management | Simple overlays, env customization |
+
+\`\`\`bash
+# Helm workflow:
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install my-release bitnami/nginx --values prod-values.yaml
+helm upgrade my-release bitnami/nginx --set replicaCount=3
+helm rollback my-release 1
+helm list
+
+# With OCI registries:
+helm install my-release oci://registry-1.docker.io/bitnamicharts/nginx
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between \`helm install\` and \`helm upgrade\`?
+   **A:** \`helm install\` creates a new release (first time). \`helm upgrade\` updates an existing release — applies template changes, runs hooks, and creates a new revision in Secrets. \`helm upgrade --install\` does install if not present, upgrade if present (idempotent).
+
+2. **Q:** How does Helm manage release state?
+   **A:** Helm stores release metadata (manifests, values, revision) in Kubernetes Secrets in the release namespace. Each upgrade creates a new Secret with an incremented revision. \`helm rollback\` restores the previous revision's manifests. This makes upgrades auditable and reversible.
+
+3. **Q:** What is the difference between \`--set\` and \`--values\`?
+   **A:** \`--set\` sets individual values inline (\`--set replicaCount=3\`). \`--values -f\` loads a YAML file with overrides. Values follow this priority: \`--set\` > \`--values\` > \`values.yaml\` defaults. Use \`--values\` for environment-specific configs, \`--set\` for CI/CD pipeline variables.
+
+4. **Q:** What is a \"Helm test\"?
+   **A:** Tests are Pods annotated with \`helm.sh/hook: test\`. They run during \`helm test <release>\` and verify that the release is working correctly (e.g., connecting to the app, checking the DB). Tests use post-install hooks — they run after install but are not deleted automatically.
+
+5. **Q:** When would you choose Kustomize over Helm?
+   **A:** Kustomize for: simpler projects (no template syntax), when you want plain YAML with environment overlays, when you do not need rollback/dependency management, when your team finds Go templates confusing. Many projects use both: Helm for third-party packages, Kustomize for first-party apps.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Chart Structure:
+  Chart.yaml → metadata + dependencies
+  values.yaml → default configuration
+  templates/ → Go template YAML
+  charts/ → sub-charts
+  crds/ → pre-install CRDs
+
+Commands:
+  helm create, helm install, helm upgrade, helm rollback
+  helm list, helm history, helm get values
+  helm dependency update, helm template
+
+Templating:
+  {{ .Values.xxx }} — values from values.yaml
+  {{ include "chart.name" . }} — named template
+  {{ range }}, {{ if }}, {{ toYaml }} — control flow + formatting
+
+Hooks: pre/post install, upgrade, rollback, delete, test
+vs Kustomize: template engine vs patch overlay`,
             tags: ["Kubernetes", "Tooling"],
           },
           {
@@ -8277,7 +19387,240 @@ spec:
               "Operator Lifecycle Manager (OLM): manages operator installation, upgrades, and permissions in the cluster.",
               "When to write an operator: managing stateful infrastructure (DBs, message queues, caches) that requires domain-specific lifecycle logic.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+CRDs let you extend the Kubernetes API with your own resource types. An operator combines a CRD with a controller that automates operational tasks — like a human operator, but automated.
+
+Operators encode domain expertise (how to back up a database, how to upgrade a message queue) into software that runs on Kubernetes. They are the standard way to manage stateful applications on K8s.
+
+---
+
+## CRD — Custom Resource Definition
+
+\`\`\`yaml
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: databases.example.com
+spec:
+  group: example.com
+  names:
+    kind: Database
+    plural: databases
+    singular: database
+    shortNames:
+    - db
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        required: ["spec"]
+        properties:
+          spec:
+            type: object
+            required: ["engine", "version", "storage"]
+            properties:
+              engine:
+                type: string
+                enum: [postgres, mysql, redis]
+              version:
+                type: string
+              storage:
+                type: string
+                pattern: '^[0-9]+(Gi|Ti)$'
+---
+# After creating the CRD, you can create custom resources:
+apiVersion: example.com/v1
+kind: Database
+metadata:
+  name: my-app-db
+spec:
+  engine: postgres
+  version: "16"
+  storage: 100Gi
+# This custom resource is stored in etcd, just like a Deployment
+# It is accessible via: kubectl get databases
+\`\`\`
+
+---
+
+## Controller — Reconciliation Loop
+
+\`\`\`python
+# Simplified Python controller using Kopf (Kubernetes Operator Framework)
+import kopf
+import kubernetes
+import boto3
+
+@kopf.on.create("example.com", "v1", "databases")
+def create_database(spec, name, namespace, logger, **kwargs):
+    """Called when a Database custom resource is created."""
+
+    # 1. Create RDS instance in AWS
+    rds = boto3.client("rds")
+    response = rds.create_db_instance(
+        DBInstanceIdentifier=name,
+        Engine=spec["engine"],
+        EngineVersion=spec["version"],
+        AllocatedStorage=int(spec["storage"].replace("Gi", "")),
+        DBInstanceClass="db.t3.medium",
+        MasterUsername="admin",
+        MasterPassword=generate_password(),
+    )
+
+    # 2. Store connection info as a Secret
+    secret = kubernetes.client.V1Secret(
+        metadata={"name": f"{name}-conn", "namespace": namespace},
+        string_data={
+            "host": response["DBInstance"]["Endpoint"]["Address"],
+            "port": str(response["DBInstance"]["Endpoint"]["Port"]),
+            "username": "admin",
+            "password": generated_password,
+        }
+    )
+    kubernetes.config.load_incluster_config()
+    api = kubernetes.client.CoreV1Api()
+    api.create_namespaced_secret(namespace, secret)
+
+    return {"status": "created", "endpoint": response["DBInstance"]["Endpoint"]["Address"]}
+
+
+@kopf.on.delete("example.com", "v1", "databases")
+def delete_database(spec, name, logger, **kwargs):
+    """Called when the Database resource is deleted."""
+    rds = boto3.client("rds")
+    rds.delete_db_instance(DBInstanceIdentifier=name, SkipFinalSnapshot=False)
+    logger.info(f"Deleted database {name}")
+\`\`\`
+
+---
+
+## Operator Pattern — The Loop
+
+\`\`\`
+The Reconciliation Loop (core of every operator):
+
+  ┌─────────────────────────────────────────────┐
+  │  Watch for changes (CRD)                      │
+  │  ┌─────────────────────┐                     │
+  │  │ Database my-app-db  │                     │
+  │  │ spec: {engine:      │                     │
+  │  │   postgres,         │                     │
+  │  │   version: "16",    │                     │
+  │  │   storage: 100Gi}   │                     │
+  │  └─────────┬───────────┘                     │
+  │            │                                 │
+  │            ▼                                 │
+  │  ┌─────────────────────┐                     │
+  │  │ Read current state  │                     │
+  │  │ (RDS API call)      │                     │
+  │  └─────────┬───────────┘                     │
+  │            │                                 │
+  │            ▼                                 │
+  │  ┌─────────────────────┐                     │
+  │  │ Compare desired vs  │                     │
+  │  │ actual state        │                     │
+  │  └─────────┬───────────┘                     │
+  │            │                                 │
+  │            ▼                                 │
+  │  ┌─────────────────────┐                     │
+  │  │ Take action          │                     │
+  │  │ (create/update/     │                     │
+  │  │  delete RDS, update │                     │
+  │  │  Secret)            │                     │
+  │  └─────────────────────┘                     │
+  │            │                                 │
+  │            ▼                                 │
+  │  ┌─────────────────────┐                     │
+  │  │ Update status       │                     │
+  │  │ (status conditions  │                     │
+  │  │  = Ready)           │                     │
+  │  └─────────────────────┘                     │
+  │            │                                 │
+  │            └─────────────────────────────────┘
+  │            (loop back, watch for next change)
+  └─────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Popular Operators
+
+| Operator | What It Does |
+|----------|-------------|
+| cert-manager | Issues and renews TLS certificates (Let's Encrypt, Venafi, self-signed) |
+| External Secrets | Syncs secrets from cloud providers (AWS Secrets Manager, GCP SM, Azure KV) |
+| Prometheus Operator | Manages Prometheus instances, ServiceMonitors, alert rules |
+| Strimzi | Manages Kafka clusters — topics, users, mirroring, upgrades |
+| Crossplane | Manages cloud resources (RDS, S3, VPC) via K8s CRDs |
+| Istio Operator | Manages Istio service mesh installation and upgrades |
+| KubeDB | Creates and manages databases (Postgres, MySQL, Redis, MongoDB) |
+
+\`\`\`yaml
+# Example: cert-manager Certificate resource
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: my-app-tls
+spec:
+  secretName: my-app-tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - app.example.com
+# cert-manager controller:
+# 1. Sees Certificate resource created
+# 2. Creates Order + Challenge resources
+# 3. Challenges domain ownership (HTTP-01/DNS-01)
+# 4. Gets certificate from Let's Encrypt
+# 5. Stores cert in Secret (my-app-tls-secret)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a CRD and an aggregated API?
+   **A:** CRD: define a new resource type using a Kubernetes manifest — no code needed, stored in etcd as custom resource JSON. Aggregated API: run your own API server that extends the K8s API — more flexibility (validation, storage, auth) but more complex. Most operators use CRDs. Aggregated APIs are used when you need advanced features (subresources, protobuf).
+
+2. **Q:** How does the controller know when a CRD instance changes?
+   **A:** The controller uses an Informer (client-go library) that watches the CRD type via the API Server. When a new resource is created/updated/deleted, the API Server sends an event to the Informer. The controller adds the event to a work queue, and the reconciliation loop processes it. This is the same pattern used by all K8s controllers.
+
+3. **Q:** What is the difference between a Helm chart and an operator?
+   **A:** A Helm chart installs static resources at deploy time — it does not manage the resource after installation. An operator runs continuously — it watches CRD instances and reacts to changes. Example: Helm installs a Prometheus instance; Prometheus Operator watches ServiceMonitors and dynamically updates Prometheus config. Operators are needed for ongoing management.
+
+4. **Q:** When should you write an operator instead of using Helm + scripts?
+   **A:** Write an operator when: you need to react to configuration changes at runtime (not just at install), you manage stateful apps with complex lifecycle (backup, restore, upgrade, resize), you need to automate operational tasks (scaling, failover, recovery), or you need to expose domain-specific APIs (Database, Certificate, Topic).
+
+5. **Q:** What is the status subresource and why do operators use it?
+   **A:** The status subresource (spec.status) stores the current observed state of the resource. The controller writes status (Ready=True, conditions, observedGeneration). Users and other systems read status to know whether the resource is healthy. Status is separated from spec because only the controller can write status — preventing user mistakes from corrupting state tracking.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+CRD: custom resource type (stored in etcd, accessible via kubectl)
+Controller: reconciliation loop watches CRD + drives state
+Operator = CRD + Controller + Domain Knowledge
+
+Reconciliation Loop:
+  Watch → Read current → Compare → Take action → Update status → Loop
+
+Popular Operators:
+  cert-manager: TLS certificates
+  External Secrets: cloud secret sync
+  Prometheus Operator: monitoring
+  Strimzi: Kafka management
+  Crossplane: cloud resource management
+
+When to write: stateful apps, complex lifecycle, domain-specific automation
+Framework: kubebuilder (Go), Kopf (Python), Java Operator SDK`,
             tags: ["Kubernetes", "Operator", "CRD"],
           },
         ],
@@ -8301,17 +19644,62 @@ spec:
               "Module: reusable config unit — input variables + output values.",
               "Import: bring existing resources under Terraform management.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "hcl",
-              filename: "main.tf",
-              code: `terraform {
+            content: `## Why This Matters (Read This First)
+
+Terraform lets you declare infrastructure as code. Instead of clicking in the AWS console, you write HCL files that describe your VPCs, databases, load balancers — and Terraform creates them.
+
+The key concepts: **state** (Terraform's record of what exists), **providers** (plugins for cloud APIs), **modules** (reusable config units), and **plan/apply** (preview before changing).
+
+---
+
+## State — The Source of Truth
+
+\`\`\`hcl
+terraform {
   backend "s3" {
     bucket         = "my-tfstate"
     key            = "prod/terraform.tfstate"
     region         = "us-east-1"
-    dynamodb_table = "tf-state-lock"   # distributed lock
+    dynamodb_table = "tf-state-lock"   # Prevents concurrent applies
   }
+}
+
+# State file contains:
+# {
+#   "version": 4,
+#   "terraform_version": "1.6.0",
+#   "resources": [
+#     {
+#       "module": "root",
+#       "type": "aws_vpc",
+#       "name": "main",
+#       "instances": [
+#         {
+#           "attributes": {
+#             "id": "vpc-0a1b2c3d4e5f",
+#             "cidr_block": "10.0.0.0/16",
+#             ...
+#           }
+#         }
+#       ]
+#     }
+#   ]
+# }
+
+# State commands:
+terraform state list                  # List all resources
+terraform state show aws_vpc.main     # Show attributes of a resource
+terraform state mv aws_vpc.main module.vpc.aws_vpc.main  # Move between modules
+terraform import aws_s3_bucket.my_bucket my-existing-bucket  # Import existing infra
+\`\`\`
+
+---
+
+## Plan and Apply
+
+\`\`\`hcl
+provider "aws" {
+  region = "us-east-1"
 }
 
 module "vpc" {
@@ -8319,8 +19707,124 @@ module "vpc" {
   version = "5.0.0"
   name    = "prod-vpc"
   cidr    = "10.0.0.0/16"
-}`,
-            },
+  azs     = ["us-east-1a", "us-east-1b"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
+  enable_nat_gateway = true
+  enable_vpn_gateway = false
+  tags = {
+    Terraform = "true"
+    Environment = "prod"
+  }
+}
+---
+# Plan output shows what will change:
+# Terraform will perform the following actions:
+#   # module.vpc.aws_vpc.this[0] will be created
+#   + resource "aws_vpc" "this" {
+#       + arn                = (known after apply)
+#       + cidr_block         = "10.0.0.0/16"
+#       + enable_dns_hostnames = true
+#       + enable_dns_support   = true
+#       + id                 = (known after apply)
+#       + tags               = {
+#           + "Environment" = "prod"
+#           + "Name"        = "prod-vpc"
+#           + "Terraform"   = "true"
+#         }
+#     }
+# Plan: 15 to add, 0 to change, 0 to destroy.
+\`\`\`
+
+---
+
+## Providers and Modules
+
+\`\`\`hcl
+# Providers — plugins for cloud/service APIs
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
+  }
+}
+
+provider "kubernetes" {
+  config_path = "~/.kube/config"
+}
+
+# Modules — reusable config units
+module "eks_cluster" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "19.0.0"
+
+  cluster_name    = "prod-eks"
+  cluster_version = "1.28"
+  vpc_id          = module.vpc.vpc_id
+  subnet_ids      = module.vpc.private_subnets
+
+  node_groups = {
+    main = {
+      desired_size = 3
+      instance_types = ["m5.large"]
+    }
+  }
+}
+
+output "cluster_endpoint" {
+  value = module.eks_cluster.cluster_endpoint
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What problem does remote state solve?
+   **A:** Local state means each teammate has their own copy — applies conflict and overwrite each other. Remote state (S3 + DynamoDB locking) ensures one apply at a time, and everyone works from the same state. Locking prevents concurrent applies that could corrupt the state file.
+
+2. **Q:** What is the difference between `terraform plan` and `terraform apply`?
+   **A:** `plan` shows the diff between current state and desired config — read-only. `apply` executes the plan. Always review the plan output before applying in production. In CI/CD, the plan is reviewed in a PR (or run `plan`, wait for approval, then `apply`).
+
+3. **Q:** What are Terraform workspaces used for?
+   **A:** Workspaces create separate state files for the same config — commonly used for environments (dev, staging, prod). Each workspace has its own state file: `prod/terraform.tfstate`, `staging/terraform.tfstate`. However, most teams prefer separate directories/modules per environment for isolation.
+
+4. **Q:** How do you handle secrets in Terraform?
+   **A:** Never hardcode secrets in config files. Options: 1) `terraform.tfvars` (gitignored, local only). 2) Environment variables (`TF_VAR_db_password`). 3) AWS Secrets Manager / SSM Parameter Store via `data.aws_secretsmanager_secret`. 4) HashiCorp Vault provider. State files containing secrets should be encrypted (S3 server-side encryption + DynamoDB encryption at rest).
+
+5. **Q:** What is the `terraform import` command?
+   **A:** Import brings existing infrastructure into Terraform management — creates a state reference for the resource without modifying config. After import, you must write the resource config in HCL to match the imported state. Without import, Terraform cannot manage resources created outside Terraform.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Terraform Workflow:
+  Write → Init → Plan → Apply → (loop)
+
+State:
+  Records real infrastructure IDs → maps to .tf config
+  Remote: S3/GCS + DynamoDB/Bigtable locking
+  Sensitive — protect and encrypt
+
+Commands:
+  init: download providers + modules
+  plan: preview changes (read-only)
+  apply: execute the plan
+  destroy: delete all managed resources
+  fmt: format HCL files
+  validate: check syntax
+  import: bring existing resources under management
+
+Providers: AWS, GCP, Azure, K8s, Helm, etc.
+Modules: reusable units from Terraform Registry`,
             tags: ["IaC", "Terraform"],
           },
           {
@@ -8336,7 +19840,172 @@ module "vpc" {
               "Flux: lighter, CRD-driven — integrates with Helm and Kustomize natively.",
               "Drift detection: controller alerts (or auto-heals) when cluster diverges from Git.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+GitOps makes Git the single source of truth for your infrastructure. When you merge a PR, the cluster updates automatically — no kubectl commands, no CI push, no manual SSH.
+
+Pull-based deployment is more secure than push-based: the cluster agent pulls changes from Git (or a container registry), so no CI system needs credentials to access the cluster.
+
+---
+
+## GitOps Flow
+
+\`\`\`
+Developer                Git Repository                Kubernetes
+    │                         │                            │
+    │── PR with changes ──────→│                            │
+    │  (deployment replicas:   │                            │
+    │   3 → 5)                 │                            │
+    │                         │                            │
+    │←─ PR approved ──────────│                            │
+    │                         │                            │
+    │── Merge to main ────────→│                            │
+    │                         │                            │
+    │                         │←── pull changes ──────────ArgoCD/Flux
+    │                         │    (periodic or webhook)    │
+    │                         │                            │
+    │                         │                            │── reconcile
+    │                         │                            │  (kubectl apply)
+    │                         │                            │
+    │                         │                            │── Deployment
+    │                         │                            │  replicas: 3 → 5
+\`\`\`
+
+---
+
+## ArgoCD Application
+
+\`\`\`yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/myorg/my-app-k8s
+    path: overlays/production
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true        # Delete resources removed from Git
+      selfHeal: true     # Revert manual changes to match Git
+    syncOptions:
+    - CreateNamespace=true
+---
+# ArgoCD features:
+# • GUI with sync status, resource tree, pod logs
+# • Sync waves and hooks (order of operations)
+# • ApplicationSet: template applications from Git directories
+# • SSO integration (OIDC, SAML)
+# • RBAC per app/project
+
+# ApplicationSet example — one app per cluster:
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+spec:
+  generators:
+  - clusters: {}                 # One app per cluster
+  template:
+    spec:
+      source:
+        repoURL: https://github.com/myorg/app-config
+        targetRevision: HEAD
+        path: "clusters/{{name}}"
+      destination:
+        server: "{{server}}"
+        namespace: "{{name}}"
+\`\`\`
+
+---
+
+## Flux — The Lighter Alternative
+
+\`\`\`yaml
+# Flux uses CRDs instead of a single Application resource:
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: my-app
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/myorg/my-app-k8s
+  ref:
+    branch: main
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-app
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./overlays/production
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: my-app
+  healthChecks:
+  - apiVersion: apps/v1
+    kind: Deployment
+    name: my-app
+    namespace: production
+---
+# Flux features:
+# • Image update automation (update git when new image tag available)
+# • OCI-compatible sources (Helm charts in container registries)
+# • Dependency management (order of reconciliation)
+# • No separate CLI — everything is CRDs
+# • Webhook receiver for instant sync (GitHub, GitLab, Bitbucket)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between push-based and pull-based deployment?
+   **A:** Push-based: CI/CD pipeline (GitHub Actions) has credentials to kubectl apply to the cluster. If CI is compromised, the attacker has cluster access. Pull-based: ArgoCD/Flux running IN the cluster pulls from Git. CI only pushes to Git — no cluster credentials in CI. Pull-based is more secure.
+
+2. **Q:** What does Drift Detection mean in GitOps?
+   **A:** If someone runs \`kubectl delete deploy my-app\`, the GitOps controller detects the cluster state diverging from Git. ArgoCD marks the app as "Out of Sync" (with auto-heal: reverts the deletion). Flux re-applies on its reconciliation interval. Drift detection ensures Git remains the source of truth.
+
+3. **Q:** What is the difference between ArgoCD's Application and ApplicationSet?
+   **A:** Application manages one deployment (single source + destination). ApplicationSet generates Applications from a template + generators — useful for multi-cluster (one app per cluster), multi-environment (one app per env), or per-git-directory patterns.
+
+4. **Q:** How does Flux's ImageUpdateAutomation work?
+   **A:** Flux watches a container registry for new image tags. When a new tag appears (matching a filter like semver range), Flux updates the Git repository with the new tag, commits, and pushes. The Kustomization controller then reconciles the change. This enables fully automated deployment pipelines.
+
+5. **Q:** What are ArgoCD sync waves and hooks?
+   **A:** Sync waves order resource application (wave 0, 1, 2...). CRDs in wave 0, namespaces in wave 1, deployments in wave 2. Hooks run at specific points (pre-sync, post-sync) for tasks like database migrations. Waves ensure proper ordering; hooks enable operational tasks during deployment.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+GitOps Principles:
+  Git as single source of truth
+  Pull-based deployment (more secure)
+  Drift detection + self-healing
+  Declarative everything
+
+ArgoCD:
+  Application (single) / ApplicationSet (multi)
+  GUI, SSO, RBAC, sync waves/hooks
+  Auto-sync + prune + self-heal
+
+Flux:
+  GitRepository → Kustomization/HelmRelease
+  Image update automation
+  OCI-compatible sources
+  CRD-driven (no separate CLI)
+
+Both: support Helm, Kustomize, multi-cluster`,
             tags: ["IaC", "GitOps"],
           },
           {
@@ -8354,7 +20023,161 @@ module "vpc" {
               "CDK vs Pulumi: CDK is AWS-only; Pulumi is multi-cloud. CDK outputs CloudFormation; Pulumi manages state itself. Both support TypeScript.",
               "Choosing IaC: Terraform for multi-cloud + large ecosystem; Pulumi/CDK for teams that want to use their existing programming language.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Pulumi and AWS CDK let you define infrastructure using real programming languages — TypeScript, Python, Go, C#. Instead of learning HCL (Terraform's DSL), you use loops, conditionals, functions, and classes you already know.
+
+Pulumi is multi-cloud (AWS, GCP, Azure, K8s). CDK is AWS-only. Both offer better IDE support (autocomplete, type checking, refactoring) than HCL.
+
+---
+
+## Pulumi — TypeScript Example
+
+\`\`\`typescript
+import * as aws from "@pulumi/aws";
+import * as pulumi from "@pulumi/pulumi";
+
+const config = new pulumi.Config();
+const env = config.require("environment");
+
+// Use real TypeScript: loops, conditionals, functions
+const subnetCount = 3;
+const azs = ["us-east-1a", "us-east-1b", "us-east-1c"];
+
+const vpc = new aws.ec2.Vpc("main", {
+    cidrBlock: "10.0.0.0/16",
+    tags: { Name: `main-${env}`, Environment: env },
+});
+
+// Loop! Not possible in HCL without modules or count
+const subnets = azs.map((az, i) =>
+    new aws.ec2.Subnet(`subnet-${i}`, {
+        vpcId: vpc.id,
+        cidrBlock: `10.0.${i}.0/24`,
+        availabilityZone: az,
+        tags: { Name: `subnet-${i}`, Environment: env },
+    })
+);
+
+// Export outputs
+export const vpcId = vpc.id;
+export const subnetIds = subnets.map(s => s.id);
+
+// pulumi up → creates VPC + 3 subnets
+// pulumi destroy → deletes everything
+\`\`\`
+
+---
+
+## Pulumi Automation API
+
+\`\`\`typescript
+import { LocalWorkspace } from "@pulumi/pulumi/automation";
+
+// Embed infrastructure provisioning in your app
+async function deployEnvironment(userId: string) {
+    const stack = await LocalWorkspace.createOrSelectStack({
+        stackName: `env-${userId}`,
+        projectName: "dynamic-infra",
+        program: async () => {
+            const bucket = new aws.s3.Bucket(`user-${userId}-assets`, {
+                forceDestroy: true,
+            });
+            return { bucketName: bucket.bucket };
+        },
+    });
+
+    await stack.up({ onOutput: console.log });
+    console.log(`Deployed bucket for user ${userId}`);
+}
+
+// Each user gets their own infrastructure
+// Completely dynamic — no Terraform plan/apply cycle
+\`\`\`
+
+---
+
+## AWS CDK — TypeScript
+
+\`\`\`typescript
+import * as cdk from "aws-cdk-lib";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
+import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as ecs_patterns from "aws-cdk-lib/aws-ecs-patterns";
+
+export class MyStack extends cdk.Stack {
+    constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+        super(scope, id, props);
+
+        const vpc = new ec2.Vpc(this, "MyVpc", {
+            maxAzs: 3,
+            natGateways: 1,
+        });
+
+        const cluster = new ecs.Cluster(this, "MyCluster", { vpc });
+
+        // L3 Construct: Fargate service + ALB + auto-scaling
+        new ecs_patterns.ApplicationLoadBalancedFargateService(
+            this, "MyService", {
+                cluster,
+                taskImageOptions: {
+                    image: ecs.ContainerImage.fromAsset("./app"),
+                    containerPort: 3000,
+                },
+                desiredCount: 3,
+                publicLoadBalancer: true,
+            }
+        );
+    }
+}
+
+const app = new cdk.App();
+new MyStack(app, "MyStack");
+
+// cdk deploy → generates CloudFormation → deploys
+// cdk synth → prints CloudFormation template
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the advantage of using real programming languages for IaC?
+   **A:** IDEs provide autocomplete, type checking, and refactoring. Loops and conditionals are native (no count/for_each workarounds). Functions can be unit-tested. Code can be shared via npm/pip packages. The same language is used for app and infra code — fewer context switches.
+
+2. **Q:** How does Pulumi's state management differ from Terraform's?
+   **A:** Terraform stores state in a file (local or remote S3/GCS backend). Pulumi Cloud manages state by default (free for individuals, paid for teams). Pulumi also supports self-managed backends (S3, GCS, Azure Blob, local). Pulumi Cloud provides web UI, deployment history, and policy enforcement.
+
+3. **Q:** What is the difference between CDK L1, L2, and L3 constructs?
+   **A:** L1 (CloudFormationResource): raw CFN resource — every property is exposed. L2 (aws_ec2.Vpc): AWS best-practice defaults — simpler API, sensible defaults. L3 (patterns.*): multi-resource patterns — e.g., ApplicationLoadBalancedFargateService creates ALB + ECS service + auto-scaling in one construct.
+
+4. **Q:** When would you use Pulumi's Automation API?
+   **A:** When you need to provision infrastructure dynamically — not declaratively. Examples: per-user ephemeral environments (a preview deployment for each PR), multi-tenant SaaS (each tenant gets separate infra), CI/CD where the infra depends on the code being deployed. Automation API is the IaC equivalent of serverless functions.
+
+5. **Q:** Is Pulumi or CDK better for existing teams?
+   **A:** If your team already knows TypeScript/Python and needs multi-cloud: Pulumi. If you are AWS-only and want to stay in AWS ecosystem (CloudFormation, Service Catalog): CDK. CDK also has better integration with AWS services (Step Functions, EventBridge, Lambda). Terraform is best for multi-cloud with an established provider ecosystem.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Pulumi:
+  Multi-cloud (AWS, GCP, Azure, K8s, 100+ providers)
+  TypeScript, Python, Go, C#, Java, YAML
+  State: Pulumi Cloud (default) or self-managed
+  Automation API: dynamic, programmatic infrastructure
+
+AWS CDK:
+  AWS-only
+  TypeScript, Python, Java, C#, Go (preview)
+  Compiles to CloudFormation
+  Constructs: L1 (raw) → L2 (defaults) → L3 (patterns)
+
+Both:
+  IDE support (autocomplete, type checking)
+  Real programming constructs (loops, functions, classes)
+  npm/PyPI package distribution`,
             tags: ["IaC", "Pulumi", "CDK"],
           },
           {
@@ -8373,7 +20196,195 @@ module "vpc" {
               "Ansible Vault: encrypt sensitive variables (passwords, API keys, SSH keys) within playbooks — `ansible-vault encrypt vars/secrets.yml`.",
               "Alternatives: SaltStack (fast, event-driven, agent optional), Puppet (DSL-based, agent pull model), Chef (Ruby DSL, full-blown CMS). Ansible is the simplest to start with.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Terraform creates infrastructure; Ansible configures it. After Terraform provisions a server, Ansible installs packages, writes config files, and starts services. The two tools complement each other.
+
+Ansible is agentless — it connects via SSH, runs commands, and disconnects. No agent to install, no certificate to manage, no daemon to monitor.
+
+---
+
+## Playbook Basics
+
+\`\`\`yaml
+---
+- name: Configure web server
+  hosts: webservers
+  become: yes              # sudo
+  vars:
+    app_port: 3000
+    node_version: "20"
+
+  tasks:
+    - name: Install nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Write nginx config
+      template:
+        src: nginx.conf.j2    # Jinja2 template
+        dest: /etc/nginx/sites-available/default
+      notify: restart nginx   # Only triggers if config actually changed
+
+    - name: Start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+---
+# Run:
+ansible-playbook -i inventory/prod.yml playbooks/webserver.yml --check
+ansible-playbook -i inventory/prod.yml playbooks/webserver.yml
+\`\`\`
+
+---
+
+## Inventory
+
+\`\`\`ini
+# static inventory (production.ini)
+[webservers]
+web1.example.com ansible_user=deploy
+web2.example.com ansible_user=deploy
+web3.example.com ansible_user=deploy
+
+[databases]
+db-primary.example.com ansible_user=admin
+db-replica.example.com ansible_user=admin
+
+[production:children]
+webservers
+databases
+
+[production:vars]
+ansible_ssh_private_key_file=~/.ssh/prod_key
+env=production
+
+# dynamic inventory — AWS EC2
+# ansible-inventory -i aws_ec2.yaml --graph
+# Uses AWS API to discover instances by tags
+plugin: aws_ec2
+regions:
+  - us-east-1
+filters:
+  tag:Environment: production
+keyed_groups:
+  - key: tags.Role
+    prefix: role
+\`\`\`
+
+---
+
+## Roles — Reusable Automation
+
+\`\`\`
+roles/
+├── nginx/
+│   ├── tasks/
+│   │   └── main.yml       # install + configure
+│   ├── handlers/
+│   │   └── main.yml       # restart nginx
+│   ├── templates/
+│   │   └── nginx.conf.j2  # config template (Jinja2)
+│   ├── vars/
+│   │   └── main.yml       # role-specific variables
+│   ├── defaults/
+│   │   └── main.yml       # default values (lowest priority)
+│   └── meta/
+│       └── main.yml       # dependencies on other roles
+└── app/
+    ├── tasks/
+    │   └── main.yml
+    └── templates/
+        └── app.service.j2
+
+# Use roles in playbook:
+- name: Configure full stack
+  hosts: all
+  roles:
+    - role: nginx
+      vars:
+        nginx_port: 8080
+    - role: app
+      vars:
+        app_version: "{{ app_version }}"
+\`\`\`
+
+---
+
+## Ansible Vault
+
+\`\`\`bash
+# Encrypt a file
+ansible-vault encrypt vars/secrets.yml
+
+# View encrypted content
+ansible-vault view vars/secrets.yml
+
+# Edit
+ansible-vault edit vars/secrets.yml
+
+# Decrypt (for git diff, never commit decrypted)
+ansible-vault decrypt vars/secrets.yml
+
+# Run playbook with vault password
+ansible-playbook playbook.yml --ask-vault-pass
+ansible-playbook playbook.yml --vault-password-file ~/.vault_pass
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Ansible and Terraform?
+   **A:** Terraform declares infrastructure resources (VPC, EC2, RDS, S3) — it creates and manages cloud resources. Ansible configures those resources (install packages, write config files, start services). They are complementary: Terraform provisions the server, Ansible configures what runs on it.
+
+2. **Q:** What does idempotent mean in Ansible?
+   **A:** Running the same playbook multiple times produces the same result. Ansible modules check the current state before acting: \`apt: name=nginx state=present\` checks if nginx is installed — if yes, it does nothing. This makes playbooks safe to run repeatedly.
+
+3. **Q:** What is the difference between Ansible variables and defaults?
+   **A:** Variable precedence (highest to lowest): extra vars (\`--extra-vars\`) > playbook vars > inventory vars > role vars > role defaults. Defaults (in defaults/main.yml) have the LOWEST priority — they are meant to be overridden. Use defaults for sensible defaults that users can override.
+
+4. **Q:** What does the \`--check\` flag do?
+   **A:** Dry-run mode: Ansible runs the playbook but makes no actual changes. Modules report what they WOULD change without applying. Useful in CI/CD to validate playbooks before running them against production servers.
+
+5. **Q:** When would you use dynamic inventory instead of static?
+   **A:** Dynamic inventory queries cloud APIs to discover servers — no need to maintain host lists. Use when: servers are auto-scaled (new instances appear/disappear), you want to group by tags (environment=prod, role=webserver), or you manage 100+ servers. AWS, GCP, and Azure all have dynamic inventory plugins.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Ansible: agentless, push-based, SSH/WinRM
+Idempotent: safe to run multiple times
+Playbook: YAML automation (tasks run in order)
+Inventory: static (INI/YAML) or dynamic (cloud API)
+Roles: reusable units (tasks + handlers + templates + vars)
+Vault: encrypted secrets in playbooks
+
+Modules:
+  apt/yum/dnf: package management
+  copy/template: file management
+  service/systemd: service management
+  command/shell: arbitrary commands (avoid when possible)
+  uri: HTTP requests (API testing, health checks)
+  docker_*/kubernetes: container orchestration
+
+Ansible vs Terraform:
+  Terraform: create/update/delete infrastructure
+  Ansible: configure what runs ON the infrastructure
+  Use both: Terraform provisions, Ansible configures`,
+            tags: ["Ansible", "Configuration Management", "Automation", "IaC"],
+          },
             tags: ["Ansible", "Configuration Management", "Automation", "IaC"],
           },
         ],
@@ -8396,28 +20407,190 @@ module "vpc" {
               "OIDC: GitHub issues a short-lived token for the run — cloud provider trusts it without stored secrets.",
               "Reusable workflows: call one workflow from another — DRY principle for CI.",
             ],
-            content: "// Content coming soon",
-            codeExample: {
-              language: "yaml",
-              filename: ".github/workflows/deploy.yml",
-              code: `name: Deploy
+            content: `## Why This Matters (Read This First)
+
+GitHub Actions is the CI/CD platform for GitHub. Workflows are defined in YAML and run on GitHub's runners or self-hosted machines. OIDC integration lets pipelines authenticate to cloud providers without storing any secrets.
+
+Key concepts: **workflows**, **jobs**, **steps**, **matrix builds**, **caching**, and **OIDC** for keyless cloud auth.
+
+---
+
+## Workflow Structure
+
+\`\`\`yaml
+name: Deploy
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:          # Manual trigger
+
+env:
+  NODE_VERSION: "20"
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - run: npm ci
+    - run: npm run lint
+
+  test:
+    needs: lint               # Run after lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20"]  # Test across versions
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - name: Cache node_modules
+      uses: actions/cache@v4
+      with:
+        path: node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+    - run: npm test
+
   deploy:
+    needs: [lint, test]       # Run after both pass
+    if: github.ref == 'refs/heads/main'  # Only on main branch
     permissions:
-      id-token: write    # required for OIDC
+      id-token: write          # Required for OIDC
       contents: read
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: arn:aws:iam::123:role/deploy
+        role-to-assume: arn:aws:iam::123456789012:role/github-actions
         aws-region: us-east-1
-    # No stored secrets — the OIDC token authenticates the role assumption`,
-            },
+    - run: npm ci && npm run build
+    - run: aws s3 sync dist/ s3://my-app-website/
+\`\`\`
+
+---
+
+## Matrix Builds and Reusable Workflows
+
+\`\`\`yaml
+# Matrix builds: test multiple OS × language versions
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: ["18", "20", "22"]
+        exclude:             # Remove invalid combinations
+          - os: windows-latest
+            node: "22"       # Windows Node 22 not supported yet
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node }}
+    - run: npm test
+
+---
+# Reusable workflow — call another workflow
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/deploy.yml  # Same repo
+    # or: myorg/my-repo/.github/workflows/deploy.yml@main
+    with:
+      environment: production
+    secrets:
+      # Inherit secrets from caller
+      inherit: true
+\`\`\`
+
+---
+
+## OIDC — Keyless Cloud Auth
+
+\`\`\`yaml
+# AWS side: create an OIDC identity provider for GitHub
+# Trust policy allows GitHub Actions to assume a role
+
+# GitHub Actions workflow:
+jobs:
+  deploy:
+    permissions:
+      id-token: write   # GitHub generates OIDC token
+    steps:
+    - uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::123456789012:role/github-actions
+        role-session-name: my-session
+        aws-region: us-east-1
+    # No AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY needed
+    # The OIDC token authenticates the role assumption
+    - run: aws s3 ls
+
+# Trust policy in AWS:
+{
+    "Effect": "Allow",
+    "Principal": {
+        "Federated": "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+        "StringEquals": {
+            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+            "token.actions.githubusercontent.com:sub": "repo:myorg/my-repo:ref:refs/heads/main"
+        }
+    }
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is OIDC and why is it better than storing access keys?
+   **A:** OIDC (OpenID Connect) lets GitHub Actions request a short-lived token and exchange it for cloud provider credentials. No long-lived access keys are stored in GitHub Secrets. If the token is leaked, it expires in 5 minutes. Benefits: no secret rotation, no leaked keys, auditable per-workflow.
+
+2. **Q:** What is the difference between needs and dependency in GitHub Actions?
+   **A:** \`needs\` creates a dependency between jobs: \`job2 needs: [job1]\` means job2 waits for job1 to complete. If job1 fails, job2 is skipped. Matrix builds automatically create dependencies between the matrix generator and the matrix jobs. There is no \`dependency\` keyword — \`needs\` is the only way to order jobs.
+
+3. **Q:** What happens when a matrix build has 12 combinations?
+   **A:** 12 jobs run in parallel (up to the runner limit). Each gets its own runner. If one combination fails, the others continue. Use \`fail-fast: false\` to prevent cancelling all jobs when one fails — useful for collecting all test results.
+
+4. **Q:** How does caching work in GitHub Actions?
+   **A:** The \`actions/cache\` action saves a directory (node_modules, .m2, .nuget) keyed by a hash (package-lock.json). On subsequent runs, if the key matches, the cache is restored — saving minutes of dependency installation. Cache is limited to 10GB per repository. Cache is not available for pull requests from forks (security).
+
+5. **Q:** What is the difference between \`push\` and \`pull_request\` triggers?
+   **A:** \`push\` triggers on commits pushed directly to a branch. \`pull_request\` triggers when a PR is opened, synchronized (new commits pushed to the PR branch), or reopened. Separate triggers let you: run fast lint on push, run full test suite on PR, restrict deploy to main branch pushes only.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Workflow: YAML in .github/workflows/
+Triggers: push, pull_request, schedule, workflow_dispatch, release
+
+Jobs: run on runners, can have needs/dependencies
+Matrix: run same job with multiple parameter combos
+Caching: actions/cache for dependency caching (key by lockfile hash)
+OIDC: keyless cloud auth (no stored secrets)
+Reusable workflows: DRY principle for CI
+
+Key Actions:
+  actions/checkout — clone repo
+  actions/setup-node/python/java — install language runtime
+  actions/cache — cache dependencies
+  aws-actions/configure-aws-credentials — OIDC auth to AWS
+  docker/login-action — auth to container registry
+
+Limits: 6h timeout, 72h max per workflow, ~35/month free`,
             tags: ["CI-CD", "GitHub Actions"],
           },
           {
@@ -8433,7 +20606,192 @@ jobs:
               "Feature flags: decouple deploy from release — ship dark, enable for specific users.",
               "Database compatibility: migrations must be backward-compatible with old code during rollout.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Deploying code is risky. A bad release can crash your site, lose data, or frustrate users. Deployment strategies mitigate this risk by controlling how new code reaches users.
+
+The right strategy depends on: how critical your service is, how fast you need to roll out, how easy it is to roll back, and whether your database supports backward-incompatible changes.
+
+---
+
+## Rolling Update
+
+\`\`\`
+Standard K8s strategy — gradual replacement:
+
+  v1: ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐
+       │A1│ │A2│ │A3│ │A4│ │A5│
+       └──┘ └──┘ └──┘ └──┘ └──┘
+
+  Step 1: ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐
+  (new)   │B1│ │A2│ │A3│ │A4│ │A5│
+           └──┘ └──┘ └──┘ └──┘ └──┘
+
+  Step 2: ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐
+           │B1│ │B2│ │A3│ │A4│ │A5│
+           └──┘ └──┘ └──┘ └──┘ └──┘
+
+  Done:   ┌──┐ ┌──┐ ┌──┐ ┌──┐ ┌──┐
+           │B1│ │B2│ │B3│ │B4│ │B5│
+           └──┘ └──┘ └──┘ └──┘ └──┘
+
+  Pros: no extra infra needed, gradual
+  Cons: slow rollout, old + new versions run together
+\`\`\`
+
+---
+
+## Blue-Green Deployment
+
+\`\`\`
+Blue-Green: two identical environments + instant switch
+
+  ┌────────┐          ┌────────┐
+  │ Blue   │          │ Green  │
+  │ v1     │          │ v2     │
+  │ 100%   │          │ 0%     │
+  └────────┘          └────────┘
+
+  Deploy to Green (v2), run tests, then switch:
+
+  ┌────────┐          ┌────────┐
+  │ Blue   │          │ Green  │
+  │ v1     │          │ v2     │
+  │ 0%     │          │ 100%   │ ← load balancer switch
+  └────────┘          └────────┘
+
+  If v2 fails: switch back to Blue (instant rollback)
+
+  Pros: instant switch, instant rollback, canary testing
+  Cons: 2x infra cost during deployment, DB schema compat
+
+  # Kubernetes: two Deployments, one Service, patch selector
+  kubectl patch service my-app -p '{"spec":{"selector":{"version":"green"}}}'
+\`\`\`
+
+---
+
+## Canary Deployment
+
+\`\`\`
+Route small % of traffic to new version, observe, increase:
+
+  ┌────────┐          ┌────────┐
+  │ v1     │          │ v2     │
+  │ 95%    │          │ 5%     │ ← canary
+  └────────┘          └────────┘
+
+  Metrics look good → increase:
+
+  ┌────────┐          ┌────────┐
+  │ v1     │          │ v2     │
+  │ 50%    │          │ 50%    │
+  └────────┘          └────────┘
+
+  Errors spike → rollback to 0%:
+
+  ┌────────┐          ┌────────┐
+  │ v1     │          │ v2     │
+  │ 100%   │          │ 0%     │ ← rollback
+  └────────┘          └────────┘
+
+  Pros: real traffic validation, small blast radius
+  Cons: complex traffic routing, requires metrics monitoring
+
+  # Istio VirtualService for canary:
+  apiVersion: networking.istio.io/v1beta1
+  kind: VirtualService
+  spec:
+    hosts: [my-app]
+    http:
+    - route:
+      - destination: { host: my-app, subset: stable }
+        weight: 95
+      - destination: { host: my-app, subset: canary }
+        weight: 5
+\`\`\`
+
+---
+
+## Feature Flags
+
+\`\`\`javascript
+// LaunchDarkly / Flagsmith / custom flag system
+
+const ldClient = LaunchDarkly.initialize("sdk-key", user);
+
+// Deploy code WITH the new feature — but it is OFF
+// The feature flag controls whether users see it
+
+async function renderHomepage() {
+    const showNewUI = await ldClient.variation("new-homepage", false);
+
+    if (showNewUI) {
+        return renderNewHomepage();  // new code — dark
+    } else {
+        return renderOldHomepage();  // old code — live
+    }
+}
+
+// Enable flag for internal users first:
+// "showNewUI = true for user.email contains @company.com"
+
+// Then 10% of users:
+// "showNewUI = true for 10% of users"
+
+// Then 100%:
+// "showNewUI = true for all"
+
+// If bug found: flip flag off → old path immediately active
+// No redeploy needed for rollback!
+
+// Benefits:
+// • Decouple deploy from release
+// • Instant kill switch (no redeploy)
+// • Target specific users (internal, beta, region)
+// • A/B test different versions
+// • No more long-lived feature branches
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** When would you use Blue-Green instead of Rolling Update?
+   **A:** Blue-Green when: you need instant rollback (switch back to the old environment), you want to run smoke tests against the new version before serving traffic, or you want 0% chance of old and new versions interacting. Rolling update is simpler and cheaper (no 2x infra) but both versions coexist during the rollout.
+
+2. **Q:** What is the database compatibility problem with deployments?
+   **A:** During rolling updates, old and new code run simultaneously. If the new code adds a column, the old code must tolerate it (or fail). If the new code renames a column, old code breaks. Solution: deploy DB changes in phases (add column first, deploy code, then remove old column). This is called "expand and contract" migrations.
+
+3. **Q:** How does a canary deployment detect problems?
+   **A:** Monitor error rate, latency (p99), and business metrics (conversion rate) for the canary vs baseline. If error rate increases by >0.1%, or latency increases by >10%, or conversion drops by >1% — abort the canary. Tools: Flagger (K8s), Istio, Argo Rollouts automate canary analysis and rollback.
+
+4. **Q:** What is the difference between feature flags and environment variables?
+   **A:** Env vars are set at deploy time — changing them requires redeployment. Feature flags are evaluated at runtime — change them instantly without redeploy. Flags support targeting (specific users, percentages, A/B tests) and have audit trails. Use feature flags for: kill switches, gradual rollouts, beta programs.
+
+5. **Q:** What is Argo Rollouts and how does it help?
+   **A:** Argo Rollouts is a K8s controller that replaces Deployment for advanced strategies (Blue-Green, Canary). It provides: automated promotion/rollback based on metrics analysis (Datadog, Prometheus), traffic splitting (Service Mesh integration), and template-based step definitions. Standard K8s Deployments only support rolling updates.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Strategies:
+  Rolling Update: gradual, no extra cost, both versions coexist
+  Blue-Green: instant switch, 2x infra, instant rollback
+  Canary: % traffic, metrics-based, small blast radius
+  Feature Flags: decouple deploy/release, instant kill switch
+
+Database:
+  Expand and Contract: add → deploy → remove
+  Never: rename/delete columns in same deploy as code change
+  Always: backward-compatible migrations
+
+Kubernetes:
+  Deployment: rolling update only
+  Argo Rollouts: Blue-Green and Canary with metrics analysis
+  Istio/Service Mesh: fine-grained traffic splitting`,
             tags: ["CI-CD", "Deployment"],
           },
           {
@@ -8449,7 +20807,190 @@ jobs:
               "Contract tests (Pact): consumer and provider agree on the API contract — catches breaking changes.",
               "Test coverage: a proxy metric — 80% with meaningful assertions beats 100% with trivial tests.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+The testing pyramid guides how to distribute testing effort: many fast unit tests at the base, fewer slower integration tests in the middle, and a handful of essential E2E tests at the top.
+
+Investing in the wrong ratio (too many E2E, too few unit tests) leads to slow, flaky, expensive test suites that catch few bugs.
+
+---
+
+## The Pyramid
+
+\`\`\`
+          ┌─────┐
+         /│ E2E │\        Few — critical user flows only
+        / │ (5%) │ \      Slow (minutes), expensive ($), flaky
+       /  └──────┘  \
+      /───────────────\
+     /│ Integration  │\  Some — test boundaries
+    / │  (15%)       │ \ Medium speed, containerized deps
+   /  └───────────────  \
+  /───────────────────────\
+ /│        Unit           │\ Many — test business logic
+/ │        (80%)          │ \ Fast (ms), isolated, no deps
+/ └───────────────────────┘ \
+\`\`\`
+
+---
+
+## Unit Tests
+
+\`\`\`typescript
+// Pure function — easy to test, no dependencies
+function calculateDiscount(items: CartItem[], coupon: Coupon): number {
+    const subtotal = items.reduce((sum, item) => sum + item.price, 0);
+    if (coupon.type === "percentage") {
+        return subtotal * (coupon.value / 100);
+    }
+    if (coupon.type === "fixed") {
+        return Math.min(coupon.value, subtotal);
+    }
+    return 0;
+}
+
+// Unit test:
+test("percentage discount calculates correctly", () => {
+    const items = [{ name: "shirt", price: 100 }];
+    const coupon = { type: "percentage", value: 20 };
+
+    expect(calculateDiscount(items, coupon)).toBe(20);
+});
+
+test("fixed discount cannot exceed subtotal", () => {
+    const items = [{ name: "shirt", price: 10 }];
+    const coupon = { type: "fixed", value: 50 };
+
+    expect(calculateDiscount(items, coupon)).toBe(10);
+});
+
+// Unit tests: no HTTP calls, no DB, no filesystem
+// Run in milliseconds, give fast feedback
+\`\`\`
+
+---
+
+## Integration Tests
+
+\`\`\`typescript
+// Integration test: tests the boundary between your code and external systems
+import { createContainer } from "testcontainers";  // Docker containers in tests
+
+describe("User Repository", () => {
+    let postgres: StartedTestContainer;
+
+    beforeAll(async () => {
+        // Spin up a real PostgreSQL container for the test
+        postgres = await createContainer("postgres:16")
+            .withExposedPorts(5432)
+            .withEnvironment({ POSTGRES_PASSWORD: "test" })
+            .start();
+
+        // Run migrations on the test DB
+        await runMigrations(`postgres://postgres:test@localhost:${postgres.getMappedPort(5432)}/test`);
+    }, 30000);
+
+    afterAll(async () => {
+        await postgres.stop();
+    });
+
+    test("create and retrieve user", async () => {
+        const repo = new UserRepository(testDbConnection);
+        const user = await repo.create({ name: "Alice", email: "alice@test.com" });
+
+        expect(user.id).toBeDefined();
+        expect(user.name).toBe("Alice");
+
+        const retrieved = await repo.findById(user.id);
+        expect(retrieved?.name).toBe("Alice");
+    });
+});
+\`\`\`
+
+---
+
+## Contract Tests (Pact)
+
+\`\`\`typescript
+// Consumer-side contract test (frontend)
+// Proves: "the API I expect returns what I need"
+
+// Pact test for the Order Service consumer:
+describe("Order Service API", () => {
+    const provider = new Pact({
+        consumer: "WebApp",
+        provider: "OrderService",
+    });
+
+    beforeAll(() => provider.setup());
+    afterAll(() => provider.finalize());
+
+    test("get order by ID", async () => {
+        await provider
+            .given("an order with ID 123 exists")
+            .uponReceiving("a request for order 123")
+            .withRequest({ method: "GET", path: "/orders/123" })
+            .willRespondWith({
+                status: 200,
+                body: { id: "123", status: "shipped", items: [{ sku: "abc", qty: 2 }] },
+            });
+
+        const response = await fetchOrder("123");
+        expect(response.id).toBe("123");
+        expect(response.status).toBe("shipped");
+    });
+});
+
+// Provider-side (backend) verifies the contract:
+// Pact verifies that the OrderService actually returns
+// what WebApp expects — catches breaking API changes
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why do unit tests make up 80% of the pyramid?
+   **A:** Unit tests are fast (milliseconds), reliable (no network/DB), and easy to write and maintain. They catch logic bugs at the earliest stage — before integration issues. The ratio reflects the trade-off: you can run 1000 unit tests in the time one E2E test takes. Most bugs are logic bugs, not integration bugs.
+
+2. **Q:** What is the difference between stubs and mocks?
+   **A:** Both replace real dependencies. A stub returns fixed values — no behavior verification (used to control inputs). A mock records interactions — verifies that specific methods were called with specific arguments (used to verify outputs). In practice: use mocks sparingly — they couple tests to implementation details.
+
+3. **Q:** What is a flaky test and how do you handle it?
+   **A:** A flaky test passes and fails without code changes — caused by timing, race conditions, network timeouts, or test ordering. Solution: quarantine flaky tests (move them to a separate CI job), fix the root cause (add retries, remove shared state), and do not add new tests that depend on timing.
+
+4. **Q:** What is the role of contract tests in microservices?
+   **A:** In microservices, each service has its own deployment cycle. Contract tests (Pact) ensure that the API provider still satisfies all consumers' expectations before deployment. If a consumer expects a field that the provider removed, the contract test fails — preventing the breaking change from reaching production.
+
+5. **Q:** What is test coverage and why is it not the goal?
+   **A:** Test coverage measures what percentage of lines/branches are executed during tests. It is a proxy metric — high coverage does not mean good tests. 100% coverage with assertions like \`expect(true).toBe(true)\` is useless. Focus on meaningful assertions, not coverage percentage. 80% with good assertions beats 100% with trivial tests.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Testing Pyramid:
+  Unit (80%): fast, isolated, business logic
+  Integration (15%): DB, API, file system boundaries
+  E2E (5%): critical user flows, full browser
+  Contract: API compatibility between services
+
+Best Practices:
+  • Test behavior, not implementation
+  • Use real dependencies in integration tests (containers)
+  • Avoid mocks for external services (use testcontainers)
+  • Quarantine flaky tests
+  • Add tests when fixing bugs (red-green-refactor)
+  • Coverage is a tool, not a target
+
+Tools:
+  Jest, Vitest (JS/TS), pytest (Python), JUnit (Java)
+  testcontainers (integration tests with Docker)
+  Pact (contract tests)
+  Playwright, Cypress (E2E)`,
+            tags: ["Testing", "CI-CD"],
+          },
             tags: ["Testing", "CI-CD"],
           },
         ],
@@ -8472,7 +21013,183 @@ jobs:
               "PromQL: functional query language — `rate()`, `histogram_quantile()`, `topk()`.",
               "AlertManager: routes alerts to PagerDuty, Slack, etc. — handles deduplication and silencing.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Prometheus is the standard for Kubernetes monitoring. It scrapes metrics from instrumented applications, stores them as time-series data, and powers Grafana dashboards and alerting.
+
+The four metric types (Counter, Gauge, Histogram, Summary) cover every monitoring need: request counts, current resource usage, latency distributions, and quantiles.
+
+---
+
+## Metric Types
+
+\`\`\`javascript
+// Instrumentation example — Node.js with prom-client
+const prometheus = require("prom-client");
+
+// Counter: cumulative count (only increases)
+const httpRequests = new prometheus.Counter({
+    name: "http_requests_total",
+    help: "Total HTTP requests",
+    labelNames: ["method", "path", "status"],
+});
+
+// Gauge: current value (goes up and down)
+const memoryUsage = new prometheus.Gauge({
+    name: "memory_usage_bytes",
+    help: "Current memory usage",
+});
+
+// Histogram: distribution of values (bucketed)
+const requestDuration = new prometheus.Histogram({
+    name: "http_request_duration_seconds",
+    help: "HTTP request latency",
+    buckets: [0.01, 0.05, 0.1, 0.5, 1, 2, 5],  // in seconds
+});
+
+// Summary: quantiles (p50, p90, p99)
+const requestDurationSummary = new prometheus.Summary({
+    name: "http_request_duration_summary",
+    help: "HTTP request latency summary",
+    percentiles: [0.5, 0.9, 0.99],
+});
+
+// Middleware:
+app.use((req, res, next) => {
+    const end = requestDuration.startTimer();
+    res.on("finish", () => {
+        httpRequests.inc({ method: req.method, path: req.path, status: res.statusCode });
+        memoryUsage.set(process.memoryUsage().heapUsed);
+        end({ method: req.method, path: req.path });
+    });
+    next();
+});
+
+// Expose /metrics endpoint:
+app.get("/metrics", async (req, res) => {
+    res.set("Content-Type", prometheus.register.contentType);
+    res.end(await prometheus.register.metrics());
+});
+\`\`\`
+
+---
+
+## PromQL — Query Language
+
+\`\`\`promql
+# Rate of requests per second over 5 minutes
+rate(http_requests_total[5m])
+
+# 99th percentile of request duration
+histogram_quantile(0.99,
+    rate(http_request_duration_seconds_bucket[5m])
+)
+
+# Error rate percentage
+sum(rate(http_requests_total{status=~"5.."}[5m]))
+/
+sum(rate(http_requests_total[5m]))
+* 100
+
+# Memory usage by pod (top 5)
+topk(5, memory_usage_bytes{namespace="production"})
+
+# CPU usage rate by container
+rate(container_cpu_usage_seconds_total{container!=""}[5m])
+
+# Recording rules — precompute expensive queries
+groups:
+  - name: instance_metrics
+    rules:
+    - record: job:http_request_errors:rate5m
+      expr: rate(http_requests_total{status=~"5.."}[5m])
+\`\`\`
+
+---
+
+## AlertManager
+
+\`\`\`yaml
+# Alerting rules
+groups:
+  - name: example
+    rules:
+    - alert: HighErrorRate
+      expr: |
+        sum(rate(http_requests_total{status=~"5.."}[5m]))
+        /
+        sum(rate(http_requests_total[5m])) > 0.05
+      for: 5m    # Fires after 5 minutes of sustained errors
+      labels:
+        severity: critical
+      annotations:
+        summary: "Error rate above 5%"
+        description: "Error rate is {{ $value | humanizePercentage }}"
+---
+# AlertManager config
+route:
+  receiver: pagerduty-critical
+  routes:
+  - match:
+      severity: critical
+    receiver: pagerduty-critical
+    repeat_interval: 1h
+  - match:
+      severity: warning
+    receiver: slack-alerts
+
+receivers:
+- name: pagerduty-critical
+  pagerduty_configs:
+  - routing_key: <key>
+- name: slack-alerts
+  slack_configs:
+  - channel: "#alerts"
+    send_resolved: true
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Counter and Gauge?
+   **A:** Counter only increases (resets on restart) — used for accumulated values like request count, bytes served, errors. Gauge can go up and down — used for current values like memory usage, CPU temperature, queue depth. Using a Gauge for a counter-like metric is wrong (rate() does not work on Gauges).
+
+2. **Q:** What is a histogram bucket and how does histogram_quantile work?
+   **A:** A histogram records observations into predefined value buckets (e.g., request durations <0.01s, <0.05s, <0.1s). histogram_quantile estimates the quantile from the bucket counts. Accuracy depends on bucket granularity — more buckets near the SLO threshold for better precision (e.g., more buckets around 200ms if SLO is p99 < 200ms).
+
+3. **Q:** What is the difference between rate() and increase()?
+   **A:** rate() calculates per-second average over a time range. increase() is the total increase over the time range. rate(http_requests[5m]) = increase(http_requests[5m]) / 300s. Use rate() for auto-scaling (per-second metrics), increase() for dashboards showing "requests per 5 min."
+
+4. **Q:** What is the for: duration in alerting rules?
+   **A:** for prevents alert flapping. "HighErrorRate for: 5m" means the condition must be true for 5 consecutive minutes before the alert fires. If the error rate spikes for 30 seconds and recovers, no alert fires. This filters out transient issues.
+
+5. **Q:** What are label best practices in Prometheus?
+   **A:** Keep label cardinality bounded — never use user IDs, email addresses, or UUIDs as label values (each unique label value creates a new time series). Use labels for: service name, method, status code, endpoint. Maximum recommended: 20 unique label values per metric. High cardinality explodes storage.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Metric Types:
+  Counter: cumulative, only increases (rate(), increase())
+  Gauge: goes up and down (current value)
+  Histogram: bucketed distribution (histogram_quantile)
+  Summary: precomputed quantiles (no aggregation across instances)
+
+PromQL:
+  rate() — per-second rate
+  increase() — total increase over window
+  histogram_quantile() — pXX from histogram buckets
+  topk() — highest N values
+  sum()/avg()/min()/max() — aggregation
+
+Best Practices:
+  Four golden signals: Latency, Traffic, Errors, Saturation (USE/RED)
+  USE: Utilization, Saturation, Errors (infra)
+  RED: Rate, Errors, Duration (services)
+  Recording rules for expensive queries`,
             tags: ["Observability", "Prometheus"],
           },
           {
@@ -8488,7 +21205,174 @@ jobs:
               "Loki: index only labels (app, level, pod) — store raw log lines in object storage.",
               "Elasticsearch: full-text indexed — powerful queries, higher storage and compute cost.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Structured logging emits JSON instead of text strings. Every field (user_id, order_id, error_code) is a separate key-value pair — queryable without regex. Correlation IDs link all log entries for a single request across services.
+
+Loki and Elasticsearch are the two main log aggregation systems. Loki is cheaper (indexes only labels, not log content). Elasticsearch is more powerful (full-text search, but costs more).
+
+---
+
+## Structured Logging
+
+\`\`\`typescript
+// BAD: unstructured logging
+console.log(`User ${userId} placed order ${orderId} for $${total}`);
+// Query: grep "placed order" | awk '{print $2}'
+// Fragile, slow, no structured fields
+
+// GOOD: structured JSON logging (pino, winston, bunyan)
+import pino from "pino";
+
+const logger = pino({
+    level: process.env.LOG_LEVEL || "info",
+    formatters: {
+        level(label) {
+            return { level: label };
+        },
+    },
+    // Redact sensitive fields
+    redact: ["password", "creditCard", "headers.authorization"],
+});
+
+logger.info({
+    event: "order.placed",
+    userId,
+    orderId,
+    total,
+    currency: "USD",
+    items: itemCount,
+}, "Order placed successfully");
+
+// Output:
+// {"level":"info","time":"2024-01-15T10:30:00Z",
+//  "event":"order.placed","userId":"usr_123","orderId":"ord_456",
+//  "total":49.99,"currency":"USD","items":3,
+//  "msg":"Order placed successfully"}
+//
+// Query in Loki: {app="order-service"} |= "order.placed" | json
+// Query in ES: event: "order.placed" AND userId: "usr_123"
+\`\`\`
+
+---
+
+## Correlation IDs
+
+\`\`\`typescript
+// Express middleware: attach correlation ID to every request
+import { v4 as uuidv4 } from "uuid";
+
+app.use((req, res, next) => {
+    // Accept existing ID if caller provides one (service-to-service)
+    const correlationId = req.headers["x-correlation-id"] || uuidv4();
+
+    // Attach to request for downstream use
+    req.correlationId = correlationId;
+
+    // Add to response headers so caller can trace
+    res.setHeader("x-correlation-id", correlationId);
+
+    // Create per-request child logger
+    req.log = logger.child({ correlationId });
+
+    next();
+});
+
+// In downstream service calls:
+// Pass x-correlation-id header to all HTTP/gRPC calls
+// All services include the same correlationId in their logs
+// Result: search for one ID → see the entire request journey
+\`\`\`
+
+---
+
+## Loki vs Elasticsearch
+
+\`\`\`
+Loki (Grafana Labs):
+  ├── Indexes: only labels (app, namespace, pod, level)
+  ├── Storage: object storage (S3, GCS) — cheap
+  ├── Query: LogQL (similar to PromQL)
+  ├── Cost: ~10x cheaper than ES for same volume
+  └── Best for: K8s-native, already using Grafana
+
+Elasticsearch / OpenSearch:
+  ├── Indexes: full-text (every field indexed)
+  ├── Storage: local SSDs — expensive
+  ├── Query: Lucene query syntax + aggregations
+  ├── Cost: ~$1000/TB/month for managed ES
+  └── Best for: complex full-text search, Kibana dashboards
+
+# LogQL — Loki query examples
+{app="order-service", level="error"}
+|= "database connection failed"
+| json
+| line_format "{{.error}} (order: {{.orderId}})"
+
+# Rate of errors per service
+sum by (app) (
+    rate({level="error"} [5m])
+)
+
+# ES query:
+GET /logs-2024.01.15/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        { "match": { "level": "error" }},
+        { "match": { "service": "order-service" }}
+      ]
+    }
+  },
+  "aggs": {
+    "errors_by_hour": {
+      "date_histogram": { "field": "@timestamp", "interval": "hour" }
+    }
+  }
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** Why is structured logging better than printf logging?
+   **A:** Structured logs emit fields as machine-readable key-value pairs. You can query, filter, and aggregate by any field without regex parsing. printf logs require fragile regex to extract data. Structured logs also redact sensitive fields, handle multiline messages, and produce valid JSON for log aggregators.
+
+2. **Q:** How does a correlation ID work across microservices?
+   **A:** When Service A receives a request, it generates a correlation ID (UUID). It passes this ID to Service B, Service C, etc. via HTTP headers or message metadata. All log entries from all services include this ID. To debug a request: search for the correlation ID → find every log entry for that request across all services.
+
+3. **Q:** What is the difference between Loki and Prometheus?
+   **A:** Prometheus stores NUMERIC time-series metrics (cpu_usage, request_count). Loki stores LOG LINES (text with labels). Prometheus answers "what is the error rate?" Loki answers "what did the error log say?" They complement each other: Prometheus alerts on high error rate, Loki finds the specific error messages.
+
+4. **Q:** What log level should you use in production?
+   **A:** Default: INFO (or WARN for high-traffic services). DEBUG logs are too verbose and expensive — they increase storage costs significantly. Use "dynamic log level" (change level at runtime without restart) for temporary debugging. In Loki, you can filter by level — expensive queries for DEBUG logs waste resources.
+
+5. **Q:** How do you handle sensitive data in logs?
+   **A:** 1) Redact: configure pino/winston to replace sensitive fields with "[REDACTED]". 2) Never log: credit card numbers, passwords, tokens, PII. 3) Audit: periodically scan logs for leaked secrets. 4) Retention: limit log retention (7-30 days typical). 5) Access control: restrict log access to on-call engineers.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Structured Logging: JSON with key-value fields — queryable without regex
+Correlation ID: UUID propagated across services — links all log entries
+
+Log Levels: DEBUG < INFO < WARN < ERROR < FATAL
+Production: INFO (or WARN). ERROR for incidents only.
+
+Loki: label-indexed, cheap storage (S3), LogQL queries
+Elasticsearch: full-text indexed, expensive, Lucene queries
+
+Best Practices:
+  • Log events (order.placed), not messages
+  • Include correlation ID in every log entry
+  • Redact sensitive fields
+  • Set appropriate log levels
+  • Use structured properties, not string interpolation
+  • Query: first filter by labels, then search content`,
             tags: ["Observability", "Logging"],
           },
           {
@@ -8504,7 +21388,222 @@ jobs:
               "OpenTelemetry: vendor-neutral SDK for generating traces, metrics, and logs.",
               "Sampling: trace 1-10% of requests in production — head-based vs tail-based sampling.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Distributed tracing follows a request across microservices. When a user's API call touches 5 services, tracing shows exactly how long each service took and where failures occurred.
+
+OpenTelemetry is the industry standard for generating traces (and metrics and logs). It provides SDKs for every language and a collector for processing telemetry data.
+
+---
+
+## Traces and Spans
+
+\`\`\`
+┌─────────────────────────────────────────────────────────┐
+│  Trace: 1 request — spans form a tree                    │
+│                                                           │
+│  [Frontend] ─────────────────────────────────────────    │
+│   span: HTTP POST /api/orders      duration: 450ms       │
+│   ├── [Auth Service] ───────────────────────────────     │
+│   │   span: validate JWT            duration: 15ms       │
+│   ├── [Order Service] ──────────────────────────────     │
+│   │   span: create order            duration: 300ms      │
+│   │   ├── [Database]              duration: 120ms        │
+│   │   └── [Payment Service] ─────────────────────────    │
+│   │       span: charge card         duration: 200ms      │
+│   │       └── [Stripe API]        duration: 180ms        │
+│   └── [Notification Service] ────────────────────────    │
+│       span: send email              duration: 50ms        │
+└─────────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## OpenTelemetry SDK
+
+\`\`\`typescript
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { Resource } from "@opentelemetry/resources";
+import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
+import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
+import { HttpInstrumentation } from "@opentelemetry/instrumentation-http";
+
+// Initialize OTel SDK
+const sdk = new NodeSDK({
+    resource: new Resource({
+        [SemanticResourceAttributes.SERVICE_NAME]: "order-service",
+        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: "production",
+    }),
+    traceExporter: new OTLPTraceExporter({
+        url: "http://otel-collector:4318/v1/traces",
+    }),
+    instrumentations: [
+        new HttpInstrumentation(),    // Auto-instrument HTTP client/server
+        new ExpressInstrumentation(), // Auto-instrument Express routes
+    ],
+});
+
+sdk.start();
+
+// Manual instrumentation:
+import { trace, SpanStatusCode } from "@opentelemetry/api";
+
+const tracer = trace.getTracer("order-service");
+
+async function createOrder(data: OrderData): Promise<Order> {
+    // Create a child span
+    return tracer.startActiveSpan("createOrder", async (span) => {
+        span.setAttribute("order.items", data.items.length);
+        span.setAttribute("order.total", data.total);
+
+        try {
+            const order = await db.saveOrder(data);
+
+            // Add events for interesting moments
+            span.addEvent("order.saved", { orderId: order.id });
+
+            await chargePayment(order);
+
+            span.setStatus({ code: SpanStatusCode.OK });
+            return order;
+        } catch (error) {
+            span.setStatus({
+                code: SpanStatusCode.ERROR,
+                message: error.message,
+            });
+            span.recordException(error);
+            throw error;
+        } finally {
+            span.end();
+        }
+    });
+}
+\`\`\`
+
+---
+
+## Context Propagation
+
+\`\`\`http
+# Trace context is propagated via HTTP headers (W3C TraceContext standard):
+
+# Service A → Service B HTTP request headers:
+traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+#              | |        trace_id (16 bytes hex)          | span_id  |trace flags
+#              | |                                         |          |
+#               version                                    01 = sampled
+
+# Service B reads traceparent, creates child span with new span_id
+# All spans with the same trace_id belong to the same trace
+
+# For message queues (SQS, Kafka): context is injected into message metadata
+# For gRPC: context is propagated via gRPC metadata
+\`\`\`
+
+---
+
+## OTel Collector
+
+\`\`\`yaml
+# otel-collector-config.yaml
+# Receives traces from services, processes them, exports to backend
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "otel-collector"
+          scrape_interval: 10s
+
+processors:
+  batch:            # Batch traces before exporting (efficiency)
+    timeout: 1s
+    send_batch_size: 1024
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  attributes:
+    actions:
+      - key: environment
+        value: production
+        action: insert
+
+exporters:
+  jaeger:
+    endpoint: jaeger:14250
+    tls:
+      insecure: true
+  datadog:
+    api:
+      key: ${DATADOG_API_KEY}
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, attributes]
+      exporters: [jaeger, datadog]
+    metrics:
+      receivers: [prometheus]
+      exporters: [prometheus]
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between logs and traces?
+   **A:** Logs are discrete events with timestamps. Traces show the RELATIONSHIP between operations — which service called which, how long each took, and where errors occurred. Traces answer "what happened before the error?" Logs answer "what was the error message?" Both are needed for debugging.
+
+2. **Q:** What is head-based vs tail-based sampling?
+   **A:** Head-based: decide at the root span whether to sample (e.g., 1% of requests). Simple but may miss rare errors. Tail-based: record all spans temporarily, then decide which to keep based on criteria (all errors, slow requests, specific users). Tail-based captures important events better but requires more storage.
+
+3. **Q:** How does context propagation work across async boundaries?
+   **A:** W3C TraceContext headers carry trace_id + span_id in HTTP requests. For message queues (SQS, RabbitMQ), the trace context is injected into message headers/attributes. For async callbacks (setTimeout, Promise), the OpenTelemetry SDK uses Node.js AsyncLocalStorage to maintain context across async boundaries automatically.
+
+4. **Q:** What is the role of the OTel Collector?
+   **A:** The collector sits between your services and the backend (Jaeger, Datadog). It: receives telemetry in OTLP format, batches it for efficiency, filters/drops unwanted data, adds attributes (environment, datacenter), and exports to one or more backends. The collector reduces the load on both services and backends.
+
+5. **Q:** What information should you add to a span as attributes?
+   **A:** Attributes that help understand the operation: order ID, user ID, payment amount, cache hit/miss, HTTP status code, error message. DO NOT add high-cardinality values (timestamps, UUIDs, full request bodies) — they increase storage and reduce performance. Use span events for detailed debug info.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Trace: tree of spans — full request journey across services
+Span: named, timed operation — start/end, attributes, status, events
+
+OpenTelemetry:
+  SDK: instrument your code (Node, Python, Java, Go)
+  Collector: receive, process, export telemetry
+  Exporters: Jaeger, Zipkin, Datadog, Honeycomb, New Relic
+  Propagators: W3C TraceContext (standard)
+
+Context Propagation:
+  HTTP: traceparent header
+  gRPC: gRPC metadata
+  Message queues: message attributes/headers
+  Async: AsyncLocalStorage / context API
+
+Sampling:
+  Head-based: decide at root (simple, may miss errors)
+  Tail-based: decide after recording (captures errors, more complex)
+
+Best Practices:
+  Instrument all services (auto-instrumentation for quick wins)
+  Add business-relevant span attributes
+  Propagate context everywhere (HTTP, queue, async)
+  Use OTel Collector for batching + filtering`,
             tags: ["Observability", "Tracing"],
           },
           {
@@ -8521,7 +21620,166 @@ jobs:
               "Postmortem: blameless review of an incident — 5 Whys, contributing factors, action items.",
               "Toil: manual, repetitive operational work — SRE principle is to automate it away.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+SRE applies software engineering principles to operations. Instead of "the system is down, fix it," SRE defines measurable reliability targets, measures them, and uses the data to prioritize reliability work.
+
+The core concepts: **SLI** (what you measure), **SLO** (the target), and **Error Budget** (how much unreliability is allowed).
+
+---
+
+## SLIs, SLOs, and Error Budgets
+
+\`\`\`
+SLI — Service Level Indicator (what we measure):
+  • Latency: p99 of HTTP request duration < 200ms
+  • Availability: % of requests that succeed (non-5xx)
+  • Throughput: requests per second
+  • Durability: % of data successfully persisted
+
+SLO — Service Level Objective (the target):
+  • "99.9% of requests complete with latency < 200ms (p99)"
+  • "99.99% of requests return success (non-5xx)"
+
+Error Budget = 100% - SLO:
+  • 99.9% SLO = 0.1% Error Budget = 43.2 minutes/month
+  • 99.99% SLO = 0.01% Error Budget = 4.32 minutes/month
+  • 99.999% SLO = 0.001% Error Budget = 25.9 seconds/month
+
+  ┌──────────────────────────────────────────┐
+  │ Error Budget Usage (monthly)              │
+  │                                           │
+  │ ┌──────────────────┐                      │
+  │ │ ████████████████ │ 60% used (26 min)    │
+  │ │ ████████████████ │                      │
+  │ │ ████████████████ │ Remaining: 17.2 min  │
+  │ └──────────────────┘                      │
+  │                                           │
+  │ Policy:                                   │
+  │ • < 50% used: deploy freely               │
+  │ • 50-80%: slow down risky changes          │
+  │ • > 80%: feature freeze — reliability      │
+  │   improvements only                        │
+  └──────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Defining SLOs
+
+\`\`\`yaml
+# Example SLO definitions for an API service
+slo_config:
+  service: order-api
+
+  slis:
+    availability:
+      good_events: requests_total{status!~"5.."}
+      valid_events: requests_total
+      objective: 99.99   # "four nines"
+
+    latency:
+      good_events: http_request_duration_seconds_bucket{le="0.2"}
+      valid_events: http_request_duration_seconds_count
+      objective: 99.9   # "three nines p99 < 200ms"
+
+    freshness:
+      # For data pipelines: how fresh is the data?
+      good_events: data_age_seconds < 300   # < 5 min
+      valid_events: total_data_updates
+      objective: 99
+
+# Multi-window, multi-burn-rate alerting:
+# Alert when error budget burns faster than threshold
+# (e.g., 2% of budget consumed in 1 hour = 14x burn rate)
+alerts:
+  - name: HighErrorBudgetBurnRate
+    condition: burn_rate > 10 for 30m  # "We'll exhaust budget in 3 days"
+    severity: page
+  - name: CriticalErrorBudgetBurnRate
+    condition: burn_rate > 20 for 5m   # "We'll exhaust budget in 12 hours"
+    severity: page
+\`\`\`
+
+---
+
+## Postmortems and Toil
+
+\`\`\`
+Postmortem template:
+  Title: "Database connection pool exhaustion on Jan 15, 2024"
+
+  Summary:
+    At 14:30 UTC, all API services became unresponsive due to
+    database connection pool exhaustion. Full recovery at 15:12 UTC.
+
+  Duration: 42 minutes
+  Impact: 100% of traffic affected (all API requests failed)
+
+  Root Causes:
+    1. A new migration ran a long-running query that held connections
+    2. Connection pool max was set to 50 (too low for peak traffic)
+    3. No alert on pool utilization > 80%
+
+  Contributing Factors:
+    - Migration was deployed during business hours (no canary)
+    - No load test covered the migration scenario
+
+  Action Items:
+    [P0] Add alert on connection pool utilization > 80%   [SRE team, due: 1/18]
+    [P0] Increase pool max to 150                         [SRE team, due: 1/16]
+    [P1] Run migrations during off-peak hours             [All teams, due: 1/31]
+    [P1] Add load test for migration scenarios             [QA team, due: 2/15]
+
+Toil (manual, repetitive ops work):
+  • Restarting pods manually → automate with health checks
+  • Approving firewall changes → self-service via API
+  • Running DB queries for support → build admin dashboard
+  • Manual deployments → CI/CD pipeline
+  SRE principle: if a human has done it twice, automate it.
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is a good SLO target for a new service?
+   **A:** Start with 99.9% (3 nines = 43 min/month downtime). This gives enough error budget for experimentation. As the service matures and reliability improves, tighten to 99.99% (4 nines = 4 min/month). Do NOT set 99.999% (5 nines) unless absolutely necessary — it costs ~10x more and adds little value for most services.
+
+2. **Q:** What happens when the error budget is exhausted?
+   **A:** All non-critical changes are frozen — only reliability improvements and security patches are deployed. The team focuses on: reducing error rate (fix bugs, add retries, scale up), understanding root causes (postmortems), and adding reliability features. Once the budget recovers (good events accumulate), normal deployments resume.
+
+3. **Q:** What is the difference between SLI and SLO?
+   **A:** SLI is the MEASUREMENT — "p99 latency is 180ms." SLO is the TARGET — "p99 latency must be < 200ms 99.9% of the time." An SLI without an SLO is just a metric. An SLO without an SLI is unmeasurable. Both are needed.
+
+4. **Q:** What is the burn rate alerting approach?
+   **A:** Burn rate is how fast the error budget is being consumed. A burn rate of 1 means budget will last the full month. Burn rate of 10 means budget will be exhausted in 3 days. Alert when burn rate exceeds thresholds: page at 10x+ for 30min, page at 20x+ for 5min. This catches problems early without paging on every small blip.
+
+5. **Q:** What is the SRE approach to on-call?
+   **A:** On-call rotations of 4-6 engineers (1 week primary, 1 week secondary). Alerts should be actionable — if an alert fires, the engineer must do something (or silence/fix the alert). Alerts that nobody acts on become noise and are ignored. Primary handles pages; secondary handles PRs and support.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+SLI: measurable metric (p99 latency, error rate, throughput)
+SLO: target for SLI (99.9% < 200ms)
+Error Budget: 100% - SLO = allowed downtime
+
+Error Budget Policy:
+  <50% consumed: deploy freely
+  50-80%: slow down
+  >80%: feature freeze, reliability only
+
+Burn Rate Alerts:
+  >10x for 30min: page (will exhaust in ~3 days)
+  >20x for 5min: page (will exhaust in ~12 hours)
+
+Postmortems: blameless, within 48h, action items with owners
+
+Toil: automate repetitive ops work
+  If done twice by a human, automate it`,
             tags: ["SRE", "Reliability"],
           },
           {
@@ -8537,7 +21795,207 @@ jobs:
               "Tools: Chaos Monkey, LitmusChaos, AWS Fault Injection Simulator.",
               "Game days: scheduled events where teams practice incident response with simulated failures.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Chaos Engineering finds weaknesses BEFORE they cause customer-facing outages. By deliberately injecting failures (kill a pod, slow a network, crash a database), you discover how your system actually behaves under stress.
+
+Netflix's Chaos Monkey was the first: it randomly kills production instances. If your service survives, it is resilient. If not, you find and fix the gap.
+
+---
+
+## Steady State Hypothesis
+
+\`\`\`
+Chaos Engineering Process:
+
+  1. Define Steady State: "p99 latency < 200ms, error rate < 0.1%"
+  2. Inject Failure: "kill 2 of 5 API-server pods"
+  3. Measure: observe latency + error rate during failure
+  4. Compare: did the system stay within steady state?
+  5. Fix or automate: if failed → fix the gap; if passed → automate
+
+  ┌─────────────────────────────────────────────────────┐
+  │  Metrics during experiment                           │
+  │                                                       │
+  │  Error Rate                                          │
+  │  5% ┤    ╔══╗                                         │
+  │  4% ┤    ║  ║   ─── SLO violation!                    │
+  │  3% ┤    ║  ║                                          │
+  │  2% ┤    ║  ║                                          │
+  │  1% ┤────║──║─── SLO threshold (1%)                    │
+  │  0% ┤────╚══╝────────────────────                      │
+  │       └────┬────┬────┬────┬────                       │
+  │            │    │    │    │    Time                    │
+  │         inject  │    │    │                           │
+  │         failure │    │    │                           │
+  │          detect │    │    │                           │
+  │          anomaly│  recovery                           │
+  └─────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## LitmusChaos — K8s Chaos Engineering
+
+\`\`\`yaml
+apiVersion: litmuschaos.io/v1alpha1
+kind: ChaosEngine
+metadata:
+  name: pod-delete-experiment
+spec:
+  engineState: "active"
+  appinfo:
+    appns: "production"
+    applabel: "app=api-server"
+    appkind: "deployment"
+  chaosServiceAccount: litmus-admin
+  experiments:
+  - name: pod-delete
+    spec:
+      rank: 1
+      probe:
+      - name: "check-api-health"
+        type: "httpProbe"
+        httpProbe/inputs:
+          url: "http://api-service:3000/healthz"
+          insecureSkipVerify: false
+          expectedResponseCode: "200"
+      components:
+        env:
+        - name: TOTAL_CHAOS_DURATION
+          value: "60"           # Run for 60 seconds
+        - name: CHAOS_INTERVAL
+          value: "10"           # Delete a pod every 10 seconds
+        - name: FORCE
+          value: "true"         # Force delete (kill -9)
+---
+# Experiment runs, measures steady state, generates a report:
+# Summary:
+#   Experiment: pod-delete
+#   Target: production/api-server (3 pods)
+#   Duration: 60s (6 pod deletions)
+#   Steady State: latency p99 < 200ms
+#   Result: ❌ FAILED
+#     - Latency spiked to 5s during pod deletion
+#     - Error rate: 2% during chaos
+#   Action Item: add preStop hook + drain connections
+\`\`\`
+
+---
+
+## AWS Fault Injection Simulator
+
+\`\`\`yaml
+# AWS FIS — inject failures into AWS infrastructure
+apiVersion: fis.aws.amazon.com/v1
+kind: ExperimentTemplate
+spec:
+  description: "Kill EC2 instance in ASG"
+  targets:
+    instances:
+      resourceType: aws:ec2:instance
+      selectionMode: PERCENT
+      parameters:
+        selectionMode: PERCENT
+        percent: 20
+      resourceTags:
+        Environment: production
+  actions:
+    terminateInstances:
+      actionId: aws:ec2:terminate-instances
+      parameters:
+        duration: PT1M
+      targets:
+        Instances: instances
+  stopConditions:
+  - source: aws:cloudwatch:alarm
+    value: "high-error-rate-alarm"  # Auto-stop if error rate spikes
+  roleArn: arn:aws:iam::123456789012:role/fis-role
+  tags:
+    ExperimentType: chaos
+---
+# Other FIS actions:
+#   aws:ssm:send-command — run stress-ng (CPU, memory, IO)
+#   aws:rds:failover-db-cluster — trigger RDS failover
+#   aws:ecs:deregister-task — stop ECS tasks
+#   aws:network:disrupt — network latency/packet loss
+\`\`\`
+
+---
+
+## Game Days
+
+\`\`\`
+Game Day: a scheduled event where the team practices incident response.
+
+  Scenario: "Primary database is corrupted"
+
+  Timeline:
+    09:00 — Announcement: "Game Day starts now. Incident: database issues."
+    09:02 — On-call engineer acknowledges
+    09:05 — Incident commander assigned
+    09:08 — Team identifies: primary DB has corrupt page
+    09:12 — Decision: failover to replica
+    09:15 — Failover complete, service recovering
+    09:22 — Service healthy, postmortem started
+
+  What We Learned:
+    • Failover script was outdated (took 3 min to find docs)
+    • Did not have replica endpoint handy
+    • Notified stakeholders late (15 min after failover)
+
+  Improvements:
+    • Document failover procedure in runbook
+    • Automate failover with a single command
+    • Add stakeholder notification step to incident checklist
+
+  Game Day cadence: monthly for critical services, quarterly for others.
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the first step in chaos engineering?
+   **A:** Define the steady state — what does "normal" look like? (p99 latency, error rate, throughput). Without a steady state hypothesis, you cannot tell if the experiment passed or failed. Run the experiment in production only after proving it works in staging.
+
+2. **Q:** What is blast radius and how do you control it?
+   **A:** Blast radius is the scope of impact if something goes wrong during the experiment. Control it by: starting small (one pod, not the whole deployment), using a small percentage (5% of instances), limiting duration (60 seconds), setting automatic stop conditions (CloudWatch alarm halts the experiment), and running during off-peak hours.
+
+3. **Q:** What is the difference between Chaos Monkey and LitmusChaos?
+   **A:** Chaos Monkey randomly kills instances in Netflix's production — no experiment configuration. LitmusChaos defines experiments with specific targets, probes (verify service health), and steady-state validation. LitmusChaos is "controlled chaos" — you define the hypothesis and verify it programmatically.
+
+4. **Q:** Why run chaos experiments in production, not just staging?
+   **A:** Staging does not have production traffic patterns, data sizes, configuration, or dependencies. A resilience fix that works in staging may fail in production. Start with small blast radii in production (one pod, <5% of servers) and gradually increase as confidence grows. Netflix runs Chaos Monkey in production during business hours.
+
+5. **Q:** What is a "noop" experiment and why start with one?
+   **A:** A noop experiment injects no failure but runs the full observability pipeline. It validates that: metrics collection works, dashboards capture the data, alerts trigger correctly, and the team responds. If the noop experiment fails (no alert fired), fix the observability before running real chaos experiments.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Chaos Engineering Process:
+  1. Define steady state (SLOs)
+  2. Inject failure
+  3. Measure impact
+  4. Fix gaps
+  5. Automate
+
+Blast Radius Control:
+  • Start with 1 pod, <5% of instances
+  • Auto-stop conditions (CloudWatch alarm)
+  • Limited duration
+  • Off-peak hours
+
+Tools:
+  LitmusChaos: K8s-native chaos experiments with probes
+  AWS FIS: infrastructure failure injection
+  Chaos Mesh: K8s chaos (network latency, pod kill, disk failure)
+  Gremlin: SaaS chaos engineering platform
+
+Game Days: scheduled incident simulation — practice response, find gaps`,
             tags: ["SRE", "Reliability", "Testing"],
           },
           {
@@ -8554,7 +22012,185 @@ jobs:
               "PagerDuty / OpsGenie: alert routing, escalation policies, silence windows, and schedules — integrate with monitoring tools.",
               "Key metric: MTTD (Mean Time to Detect) and MTTR (Mean Time to Resolve) — track trends, not absolute values.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+When a critical incident happens, how you respond matters more than what caused it. A structured incident management process reduces downtime, prevents burnout, and ensures the right people are working on the right problems.
+
+Without it: chaos, hero culture, incomplete fixes, repeated outages, and burned-out engineers.
+
+---
+
+## Severity Levels
+
+\`\`\`
+SEV1 — Critical (page immediately):
+  • Service is down for all users
+  • Data loss in progress
+  • Response: < 5 minutes, any time of day/night
+  • Escalation: IC → Engineering Manager → VP → CTO
+
+SEV2 — High (page during business hours):
+  • Service degraded for significant subset of users
+  • Feature unavailable, but core functionality works
+  • Response: < 15 minutes during business hours
+  • Escalation: IC → Engineering Manager
+
+SEV3 — Medium (no page, ticket):
+  • Minor feature broken, workaround exists
+  • Non-urgent performance degradation
+  • Response: < 1 business day
+  • Track in issue tracker, no pager
+
+SEV4 — Low (ticket):
+  • Cosmetic issue, documentation error
+  • Response: next sprint planning
+  • Track in issue tracker
+\`\`\`
+
+---
+
+## Incident Response Process
+
+\`\`\`
+  ┌─────────────────────────────────────────────────────┐
+  │  Alert fires                                          │
+  └────────────────────┬────────────────────────────────┘
+                       │
+  ┌────────────────────▼────────────────────────────────┐
+  │  Acknowledge (within 5 min)                          │
+  │  • Primary on-call acknowledges the page              │
+  │  • "I am looking at this" in #incident Slack channel  │
+  └────────────────────┬────────────────────────────────┘
+                       │
+  ┌────────────────────▼────────────────────────────────┐
+  │  Assess                                              │
+  │  • What is the impact? (users affected, services)     │
+  │  • What severity? (SEV1? SEV2?)                       │
+  │  • Do I need help? (secondary, subject matter expert) │
+  └────────────────────┬────────────────────────────────┘
+                       │
+  ┌────────────────────▼────────────────────────────────┐
+  │  Incident Commander assigned (for SEV1/2)            │
+  │  • IC owns: timeline, communication, task delegation  │
+  │  • IC does NOT: debug the issue                       │
+  │  • IC says: "You investigate DB. You deploy fix.      │
+  │    I will update stakeholders every 15 min."          │
+  └────────────────────┬────────────────────────────────┘
+                       │
+  ┌────────────────────▼────────────────────────────────┐
+  │  Mitigate (not fix — stop the bleeding)              │
+  │  • Rollback the deploy                               │
+  │  • Scale up to handle load                           │
+  │  • Failover to replica                               │
+  │  • Disable the problematic feature                    │
+  └────────────────────┬────────────────────────────────┘
+                       │
+  ┌────────────────────▼────────────────────────────────┐
+  │  Resolve + Postmortem                                │
+  │  • Service healthy → incident resolved                │
+  │  • Postmortem within 48 hours                         │
+  │  • Action items assigned with deadlines               │
+  └─────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Blameless Postmortems
+
+\`\`\`
+Postmortem "5 Whys" Example:
+
+  Problem: User data was lost during a deploy
+
+  Why? → Deployment deleted the PVC attached to the database
+  Why? → Helm chart had "Delete" reclaim policy instead of "Retain"
+  Why? → We copied a staging chart template that uses Delete for ephemeral data
+  Why? → No review process flagged the reclaim policy difference
+  Why? → We do not have a checklist for production deployments
+
+  Action Items:
+  [P0] Change PVC reclaim policy to Retain for all production databases
+  [P1] Add "verify PVC reclaim policy" to deployment checklist
+  [P2] Create separate Helm values template for prod with safety defaults
+
+Key: The goal is NOT to say "Alice made a mistake."
+The goal IS to find: "What process allowed this mistake to reach production?"
+\`\`\`
+
+---
+
+## On-Call Best Practices
+
+\`\`\`
+Rotation: 4-6 engineers per rotation
+  • 1 week primary (pages only go to primary)
+  • 1 week secondary (supports primary, handles non-urgent)
+  • 1-2 weeks off (no on-call) between rotations
+
+Alert quality:
+  • Every alert must be actionable
+  • If an alert fires and nobody acts → remove or fix it
+  • Alerts that repeat → automate the response
+  • Target: < 5 pages per on-call shift
+
+Handover:
+  • End of shift: document ongoing issues in Slack
+  • Review alert history from your shift
+  • Update runbooks for anything that was unclear on-call
+
+Fatigue prevention:
+  • No more than 1 week primary per month
+  • Swap shifts if needed (vacation, conference)
+  • Auto-escalation after 10 min with no acknowledgment
+  • Secondary takes over if primary does not respond
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the role of the Incident Commander?
+   **A:** The IC manages the incident — they do NOT debug. They: declare severity, delegate tasks ("Alice, investigate the DB. Bob, check the CDN."), communicate status to stakeholders every 15-30 min, manage the timeline, and call the incident when resolved. The IC is often the most organized person, not the most technical.
+
+2. **Q:** What is a blameless postmortem?
+   **A:** A postmortem that focuses on SYSTEMIC causes, not individual mistakes. The assumption: everyone did their best with the information they had. The question is: "What in our system, process, or tooling allowed this to happen?" Blameless culture encourages reporting incidents without fear of punishment.
+
+3. **Q:** What is the difference between MTTD and MTTR?
+   **A:** MTTD (Mean Time to Detect): how long between the incident starting and someone acknowledging the page. MTTR (Mean Time to Resolve): how long between detection and service recovery. Track both — MTTD improves with better monitoring and alerting; MTTR improves with better runbooks and automation.
+
+4. **Q:** How do you distinguish between a SEV1 and SEV2?
+   **A:** SEV1: service is COMPLETELY down for all users, or data loss is in progress. SEV2: service is DEGRADED (slow, partial feature loss) for some users. SEV1 pages at 3 AM; SEV2 pages during business hours only. If unsure, declare SEV1 — you can always downgrade, but you cannot undo the delay of an escalation.
+
+5. **Q:** How many on-call rotations should a team have?
+   **A:** 4-6 engineers per rotation. Fewer than 4: too frequent (burnout risk). More than 6: too infrequent (engineers lose familiarity with the system). Example: 6-person team → on-call every 6 weeks. Each rotation: 1 week primary, 1 week secondary, 4 weeks off.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Severity Levels:
+  SEV1: service down, page immediately (any time)
+  SEV2: degraded, page business hours
+  SEV3: minor, ticket
+  SEV4: cosmetic, backlog
+
+Incident Response:
+  Acknowledge → Assess → Assign IC → Mitigate → Resolve → Postmortem
+
+Incident Commander:
+  Manages timeline, delegates tasks, communicates — does NOT debug
+
+Postmortem:
+  Blameless, within 48 hours
+  Focus: systemic causes, not individual mistakes
+  Action items: specific, with owners and deadlines
+
+On-Call:
+  4-6 per rotation, 1 week primary, actionable alerts only
+  MTTD + MTTR: track trends, not absolute values`,
+            tags: ["SRE", "Incident Management", "On-Call"],
+          },
             tags: ["SRE", "Incident Management", "On-Call"],
           },
         ],
@@ -8578,7 +22214,165 @@ jobs:
               "Vulnerability scanning in CI: Trivy, Grype, Dependabot, Renovate — scan both OS packages and application dependencies.",
               "Renovate: auto-create PRs for dependency updates with changelogs — configure grouping, scheduling, and automerge for patch versions.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Supply chain attacks target your dependencies — malicious packages, compromised build systems, and unsigned artifacts. SBOMs, Sigstore signing, and SLSA levels help you know exactly what is in your software and verify it has not been tampered with.
+
+The SolarWinds attack showed that compromising one build pipeline can infect thousands of downstream customers. Supply chain security is now a regulatory requirement (US Executive Order 14028, EU Cyber Resilience Act).
+
+---
+
+## SBOM — Software Bill of Materials
+
+\`\`\`json
+// CycloneDX SBOM format (machine-readable)
+{
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.5",
+    "version": 1,
+    "metadata": {
+        "timestamp": "2024-01-15T10:00:00Z",
+        "tools": [{
+            "vendor": "anchore",
+            "name": "syft",
+            "version": "0.80.0"
+        }],
+        "component": {
+            "name": "my-app",
+            "version": "1.2.3",
+            "type": "application"
+        }
+    },
+    "components": [
+        {"name": "express", "version": "4.18.2", "purl": "pkg:npm/express@4.18.2"},
+        {"name": "lodash", "version": "4.17.21", "purl": "pkg:npm/lodash@4.17.21"},
+        {"name": "postgres", "version": "16.1", "purl": "pkg:deb/debian/postgresql@16.1"}
+    ]
+}
+\`\`\`
+
+\`\`\`bash
+# Generate SBOM with Syft
+syft myapp:latest -o cyclonedx-json > sbom.json
+
+# Scan SBOM for vulnerabilities with Grype
+grype sbom:sbom.json
+
+# Generate SBOM in CI and store it as a build artifact
+# Upload to Dependency-Track or Guac for continuous monitoring
+\`\`\`
+
+---
+
+## Sigstore — Keyless Signing
+
+\`\`\`bash
+# Sigstore: sign artifacts using OIDC identity (no GPG keys!)
+# Fulcio: certificate authority issues short-lived code signing certs
+# Rekor: transparency log records all signing events
+
+# Sign a container image with Cosign:
+cosign sign myrepo/myapp:latest
+
+# This:
+# 1. Gets your OIDC identity from GitHub/GitLab/Google (I am user@example.com)
+# 2. Fulcio issues a cert binding your identity to a signing key
+# 3. Signs the image digest
+# 4. Records the signing event in Rekor (immutable transparency log)
+
+# Verify the signature:
+cosign verify myrepo/myapp:latest
+
+# Verification output:
+# Verification for index.docker.io/myrepo/myapp:latest --
+# The following checks were performed on each of these signatures:
+#   - The cosign claims were validated
+#   - Existence of the claims in the transparency log was verified
+#   - Any certificates were verified against the Fulcio roots.
+#   - The identity (user@example.com) is authorized for this signing.
+
+# Sign with keyless identity from GitHub Actions:
+# GITHUB_ACTOR=deploy-bot → signed by deploy-bot
+# Anyone can verify: "this image was built and signed by GitHub Actions"
+\`\`\`
+
+---
+
+## SLSA — Supply Chain Levels
+
+\`\`\`
+SLSA 1: Build documented
+  • Build steps are documented
+  • Example: Dockerfile + README
+
+SLSA 2: Signed + hosted build
+  • Build runs on a hosted CI (GitHub Actions, GitLab CI)
+  • Build artifacts are signed (Sigstore)
+  • Example: GitHub Actions builds + cosign signs
+
+SLSA 3: Hardened build
+  • Build runs in an isolated environment (ephemeral runner)
+  • Build is hermetic (no network access to arbitrary URLs)
+  • Dependencies are verified
+  • Example: hermetic build with dependency lockfiles, isolated runner
+
+SLSA 4: Reproducible build
+  • Same source + same build environment → same artifact
+  • Two independent build systems produce identical output
+  • Any discrepancy indicates tampering
+  • Example: deterministic build, verified by two CI systems
+
+# To reach SLSA 3:
+# 1. Use GitHub Actions with id-token: write (OIDC-based)
+# 2. Pin actions to SHA, not version tags
+# 3. Generate SBOM + sign with cosign
+# 4. Verify dependencies (lockfile + hash check)
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between SBOM, Sigstore, and SLSA?
+   **A:** SBOM = what is in your software (dependency list). Sigstore = who built and signed it (identity + signature). SLSA = how trustworthy is the build process (maturity model). You need all three for comprehensive supply chain security.
+
+2. **Q:** How does Sigstore's keyless signing work?
+   **A:** Instead of managing GPG keys, Sigstore uses OIDC (OpenID Connect). Your CI system (GitHub Actions) requests an OIDC token proving its identity (repo, branch, workflow). Fulcio (Sigstore's CA) issues a short-lived code signing cert. Cosign signs the artifact. The cert + signature are recorded in Rekor's transparency log. Anyone can verify without prior trust setup.
+
+3. **Q:** What is a "hermetic build" in SLSA context?
+   **A:** A hermetic build has no network access except to explicitly allowed resources (with hashed content). All dependencies are pre-fetched and verified. This prevents: compromised package registries serving malware, build scripts downloading unauthorized code, and dependency confusion attacks. Hermetic builds produce deterministic artifacts.
+
+4. **Q:** What is dependency confusion and how do you prevent it?
+   **A:** Dependency confusion: an attacker publishes a public package with the same name as your internal private package. If your package manager is configured to prefer higher version numbers, it may download the attacker's malicious package. Prevention: use scoped packages (@myorg/internal-lib), verify package sources, use lockfiles, and configure package registries with priority rules.
+
+5. **Q:** How do you verify a container image's provenance?
+   **A:** 1) Verify the image signature (cosign verify). 2) Check the attestation (cosign verify-attestation — proves the build process). 3) Inspect the SBOM (grype, trivy — checks for known vulnerabilities). 4) Verify the SLSA provenance attestation (documents the build pipeline). All verifiable without trusting the image registry.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+SBOM: list of all dependencies (CycloneDX, SPDX)
+  Generate: syft, trivy image --format cyclonedx
+  Scan: grype, trivy, snyk
+  Monitor: Dependency-Track, Guac
+
+Sigstore: keyless code signing
+  cosign sign → Fulcio CA + Rekor transparency log
+  cosign verify → verify identity + signature
+  No GPG keys to manage!
+
+SLSA: build integrity levels
+  1: documented  2: signed hosted build
+  3: hardened hermetic build  4: reproducible
+
+Best Practices:
+  • Generate SBOM in CI → upload to artifact store
+  • Sign all images + attestations with cosign
+  • Pin CI actions to SHA instead of version tags
+  • Use lockfiles for all package managers
+  • Verify dependencies before installing`,
             tags: ["Security", "Supply Chain", "SBOM"],
           },
           {
@@ -8594,7 +22388,173 @@ jobs:
               "Security updates: Renovate can auto-merge patch security updates after CI passes — critical for reducing exposure window.",
               "Monorepo support: Renovate natively understands pnpm/npm/yarn workspaces — updates shared packages correctly.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Outdated dependencies accumulate security vulnerabilities. But updating dependencies manually is tedious and error-prone. Renovate automates the process: it scans your repo, detects outdated packages, and creates pull requests with updates.
+
+Renovate handles grouping (related packages in one PR), scheduling (avoid Friday deploys), and security auto-merge (patch CVEs immediately).
+
+---
+
+## Renovate Configuration
+
+\`\`\`json
+// renovate.json
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "extends": [
+        "config:recommended",
+        "group:allNonMajor",        // Group all non-major updates
+        ":separateMajorMinor"       // Separate PRs for major versions
+    ],
+    "schedule": ["before 9am on Monday"],  // Only create PRs on Monday
+    "minimumReleaseAge": "3 days",          // Wait 3 days after release
+    "labels": ["dependencies"],
+    "packageRules": [
+        {
+            "description": "Group all AWS SDK updates",
+            "matchPackagePrefixes": ["@aws-sdk/"],
+            "groupName": "AWS SDK"
+        },
+        {
+            "description": "Group all ESLint + Prettier updates",
+            "matchPackageNames": ["eslint", "prettier", "@typescript-eslint/*"],
+            "groupName": "Linting"
+        },
+        {
+            "description": "Auto-merge patch updates",
+            "matchUpdateTypes": ["patch"],
+            "automerge": true,
+            "automergeType": "pr",
+            "platformAutomerge": true
+        }
+    ],
+    "vulnerabilityAlerts": {
+        "enabled": true,
+        "labels": ["security"]
+    }
+}
+\`\`\`
+
+---
+
+## Renovate in Practice
+
+\`\`\`
+Renovate workflow:
+
+  1. Renovate bot scans your repo (on schedule or webhook)
+  2. Detects outdated dependencies (package.json, Dockerfile, requirements.txt, etc.)
+  3. Creates PRs with updates
+
+  Example PR:
+  ┌─────────────────────────────────────────────────┐
+  │  renovate[bot] opened PR #123                   │
+  │  Title: Update dependency express to 4.19.0      │
+  │                                                   │
+  │  Changes:                                         │
+  │   package.json: "express": "4.18.2" → "4.19.0"  │
+  │   package-lock.json: auto-updated                 │
+  │                                                   │
+  │  Release notes:                                   │
+  │   https://github.com/expressjs/express/releases    │
+  │                                                   │
+  │  CI status: ✅ passed                             │
+  │                                                   │
+  │  Labels: dependencies, patch                       │
+  │  Wait: minimumReleaseAge (2 days remaining)        │
+  └─────────────────────────────────────────────────┘
+
+  4. If automerge is enabled AND CI passes:
+     Renovate merges the PR automatically
+  5. If automerge is not enabled:
+     Developer reviews and approves the PR
+\`\`\`
+
+---
+
+## Advanced Config
+
+\`\`\`jsonc
+// Monorepo support (pnpm workspaces)
+{
+    "extends": ["config:recommended"],
+    "enabledManagers": ["npm", "dockerfile", "github-actions"],
+    "baseBranches": ["main", "next"],  // Update both branches
+
+    // Lock file maintenance (keep lockfile fresh)
+    "lockFileMaintenance": {
+        "enabled": true,
+        "schedule": ["before 9am on Monday"]
+    },
+
+    // Pin GitHub Actions to SHA (supply chain security)
+    "pin": {
+        "automerge": true,
+        "matchManagers": ["github-actions"]
+    },
+    "pinDigests": true,
+
+    // Range strategy
+    "rangeStrategy": "bump",  // ^1.0.0 → ^1.1.0 (update range)
+
+    // Branch naming
+    "branchPrefix": "renovate/",
+
+    // PR conventions
+    "commitMessagePrefix": "chore(deps):",
+    "prConcurrentLimit": 10,
+    "prHourlyLimit": 2,
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between Renovate and Dependabot?
+   **A:** Both create dependency update PRs. Renovate is more configurable (grouping, scheduling, regex matching, custom managers). Dependabot is simpler (fewer options) but GitHub-native. Renovate supports more ecosystems and has better monorepo support. Dependabot is great for simple projects; Renovate for complex setups.
+
+2. **Q:** Why use minimumReleaseAge?
+   **A:** Avoids rushing to update to a version that may be yanked (withdrawn due to bugs/security). Wait 3-7 days after release before creating a PR. If a critical bug is found in the new version, the yanked version is never proposed. Major types of packages may need longer wait.
+
+3. **Q:** What is the purpose of grouping dependencies?
+   **A:** Without grouping: each package gets its own PR — 20 PRs for 20 packages. With grouping: related packages (all AWS SDK, all ESLint) are in one PR — fewer CI runs, less review overhead, easier to manage. But large groups make rollback harder if one package in the group breaks something.
+
+4. **Q:** How do you handle major version updates?
+   **A:** Separately from minor/patch (separateMajorMinor: true). Major updates often have breaking changes — they need human review. Pin major versions in CI tests and schedule a dedicated upgrade effort. Use Renovate's "dependencyDashboardApproval" to require manual approval for major updates.
+
+5. **Q:** How does Renovate handle security vulnerabilities?
+   **A:** When GitHub/NPM/etc. reports a CVE, Renovate creates an urgent PR (even outside the schedule). If automerge is configured and CI passes, the security patch is merged automatically. This reduces the window between CVE disclosure and patch deployment from weeks to hours.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Renovate: automated dependency update PRs
+
+Key Features:
+  • Scheduling (avoid Friday deploys)
+  • Grouping (related packages together)
+  • Auto-merge (patch + security)
+  • Minimum release age (avoid yanked versions)
+  • Lockfile maintenance
+  • Monorepo support
+  • Regex-based custom managers
+  • Presets (shareable config across org)
+
+Config Best Practices:
+  minimumReleaseAge: "3 days"
+  schedule: "before 9am on Monday"
+  automerge: true for patch and digest
+  group: allNonMajor
+  Separate major version PRs
+
+Security:
+  Auto-merge security patches
+  Pin GitHub Actions to SHA
+  Vulnerability alerts enabled`,
             tags: ["Dependencies", "Security", "Tooling"],
           },
         ],
@@ -8618,7 +22578,203 @@ jobs:
               "Scorecards: define and measure standards (test coverage, SLO attainment, dependency freshness) — gamify operational excellence.",
               "Adoption path: start with the Catalog, add Templates for new services, then gradually adopt plugins and custom integrations.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Backstage is Spotify's open-source developer portal. It provides a unified view of all your services (Catalog), project scaffolding (Templates), documentation (TechDocs), and operational data (Scorecards and Plugins).
+
+Without Backstage: developers switch between 10+ tools (Grafana, PagerDuty, Datadog, Jenkins, ArgoCD, etc.) to understand and operate their services. With Backstage: one UI for everything.
+
+---
+
+## Software Catalog
+
+\`\`\`yaml
+# catalog-info.yaml — register a service in Backstage
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: order-service
+  description: Order processing service
+  annotations:
+    backstage.io/techdocs-ref: dir:.           # Documentation in this repo
+    github.com/project-slug: myorg/order-service
+    pagerduty.com/service-id: PD12345           # Link to PagerDuty
+    grafana/dashboard-selector: "order-*"       # Link to Grafana dashboards
+    sonarqube.org/project-key: order-service    # Link to SonarQube
+    backstage.io/kubernetes-id: order-service   # Link to K8s resources
+spec:
+  type: service
+  lifecycle: production
+  owner: team-payments
+  system: payment-platform
+  dependsOn:
+    - component:payment-db
+    - resource:payment-queue
+  providesApis:
+    - order-api
+---
+# Catalog entities:
+# Component: service, library, website
+# API: REST, gRPC, GraphQL specification
+# Resource: infrastructure (DB, queue, bucket)
+# System: group of components forming a bounded context
+# Domain: group of systems aligned with business capability
+\`\`\`
+
+---
+
+## Software Templates
+
+\`\`\`yaml
+# template.yaml — scaffold a new service
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: node-express-service
+  title: Node.js Express Service
+  description: Create a new Node.js Express microservice
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Service Details
+      required:
+        - serviceName
+        - owner
+      properties:
+        serviceName:
+          title: Service Name
+          type: string
+          pattern: '^[a-z0-9-]+$'
+        owner:
+          title: Owner
+          type: string
+          ui:field: OwnerPicker
+        enableDatabase:
+          title: Include PostgreSQL Database?
+          type: boolean
+          default: false
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          serviceName: ${{ parameters.serviceName }}
+          owner: ${{ parameters.owner }}
+
+    - id: create-repo
+      name: Create Repository
+      action: publish:github
+      input:
+        repoUrl: github.com?repo=${{ parameters.serviceName }}
+        defaultBranch: main
+
+    - id: register-catalog
+      name: Register in Catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['create-repo'].output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['create-repo'].output.remoteUrl }}
+      - title: Open in Catalog
+        icon: catalog
+        entityRef: ${{ steps['register-catalog'].output.entityRef }}
+---
+# Result: developer clicks "Create" → fills form →
+# new service with CI/CD, linting, deployments, docs
+# Golden path: opinionated, production-ready defaults
+\`\`\`
+
+---
+
+## TechDocs — Documentation as Code
+
+\`\`\`markdown
+# docs/index.md — documentation lives in the repo
+
+# Order Service
+
+## Overview
+The Order Service processes customer orders...
+
+## API
+See [OpenAPI spec](./openapi.yaml)
+
+## Running Locally
+\`\`\`bash
+docker compose up
+\`\`\`
+
+## Deployment
+Deployed via ArgoCD to production cluster.
+
+## Monitoring
+- [Grafana Dashboard](https://grafana.example.com/d/orders)
+- [PagerDuty](https://myorg.pagerduty.com/services/PD12345)
+
+---
+# TechDocs features:
+# • Renders markdown from the repo
+# • Search across all service docs
+# • Versioned (one doc version per service version)
+# • Backstage UI shows documentation alongside catalog info
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the main benefit of Backstage's Software Catalog?
+   **A:** Single source of truth for all services. Instead of asking "who owns this service?" or "where is this service's documentation?", the catalog answers these questions immediately. Catalog metadata (owner, SLA, dependencies) is defined in code (catalog-info.yaml) and tracked in git.
+
+2. **Q:** What are Software Templates and why are they important?
+   **A:** Templates scaffold new projects with pre-configured CI/CD, linting, deployments, and documentation. They enforce organizational standards (golden paths) from day one. Developers get a production-ready setup without manually configuring each tool. Templates reduce the cognitive load of starting a new service.
+
+3. **Q:** How does Backstage integrate with other tools?
+   **A:** Via plugins — React components that embed data from other tools. Backstage has 150+ open source plugins for: Datadog (show dashboards), PagerDuty (show on-call status), Grafana (embed dashboards), ArgoCD (show deployment status), AWS (show resource details), Kubernetes (show pod status), and many more.
+
+4. **Q:** What are scorecards in Backstage?
+   **A:** Scorecards define standards (test coverage >80%, SLO attainment >99.9%, dependencies up to date, security scan clean) and measure each service against them. Scorecards are shown in the service catalog entry. They gamify operational excellence and help teams identify gaps without manual audits.
+
+5. **Q:** What is the recommended adoption path for Backstage?
+   **A:** 1) Deploy Backstage and register existing services in the Catalog. 2) Create Software Templates for new services. 3) Enable TechDocs and migrate documentation to repos. 4) Add plugins for existing tools (Grafana, PagerDuty, etc.). 5) Define Scorecards and measure standards. Do NOT try to build everything at once.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+Backstage Core Features:
+  Software Catalog: service registry with metadata
+  Software Templates: golden path scaffolding
+  TechDocs: documentation-as-code (markdown in repo)
+  Plugins: Grafana, PagerDuty, ArgoCD, Datadog, 150+
+  Scorecards: measure operational standards
+
+Catalog Entities:
+  Component: service/library/website
+  API: API specification
+  Resource: DB, queue, bucket
+  System: group of components
+  Domain: group of systems
+
+Adoption Path:
+  Catalog → Templates → TechDocs → Plugins → Scorecards
+
+Key Benefits:
+  One UI for all tooling
+  Reduced cognitive load
+  Enforced golden paths
+  Service discoverability
+  Ownership clarity`,
             tags: ["Platform", "Developer Experience", "Tooling"],
           },
           {
@@ -8635,7 +22791,160 @@ jobs:
               "Measuring success: lead time for a new service (from commit → production), developer satisfaction survey (SPACE framework).",
               "Common pitfalls: building a portal before having APIs to back it; over-customizing before proving value with the catalog.",
             ],
-            content: "// Content coming soon",
+            content: `## Why This Matters (Read This First)
+
+Platform engineering is about reducing cognitive load for developers. Every infrastructure decision (which DB, how to deploy, how to configure CI/CD) adds mental overhead. An Internal Developer Platform (IDP) provides paved paths for common tasks so developers can focus on business logic.
+
+The goal is NOT to build a perfect platform. The goal is to reduce friction and accelerate delivery.
+
+---
+
+## Golden Paths
+
+\`\`\`
+Golden Path: the recommended, opinionated way to do common tasks.
+
+  Without Golden Paths:
+    ┌─────────────────────────────────────────────────┐
+    │ Developer asks: "How do I add a database?"        │
+    │                                                   │
+    │ Options:                                           │
+    │ • Ask on Slack → wait for answer                  │
+    │ • Read 5 different wiki pages (outdated)          │
+    │ • Look at 3 other services (all different)        │
+    │ • Copy-paste config from an old service (wrong)   │
+    │ • Give up and use a different tech (shadow IT)    │
+    └─────────────────────────────────────────────────┘
+
+  With Golden Paths:
+    ┌─────────────────────────────────────────────────┐
+    │ Developer asks: "How do I add a database?"        │
+    │                                                   │
+    │ Answer:                                            │
+    │ 1. Run: idp add-database --name orders             │
+    │ 2. Backstage template creates:                     │
+    │    • RDS instance in staging                      │
+    │    • IAM role for the service                     │
+    │    • Connection secret in Secrets Manager         │
+    │    • Read replica for production                  │
+    │    • Backup schedule                              │
+    │    • Monitoring dashboard                         │
+    │    • Runbook for connection issues                │
+    │ 3. Done in 10 minutes (no ticket, no Slack)       │
+    └─────────────────────────────────────────────────┘
+\`\`\`
+
+Key principle: the golden path handles 80% of use cases. For the other 20%, developers can deviate — but they must understand the tradeoffs and maintain the custom setup themselves.
+
+---
+
+## IDP Architecture
+
+\`\`\`
+┌─────────────────────────────────────────────────────┐
+│  Developer Self-Service Interface                     │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │ Backstage   │  │ CLI (idp)   │  │ API          │  │
+│  │ Portal      │  │             │  │ (REST/gRPC)  │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└───────────────────────┬─────────────────────────────┘
+                        │
+┌───────────────────────▼─────────────────────────────┐
+│  Orchestration Layer                                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │ Terraform   │  │ Crossplane  │  │ Kubernetes  │  │
+│  │ (IaC)       │  │ (K8s CRDs)  │  │ (operators) │  │
+│  └─────────────┘  └─────────────┘  └─────────────┘  │
+└───────────────────────┬─────────────────────────────┘
+                        │
+┌───────────────────────▼─────────────────────────────┐
+│  Infrastructure (Cloud APIs, K8s, Databases, etc.)    │
+└─────────────────────────────────────────────────────┘
+\`\`\`
+
+---
+
+## Cognitive Load Types
+
+\`\`\`
+IDP success = reducing these three types of cognitive load:
+
+1. Intrinsic (domain complexity):
+   • Business logic of the application
+   • The IDP should NOT increase this
+
+2. Extraneous (unnecessary complexity):
+   • "Which port does Prometheus scrape? How do I add labels?"
+   • IDP should REMOVE this (paved paths handle it)
+
+3. Germane (learning):
+   • New patterns, tools, practices
+   • IDP should make this EASIER (templates, docs, examples)
+
+Example: deploying a service
+  Without IDP:                          With IDP:
+  • Install kubectl                     • git push (CI/CD is automatic)
+  • Learn K8s Deployments               • Golden path handles it
+  • Configure 10 YAML files             • Just merge to main
+  • Set up monitoring (Grafana/Prom)    • Monitoring is pre-configured
+  • Configure alerts                    • Alerts have sensible defaults
+  • Write runbook                       • Runbook template provided
+  → Cognitive load: HIGH                → Cognitive load: LOW
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between a platform and a portal?
+   **A:** A platform is the underlying infrastructure and APIs (Terraform modules, K8s operators, CI/CD pipelines). A portal (Backstage) is the UI that developers use to interact with the platform. Build the platform first (APIs and automation), then build the portal. A portal without a platform is just a pretty frontend with nothing behind it.
+
+2. **Q:** What is the "paved road" principle in platform engineering?
+   **A:** Make the right thing easy. The golden path should be the path of least resistance. If a developer needs to do something common (add a DB, deploy a service), the platform should make it easier to use the golden path than to do it manually. If the golden path is harder, developers will bypass it.
+
+3. **Q:** How do you measure the success of an IDP?
+   **A:** Developer satisfaction (survey using SPACE framework), lead time for new services (commit to production), time to provision infrastructure, number of tickets to the platform team, adoption rate of golden paths (are developers using them?), and platform team's ability to deliver new capabilities.
+
+4. **Q:** What is the "team topologies" approach to platform teams?
+   **A:** Platform team is an "enabling team" — they build tools and capabilities for stream-aligned teams. The platform team does NOT gatekeep or require tickets for every change. They provide self-service capabilities and treat the platform as a product. The platform team measures success by how well stream-aligned teams can deliver independently.
+
+5. **Q:** What are common pitfalls when building an IDP?
+   **A:** 1) Building the portal before having APIs. 2) Over-engineering for edge cases (golden path handles 80%). 3) Making the platform mandatory (developers should be able to deviate). 4) Not treating the platform as a product (no user research, no feedback loops). 5) Platform team becoming a bottleneck (ticket-based access). 6) Not measuring developer satisfaction.
+
+---
+
+## Summary Cheat Sheet
+
+\`\`\`
+IDP Goal: reduce cognitive load — let devs focus on business logic
+
+Golden Paths: paved, opinionated, handles 80% of use cases
+  Make the right thing easy
+  Deviation allowed but owned by the dev team
+
+Architecture:
+  Interface: Portal (Backstage), CLI, API
+  Orchestration: Terraform, Crossplane, K8s operators
+  Infrastructure: cloud APIs, K8s, databases
+
+Cognitive Load:
+  Intrinsic: business logic (keep)
+  Extraneous: unnecessary complexity (remove)
+  Germane: learning (make easier)
+
+Success Metrics:
+  Developer satisfaction (SPACE survey)
+  Lead time for new services
+  Golden path adoption rate
+  Platform team ticket volume
+
+Pitfalls:
+  Portal before APIs
+  Over-engineering
+  Mandatory platform (no deviation)
+  Ticket-based access`,
+            tags: ["Platform", "Developer Experience", "Architecture"],
+          },
             tags: ["Platform", "Developer Experience", "Architecture"],
           },
         ],
