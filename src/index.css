@@ -5,6 +5,8 @@
   --bg-sidebar: #050811;
   --bg-canvas: #070b16;
   --bg-card: rgba(17, 24, 39, 0.5);
+  --bg-rail: #03060d;
+  --code-bg: #03050a;
   
   --accent-cyan: #06b6d4;
   --accent-cyan-glow: rgba(6, 182, 212, 0.15);
@@ -13,9 +15,14 @@
   --text-primary: #f3f4f6;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
+  --text-code: #e5e7eb;
+  --text-white: #ffffff;
   
   --border-light: rgba(255, 255, 255, 0.05);
   --border-active: rgba(6, 182, 212, 0.3);
+  
+  --hover-bg: rgba(255, 255, 255, 0.04);
+  --hover-bg-subtle: rgba(255, 255, 255, 0.02);
   
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'Fira Code', monospace;
@@ -23,10 +30,39 @@
   --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-sidebar: #f1f5f9;
+  --bg-canvas: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-rail: #eef2f6;
+  --code-bg: #f8fafc;
+  
+  --accent-cyan: #0891b2;
+  --accent-cyan-glow: rgba(8, 145, 178, 0.1);
+  --accent-purple: #9333ea;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-code: #1e293b;
+  --text-white: #1e293b;
+  
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(8, 145, 178, 0.5);
+  
+  --hover-bg: rgba(0, 0, 0, 0.04);
+  --hover-bg-subtle: rgba(0, 0, 0, 0.02);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 body {
@@ -44,7 +80,7 @@ body {
 
 ::selection {
   background: rgba(6, 182, 212, 0.25);
-  color: #fff;
+  color: var(--text-white);
 }
 
 ::-webkit-scrollbar {
@@ -57,12 +93,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(128, 128, 128, 0.2);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(128, 128, 128, 0.35);
 }
 
 /* App Container */
@@ -77,10 +113,10 @@ body {
 }
 
 /* 1. Pillar Rail (Leftmost Navigation) */
-.pillar-rail {
+  .pillar-rail {
   width: 104px;
   min-width: 104px;
-  background-color: #03060d;
+  background-color: var(--bg-rail);
   border-right: 1px solid var(--border-light);
   display: flex;
   flex-direction: column;
@@ -110,7 +146,7 @@ body {
 .rail-logo .logo-icon {
   width: 1.1rem;
   height: 1.1rem;
-  color: white;
+  color: #fff;
 }
 
 .rail-logo .logo-text {
@@ -134,7 +170,7 @@ body {
   padding: 0.5rem 0.25rem;
   border-radius: 0.75rem;
   border: 1px solid var(--border-light);
-  background: rgba(255, 255, 255, 0.01);
+  background: transparent;
   color: var(--text-secondary);
   display: flex;
   flex-direction: column;
@@ -146,9 +182,9 @@ body {
 }
 
 .rail-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: white;
-  border-color: rgba(255, 255, 255, 0.08);
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--border-light);
 }
 
 .rail-tab-btn:focus-visible,
@@ -214,14 +250,14 @@ body {
 .col-header {
   padding: 1.25rem 1rem;
   border-bottom: 1px solid var(--border-light);
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--hover-bg-subtle);
   display: flex;
   align-items: center;
 }
 
 .col-title {
   font-weight: 800;
-  color: white;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -248,18 +284,18 @@ body {
 .search-input {
   width: 100%;
   padding: 0.5rem 0.75rem 0.5rem 2rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover-bg-subtle);
   border: 1px solid var(--border-light);
   border-radius: 0.75rem;
   font-size: 0.75rem;
-  color: white;
+  color: var(--text-primary);
   transition: var(--transition-smooth);
 }
 
 .search-input:focus {
   outline: none;
   border-color: var(--accent-cyan);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--hover-bg);
 }
 
 .modules-list, .topics-list {
@@ -287,14 +323,14 @@ body {
 }
 
 .module-item-btn:hover {
-  background: rgba(255, 255, 255, 0.02);
-  color: white;
+  background: var(--hover-bg-subtle);
+  color: var(--text-primary);
 }
 
 .module-item-btn.active {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--hover-bg);
   border-color: var(--border-light);
-  color: white;
+  color: var(--text-primary);
 }
 
 .module-item-content {
@@ -348,14 +384,14 @@ body {
 }
 
 .topic-item-btn:hover {
-  background: rgba(255, 255, 255, 0.02);
-  color: white;
+  background: var(--hover-bg-subtle);
+  color: var(--text-primary);
 }
 
 .topic-item-btn.active {
   background: var(--accent-cyan-glow);
   border-color: rgba(6, 182, 212, 0.4);
-  color: white;
+  color: var(--text-primary);
 }
 
 .topic-title {
@@ -507,7 +543,7 @@ body {
 .article-title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: white;
+  color: var(--text-primary);
   line-height: 1.25;
 }
 
@@ -515,14 +551,14 @@ body {
   padding: 0.5rem;
   border-radius: 0.75rem;
   border: 1px solid var(--border-light);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--hover-bg-subtle);
   color: var(--text-secondary);
   transition: var(--transition-smooth);
 }
 
 .bookmark-toggle-btn:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  border-color: var(--border-light);
+  color: var(--text-primary);
 }
 
 .bookmark-toggle-btn.active {
@@ -555,7 +591,7 @@ body {
 }
 
 .tag-badge {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover-bg-subtle);
   border: 1px solid var(--border-light);
   color: var(--text-secondary);
   padding: 0.25rem 0.5rem;
@@ -565,7 +601,7 @@ body {
 
 /* Summary Card */
 .concepts-summary-card {
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--hover-bg-subtle);
   border: 1px solid var(--border-light);
   border-radius: 1rem;
   padding: 1.25rem 1.5rem;
@@ -650,13 +686,17 @@ body {
   color: #67e8f9;
 }
 
+[data-theme="light"] .essay-body a:hover {
+  color: #06b6d4;
+}
+
 .essay-body h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: white;
+  color: var(--text-primary);
   margin: 2rem 0 0.5rem;
   padding-bottom: 0.375rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .essay-body h3 {
@@ -695,23 +735,23 @@ body {
 }
 
 .essay-body strong {
-  color: #e5e7eb;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
 .essay-body code {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--hover-bg);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
-  color: #e5e7eb;
+  color: var(--text-code);
 }
 
 .essay-body pre {
   margin: 1rem 0;
   padding: 1rem 1.25rem;
-  background: #03050a;
+  background: var(--code-bg);
   border: 1px solid var(--border-light);
   border-radius: 0.75rem;
   overflow-x: auto;
@@ -723,7 +763,7 @@ body {
   border-radius: 0;
   font-size: 0.8125rem;
   line-height: 1.6;
-  color: #e5e7eb;
+  color: var(--text-code);
 }
 
 .essay-body blockquote {
@@ -751,7 +791,7 @@ body {
 }
 
 .essay-body th {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--hover-bg);
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -778,13 +818,13 @@ body {
   margin-top: 2rem;
   border: 1px solid var(--border-light);
   border-radius: 1rem;
-  background: #03050a;
+  background: var(--code-bg);
   overflow: hidden;
 }
 
 .code-box-header {
   padding: 0.75rem 1.25rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--hover-bg);
   border-bottom: 1px solid var(--border-light);
   display: flex;
   align-items: center;
@@ -813,7 +853,7 @@ body {
 }
 
 .copy-btn:hover {
-  color: white;
+  color: var(--text-primary);
 }
 
 .copy-icon {
@@ -828,14 +868,14 @@ body {
 }
 
 .code-pre {
-  color: #e5e7eb;
+  color: var(--text-code);
   font-family: var(--font-mono);
   line-height: 1.6;
 }
 
 .snippet-placeholder-box {
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.01);
+  background: var(--hover-bg-subtle);
   border: 1px dashed var(--border-light);
   border-radius: 1rem;
   text-align: center;
@@ -863,7 +903,7 @@ body {
 
 .welcome-title {
   font-size: 1.25rem;
-  color: white;
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
   font-weight: 700;
 }

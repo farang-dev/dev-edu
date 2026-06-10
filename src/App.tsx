@@ -17,7 +17,9 @@ import {
   Cpu,
   BookOpenCheck,
   Clock,
-  Award
+  Award,
+  Sun,
+  Moon
 } from "lucide-react";
 
 export default function App() {
@@ -27,6 +29,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [bookmarkedTopicIds, setBookmarkedTopicIds] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   const activeDomain = curriculumData.find((d) => d.id === selectedDomainId) || curriculumData[0];
 
@@ -41,6 +44,24 @@ export default function App() {
       }
     }
   }, []);
+
+  // Load theme on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("dev-edu-theme");
+    if (saved === "light" || saved === "dark") {
+      setTheme(saved);
+    }
+  }, []);
+
+  // Sync theme attribute and save
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("dev-edu-theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === "dark" ? "light" : "dark");
+  };
 
   // Sync selected module and topic when domain changes
   useEffect(() => {
@@ -276,6 +297,19 @@ export default function App() {
             </button>
           ))}
         </nav>
+
+        <button
+          onClick={toggleTheme}
+          className="rail-tab-btn theme-toggle"
+          style={{ marginTop: "auto", marginBottom: "1rem" }}
+          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+        >
+          <div className="rail-icon-wrapper">
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </div>
+          <span className="rail-label text-micro">{theme === "dark" ? "Light" : "Dark"}</span>
+        </button>
       </aside>
 
       {/* 2. SIDEBAR - 2 COLUMN CONFIGURATION */}
