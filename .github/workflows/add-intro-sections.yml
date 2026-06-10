@@ -1,0 +1,55 @@
+name: Add "What Is This" + "Why Learn This" to All Topics
+on:
+  workflow_dispatch:
+jobs:
+  add-intros:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/big-pickle
+          use_github_token: true
+          prompt: |
+            You are an expert software engineering educator. Your task is to add introductory context sections to ALL 168 topics across ALL domains in src/data/curriculum.ts.
+
+            ## Problem
+            The articles are technically deep but jump straight into content without answering the most basic question a beginner has: "What IS this?" Every topic needs a clear, plain-english definition at the beginning.
+
+            ## What to do
+            For EVERY topic in EVERY domain (frontend, backend, infrastructure, devops, cheat), find its content field and insert the following sections at the VERY START of the content, before any existing content:
+
+            ### "What Is This?"
+            2-3 paragraphs covering:
+            - A clear, plain-english definition of what this is (assume the reader has zero prior knowledge)
+            - The historical context or problem that led to its creation
+            - A real-world analogy where helpful
+
+            ### "Why Learn This?"
+            1-2 paragraphs covering:
+            - Why this concept/tool matters in real-world engineering
+            - What concrete engineering problems it solves
+            - (No career advice or job market mentions)
+
+            ### "Where Is This Used?" (only when clearly applicable)
+            1 paragraph maximum, only when there are clear real-world use cases. Skip this section if the topic is purely conceptual/theoretical. When included, mention specific companies, projects, or scenarios.
+
+            ## Rules
+            - INSERT at the start of each topic's content — do NOT delete or modify any existing content.
+            - Preserve all existing sections, code examples, tables, practice questions, etc.
+            - Do NOT change id, title, shortDesc, difficulty, readTimeMin, keyPoints, tags.
+            - Work through topics in curriculum.ts order: frontend → backend → infrastructure → devops → cheat.
+            - After ALL edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
+            - Write in English, no emojis.
