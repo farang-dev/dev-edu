@@ -1,0 +1,60 @@
+name: Rewrite Short Articles
+on:
+  workflow_dispatch:
+jobs:
+  rewrite:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Run OpenCode - rewrite short articles
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/big-pickle
+          use_github_token: true
+          prompt: |
+            You are an expert software engineering educator. Your task is to regenerate 6 specific short articles in src/data/curriculum.ts.
+
+            ## The 6 topic IDs and their current content length
+            1. fe-browser-security (Browser Security Model) — currently ~938 chars
+            2. fe-wasm (WebAssembly: Architecture & Integration) — currently ~928 chars
+            3. fe-closures (Closures, Scope & Execution Contexts) — currently ~1,379 chars
+            4. fe-prototypes (Prototypal Inheritance & the Prototype Chain) — currently ~1,028 chars
+            5. fe-async (Async JavaScript: Callbacks, Promises & async/await) — currently ~1,171 chars
+            6. fe-modules (ES Modules vs CommonJS) — currently ~1,109 chars
+
+            ## CRITICAL: Only edit these 6 topics. Do NOT touch any other topic in the file.
+
+            For each topic, find its `id:` field (e.g. `id: "fe-browser-security"`) and locate the `content:` backtick string field. Replace the ENTIRE content value with a master-level educational article.
+
+            ## Quality Requirements
+            Each article must be at least 3,000 characters. Follow this structure:
+
+            - "## Why This Matters (Read This First)" — compelling real-world hook
+            - Multiple ## and ### sections covering all keyPoints
+            - Each concept: definition → why it exists → how it works → real-world example
+            - Working code examples with explanation
+            - ASCII diagrams in code fences where helpful
+            - Comparison tables where appropriate
+            - "## Practice Questions" — exactly 5 Q&A pairs
+            - "## Summary Cheat Sheet" in a code block
+
+            ## Important rules
+            - Only edit these 6 topic IDs. Do NOT change any other topic, module, or field.
+            - Keep the existing `id`, `title`, `shortDesc`, `difficulty`, `readTimeMin`, `keyPoints`, `codeExample`, `tags` fields UNCHANGED.
+            - Replace only the `content:` field entirely.
+            - For inline code inside the content, use <code> tags (not backticks) to prevent breaking the template literal.
+            - For ${...} expressions inside template literal content, write them as \${...}.
+            - After all edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
+            - Do NOT create any new files — only edit curriculum.ts.
+            - Write in English, no emojis.
