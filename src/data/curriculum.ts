@@ -9915,7 +9915,7 @@ services:
     plugins:
       - name: jwt
         config:
-          secret: "${JWT_SECRET}"
+          secret: "\${JWT_SECRET}"
       - name: rate-limiting
         config:
           minute: 100
@@ -18215,8 +18215,6 @@ Scanning Tools:
   Snyk: developer-friendly, GitHub integration`,
             tags: ["Docker", "Security"],
           },
-            tags: ["Docker", "Security"],
-          },
         ],
       },
       {
@@ -19789,16 +19787,16 @@ output "cluster_endpoint" {
 1. **Q:** What problem does remote state solve?
    **A:** Local state means each teammate has their own copy — applies conflict and overwrite each other. Remote state (S3 + DynamoDB locking) ensures one apply at a time, and everyone works from the same state. Locking prevents concurrent applies that could corrupt the state file.
 
-2. **Q:** What is the difference between `terraform plan` and `terraform apply`?
-   **A:** `plan` shows the diff between current state and desired config — read-only. `apply` executes the plan. Always review the plan output before applying in production. In CI/CD, the plan is reviewed in a PR (or run `plan`, wait for approval, then `apply`).
+2. **Q:** What is the difference between <code>terraform plan</code> and <code>terraform apply</code>?
+   **A:** <code>plan</code> shows the diff between current state and desired config — read-only. <code>apply</code> executes the plan. Always review the plan output before applying in production. In CI/CD, the plan is reviewed in a PR (or run <code>plan</code>, wait for approval, then <code>apply</code>).
 
 3. **Q:** What are Terraform workspaces used for?
-   **A:** Workspaces create separate state files for the same config — commonly used for environments (dev, staging, prod). Each workspace has its own state file: `prod/terraform.tfstate`, `staging/terraform.tfstate`. However, most teams prefer separate directories/modules per environment for isolation.
+   **A:** Workspaces create separate state files for the same config — commonly used for environments (dev, staging, prod). Each workspace has its own state file: <code>prod/terraform.tfstate</code>, <code>staging/terraform.tfstate</code>. However, most teams prefer separate directories/modules per environment for isolation.
 
 4. **Q:** How do you handle secrets in Terraform?
-   **A:** Never hardcode secrets in config files. Options: 1) `terraform.tfvars` (gitignored, local only). 2) Environment variables (`TF_VAR_db_password`). 3) AWS Secrets Manager / SSM Parameter Store via `data.aws_secretsmanager_secret`. 4) HashiCorp Vault provider. State files containing secrets should be encrypted (S3 server-side encryption + DynamoDB encryption at rest).
+   **A:** Never hardcode secrets in config files. Options: 1) <code>terraform.tfvars</code> (gitignored, local only). 2) Environment variables (<code>TF_VAR_db_password</code>). 3) AWS Secrets Manager / SSM Parameter Store via <code>data.aws_secretsmanager_secret</code>. 4) HashiCorp Vault provider. State files containing secrets should be encrypted (S3 server-side encryption + DynamoDB encryption at rest).
 
-5. **Q:** What is the `terraform import` command?
+5. **Q:** What is the <code>terraform import</code> command?
    **A:** Import brings existing infrastructure into Terraform management — creates a state reference for the resource without modifying config. After import, you must write the resource config in HCL to match the imported state. Without import, Terraform cannot manage resources created outside Terraform.
 
 ---
@@ -20046,16 +20044,16 @@ const azs = ["us-east-1a", "us-east-1b", "us-east-1c"];
 
 const vpc = new aws.ec2.Vpc("main", {
     cidrBlock: "10.0.0.0/16",
-    tags: { Name: `main-${env}`, Environment: env },
+    tags: { Name: \`main-\${env}\`, Environment: env },
 });
 
 // Loop! Not possible in HCL without modules or count
 const subnets = azs.map((az, i) =>
-    new aws.ec2.Subnet(`subnet-${i}`, {
+    new aws.ec2.Subnet(\`subnet-\${i}\`, {
         vpcId: vpc.id,
-        cidrBlock: `10.0.${i}.0/24`,
+        cidrBlock: \`10.0.\${i}.0/24\`,
         availabilityZone: az,
-        tags: { Name: `subnet-${i}`, Environment: env },
+        tags: { Name: \`subnet-\${i}\`, Environment: env },
     })
 );
 
@@ -20077,10 +20075,10 @@ import { LocalWorkspace } from "@pulumi/pulumi/automation";
 // Embed infrastructure provisioning in your app
 async function deployEnvironment(userId: string) {
     const stack = await LocalWorkspace.createOrSelectStack({
-        stackName: `env-${userId}`,
+        stackName: \`env-\${userId}\`,
         projectName: "dynamic-infra",
         program: async () => {
-            const bucket = new aws.s3.Bucket(`user-${userId}-assets`, {
+            const bucket = new aws.s3.Bucket(\`user-\${userId}-assets\`, {
                 forceDestroy: true,
             });
             return { bucketName: bucket.bucket };
@@ -20088,7 +20086,7 @@ async function deployEnvironment(userId: string) {
     });
 
     await stack.up({ onOutput: console.log });
-    console.log(`Deployed bucket for user ${userId}`);
+    console.log(\`Deployed bucket for user \${userId}\`);
 }
 
 // Each user gets their own infrastructure
@@ -20385,8 +20383,6 @@ Ansible vs Terraform:
   Use both: Terraform provisions, Ansible configures`,
             tags: ["Ansible", "Configuration Management", "Automation", "IaC"],
           },
-            tags: ["Ansible", "Configuration Management", "Automation", "IaC"],
-          },
         ],
       },
       {
@@ -20436,7 +20432,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ env.NODE_VERSION }}
+        node-version: $\{{ env.NODE_VERSION }}
     - run: npm ci
     - run: npm run lint
 
@@ -20450,13 +20446,13 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: $\{{ matrix.node-version }}
     - run: npm ci
     - name: Cache node_modules
       uses: actions/cache@v4
       with:
         path: node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        key: $\{{ runner.os }}-node-$\{{ hashFiles('package-lock.json') }}
     - run: npm test
 
   deploy:
@@ -20491,11 +20487,11 @@ jobs:
         exclude:             # Remove invalid combinations
           - os: windows-latest
             node: "22"       # Windows Node 22 not supported yet
-    runs-on: ${{ matrix.os }}
+    runs-on: $\{{ matrix.os }}
     steps:
     - uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node }}
+        node-version: $\{{ matrix.node }}
     - run: npm test
 
 ---
@@ -20887,7 +20883,7 @@ describe("User Repository", () => {
             .start();
 
         // Run migrations on the test DB
-        await runMigrations(`postgres://postgres:test@localhost:${postgres.getMappedPort(5432)}/test`);
+        await runMigrations(\`postgres://postgres:test@localhost:\${postgres.getMappedPort(5432)}/test\`);
     }, 30000);
 
     afterAll(async () => {
@@ -20989,8 +20985,6 @@ Tools:
   testcontainers (integration tests with Docker)
   Pact (contract tests)
   Playwright, Cypress (E2E)`,
-            tags: ["Testing", "CI-CD"],
-          },
             tags: ["Testing", "CI-CD"],
           },
         ],
@@ -21217,7 +21211,7 @@ Loki and Elasticsearch are the two main log aggregation systems. Loki is cheaper
 
 \`\`\`typescript
 // BAD: unstructured logging
-console.log(`User ${userId} placed order ${orderId} for $${total}`);
+console.log(\`User \${userId} placed order \${orderId} for \$\${total}\`);
 // Query: grep "placed order" | awk '{print $2}'
 // Fragile, slow, no structured fields
 
@@ -21541,7 +21535,7 @@ exporters:
       insecure: true
   datadog:
     api:
-      key: ${DATADOG_API_KEY}
+      key: \${DATADOG_API_KEY}
   prometheus:
     endpoint: "0.0.0.0:8889"
 
@@ -22191,8 +22185,6 @@ On-Call:
   MTTD + MTTR: track trends, not absolute values`,
             tags: ["SRE", "Incident Management", "On-Call"],
           },
-            tags: ["SRE", "Incident Management", "On-Call"],
-          },
         ],
       },
       {
@@ -22663,30 +22655,30 @@ spec:
       input:
         url: ./skeleton
         values:
-          serviceName: ${{ parameters.serviceName }}
-          owner: ${{ parameters.owner }}
+          serviceName: $\{{ parameters.serviceName }}
+          owner: $\{{ parameters.owner }}
 
     - id: create-repo
       name: Create Repository
       action: publish:github
       input:
-        repoUrl: github.com?repo=${{ parameters.serviceName }}
+        repoUrl: github.com?repo=$\{{ parameters.serviceName }}
         defaultBranch: main
 
     - id: register-catalog
       name: Register in Catalog
       action: catalog:register
       input:
-        repoContentsUrl: ${{ steps['create-repo'].output.repoContentsUrl }}
+        repoContentsUrl: $\{{ steps['create-repo'].output.repoContentsUrl }}
         catalogInfoPath: /catalog-info.yaml
 
   output:
     links:
       - title: Repository
-        url: ${{ steps['create-repo'].output.remoteUrl }}
+        url: $\{{ steps['create-repo'].output.remoteUrl }}
       - title: Open in Catalog
         icon: catalog
-        entityRef: ${{ steps['register-catalog'].output.entityRef }}
+        entityRef: $\{{ steps['register-catalog'].output.entityRef }}
 ---
 # Result: developer clicks "Create" → fills form →
 # new service with CI/CD, linting, deployments, docs
@@ -22943,8 +22935,6 @@ Pitfalls:
   Over-engineering
   Mandatory platform (no deviation)
   Ticket-based access`,
-            tags: ["Platform", "Developer Experience", "Architecture"],
-          },
             tags: ["Platform", "Developer Experience", "Architecture"],
           },
         ],
