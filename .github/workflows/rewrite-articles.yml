@@ -1,18 +1,6 @@
 name: Expand All Articles
 on:
   workflow_dispatch:
-    inputs:
-      target_domain:
-        description: "Domain to process (all = all 4 domains)"
-        required: true
-        default: "all"
-        type: choice
-        options:
-          - all
-          - backend
-          - infrastructure
-          - devops
-          - frontend
 jobs:
   expand:
     strategy:
@@ -29,7 +17,6 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-    if: ${{ inputs.target_domain == 'all' || inputs.target_domain == matrix.domain }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure git identity
