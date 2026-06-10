@@ -1,20 +1,42 @@
 name: Expand All Articles
 on:
   workflow_dispatch:
+    inputs:
+      target_domain:
+        description: "Domain to process (all = all 4 domains)"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - backend
+          - infrastructure
+          - devops
+          - frontend
 jobs:
   expand:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        domain:
+          - backend
+          - infrastructure
+          - devops
+          - frontend
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: write
       pull-requests: write
+    if: ${{ inputs.target_domain == 'all' || inputs.target_domain == matrix.domain }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure git identity
         run: |
           git config user.name "farang-dev"
           git config user.email "farang-dev@users.noreply.github.com"
-      - name: Run OpenCode - expand all articles
+      - name: Run OpenCode - expand ${{ matrix.domain }}
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -23,51 +45,35 @@ jobs:
           model: opencode/big-pickle
           use_github_token: true
           prompt: |
-            You are an expert software engineering educator. Your task is to expand and enrich ALL 118 articles in src/data/curriculum.ts. This is a comprehensive educational content improvement pass.
+            You are an expert software engineering educator. Your task is to expand and enrich the ${{ matrix.domain }} articles in src/data/curriculum.ts.
 
-            ## Current State
-            The file contains 118 topics across 4 domains:
-            - be-* (Backend, 34 topics) — avg ~6,500 chars each
-            - infra-* (Infrastructure, 22 topics) — avg ~5,800 chars each
-            - do-* (DevOps, 26 topics) — avg ~6,200 chars each
-            - fe-* (Frontend, 36 topics) — avg ~8,500 chars each
+            ## Topic Prefix
+            Only edit topics whose id starts with:
+            ${{ matrix.domain == 'backend' && 'be- (Backend, 34 topics)' || matrix.domain == 'infrastructure' && 'infra- (Infrastructure, 22 topics)' || matrix.domain == 'devops' && 'do- (DevOps, 26 topics)' || matrix.domain == 'frontend' && 'fe- (Frontend, 36 topics)' }}
 
-            Each topic has fields: id, title, shortDesc, difficulty, readTimeMin, keyPoints, content, codeExample (optional), tags.
+            Do NOT touch any topic from other domains.
 
             ## What To Do
-            For EVERY topic, find its `content:` field and EDIT it (add to existing content, never delete). Follow these rules:
+            For each matching topic, find its content field and EDIT it (add to existing content, never delete).
 
-            1. **Explain every technical term on first use** — If an article uses "CRP", "CSSOM", "JIT", "TLS", "sharding", or ANY specialized term, immediately follow it with a parenthetical definition: e.g., "CRP (Critical Rendering Path — the 6-step pipeline the browser uses to convert HTML/CSS/JS into pixels)".
-            
-            2. **Add beginner context** — Before jumping into technical detail, add a paragraph that tells a beginner what this concept is analogous to in the real world.
+            **Explain every technical term on first use** — When a specialized term appears (e.g., "CSSOM", "JIT", "TLS", "sharding", "backpressure"), immediately follow it with a parenthetical definition explaining what it means and why it matters.
 
-            3. **Expand code examples** — For every code block, add explanatory comments and at least 2-3 sentences afterward explaining what the code does and why it works.
+            **Add beginner context** — Before each major technical section, add 1-2 sentences that relate the concept to something familiar.
 
-            4. **Add edge cases and footguns** — After explaining the main concept, add a "## Common Pitfalls" section with 3-5 real-world mistakes developers make.
+            **Expand code examples** — Add explanatory comments inside code blocks and 2-3 sentences after explaining what the code does.
 
-            5. **Expand Practice Questions** — Add at least 3 more scenario-based practice questions (total 8+). Each question should test conceptual understanding, not memorization.
+            **Add a "Common Pitfalls" section** — 3-5 real-world mistakes developers make with this concept.
 
-            6. **Add cross-references** — When an article mentions a concept covered in another topic, add a note like "(see also: fe-event-loop for more on microtasks)".
+            **Add "Practice Questions"** — at least 8 scenario-based Q&A pairs total.
 
-            7. **Target minimum 20,000 characters** per `content:` field (currently 7k avg).
+            **Target minimum 20,000 characters** per content field (currently ~6k-8k avg).
 
-            ## How To Edit (CRITICAL)
-            - Do NOT delete or replace existing content. KEEP ALL existing text and ADD new text around it.
-            - Insert term definitions inline within existing paragraphs when terms first appear.
-            - Insert new sections (like "## Common Pitfalls", "## Further Reading") at the END of the existing content, before the closing backtick.
-            - Keep the existing `id`, `title`, `shortDesc`, `difficulty`, `readTimeMin`, `keyPoints`, `codeExample`, `tags` fields UNCHANGED.
-            
-            ## Processing Order
-            Work through topics in file order within each domain. Process ALL 4 domains:
-            1. Backend (be-*)
-            2. Infrastructure (infra-*)
-            3. DevOps (do-*)
-            4. Frontend (fe-*)
-
-            ## Inline Code Rules
-            - Inside template literal content fields, use <code> tags instead of backticks for inline code.
-            - For dollar-brace expressions like dollar{var}, escape as backslash-dollar{var}.
-            - For GitHub Actions expressions like dollar{double-brace env.NODE_VERSION double-brace}, escape as backslash-dollar{double-brace env.NODE_VERSION double-brace}.
-
-            ## Verification
-            After all edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors. Do NOT create new files — only edit curriculum.ts. Write in English, no emojis.
+            ## CRITICAL
+            - Keep ALL existing text. Only ADD new content around it.
+            - Insert term definitions inline within existing paragraphs on first use.
+            - Insert new sections at the END of the existing content.
+            - Keep id, title, shortDesc, difficulty, readTimeMin, keyPoints, codeExample, tags UNCHANGED.
+            - Use angle-bracket code tags (not backticks) for inline code inside template literal content.
+            - Escape dollar-brace expressions like dollar{var} as backslash-dollar{var}.
+            - After edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
+            - Only edit curriculum.ts. Write in English, no emojis.
