@@ -3,15 +3,6 @@ on:
   workflow_dispatch:
 jobs:
   expand:
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        domain:
-          - backend
-          - infrastructure
-          - devops
-          - frontend
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -23,7 +14,7 @@ jobs:
         run: |
           git config user.name "farang-dev"
           git config user.email "farang-dev@users.noreply.github.com"
-      - name: Run OpenCode - expand ${{ matrix.domain }}
+      - name: Run OpenCode - expand all articles
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -32,35 +23,23 @@ jobs:
           model: opencode/big-pickle
           use_github_token: true
           prompt: |
-            You are an expert software engineering educator. Your task is to expand and enrich the ${{ matrix.domain }} articles in src/data/curriculum.ts.
+            You are an expert software engineering educator. Your task is to expand and enrich ALL 118 articles in src/data/curriculum.ts by adding explanations of technical terms.
 
-            ## Topic Prefix
-            Only edit topics whose id starts with:
-            ${{ matrix.domain == 'backend' && 'be- (Backend, 34 topics)' || matrix.domain == 'infrastructure' && 'infra- (Infrastructure, 22 topics)' || matrix.domain == 'devops' && 'do- (DevOps, 26 topics)' || matrix.domain == 'frontend' && 'fe- (Frontend, 36 topics)' }}
+            ## What to fix
+            The current articles use technical terms (like "CSSOM", "JIT", "TLS", "sharding", "CRP", "backpressure", etc.) without defining them. Beginners cannot understand them.
 
-            Do NOT touch any topic from other domains.
+            For EVERY topic in the file, find its content field and:
 
-            ## What To Do
-            For each matching topic, find its content field and EDIT it (add to existing content, never delete).
+            1. **Define every term on first use** - When a specialized term appears, add a parenthetical definition: e.g. "CRP (Critical Rendering Path, the browser pipeline that converts HTML/CSS to pixels)"
+            2. **Add beginner context** - Before dense sections, add 1-2 sentences relating the concept to something familiar
+            3. **Expand code comments** - Add // comments inside code blocks explaining each line
+            4. **Add a Common Pitfalls section** - 3-5 real mistakes developers make
+            5. **Add more Practice Questions** - target 8+ total per topic
 
-            **Explain every technical term on first use** — When a specialized term appears (e.g., "CSSOM", "JIT", "TLS", "sharding", "backpressure"), immediately follow it with a parenthetical definition explaining what it means and why it matters.
-
-            **Add beginner context** — Before each major technical section, add 1-2 sentences that relate the concept to something familiar.
-
-            **Expand code examples** — Add explanatory comments inside code blocks and 2-3 sentences after explaining what the code does.
-
-            **Add a "Common Pitfalls" section** — 3-5 real-world mistakes developers make with this concept.
-
-            **Add "Practice Questions"** — at least 8 scenario-based Q&A pairs total.
-
-            **Target minimum 20,000 characters** per content field (currently ~6k-8k avg).
-
-            ## CRITICAL
-            - Keep ALL existing text. Only ADD new content around it.
-            - Insert term definitions inline within existing paragraphs on first use.
-            - Insert new sections at the END of the existing content.
-            - Keep id, title, shortDesc, difficulty, readTimeMin, keyPoints, codeExample, tags UNCHANGED.
-            - Use angle-bracket code tags (not backticks) for inline code inside template literal content.
-            - Escape dollar-brace expressions like dollar{var} as backslash-dollar{var}.
-            - After edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
-            - Only edit curriculum.ts. Write in English, no emojis.
+            ## Rules
+            KEEP all existing text. Only ADD new content. Do NOT delete anything.
+            Preserve id, title, shortDesc, difficulty, readTimeMin, keyPoints, codeExample, tags as-is.
+            Use <code> tags for inline code (not backticks).
+            Escape dollar-brace as backslash-dollar-brace.
+            After all edits, run: npx tsc -p tsconfig.app.json --noEmit.
+            Only edit curriculum.ts. Write in English, no emojis.
