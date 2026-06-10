@@ -11958,7 +11958,7 @@ This is powered by an **npm compatibility layer** that translates CommonJS and N
 
 ## Common Pitfalls
 
-1. **Assuming full Node.js compatibility** — Bun and Deno do not support every Node.js API. Native C++ addons (`.node` files) do not work in either runtime. Test your dependencies thoroughly before migrating.
+1. **Assuming full Node.js compatibility** — Bun and Deno do not support every Node.js API. Native C++ addons (<code>.node</code> files) do not work in either runtime. Test your dependencies thoroughly before migrating.
 
 2. **Ignoring Bun's lack of Windows support parity** — Bun runs on Windows but some features are less mature. The Zig compilation targets may have subtle differences in behavior. Always test on your target deployment OS.
 

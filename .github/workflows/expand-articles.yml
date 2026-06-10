@@ -1,0 +1,58 @@
+name: Expand All Articles
+on:
+  workflow_dispatch:
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Run OpenCode - expand all articles
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/big-pickle
+          use_github_token: true
+          prompt: |
+            You are an expert software engineering educator. Your task is to EXPAND every topic article in src/data/curriculum.ts to be more complete, self-contained, and educational.
+
+            ## Context
+            The file contains 152 topics across 4 domains (fe-*, be-*, infra-*, do-*). Each topic has a `content:` field with an educational article (currently 4K-22K chars). The goal is to expand ALL of them to ~20,000 characters each.
+
+            ## Problem to fix
+            Currently articles use technical terms without explaining them, assume prior knowledge, and skip foundational concepts. Readers (bootcamp students) get lost.
+
+            ## What to do for EACH topic (work through ALL topics in file order)
+            For each topic's `content:` field:
+            1. READ the existing content completely
+            2. EXPAND it by ADDING content — do NOT remove or replace existing text
+            3. Target size: ~20,000 characters per topic
+
+            ## Specific improvements to make (in order of priority)
+            1. Define every technical term the first time it appears — e.g., if "sharding" is mentioned, add a plain-language definition inline
+            2. Add "## Prerequisites" section at the start (after the hook) listing what you need to know before this article
+            3. Add more real-world analogies and concrete examples for abstract concepts
+            4. Add "## Common Pitfalls" section showing mistakes beginners make
+            5. Add "## Debugging & Troubleshooting" section with CLI commands, tools, or techniques
+            6. Expand existing code examples with comments and explanation
+            7. Add more comparison tables
+            8. Expand "## Practice Questions" to include scenario-based questions
+            9. Expand "## Summary Cheat Sheet" with more commands/flags/examples
+
+            ## Critical rules
+            - ONLY edit the `content:` field of each topic — keep `id`, `title`, `shortDesc`, `difficulty`, `readTimeMin`, `keyPoints`, `codeExample`, `tags` UNCHANGED
+            - DO NOT delete any existing text — only ADD new sections and explanations
+            - Use <code> tags instead of backticks inside template literals
+            - Escape ${} as \${} inside template literals
+            - After all edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors
+            - Do NOT create any new files — only edit curriculum.ts
+            - Write in English, no emojis
