@@ -65,8 +65,9 @@ jobs:
             4. Frontend (fe-*)
 
             ## Inline Code Rules
-            - Inside template literal content (`content: \`...\``), use <code> tags instead of backticks for inline code.
-            - Write ${...} as \${...} and ${{...}} as $\{{...}} inside template literals.
+            - Inside template literal content fields, use <code> tags instead of backticks for inline code.
+            - For dollar-brace expressions like dollar{var}, escape as backslash-dollar{var}.
+            - For GitHub Actions expressions like dollar{double-brace env.NODE_VERSION double-brace}, escape as backslash-dollar{double-brace env.NODE_VERSION double-brace}.
 
             ## Verification
             After all edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors. Do NOT create new files — only edit curriculum.ts. Write in English, no emojis.
