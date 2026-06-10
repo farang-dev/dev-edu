@@ -1,8 +1,13 @@
 name: Add "What Is This" + "Why Learn This" to All Topics
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Generate Cheat Sheets"]
+    types:
+      - completed
 jobs:
   add-intros:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
