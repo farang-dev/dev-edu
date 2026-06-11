@@ -24,7 +24,7 @@ export interface Module {
 }
 
 export interface Domain {
-  id: "frontend" | "backend" | "infrastructure" | "devops";
+  id: "frontend" | "backend" | "infrastructure" | "devops" | "cheat";
   title: string;
   tagline: string;
   description: string;
@@ -39674,6 +39674,10857 @@ Pitfalls:
   Mandatory platform (no deviation)
   Ticket-based access`,
             tags: ["Platform", "Developer Experience", "Architecture"],
+          },
+        ],
+      },
+    ],
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  // CHEAT (Backend)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id: "cheat",
+    title: "Cheat Sheets",
+    tagline: "Quick reference for backend technologies",
+    description: "Comprehensive cheat sheets covering backend languages, frameworks, protocols, databases, and operational patterns.",
+    color: "amber",
+    iconName: "BookOpen",
+    topics: [],
+    modules: [
+      {
+        id: "cheat-backend",
+        title: "Backend Cheat Sheets",
+        description: "Quick-reference cheat sheets for backend development — languages, frameworks, APIs, databases, caching, messaging, testing, deployment, and observability.",
+        topics: [
+          {
+            id: "cheat-python-backend",
+            title: "Python Backend Fundamentals",
+            shortDesc: "Complete Python reference for backend development — types, async/await, FastAPI/Django/Flask, SQLAlchemy, testing, and deployment.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Python type system: dynamic typing with gradual typing via type hints (PEP 484).",
+              "Async/await with asyncio: cooperative multitasking on a single thread.",
+              "WSGI vs ASGI: synchronous vs asynchronous Python web servers.",
+              "ORM patterns: SQLAlchemy declarative models, Alembic migrations.",
+              "Testing: pytest fixtures, async tests, mocking external services.",
+            ],
+            content: `## Quick Reference
+Python is a dynamically-typed, interpreted language with optional static type checking via type hints (PEP 484). Backend development uses WSGI (Django/Flask) for synchronous or ASGI (FastAPI) for asynchronous request handling. The ecosystem provides mature ORMs (SQLAlchemy), migration tools (Alembic), testing frameworks (pytest), and production ASGI servers (Uvicorn, Gunicorn).
+<code>python</code> — dynamic typing, garbage collected, interpreted. <code>asyncio</code> — cooperative multitasking on a single thread via event loop. <code>PEP 484</code> — gradual typing with <code>mypy</code> static analysis.
+## Language Fundamentals
+| Category | Details |
+| Paradigm | Multi-paradigm: procedural, OOP, functional |
+| Typing | Dynamic, strong, duck typing |
+| Memory | Reference-counted GC with cycle detector |
+| Version | 3.12+ (3.13 free-threaded mode available) |
+| Package manager | pip, uv, poetry, pdm |
+| ASGI server | Uvicorn, Hypercorn, Daphne |
+| WSGI server | Gunicorn, uWSGI, Waitress |
+### Types & Values
+| Category | Types | Mutability | Example |
+|----------|-------|------------|---------|
+| Numeric | <code>int</code>, <code>float</code>, <code>complex</code> | Immutable | <code>42</code>, <code>3.14</code>, <code>1j</code> |
+| Text | <code>str</code> | Immutable | <code>"hello"</code>, <code>f"val={x}"</code> |
+| Boolean | <code>bool</code> (subclass of <code>int</code>) | Immutable | <code>True</code>, <code>False</code> |
+| Sequence | <code>list</code>, <code>tuple</code>, <code>range</code> | List mutable, tuple immutable | <code>[1,2]</code>, <code>(1,2)</code> |
+| Mapping | <code>dict</code> | Mutable | <code>{"k": "v"}</code> |
+| Set | <code>set</code>, <code>frozenset</code> | Set mutable | <code>{1, 2}</code> |
+| Null | <code>None</code> | Singleton | <code>None</code> |
+| Bytes | <code>bytes</code>, <code>bytearray</code> | bytes immutable | <code>b"data"</code> |
+### Variables & Scoping
+<code>python
+# -- Variables are dynamically typed --
+name = "Alice"       # Variable 'name' is bound to a str object
+age = 30             # Re-binding to an int -- no type error
+age = "thirty"       # Allowed -- dynamic typing at work
+# -- Scope resolution uses LEGB rule --
+# Local, Enclosing, Global, Built-in
+count = 0            # Global scope
+def outer():
+    count = 1        # Enclosing scope (nonlocal)
+    def inner():
+        count = 2    # Local scope -- shadows outer 'count'
+        print(count)
+    inner()
+# -- Type hints (PEP 484) for static analysis only --
+def greet(name: str) -> str:
+    return f"Hello, {name}"   # f-string expression
+### Control Flow
+<code>python
+# -- Conditionals --
+if x > 0:
+    print("positive")
+elif x == 0:
+    print("zero")
+else:
+    print("negative")
+# -- For loop with iterator protocol --
+for i in range(5):       # range is lazy (no list allocation)
+    print(i)
+for key, value in {"a": 1}.items():
+    print(key, value)
+# -- While loop --
+while True:
+# -- Exception handling with context manager --
+    with open("file.txt") as f:   # __enter__ / __exit__ protocol
+        data = f.read()
+except FileNotFoundError:
+    print("file not found")
+finally:
+    print("always runs")
+### Functions
+<code>python
+# -- Positional, keyword, default, *args, **kwargs --
+def send_email(to: str, subject: str = "No Subject", *cc: str, **headers: str) -> bool:
+    #    ^required    ^default               ^variable positional  ^variable keyword
+    print(f"Sending to {to}")
+    for addr in cc:
+        print(f"  CC: {addr}")
+    for key, value in headers.items():
+        print(f"  Header {key}: {value}")
+    return True
+send_email("a@b.com", "Hello", "c@d.com", "e@f.com", X_Custom="value")
+# Positional: to="a@b.com", subject="Hello"
+# *cc captures ("c@d.com", "e@f.com")
+# **headers captures {"X_Custom": "value"}
+# -- Lambda (anonymous) --
+square = lambda x: x ** 2    # Single expression only
+# -- Decorators (higher-order functions) --
+import functools
+def timer(func):
+    @functools.wraps(func)            # Preserves func.__name__, __doc__
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        print(f"{func.__name__} took {time.perf_counter() - start:.3f}s")
+        return result
+    return wrapper
+@timer
+def slow_function():
+### Async / Concurrency
+| Mechanism | Model | Use Case |
+|-----------|-------|----------|
+| <code>threading</code> | OS threads (preemptive) | I/O-bound, blocking libraries |
+| <code>asyncio</code> | Cooperative (single thread) | I/O-bound, async libraries |
+| <code>multiprocessing</code> | OS processes | CPU-bound (no GIL contention) |
+| <code>concurrent.futures</code> | Thread/Process pool executors | Simple parallel mapping |
+<code>python
+import asyncio
+import httpx
+async def fetch_data(url: str) -> dict:
+    #    ^^^^^^ Coroutine function -- must be awaited
+    async with httpx.AsyncClient() as client:
+        #   ^^^^^  Context manager that supports async enter/exit
+        response = await client.get(url)
+        #          ^^^^^  Suspends coroutine until HTTP response arrives
+        return response.json()
+async def main():
+    # -- Run multiple coroutines concurrently --
+    results = await asyncio.gather(
+        fetch_data("https://api.example.com/users"),
+        fetch_data("https://api.example.com/posts"),
+    print(results)
+asyncio.run(main())   # Entry point -- creates event loop, runs main(), closes loop
+### Module System
+<code>python
+# mypackage/__init__.py     # Package marker (can be empty for namespace packages)
+# mypackage/helpers.py      # Submodule
+# -- Import variants --
+import os                     # Imports the module object
+from sys import path          # Imports 'path' into current namespace
+from datetime import date as d  # Aliased import
+from mypackage import helpers   # Relative to PYTHONPATH / site-packages
+from . import sibling          # Relative import (inside package)
+from ..parent import thing     # Relative import, one level up
+# -- __name__ guard for script vs import --
+if __name__ == "__main__":
+    # Only runs when file is executed directly (not imported)
+    main()
+### Standard Library Highlights
+| Module | Purpose | Key Functions/Classes |
+|--------|---------|----------------------|
+| <code>os</code> | OS interface | <code>os.environ</code>, <code>os.path.join</code>, <code>os.listdir</code> |
+| <code>pathlib</code> | Path manipulation | <code>Path("/tmp") / "file.txt"</code>, <code>p.read_text()</code> |
+| <code>json</code> | JSON serialization | <code>json.dumps</code>, <code>json.load</code> |
+| <code>datetime</code> | Date/time handling | <code>datetime.now()</code>, <code>timedelta</code>, <code>timezone.utc</code> |
+| <code>re</code> | Regular expressions | <code>re.compile</code>, <code>re.match</code>, <code>re.sub</code> |
+| <code>collections</code> | Specialized containers | <code>deque</code>, <code>Counter</code>, <code>defaultdict</code>, <code>OrderedDict</code> |
+| <code>itertools</code> | Iterator combinators | <code>chain</code>, <code>groupby</code>, <code>product</code>, <code>islice</code> |
+| <code>functools</code> | Higher-order functions | <code>lru_cache</code>, <code>partial</code>, <code>reduce</code> |
+| <code>typing</code> | Type hints | <code>Optional</code>, <code>Union</code>, <code>Generic</code>, <code>Protocol</code> |
+| <code>logging</code> | Structured logging | <code>getLogger</code>, <code>Logger.info</code>, <code>RotatingFileHandler</code> |
+| <code>unittest</code> / <code>pytest</code> | Testing | <code>TestCase</code>, fixtures, <code>mock.patch</code> |
+| <code>dataclasses</code> | Data containers | <code>@dataclass(frozen=True)</code>, <code>field</code> |
+| <code>enum</code> | Enumerated types | <code>class Color(Enum)</code>, <code>auto()</code> |
+## Framework by Framework Reference
+### FastAPI (ASGI, async-native)
+FastAPI is a modern, fast web framework for building APIs with Python 3.8+ based on standard Python type hints. It uses Starlette under the hood and Pydantic for data validation.
+**Setup:**
+<code>bash
+pip install fastapi uvicorn        # Install framework + ASGI server
+uvicorn main:app --reload         # Run with auto-reload for development
+**Core Concepts:**
+<code>python
+from fastapi import FastAPI, HTTPException, Depends, Query, Path
+app = FastAPI(title="My API", version="1.0.0")   # ASGI application instance
+# -- Pydantic model for request/response validation --
+    name: str                         # Required field -- str type
+    price: float                       # Required field -- float type
+    tax: Optional[float] = None        # Optional field with default None
+    tags: list[str] = []               # Typed list with default empty list
+# -- Path operation decorator + type-annotated handler --
+async def read_item(
+    item_id: int = Path(..., title="The ID of the item to get"),   # Path parameter
+    q: Optional[str] = Query(None, max_length=50),                # Query parameter
+    # FastAPI validates item_id as int automatically
+    # Returns 422 if validation fails
+# -- Request body via Pydantic model --
+@app.post("/items", status_code=201)
+async def create_item(item: Item):          # Request body validated as Item
+    # FastAPI reads the JSON body, validates against Item schema
+    return {"item": item.model_dump()}      # Convert Pydantic model to dict
+# -- Dependency injection --
+def get_db():
+    # Generator-based dependency -- yields value, cleanup on teardown
+    db = Database()
+        yield db
+    finally:
+        db.close()
+@app.get("/users/{user_id}")
+async def get_user(db = Depends(get_db)):   # Dependency resolved automatically
+    return db.query(User).all()
+**Common Patterns:**
+| Pattern | Implementation |
+| Error handling | Raise <code>HTTPException(status_code=404, detail="Not found")</code> |
+| Background tasks | <code>from fastapi import BackgroundTasks</code> |
+| File upload | <code>UploadFile</code> from <code>fastapi</code> |
+| CORS | <code>from fastapi.middleware.cors import CORSMiddleware</code> |
+| Rate limiting | <code>slowapi</code> extension |
+| OpenAPI docs | Automatic at <code>/docs</code> (Swagger) and <code>/redoc</code> |
+### Django (WSGI, batteries-included)
+**Setup:**
+<code>bash
+pip install django
+django-admin startproject mysite .
+python manage.py startapp myapp
+python manage.py migrate
+python manage.py runserver
+**Core Concepts:**
+<code>python
+# -- Models (ORM) --  myapp/models.py
+class Author(models.Model):
+    name = models.CharField(max_length=100)       # VARCHAR column
+    email = models.EmailField(unique=True)         # UNIQUE constraint + email validation
+class Book(models.Model):
+    author = models.ForeignKey(                     # Many-to-one relationship
+        Author, on_delete=models.CASCADE            # CASCADE: delete Author deletes Books
+    published = models.DateField()
+# -- Views (request handlers) --  myapp/views.py
+from django.http import JsonResponse
+from django.views import View
+from .models import Book
+class BookListView(View):                           # Class-based view
+    def get(self, request):
+        books = Book.objects.select_related("author").all()
+        #     ^^^^^^ QuerySet -- lazy, evaluated on iteration
+        data = [
+            {"id": b.id, "title": b.title, "author": b.author.name}
+            for b in books
+        return JsonResponse(data, safe=False)       # safe=False allows list serialization
+# -- URLs (routing) -- myapp/urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+    path("books/", views.BookListView.as_view(), name="book-list"),
+**Common Patterns:**
+| Pattern | Implementation |
+| Admin panel | <code>python manage.py createsuperuser</code>, register models in <code>admin.py</code> |
+| Django REST Framework | <code>pip install djangorestframework</code> — <code>ModelViewSet</code>, <code>Serializer</code> |
+| Authentication | <code>django.contrib.auth</code>, <code>LoginRequiredMixin</code> |
+| Migrations | <code>python manage.py makemigrations && python manage.py migrate</code> |
+| Signals | <code>@receiver(post_save, sender=Book)</code> for event-driven logic |
+| Management commands | Custom <code>python manage.py mycommand</code> via <code>management/commands/</code> |
+### Flask (WSGI, minimal/micro)
+**Setup:**
+<code>bash
+pip install flask
+# Run with: flask --app main run
+**Core Concepts:**
+<code>python
+from flask import Flask, request, jsonify, abort
+app = Flask(__name__)                               # WSGI application
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
+db = SQLAlchemy(app)                                 # ORM instance tied to app
+# -- Route with dynamic segment --
+@app.route("/api/users/<int:user_id>", methods=["GET"])
+def get_user(user_id: int):
+    # Flask converts <int:user_id> to Python int
+    if user_id < 1:
+        abort(400, description="Invalid user ID")   # Returns 400 JSON
+    return jsonify({"id": user_id, "name": "Alice"})
+# -- Blueprints for modular organization --
+from flask import Blueprint
+auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json(force=True)              # Parse JSON body
+    return jsonify({"token": "..."})
+app.register_blueprint(auth_bp)                      # Mount blueprint at /auth/*
+**Common Patterns:**
+| Pattern | Implementation |
+| Extensions | Flask-SQLAlchemy, Flask-Migrate, Flask-Login, Flask-CORS |
+| Error handlers | <code>@app.errorhandler(404)</code> — custom JSON error responses |
+| Request hooks | <code>@app.before_request</code>, <code>@app.after_request</code> |
+| CLI commands | <code>@app.cli.command()</code> |
+| Testing | <code>app.test_client()</code> — <code>client.get("/")</code> |
+| App factory | Factory function <code>create_app()</code> for testability |
+## Comparison Tables
+| Feature | FastAPI | Django | Flask |
+|---------|---------|--------|-------|
+| Protocol | ASGI | WSGI (ASGI via Django Channels) | WSGI |
+| Async native | Yes | Partial (3.1+ async views) | No (Flask 2.x async views) |
+| ORM | SQLAlchemy / Tortoise-ORM | Django ORM (built-in) | SQLAlchemy (extension) |
+| Validation | Pydantic (built-in) | Django Forms / DRF Serializers | Flask-Marshmallow |
+| Admin UI | None (external) | Built-in <code>/admin/</code> | Flask-Admin |
+| REST framework | Built-in | Django REST Framework | Flask-RESTful |
+| Database migrations | Alembic (external) | Built-in migrations | Flask-Migrate (Alembic) |
+| Auto-docs | OpenAPI (built-in) | DRF OpenAPI / Schema | Flask-Spectree / APISpec |
+| Learning curve | Moderate | Steep (batteries-included) | Low (minimal) |
+| Best for | Async APIs, microservices | Monoliths, content sites | Microservices, prototypes |
+| Community size | Growing fast | Very large | Very large |
+| Performance | Very high (async) | Moderate | Moderate |
+## Common Pitfalls & Anti-patterns
+1. **Mutable default arguments** — <code>def foo(items=[])</code> creates one list shared across all calls. Use <code>None</code> and assign inside: <code>items = items or []</code>.
+2. **Blocking the event loop** — Calling <code>time.sleep()</code> or <code>requests.get()</code> inside an async route blocks the entire server. Use <code>asyncio.sleep()</code> and <code>httpx.AsyncClient()</code>.
+3. **N+1 queries in ORMs** — Accessing <code>book.author.name</code> in a loop generates N extra queries. Use <code>select_related()</code> (SQL JOIN) or <code>prefetch_related()</code> (batched).
+4. **Catching bare <code>Exception</code>** — Hides bugs like <code>KeyboardInterrupt</code> and <code>SystemExit</code>. Catch specific exceptions or use <code>except Exception as e: logger.exception(e)</code>.
+5. **Modifying a list while iterating** — <code>for x in lst: lst.remove(x)</code> skips elements. Iterate over a copy: <code>for x in list(lst)</code>.
+6. **Not using <code>__slots__</code> for memory-heavy classes** — Each instance has a <code>__dict__</code> (~50% overhead). Define <code>__slots__ = ("x", "y")</code> for dataclass-like objects.
+7. **Mixing sync and async code without thread pools** — Running sync ORM code inside async route blocks the loop. Run sync code in a thread pool via <code>asyncio.to_thread()</code>.
+8. **Hardcoding configuration** — Using <code>if DEBUG:</code> in code. Use environment variables with <code>pydantic-settings</code> or <code>python-dotenv</code>.
+9. **Over-fetching with <code>.all()</code>** — Loading entire tables into memory. Use <code>.only()</code>, <code>.defer()</code>, or pagination.
+10. **Not setting <code>pool_pre_ping=True</code> in SQLAlchemy** — Stale connections from pool cause <code>MySQL has gone away</code> errors.
+11. **Exposing sensitive data in serializers** — Returning password hashes or internal IDs. Define explicit response models with <code>response_model_exclude_unset=True</code>.
+12. **Ignoring CORS in production** — Frontend calls fail with opaque errors. Configure CORS properly per allowed origins, not <code>["*"]</code>.
+13. **Running Django with <code>runserver</code> in production** — Built-in server is single-threaded and insecure. Use Gunicorn + uWSGI or Uvicorn (ASGI).
+## Complete API Reference
+### FastAPI
+| Decorator/Function | Signature | Description |
+|--------------------|-----------|-------------|
+| <code>@app.get()</code> | <code>(path, response_model, status_code, tags, summary)</code> | Register GET endpoint |
+| <code>@app.post()</code> | <code>(path, response_model, status_code, ...)</code> | Register POST endpoint |
+| <code>@app.put()</code> | <code>(path, ...)</code> | Register PUT endpoint |
+| <code>@app.delete()</code> | <code>(path, ...)</code> | Register DELETE endpoint |
+| <code>@app.patch()</code> | <code>(path, ...)</code> | Register PATCH endpoint |
+| <code>Path()</code> | <code>(default=..., *, ge, le, gt, lt, regex)</code> | Path parameter validation |
+| <code>Query()</code> | <code>(default, *, max_length, regex, ge, le)</code> | Query parameter validation |
+| <code>Body()</code> | <code>(default, *, embed)</code> | Request body customization |
+| <code>Header()</code> | <code>(default, *, convert_underscores)</code> | Header parameter extraction |
+| <code>Cookie()</code> | <code>(default, *)</code> | Cookie parameter extraction |
+| <code>Depends()</code> | <code>(dependency, *, use_cache)</code> | Dependency injection marker |
+| <code>HTTPException()</code> | <code>(status_code, detail, headers)</code> | Return error response |
+| <code>File()</code> / <code>UploadFile</code> | <code>(...)</code> | File upload handling |
+| <code>Form()</code> | <code>(default, *)</code> | Form field parameter |
+| <code>BackgroundTasks</code> | <code>.add_task(func, *args)</code> | Run after response sent |
+| <code>Request</code> | Injected parameter | Direct request object access |
+| <code>Response</code> | <code>(content, status_code, headers, media_type)</code> | Custom response |
+| Component | Import Path | Purpose |
+| <code>HttpResponse</code> | <code>django.http</code> | Base response class |
+| <code>JsonResponse</code> | <code>django.http</code> | JSON-encoded response |
+| <code>Http404</code> | <code>django.http</code> | 404 exception |
+| <code>View</code> | <code>django.views</code> | Base class-based view |
+| <code>TemplateView</code> | <code>django.views.generic</code> | Render template |
+| <code>ListView</code> | <code>django.views.generic</code> | List model objects |
+| <code>DetailView</code> | <code>django.views.generic</code> | Single model object |
+| <code>CreateView</code> | <code>django.views.generic.edit</code> | Create model object |
+| <code>UpdateView</code> | <code>django.views.generic.edit</code> | Update model object |
+| <code>DeleteView</code> | <code>django.views.generic.edit</code> | Delete model object |
+| <code>Model</code> | <code>django.db.models</code> | Base model class |
+| <code>QuerySet</code> | <code>django.db.models</code> | Database query set |
+| <code>Manager</code> | <code>django.db.models</code> | Model manager (objects) |
+| <code>Serializer</code> | <code>rest_framework.serializers</code> | DRF: model serialization |
+| <code>ModelViewSet</code> | <code>rest_framework.viewsets</code> | DRF: full CRUD viewset |
+| <code>Router</code> | <code>rest_framework.routers</code> | DRF: automatic URL routing |
+### Flask
+| Decorator/Function | Signature | Description |
+|--------------------|-----------|-------------|
+| <code>@app.route()</code> | <code>(rule, methods, endpoint)</code> | Register URL rule |
+| <code>@app.before_request</code> | Decorator | Run before each request |
+| <code>@app.after_request</code> | Decorator | Run after each request |
+| <code>@app.errorhandler()</code> | <code>(code_or_exception)</code> | Custom error handler |
+| <code>request</code> | Global proxy | Current request object |
+| <code>jsonify()</code> | <code>(data)</code> | Create JSON response |
+| <code>abort()</code> | <code>(code, description)</code> | Abort with error code |
+| <code>redirect()</code> | <code>(location, code=302)</code> | Redirect response |
+| <code>url_for()</code> | <code>(endpoint, **values)</code> | URL reverse lookup |
+| <code>Blueprint</code> | <code>(name, import_name)</code> | Modular route grouping |
+| <code>current_app</code> | Proxy | Current application instance |
+| <code>g</code> | Proxy | Request-scoped global |
+| <code>session</code> | Proxy | Cookie-based session |
+1. **Q:** What is the difference between WSGI and ASGI? When would you use each?
+   **A:** WSGI (Web Server Gateway Interface) is synchronous — one request, one thread, blocking I/O. ASGI (Asynchronous Server Gateway Interface) supports async I/O, long-lived connections (WebSockets), and HTTP/2. Use WSGI for simple request-response apps (Django/Flask). Use ASGI for high-concurrency APIs, WebSockets, and streaming (FastAPI, Django Channels).
+2. **Q:** How does Python's <code>asyncio</code> event loop handle concurrency without threads?
+   **A:** The event loop runs a single thread. Coroutines <code>await</code> on I/O operations, yielding control back to the loop. The loop picks another ready coroutine and resumes it. This is cooperative multitasking — coroutines must explicitly yield control with <code>await</code>. Blocking calls (<code>time.sleep</code>, sync <code>requests</code>) block the entire loop.
+3. **Q:** Explain the N+1 query problem in Django/SQLAlchemy ORMs and how to fix it.
+   **A:** Accessing a related field in a loop (<code>for book in books: print(book.author.name)</code>) triggers one query for the list + one per book. For 100 books, thats 101 queries. Fix with <code>select_related()</code> (SQL JOIN for FK/O2O) or <code>prefetch_related()</code> (separate batched query for M2M/reverse).
+4. **Q:** How does Python's GIL affect backend web servers?
+   **A:** The GIL (Global Interpreter Lock) prevents multiple threads from executing Python bytecode simultaneously. For CPU-bound work (image processing, ML inference), threads provide no speedup — use <code>multiprocessing</code> instead. For I/O-bound work (database queries, HTTP calls), <code>asyncio</code> or threads work well because the GIL is released during blocking I/O.
+5. **Q:** What is the difference between <code>@app.get</code> in FastAPI and <code>@app.route</code> in Flask?
+   **A:** FastAPI <code>@app.get</code> is an explicit HTTP method decorator with built-in validation via type hints and Pydantic. Flask <code>@app.route</code> requires a <code>methods</code> argument and manual request parsing. FastAPI generates OpenAPI docs automatically; Flask requires extensions.
+6. **Q:** How would you handle database migrations across multiple environments?
+   **A:** Use Alembic (with SQLAlchemy) or Django migrations. Store migration files in version control. Each environment (dev, staging, prod) runs <code>alembic upgrade head</code> on deploy. Never edit existing migrations after they are committed — create a new migration. Use <code>--sql</code> flag to generate raw SQL for DBA review.
+7. **Q:** What is the purpose of <code>__init__.py</code> in Python packages?
+   **A:** It marks a directory as a Python package (implicit namespace packages in Python 3.3+ don't need it, but it is still common). It can execute package-level initialization code and define <code>__all__</code> for wildcard imports. Without it, Python does not treat the directory as importable.
+8. **Q:** Compare Django Models and SQLAlchemy Declarative models.
+   **A:** Both map Python classes to database tables. Django Models are tightly coupled to Django (cannot use outside Django). SQLAlchemy is framework-agnostic. Django uses an active-record pattern (model.save()), SQLAlchemy uses a data-mapper pattern (session.add(), session.commit()). Django generates migrations automatically; SQLAlchemy requires Alembic. SQLAlchemy has more flexible query building and better async support.
+9. **Q:** How would you implement a custom middleware in FastAPI?
+   **A:** Create a class or function with <code>@app.middleware("http")</code> decorator. The middleware receives <code>request</code> and <code>call_next</code>. It can modify the request before passing to <code>call_next(request)</code> and modify the response before returning it.
+10. **Q:** What is the difference between <code>sync_to_async</code> and <code>async_to_sync</code> in Django Channels?
+    **A:** <code>sync_to_async</code> wraps a synchronous callable into an async callable (runs it in a thread pool). <code>async_to_sync</code> wraps an async callable to run synchronously (creates a temporary event loop). Use <code>sync_to_async</code> to call Django ORM from async views. Use <code>async_to_sync</code> to call async code from sync contexts (like management commands).`,
+          },
+          {
+            id: "cheat-nodejs-backend",
+            title: "Node.js / Express Backend",
+            shortDesc: "Complete Node.js reference — event loop, streams, Express/Fastify/NestJS patterns, middleware, testing, and production deployment.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Event loop phases: timers, I/O callbacks, idle, poll, check, close.",
+              "Streams: Readable, Writable, Transform, Duplex — backpressure handling.",
+              "Express/Fastify/NestJS: middleware patterns, error handling, validation.",
+              "Testing: Jest, Supertest, test containers, mock Prisma/Mongoose.",
+              "Production: clustering, PM2, Docker multi-stage builds, health checks.",
+            ],
+            content: `## Quick Reference
+Node.js is a JavaScript runtime built on V8 with a single-threaded event loop (libuv). Express is the de facto HTTP framework for routing and middleware. Fastify provides faster serialization and schema-based validation. NestJS adds a modular, opinionated architecture (controllers/providers/modules) inspired by Angular. All run on the same event loop — any synchronous blocking operation stalls every concurrent request.
+<code>node</code> — single-threaded event loop via libuv. <code>Express</code> — middleware-based routing. <code>Fastify</code> — schema-fast serialization. <code>NestJS</code> — decorator-driven architecture.
+## Language Fundamentals
+| Category | Details |
+| Paradigm | Event-driven, non-blocking I/O |
+| Runtime | V8 (JavaScript) + libuv (C library for event loop + thread pool) |
+| Concurrency | Single thread + async I/O + 4-worker thread pool |
+| Module system | ESM (import/export) since Node 16; CJS (require/module.exports) |
+| Package manager | npm, yarn, pnpm |
+| Version | Node 22 LTS (2026) |
+### Types & Values
+| Category | Type | Example | Notes |
+|----------|------|---------|-------|
+| Primitive | <code>string</code> | <code>"hello"</code> | UTF-16, immutable |
+| Primitive | <code>number</code> | <code>42</code>, <code>3.14</code> | IEEE-754 double (64-bit) |
+| Primitive | <code>boolean</code> | <code>true</code> | <code>false</code>, <code>true</code> |
+| Primitive | <code>undefined</code> | <code>let x</code> | Default for uninitialized |
+| Primitive | <code>null</code> | <code>null</code> | Explicit absence |
+| Primitive | <code>bigint</code> | <code>42n</code> | Arbitrary precision integers |
+| Primitive | <code>symbol</code> | <code>Symbol("id")</code> | Unique, used as object keys |
+| Object | <code>object</code> | <code>{a: 1}</code> | Mutable, reference type |
+| Object | <code>Array</code> | <code>[1, 2]</code> | Subtype of object |
+| Object | <code>Function</code> | <code>() => {}</code> | First-class callable |
+| Object | <code>Promise</code> | <code>Promise.resolve(1)</code> | Future value container |
+| Object | <code>Buffer</code> | <code>Buffer.from("hi")</code> | Raw binary data (Node-specific) |
+### Variables (ES6+)
+<code>javascript
+// -- const: immutable binding (not immutable value) --
+const PORT = 3000;              // Cannot reassign PORT
+const CONFIG = { db: "pg" };    // CONFIG = {} -> TypeError, but CONFIG.db = "mysql" is allowed
+// -- let: block-scoped, reassignable --
+count = 1;                      // Allowed
+if (true) {
+    let inner = "scoped";       // Not visible outside this block
+// -- var: function-scoped, hoisted (avoid in modern code) --
+var name = "old";               // Hoisted to top of function, no block scope
+// -- Destructuring assignment --
+const { host, port } = CONFIG;  // Extracts CONFIG.host and CONFIG.port into variables
+const [first, ...rest] = [1, 2, 3];  // first=1, rest=[2,3]
+### Control Flow
+<code>javascript
+// -- Conditionals --
+if (user) {
+    console.log(user.name);
+} else if (guest) {
+    console.log("Guest");
+    console.log("Unknown");
+// -- Loops --
+for (let i = 0; i < 5; i++) { /* traditional */ }
+for (const item of items) { /* iterable values */ }
+for (const key in obj) { /* object keys (includes prototype) */ }
+while (condition) { /* pre-check */ }
+do { /* post-check */ } while (condition);
+// -- Error handling --
+    const result = riskyOperation();
+    if (err instanceof ValidationError) {
+        console.error("Validation failed:", err.message);
+        throw err;  // Re-throw unexpected errors
+    cleanup();      // Always runs
+### Functions
+<code>javascript
+// -- Arrow function (lexical this, no arguments object) --
+const double = (x: number): number => x * 2;   // Implicit return (single expression)
+const log = (msg: string): void => {           // Explicit block
+    console.log(msg);
+// -- Function declaration (hoisted) --
+function multiply(a: number, b?: number): number {
+    // b is optional, defaults to undefined
+    return a * (b ?? 1);   // Use b if provided, else 1
+// -- Rest parameters + default values --
+function sum(...nums: number[]): number {
+    return nums.reduce((acc, n) => acc + n, 0);
+// -- async function (returns Promise) --
+async function fetchUser(id: string): Promise<User> {
+    const res = await fetch(/*url*/);   // Pauses execution until Promise resolves
+### Concurrency / Async
+| Mechanism | How It Works | Use Case |
+| Callback | Function passed to async operation | Legacy Node APIs (fs.readFile) |
+| Promise | <code>.then()/.catch()</code> chaining | Modern async operations |
+| async/await | Syntactic sugar over Promises | Sequential async code |
+| EventEmitter | <code>.on()/.emit()</code> pattern | Streams, HTTP events |
+| Worker Threads | True OS threads (isolated V8 instances) | CPU-bound work |
+| Child Process | Separate OS process | Heavy computation, third-party CLIs |
+<code>javascript
+// -- Promise chain --
+fetch("/api/users")
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+    .then(data => console.log(data))
+    .catch(err => console.error(err));
+// -- async/await (preferred) --
+async function loadUsers(): Promise<User[]> {
+        const res = await fetch("/api/users");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return await res.json();
+        console.error("Failed to load users:", err);
+        throw err;  // Re-throw for caller to handle
+// -- Concurrent execution --
+    fetchUsers(),
+    fetchPosts(),
+### Module System
+<code>javascript
+// -- ESM (recommended) -- package.json: "type": "module"
+// math.js
+export const PI = 3.14159;
+export function add(a: number, b: number): number {
+    return a + b;
+export default class Calculator { /* ... */ }
+import Calculator, { PI, add as sum } from "./math.js";
+// -- CJS (legacy) -- still used for many npm packages
+// math.js
+module.exports = { PI, add };
+module.exports.default = Calculator;
+const { PI, add } = require("./math");
+### Standard Library Highlights
+| Module | Purpose | Key Functions |
+| <code>fs</code> | File system | <code>readFile</code>, <code>writeFile</code>, <code>createReadStream</code>, <code>watch</code> |
+| <code>path</code> | Path manipulation | <code>join</code>, <code>resolve</code>, <code>basename</code>, <code>extname</code> |
+| <code>http</code> / <code>https</code> | HTTP server/client | <code>createServer</code>, <code>request</code> |
+| <code>stream</code> | Streaming data | <code>Readable</code>, <code>Writable</code>, <code>Transform</code>, <code>pipeline</code> |
+| <code>crypto</code> | Cryptography | <code>randomBytes</code>, <code>createHash</code>, <code>sign</code>/<code>verify</code> |
+| <code>url</code> | URL parsing | <code>URL</code> class, <code>URLSearchParams</code> |
+| <code>events</code> | Event emitter | <code>EventEmitter</code> class |
+| <code>os</code> | OS information | <code>cpus()</code>, <code>freemem()</code>, <code>hostname()</code> |
+| <code>cluster</code> | Process clustering | <code>fork()</code>, <code>isPrimary</code> |
+| <code>child_process</code> | Spawn subprocesses | <code>spawn</code>, <code>exec</code>, <code>fork</code> |
+| <code>timers</code> | Scheduling | <code>setTimeout</code>, <code>setInterval</code>, <code>setImmediate</code> |
+| <code>util</code> | Utilities | <code>promisify</code>, <code>callbackify</code>, <code>types</code> |
+## Framework by Framework Reference
+### Express (Minimal, unopinionated)
+**Setup:**
+<code>bash
+mkdir my-api && cd my-api
+npm init -y
+npm install express
+npm install -D typescript @types/express ts-node
+**Core Concepts:**
+<code>javascript
+import express, { Request, Response, NextFunction, Router } from "express";
+const app = express();                          // Create Express application
+// -- Middleware: functions that run in sequence --
+app.use(express.json());                        // Built-in: parse JSON request body
+app.use(express.urlencoded({ extended: true }));// Built-in: parse URL-encoded bodies
+// -- Route handler --
+app.get("/api/users/:id", (req: Request, res: Response, next: NextFunction) => {
+    // req.params.id -> URL path parameter
+    // req.query -> URL query string (?page=1)
+    // req.body -> parsed JSON body (requires json() middleware)
+        const user = { id: req.params.id, name: "Alice" };
+        res.status(200).json(user);             // Send JSON response with status code
+        next(err);                              // Forward error to error handler
+// -- Router (modular route organization) --
+const userRouter = Router();                    // Isolated route instance
+userRouter.get("/", async (req, res) => {
+    res.json(await getAllUsers());
+userRouter.post("/", async (req, res) => {
+    const user = await createUser(req.body);
+    res.status(201).json(user);
+app.use("/api/users", userRouter);              // Mount router at prefix
+// -- Error handling middleware (4 arguments = error handler) --
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+app.listen(3000, () => console.log("Server running on port 3000"));
+**Common Patterns:**
+| Pattern | Implementation |
+| Auth middleware | Check JWT in <code>Authorization</code> header, attach <code>req.user</code> |
+| Rate limiting | <code>express-rate-limit</code> package |
+| Validation | <code>express-validator</code> or <code>joi</code> / <code>zod</code> |
+| File upload | <code>multer</code> middleware |
+| CORS | <code>cors</code> package |
+| Compression | <code>compression</code> middleware |
+| Async error catch | Wrap handlers: <code>const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)</code> |
+### Fastify (Schema-fast, low overhead)
+**Setup:**
+<code>bash
+npm init -y
+npm install fastify
+npm install -D typescript @types/node
+**Core Concepts:**
+<code>javascript
+import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+const app: FastifyInstance = Fastify({          // Create Fastify instance
+    logger: true,                               // Built-in pino logger
+// -- Schema-based validation for request/response --
+const userSchema = {
+    params: {                                   // Path parameter validation (JSON Schema)
+        type: "object",
+        properties: { id: { type: "integer" } },
+        required: ["id"],
+    response: {                                 // Response serialization schema
+        200: {
+            type: "object",
+            properties: {
+                id: { type: "integer" },
+                name: { type: "string" },
+app.get("/api/users/:id", { schema: userSchema }, async (
+    request: FastifyRequest,
+    reply: FastifyReply
+    // request.params.id is validated as integer
+    // Fastify serializes response according to schema (faster than JSON.stringify)
+    const user = { id: request.params.id, name: "Alice" };
+    return user;                                // Fastify handles serialization
+// -- Plugins (encapsulated functionality) --
+import userRoutes from "./routes/users";
+app.register(userRoutes, { prefix: "/api/users" });
+// -- Startup --
+const start = async () => {
+        await app.listen({ port: 3000 });
+        app.log.error(err);
+        process.exit(1);
+**Common Patterns:**
+| Pattern | Implementation |
+| Validation | JSON Schema in route options (fast by default) |
+| Serialization | Response schema in route options |
+| Hooks | <code>app.addHook("onRequest", ...)</code> |
+| Decorators | <code>app.decorate("db", database)</code> |
+| Plugins | Encapsulated via <code>app.register(plugin)</code> |
+| Content type parser | <code>app.addContentTypeParser("application/json", ...)</code> |
+### NestJS (Opinionated, modular)
+**Setup:**
+<code>bash
+npm install -g @nestjs/cli
+nest new project-name
+npm run start:dev
+**Core Concepts:**
+<code>javascript
+// -- Module: organizes controllers and providers --
+import { Module } from "@nestjs/common";
+import { UsersController } from "./users.controller";
+import { UsersService } from "./users.service";
+@Module({
+    controllers: [UsersController],             // Route handlers
+    providers: [UsersService],                  // Injectable services
+    exports: [UsersService],                    // Make available to other modules
+export class UsersModule {}
+// -- Controller: handles HTTP requests --
+import { Controller, Get, Param, Post, Body, ParseIntPipe } from "@nestjs/common";
+@Controller("users")                            // Base path: /users
+export class UsersController {
+    constructor(private readonly usersService: UsersService) {}  // DI via constructor
+    @Get(":id")                                 // GET /users/:id
+    async findOne(@Param("id", ParseIntPipe) id: number) {
+        // ParseIntPipe transforms param to number, throws 400 on failure
+        return this.usersService.findById(id);
+    @Post()                                     // POST /users
+    async create(@Body() createUserDto: CreateUserDto) {
+        return this.usersService.create(createUserDto);
+// -- Provider (Service): business logic --
+import { Injectable } from "@nestjs/common";
+@Injectable()
+export class UsersService {
+    private users = [{ id: 1, name: "Alice" }];
+    async findById(id: number) {
+        return this.users.find(u => u.id === id);
+// -- DTO: Data Transfer Object with validation --
+import { IsString, IsEmail, MinLength } from "class-validator";
+export class CreateUserDto {
+    @IsString()                                 // Validation decorator
+    @MinLength(2)
+    name: string;
+    @IsEmail()
+    email: string;
+**Common Patterns:**
+| Pattern | Implementation |
+| Guards | <code>@Injectable()</code> class implementing <code>CanActivate</code> |
+| Interceptors | Transform responses or add logging |
+| Pipes | Validation (<code>ValidationPipe</code>) or transformation |
+| Filters | Exception filters (<code>@Catch()</code>) for error formatting |
+| Middleware | <code>@Injectable()</code> class implementing <code>NestMiddleware</code> |
+| WebSockets | <code>@WebSocketGateway()</code> |
+| GraphQL | <code>@Resolver()</code> / <code>@Query()</code> / <code>@Mutation()</code> |
+| Testing | <code>Test.createTestingModule()</code> |
+## Comparison Tables
+| Feature | Express | Fastify | NestJS |
+|---------|---------|---------|--------|
+| Philosophy | Minimal, unopinionated | Performance, schema-first | Opinionated, modular |
+| Performance | Moderate | Very high (JSON Schema serialization) | Moderate (Express/Fastify under the hood) |
+| Validation | External (zod/joi) | Built-in (JSON Schema) | Built-in (class-validator) |
+| Serialization | JSON.stringify (per-call) | Schema-cached serialization | Built-in (class-transformer) |
+| TypeScript support | Good (manual setup) | Good (full TS support) | Excellent (first-class) |
+| Middleware model | Linear chain | Plugin with encapsulation | Decorator-based pipeline |
+| Built-in DI | None | None | Yes (constructor-based) |
+| Learning curve | Low | Moderate | High |
+| Community | Very large | Medium | Large |
+| Plugin ecosystem | Express middleware | Fastify plugin | @nestjs/* packages |
+| WebSocket | Via socket.io | Via @fastify/websocket | Built-in gateway |
+| Testing | Supertest | Built-in inject() | Testing module |
+| Best for | Simple APIs | High-performance APIs | Enterprise monoliths |
+## Common Pitfalls & Anti-patterns
+1. **Blocking the event loop** — CPU-heavy operations like <code>JSON.parse(largeJSON)</code>, <code>bcrypt.hashSync()</code>, or tight loops block every concurrent request. Offload to Worker Threads or split into chunks.
+2. **Callback hell / pyramid of doom** — Nested callbacks make code unreadable. Use <code>async/await</code> and <code>Promise.all()</code> for parallel operations.
+3. **Unhandled Promise rejections** — Since Node 15, unhandled rejections crash the process. Always append <code>.catch()</code> or use <code>try/catch</code> in async functions. Register <code>process.on("unhandledRejection", handler)</code>.
+4. **Memory leaks from closures** — Timers, event listeners, or promises that capture large objects prevent GC. Always clean up with <code>clearTimeout()</code>, <code>removeListener()</code>, and <code>AbortController</code>.
+5. **Not handling backpressure in streams** — <code>res.write()</code> without checking <code>res.writableEnded</code> or using <code>pipeline()</code> causes excessive memory usage. Always use <code>stream.pipeline()</code> for proper backpressure handling.
+6. **Using <code>fs.readFile</code> synchronously in request handlers** — <code>fs.readFileSync()</code> blocks the event loop for the entire file read. Use <code>fs.promises.readFile()</code> or streams.
+7. **Not configuring <code>NODE_ENV=production</code>** — Express/Fastify have development-only overhead (verbose logging, stack traces, template caching disabled). Always set <code>NODE_ENV=production</code> in staging/prod.
+8. **Storing secrets in code** — API keys, DB passwords in source code leak via git. Use environment variables via <code>dotenv</code> for local and secrets manager in production.
+9. **Over-fetching in database queries** — <code>SELECT *</code> or Mongoose <code>.find()</code> without projection returns entire documents. Use projection: <code>.select("name email")</code>.
+10. **Using <code>try/catch</code> inside Express route handlers** — Synchronous errors crash the process if not caught. Use an async wrapper that calls <code>next(err)</code> automatically.
+11. **Not closing database connections on shutdown** — Active connections prevent the process from exiting cleanly. Listen for <code>SIGTERM</code>/<code>SIGINT</code> and call <code>mongoose.disconnect()</code> or <code>app.close()</code>.
+12. **Versioning APIs via files** — <code>v1/users.js</code>, <code>v2/users.js</code> leads to duplication. Use Express Router <code>/api/v1/users</code> or content negotiation.
+13. **Neglecting security headers** — No <code>helmet</code> middleware exposes app to XSS, clickjacking, and MIME sniffing attacks. Add <code>app.use(helmet())</code>.
+## Complete API Reference
+### Express
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>express()</code> | <code>() => Application</code> | Create Express application |
+| <code>app.use()</code> | <code>(path?, middleware)</code> | Mount middleware at optional path |
+| <code>app.get/post/put/delete/patch()</code> | <code>(path, ...handlers)</code> | Register route by HTTP method |
+| <code>app.all()</code> | <code>(path, handler)</code> | Match all HTTP methods |
+| <code>app.param()</code> | <code>(name, callback)</code> | Param-specific middleware |
+| <code>app.set()</code> | <code>(key, value)</code> | Application settings |
+| <code>app.listen()</code> | <code>(port, host?, callback)</code> | Start HTTP server |
+| <code>Router()</code> | <code>() => Router</code> | Isolated router instance |
+| <code>req.params</code> | Object | Route parameters |
+| <code>req.query</code> | Object | Query string parameters |
+| <code>req.body</code> | Object | Parsed request body |
+| <code>req.headers</code> | Object | Request headers |
+| <code>req.cookies</code> | Object | Cookie-parsed values |
+| <code>res.status()</code> | <code>(code) => Response</code> | Set HTTP status code |
+| <code>res.json()</code> | <code>(body) => void</code> | Send JSON response |
+| <code>res.send()</code> | <code>(body) => void</code> | Send generic response |
+| <code>res.redirect()</code> | <code>(path) => void</code> | Redirect (302 default) |
+| <code>next()</code> | <code>(err?) => void</code> | Pass control to next middleware |
+### Fastify
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>Fastify()</code> | <code>(opts?) => FastifyInstance</code> | Create Fastify instance |
+| <code>app.get/post/put/delete()</code> | <code>(path, opts?, handler)</code> | Register route with optional schema |
+| <code>app.register()</code> | <code>(plugin, opts?)</code> | Register plugin |
+| <code>app.decorate()</code> | <code>(name, value)</code> | Add property to instance |
+| <code>app.addHook()</code> | <code>(name, fn)</code> | Lifecycle hook |
+| <code>app.setErrorHandler()</code> | <code>(handler)</code> | Custom error handler |
+| <code>app.setNotFoundHandler()</code> | <code>(handler)</code> | Custom 404 handler |
+| <code>app.addContentTypeParser()</code> | <code>(type, opts, parser)</code> | Custom body parser |
+| <code>app.inject()</code> | <code>(opts) => Promise</code> | Lightweight integration test |
+| <code>request.params</code> | Object | Path parameters |
+| <code>request.query</code> | Object | Query parameters |
+| <code>request.body</code> | Object | Parsed request body |
+| <code>reply.code()</code> | <code>(code) => Reply</code> | Set status code |
+| <code>reply.send()</code> | <code>(payload) => void</code> | Send response |
+| <code>reply.header()</code> | <code>(key, value) => Reply</code> | Set response header |
+| <code>reply.type()</code> | <code>(contentType) => Reply</code> | Set Content-Type |
+### NestJS
+| Decorator | Target | Description |
+|-----------|--------|-------------|
+| <code>@Module()</code> | Class | Declare module metadata |
+| <code>@Controller()</code> | Class | Declare controller |
+| <code>@Injectable()</code> | Class | Declare provider (service) |
+| <code>@Get()</code> / <code>@Post()</code> / etc. | Method | Route handler by method |
+| <code>@Param()</code> | Parameter | Extract route parameter |
+| <code>@Query()</code> | Parameter | Extract query parameter |
+| <code>@Body()</code> | Parameter | Extract request body |
+| <code>@Headers()</code> | Parameter | Extract header value |
+| <code>@Req()</code> / <code>@Res()</code> | Parameter | Express raw request/response |
+| <code>@UseGuards()</code> | Method/Class | Apply guard |
+| <code>@UsePipes()</code> | Method/Class | Apply pipe |
+| <code>@UseInterceptors()</code> | Method/Class | Apply interceptor |
+| <code>@UseFilters()</code> | Method/Class | Apply exception filter |
+| <code>@Catch()</code> | Class | Declare exception filter target |
+| <code>GlobalPrefix()</code> | <code>app.setGlobalPrefix()</code> | Set API base path |
+1. **Q:** How does Node.js handle thousands of concurrent requests with a single thread?
+   **A:** Node uses an event loop (libuv). Each I/O operation (DB query, file read, HTTP call) is non-blocking — it registers a callback and returns immediately. When the I/O completes, the event loop puts the callback in the relevant phase queue and executes it when the call stack is empty. No thread is blocked waiting. The single thread only executes JavaScript; I/O waits happen in the kernel (epoll/kqueue/IOCP) or the libuv thread pool.
+2. **Q:** What is the difference between <code>process.nextTick</code> and <code>setImmediate</code>?
+   **A:** <code>process.nextTick</code> runs before the event loop continues to any I/O phase — it can starve I/O if called recursively. <code>setImmediate</code> runs in the "check" phase (after I/O callbacks). <code>nextTick</code> has higher priority. Use <code>nextTick</code> to defer work until the current operation completes, but prefer <code>setImmediate</code> for most cases.
+3. **Q:** Explain the middleware pattern in Express. How does <code>next()</code> work?
+   **A:** Middleware are functions that receive <code>(req, res, next)</code>. The app passes the request through a pipeline of middleware in registration order. Each middleware can modify req/res, send a response (short-circuiting), or call <code>next()</code> to pass control to the next middleware. If a middleware sends a response, subsequent middleware does not run. Error middleware with 4 args <code>(err, req, res, next)</code> catches errors from <code>next(err)</code>.
+4. **Q:** What is backpressure in Node streams and how do you handle it?
+   **A:** Backpressure occurs when a writable stream receives data faster than it can process (e.g., writing to a slow disk). Without handling it, data buffers in memory until OOM. Handle by checking <code>writable.write()</code> return value (false means buffer full) and listening for <code>"drain"</code> event. The <code>stream.pipeline()</code> function handles backpressure automatically.
+5. **Q:** How would you structure a large Express application for maintainability?
+   **A:** Use Express Router for feature modules (<code>routes/users.js</code>, <code>routes/orders.js</code>). Separate concerns: routes (HTTP), services (business logic), repositories (data access). Use middleware for cross-cutting concerns (auth, logging, validation). Consider moving to NestJS for large teams who need strict architecture.
+6. **Q:** Describe the request lifecycle in NestJS from ingress to response.
+   **A:** Incoming request -> Global middleware -> Guards (authentication check) -> Interceptors (pre-handler transformation) -> Pipes (validation/transformation) -> Route handler -> Interceptors (post-handler transformation) -> Exception filter (if error) -> Response.
+7. **Q:** How does Fastify achieve better performance than Express?
+   **A:** (1) JSON Schema-based serialization: Fastify compiles schemas into fast serialization functions, avoiding JSON.stringify overhead. (2) Lower abstraction overhead: Fastify is built from scratch for performance, not wrapping Node's http module like Express. (3) Efficient JSON parsing: uses <code>secure-json-parse</code> with schema validation during parsing.
+8. **Q:** What is the difference between npm, npx, yarn, and pnpm?
+   **A:** npm and yarn are package managers with similar features. npx runs packages without installing them globally. pnpm uses content-addressable storage (hard links) to share dependencies across projects, saving disk space and install time. pnpm also enforces strict dependency isolation (packages cannot access undeclared dependencies).
+9. **Q:** How do you prevent memory leaks in long-running Node.js processes?
+   **A:** Use <code>process.memoryUsage()</code> and garbage collector monitoring (<code>--trace-gc</code>). Common leak sources: global variables, forgotten timers/interval, event listeners without removal (<code>emitter.removeListener()</code>), closures referencing large objects, and growing <code>Map</code>/<code>Set</code> without cleanup. Use <code>heapdump</code> or Chrome DevTools Memory tab for analysis.
+10. **Q:** When would you use Worker Threads vs Child Processes vs Cluster?
+    **A:** Worker Threads: share memory (SharedArrayBuffer), same event loop model, for CPU-bound JS. Child Processes: separate process with its own memory, can run non-JS binaries, for heavy computation or legacy scripts. Cluster: fork multiple Node processes to utilize multi-core CPUs for HTTP serving — each process handles a portion of incoming connections.\`,
+}
+
+// -- Provider (Service): business logic --
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class UsersService {
+    private users = [{ id: 1, name: "Alice" }];
+
+    async findById(id: number) {
+        return this.users.find(u => u.id === id);
+    }
+}
+
+// -- DTO: Data Transfer Object with validation --
+import { IsString, IsEmail, MinLength } from "class-validator";
+
+export class CreateUserDto {
+    @IsString()                                 // Validation decorator
+    @MinLength(2)
+    name: string;
+
+    @IsEmail()
+    email: string;
+}
+</code>
+
+**Common Patterns:**
+
+| Pattern | Implementation |
+|---------|---------------|
+| Guards | <code>@Injectable()</code> class implementing <code>CanActivate</code> |
+| Interceptors | Transform responses or add logging |
+| Pipes | Validation (<code>ValidationPipe</code>) or transformation |
+| Filters | Exception filters (<code>@Catch()</code>) for error formatting |
+| Middleware | <code>@Injectable()</code> class implementing <code>NestMiddleware</code> |
+| WebSockets | <code>@WebSocketGateway()</code> |
+| GraphQL | <code>@Resolver()</code> / <code>@Query()</code> / <code>@Mutation()</code> |
+| Testing | <code>Test.createTestingModule()</code> |
+
+---
+
+## Comparison Tables
+
+| Feature | Express | Fastify | NestJS |
+|---------|---------|---------|--------|
+| Philosophy | Minimal, unopinionated | Performance, schema-first | Opinionated, modular |
+| Performance | Moderate | Very high (JSON Schema serialization) | Moderate (Express/Fastify under the hood) |
+| Validation | External (zod/joi) | Built-in (JSON Schema) | Built-in (class-validator) |
+| Serialization | JSON.stringify (per-call) | Schema-cached serialization | Built-in (class-transformer) |
+| TypeScript support | Good (manual setup) | Good (full TS support) | Excellent (first-class) |
+| Middleware model | Linear chain | Plugin with encapsulation | Decorator-based pipeline |
+| Built-in DI | None | None | Yes (constructor-based) |
+| Learning curve | Low | Moderate | High |
+| Community | Very large | Medium | Large |
+| Plugin ecosystem | Express middleware | Fastify plugin | @nestjs/* packages |
+| WebSocket | Via socket.io | Via @fastify/websocket | Built-in gateway |
+| Testing | Supertest | Built-in inject() | Testing module |
+| Best for | Simple APIs | High-performance APIs | Enterprise monoliths |
+
+---
+
+## Common Pitfalls & Anti-patterns
+
+1. **Blocking the event loop** — CPU-heavy operations like <code>JSON.parse(largeJSON)</code>, <code>bcrypt.hashSync()</code>, or tight loops block every concurrent request. Offload to Worker Threads or split into chunks.
+
+2. **Callback hell / pyramid of doom** — Nested callbacks make code unreadable. Use <code>async/await</code> and <code>Promise.all()</code> for parallel operations.
+
+3. **Unhandled Promise rejections** — Since Node 15, unhandled rejections crash the process. Always append <code>.catch()</code> or use <code>try/catch</code> in async functions. Register <code>process.on("unhandledRejection", handler)</code>.
+
+4. **Memory leaks from closures** — Timers, event listeners, or promises that capture large objects prevent GC. Always clean up with <code>clearTimeout()</code>, <code>removeListener()</code>, and <code>AbortController</code>.
+
+5. **Not handling backpressure in streams** — <code>res.write()</code> without checking <code>res.writableEnded</code> or using <code>pipeline()</code> causes excessive memory usage. Always use <code>stream.pipeline()</code> for proper backpressure handling.
+
+6. **Using <code>fs.readFile</code> synchronously in request handlers** — <code>fs.readFileSync()</code> blocks the event loop for the entire file read. Use <code>fs.promises.readFile()</code> or streams.
+
+7. **Not configuring <code>NODE_ENV=production</code>** — Express/Fastify have development-only overhead (verbose logging, stack traces, template caching disabled). Always set <code>NODE_ENV=production</code> in staging/prod.
+
+8. **Storing secrets in code** — API keys, DB passwords in source code leak via git. Use environment variables via <code>dotenv</code> for local and secrets manager in production.
+
+9. **Over-fetching in database queries** — <code>SELECT *</code> or Mongoose <code>.find()</code> without projection returns entire documents. Use projection: <code>.select("name email")</code>.
+
+10. **Using <code>try/catch</code> inside Express route handlers** — Synchronous errors crash the process if not caught. Use an async wrapper that calls <code>next(err)</code> automatically.
+
+11. **Not closing database connections on shutdown** — Active connections prevent the process from exiting cleanly. Listen for <code>SIGTERM</code>/<code>SIGINT</code> and call <code>mongoose.disconnect()</code> or <code>app.close()</code>.
+
+12. **Versioning APIs via files** — <code>v1/users.js</code>, <code>v2/users.js</code> leads to duplication. Use Express Router <code>/api/v1/users</code> or content negotiation.
+
+13. **Neglecting security headers** — No <code>helmet</code> middleware exposes app to XSS, clickjacking, and MIME sniffing attacks. Add <code>app.use(helmet())</code>.
+
+---
+
+## Complete API Reference
+
+### Express
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>express()</code> | <code>() => Application</code> | Create Express application |
+| <code>app.use()</code> | <code>(path?, middleware)</code> | Mount middleware at optional path |
+| <code>app.get/post/put/delete/patch()</code> | <code>(path, ...handlers)</code> | Register route by HTTP method |
+| <code>app.all()</code> | <code>(path, handler)</code> | Match all HTTP methods |
+| <code>app.param()</code> | <code>(name, callback)</code> | Param-specific middleware |
+| <code>app.set()</code> | <code>(key, value)</code> | Application settings |
+| <code>app.listen()</code> | <code>(port, host?, callback)</code> | Start HTTP server |
+| <code>Router()</code> | <code>() => Router</code> | Isolated router instance |
+| <code>req.params</code> | Object | Route parameters |
+| <code>req.query</code> | Object | Query string parameters |
+| <code>req.body</code> | Object | Parsed request body |
+| <code>req.headers</code> | Object | Request headers |
+| <code>req.cookies</code> | Object | Cookie-parsed values |
+| <code>res.status()</code> | <code>(code) => Response</code> | Set HTTP status code |
+| <code>res.json()</code> | <code>(body) => void</code> | Send JSON response |
+| <code>res.send()</code> | <code>(body) => void</code> | Send generic response |
+| <code>res.redirect()</code> | <code>(path) => void</code> | Redirect (302 default) |
+| <code>next()</code> | <code>(err?) => void</code> | Pass control to next middleware |
+
+### Fastify
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>Fastify()</code> | <code>(opts?) => FastifyInstance</code> | Create Fastify instance |
+| <code>app.get/post/put/delete()</code> | <code>(path, opts?, handler)</code> | Register route with optional schema |
+| <code>app.register()</code> | <code>(plugin, opts?)</code> | Register plugin |
+| <code>app.decorate()</code> | <code>(name, value)</code> | Add property to instance |
+| <code>app.addHook()</code> | <code>(name, fn)</code> | Lifecycle hook |
+| <code>app.setErrorHandler()</code> | <code>(handler)</code> | Custom error handler |
+| <code>app.setNotFoundHandler()</code> | <code>(handler)</code> | Custom 404 handler |
+| <code>app.addContentTypeParser()</code> | <code>(type, opts, parser)</code> | Custom body parser |
+| <code>app.inject()</code> | <code>(opts) => Promise</code> | Lightweight integration test |
+| <code>request.params</code> | Object | Path parameters |
+| <code>request.query</code> | Object | Query parameters |
+| <code>request.body</code> | Object | Parsed request body |
+| <code>reply.code()</code> | <code>(code) => Reply</code> | Set status code |
+| <code>reply.send()</code> | <code>(payload) => void</code> | Send response |
+| <code>reply.header()</code> | <code>(key, value) => Reply</code> | Set response header |
+| <code>reply.type()</code> | <code>(contentType) => Reply</code> | Set Content-Type |
+
+### NestJS
+
+| Decorator | Target | Description |
+|-----------|--------|-------------|
+| <code>@Module()</code> | Class | Declare module metadata |
+| <code>@Controller()</code> | Class | Declare controller |
+| <code>@Injectable()</code> | Class | Declare provider (service) |
+| <code>@Get()</code> / <code>@Post()</code> / etc. | Method | Route handler by method |
+| <code>@Param()</code> | Parameter | Extract route parameter |
+| <code>@Query()</code> | Parameter | Extract query parameter |
+| <code>@Body()</code> | Parameter | Extract request body |
+| <code>@Headers()</code> | Parameter | Extract header value |
+| <code>@Req()</code> / <code>@Res()</code> | Parameter | Express raw request/response |
+| <code>@UseGuards()</code> | Method/Class | Apply guard |
+| <code>@UsePipes()</code> | Method/Class | Apply pipe |
+| <code>@UseInterceptors()</code> | Method/Class | Apply interceptor |
+| <code>@UseFilters()</code> | Method/Class | Apply exception filter |
+| <code>@Catch()</code> | Class | Declare exception filter target |
+| <code>GlobalPrefix()</code> | <code>app.setGlobalPrefix()</code> | Set API base path |
+
+---
+
+## Practice Questions
+
+1. **Q:** How does Node.js handle thousands of concurrent requests with a single thread?
+   **A:** Node uses an event loop (libuv). Each I/O operation (DB query, file read, HTTP call) is non-blocking — it registers a callback and returns immediately. When the I/O completes, the event loop puts the callback in the relevant phase queue and executes it when the call stack is empty. No thread is blocked waiting. The single thread only executes JavaScript; I/O waits happen in the kernel (epoll/kqueue/IOCP) or the libuv thread pool.
+
+2. **Q:** What is the difference between <code>process.nextTick</code> and <code>setImmediate</code>?
+   **A:** <code>process.nextTick</code> runs before the event loop continues to any I/O phase — it can starve I/O if called recursively. <code>setImmediate</code> runs in the "check" phase (after I/O callbacks). <code>nextTick</code> has higher priority. Use <code>nextTick</code> to defer work until the current operation completes, but prefer <code>setImmediate</code> for most cases.
+
+3. **Q:** Explain the middleware pattern in Express. How does <code>next()</code> work?
+   **A:** Middleware are functions that receive <code>(req, res, next)</code>. The app passes the request through a pipeline of middleware in registration order. Each middleware can modify req/res, send a response (short-circuiting), or call <code>next()</code> to pass control to the next middleware. If a middleware sends a response, subsequent middleware does not run. Error middleware with 4 args <code>(err, req, res, next)</code> catches errors from <code>next(err)</code>.
+
+4. **Q:** What is backpressure in Node streams and how do you handle it?
+   **A:** Backpressure occurs when a writable stream receives data faster than it can process (e.g., writing to a slow disk). Without handling it, data buffers in memory until OOM. Handle by checking <code>writable.write()</code> return value (false means buffer full) and listening for <code>"drain"</code> event. The <code>stream.pipeline()</code> function handles backpressure automatically.
+
+5. **Q:** How would you structure a large Express application for maintainability?
+   **A:** Use Express Router for feature modules (<code>routes/users.js</code>, <code>routes/orders.js</code>). Separate concerns: routes (HTTP), services (business logic), repositories (data access). Use middleware for cross-cutting concerns (auth, logging, validation). Consider moving to NestJS for large teams who need strict architecture.
+
+6. **Q:** Describe the request lifecycle in NestJS from ingress to response.
+   **A:** Incoming request -> Global middleware -> Guards (authentication check) -> Interceptors (pre-handler transformation) -> Pipes (validation/transformation) -> Route handler -> Interceptors (post-handler transformation) -> Exception filter (if error) -> Response.
+
+7. **Q:** How does Fastify achieve better performance than Express?
+   **A:** (1) JSON Schema-based serialization: Fastify compiles schemas into fast serialization functions, avoiding JSON.stringify overhead. (2) Lower abstraction overhead: Fastify is built from scratch for performance, not wrapping Node's http module like Express. (3) Efficient JSON parsing: uses <code>secure-json-parse</code> with schema validation during parsing.
+
+8. **Q:** What is the difference between npm, npx, yarn, and pnpm?
+   **A:** npm and yarn are package managers with similar features. npx runs packages without installing them globally. pnpm uses content-addressable storage (hard links) to share dependencies across projects, saving disk space and install time. pnpm also enforces strict dependency isolation (packages cannot access undeclared dependencies).
+
+9. **Q:** How do you prevent memory leaks in long-running Node.js processes?
+   **A:** Use <code>process.memoryUsage()</code> and garbage collector monitoring (<code>--trace-gc</code>). Common leak sources: global variables, forgotten timers/interval, event listeners without removal (<code>emitter.removeListener()</code>), closures referencing large objects, and growing <code>Map</code>/<code>Set</code> without cleanup. Use <code>heapdump</code> or Chrome DevTools Memory tab for analysis.
+
+10. **Q:** When would you use Worker Threads vs Child Processes vs Cluster?
+    **A:** Worker Threads: share memory (SharedArrayBuffer), same event loop model, for CPU-bound JS. Child Processes: separate process with its own memory, can run non-JS binaries, for heavy computation or legacy scripts. Cluster: fork multiple Node processes to utilize multi-core CPUs for HTTP serving — each process handles a portion of incoming connections.`,
+            tags: ["Node.js", "Express", "Backend", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-go-backend",
+            title: "Go Backend Development",
+            shortDesc: "Complete Go reference — goroutines, channels, net/http, Gin/Echo/Fiber, testing, profiling, and idiomatic Go patterns.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Goroutines: lightweight threads multiplexed onto OS threads by the Go scheduler.",
+              "Channels: typed conduits for goroutine communication — unbuffered vs buffered.",
+              "net/http: Handler interface, ServeMux, middleware with http.Handler.",
+              "Frameworks: Gin (fast routing), Echo (middleware), Fiber (Express-like).",
+              "Testing: testing package, httptest, table-driven tests, benchmarks.",
+            ],
+            content: `## Quick Reference
+Go is a statically-typed, compiled language with built-in concurrency primitives (goroutines, channels). The standard library includes a production-grade HTTP server (<code>net/http</code>). Popular frameworks (Gin, Echo, Fiber) add routing performance and middleware. Go compiles to a single binary with zero dependencies — ideal for microservices.
+<code>go</code> — static typing, garbage collected, fast compilation. <code>goroutine</code> — ~2KB stack, multiplexed onto OS threads by the Go scheduler. <code>channel</code> — typed conduit for goroutine communication (CSP model).
+## Language Fundamentals
+| Category | Details |
+| Paradigm | Concurrent, imperative, structured |
+| Typing | Static, strong, structural typing (interfaces) |
+| Memory | Garbage collected (concurrent, non-generational, tri-color mark-sweep) |
+| Compilation | AOT compiled to native binary (no VM) |
+| Version | Go 1.24 (2026) |
+| Module system | Go modules (<code>go.mod</code>) |
+| Package manager | Built-in (<code>go get</code>, <code>go mod tidy</code>) |
+### Types & Values
+| Category | Types | Zero Value | Example |
+|----------|-------|------------|---------|
+| Boolean | <code>bool</code> | <code>false</code> | <code>true</code> |
+| Numeric (int) | <code>int</code>, <code>int8</code>, <code>int16</code>, <code>int32</code>, <code>int64</code> | <code>0</code> | <code>42</code> |
+| Numeric (uint) | <code>uint</code>, <code>uint8</code>, <code>uint16</code>, <code>uint32</code>, <code>uint64</code> | <code>0</code> | <code>uint(42)</code> |
+| Float | <code>float32</code>, <code>float64</code> | <code>0.0</code> | <code>3.14</code> |
+| Complex | <code>complex64</code>, <code>complex128</code> | <code>0+0i</code> | <code>1 + 2i</code> |
+| String | <code>string</code> | <code>""</code> | <code>"hello"</code> |
+| Byte | <code>byte</code> (alias for <code>uint8</code>) | <code>0</code> | <code>byte('A')</code> |
+| Rune | <code>rune</code> (alias for <code>int32</code>) | <code>0</code> | <code>'A'</code> |
+| Pointer | <code>*T</code> | <code>nil</code> | <code>&x</code> |
+| Slice | <code>[]T</code> | <code>nil</code> | <code>[]int{1, 2}</code> |
+| Map | <code>map[K]V</code> | <code>nil</code> | <code>map[string]int{"a": 1}</code> |
+| Struct | <code>struct{}</code> | Zero-value fields | <code>User{Name: "Alice"}</code> |
+| Interface | <code>interface{}</code> or <code>any</code> | <code>nil</code> | <code>any("hello")</code> |
+| Function | <code>func(T) R</code> | <code>nil</code> | <code>func(x int) int { return x }</code> |
+| Channel | <code>chan T</code> | <code>nil</code> | <code>make(chan int)</code> |
+### Variables & Control Flow
+<code>go
+import "fmt"
+// -- Package-level variable --
+var AppVersion = "1.0.0"              // Type inferred from literal
+    // -- Short declaration (type inference) --
+    name := "Alice"                    // Equivalent to: var name string = "Alice"
+    age := 30
+    // -- Explicit declaration --
+    var count int = 0
+    var enabled bool                   // Zero value: false
+    // -- Multiple assignment --
+    x, y := 10, 20
+    x, y = y, x                       // Swap values without temp variable
+    // -- Conditionals --
+    if score := 85; score >= 90 {      // 'score' scoped to if/else blocks
+        fmt.Println("A")
+    } else if score >= 80 {
+        fmt.Println("B")
+        fmt.Println("C")
+    // -- Switch (no break needed, no fallthrough by default) --
+    switch day := "Monday"; day {
+    case "Saturday", "Sunday":
+        fmt.Println("Weekend")
+        fmt.Println("Weekday")
+    // -- For loop (only loop construct in Go) --
+    for i := 0; i < 5; i++ {           // Traditional for loop
+        fmt.Println(i)
+    for i < 10 {                       // While-style (no 'while' keyword)
+        i++
+    for {                               // Infinite loop
+    for index, value := range []string{"a", "b"} {  // Iterate over collections
+        fmt.Println(index, value)
+### Functions
+<code>go
+// -- Function with multiple return values --
+func divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("division by zero")    // Error as return value
+    return a / b, nil                                 // nil error = success
+// -- Named return values (documentation, auto-zero) --
+func stats(nums []int) (sum int, avg float64) {
+    for _, n := range nums {
+        sum += n
+    if len(nums) > 0 {
+        avg = float64(sum) / float64(len(nums))
+    return                                            // Bare return: returns sum, avg
+// -- Variadic function --
+func sum(nums ...int) int {                           // nums is []int inside
+    total := 0
+    for _, n := range nums {
+        total += n
+    return total
+// -- Function as value (closure) --
+func counter() func() int {
+    i := 0
+    return func() int {
+        i++
+        return i
+// -- Defer (runs when surrounding function returns) --
+func readFile(path string) error {
+    f, err := os.Open(path)
+    if err != nil {
+    defer f.Close()                                    // Runs even if function panics
+    // ... read from f ...
+### Types / Generics (Go 1.18+)
+<code>go
+// -- Struct with methods --
+type User struct {
+    ID        int64
+    Name      string
+    Email     string    \`json:"email"\`                 // Struct tags (reflect metadata)
+    createdAt time.Time                                // Unexported field
+// Method with value receiver
+func (u User) FullName() string {                     // u is a copy
+    return u.Name
+// Method with pointer receiver (can modify)
+func (u *User) UpdateEmail(email string) {
+    u.Email = email                                    // Modifies original
+// -- Interface (structural typing — implicit satisfaction) --
+type Stringer interface {
+    String() string                                    // Method set
+// User implements Stringer automatically (no 'implements' keyword)
+func (u User) String() string {
+    return fmt.Sprintf("User(%d, %s)", u.ID, u.Name)
+// -- Generics (type parameters) --
+func Map[T any, R any](input []T, transform func(T) R) []R {
+    result := make([]R, len(input))
+    for i, v := range input {
+        result[i] = transform(v)
+// Usage with inferred types
+doubled := Map([]int{1, 2, 3}, func(x int) int { return x * 2 })
+### Concurrency / Goroutines
+| Pattern | Code | Description |
+|---------|------|-------------|
+| Spawn goroutine | <code>go doWork()</code> | Run function concurrently |
+| Channel send/receive | <code>ch <- v</code> / <code>v := <-ch</code> | Blocking communication |
+| Buffered channel | <code>make(chan int, 10)</code> | Non-blocking until full |
+| Select | <code>select { case <-ch1: ... }</code> | Wait on multiple channels |
+| WaitGroup | <code>wg.Add(1); defer wg.Done(); wg.Wait()</code> | Wait for goroutine completion |
+| Mutex | <code>sync.Mutex</code>: <code>mu.Lock()</code> / <code>mu.Unlock()</code> | Protect shared state |
+<code>go
+    "fmt"
+    "sync"
+    "time"
+func worker(id int, jobs <-chan int, results chan<- int) {
+    // jobs: receive-only channel
+    // results: send-only channel
+    for job := range jobs {                            // Reads until jobs is closed
+        results <- job * 2                             // Send result
+    const numJobs = 10
+    jobs := make(chan int, numJobs)
+    results := make(chan int, numJobs)
+    // -- Start 3 worker goroutines --
+    var wg sync.WaitGroup
+    for w := 1; w <= 3; w++ {
+        go func(id int) {
+            defer wg.Done()
+            worker(id, jobs, results)
+        }(w)                                           // Pass w as argument (avoid loop capture)
+    // -- Send jobs and close channel --
+    for j := 1; j <= numJobs; j++ {
+        jobs <- j
+    close(jobs)                                        // Workers stop when channel is closed
+    wg.Wait()                                          // Wait for all workers to finish
+    close(results)
+    for r := range results {
+        fmt.Println(r)
+### Module System
+<code>bash
+go mod init example.com/myapi            # Creates go.mod
+go get github.com/gin-gonic/gin           # Add dependency
+go mod tidy                              # Clean up unused dependencies
+go mod vendor                            # Create vendor directory
+<code>go
+// -- Package structure --
+// myapi/
+//   go.mod
+//   main.go                        (package main)
+//   handlers/
+//     users.go                     (package handlers)
+//   models/
+//     user.go                      (package models)
+// Import uses module path + subdirectory
+    "example.com/myapi/handlers"
+    "example.com/myapi/models"
+### Standard Library Highlights
+| Package | Purpose | Key Functions/Types |
+|---------|---------|---------------------|
+| <code>fmt</code> | Format I/O | <code>Printf</code>, <code>Sprintf</code>, <code>Errorf</code> |
+| <code>net/http</code> | HTTP server/client | <code>HandleFunc</code>, <code>ListenAndServe</code>, <code>Client</code> |
+| <code>encoding/json</code> | JSON | <code>Marshal</code>, <code>Unmarshal</code>, <code>Encoder</code>, <code>Decoder</code> |
+| <code>database/sql</code> | SQL interface | <code>Open</code>, <code>Query</code>, <code>Exec</code>, <code>Rows</code> |
+| <code>context</code> | Request scoping | <code>WithCancel</code>, <code>WithTimeout</code>, <code>WithValue</code> |
+| <code>sync</code> | Concurrency | <code>Mutex</code>, <code>RWMutex</code>, <code>WaitGroup</code>, <code>Once</code> |
+| <code>time</code> | Time | <code>Now</code>, <code>Parse</code>, <code>Duration</code>, <code>Ticker</code> |
+| <code>io</code> | I/O interfaces | <code>Reader</code>, <code>Writer</code>, <code>Copy</code>, <code>ReadAll</code> |
+| <code>strings</code> | String manipulation | <code>Split</code>, <code>Join</code>, <code>Contains</code>, <code>Builder</code> |
+| <code>log</code> | Logging | <code>Printf</code>, <code>Fatal</code>, <code>New</code> |
+| <code>testing</code> | Testing | <code>T</code>, <code>B</code>, <code>Run</code>, <code>Coverage</code> |
+| <code>os</code> | OS interface | <code>Getenv</code>, <code>Open</code>, <code>Exit</code>, <code>Signal</code> |
+| <code>flag</code> | CLI flags | <code>String</code>, <code>Int</code>, <code>Parse</code> |
+| <code>reflect</code> | Runtime reflection | <code>TypeOf</code>, <code>ValueOf</code> |
+## Framework by Framework Reference
+### Gin (Fast router, most popular)
+**Setup:**
+<code>bash
+go mod init example.com/myapi
+go get github.com/gin-gonic/gin
+**Core Concepts:**
+<code>go
+    "net/http"
+    "github.com/gin-gonic/gin"
+    r := gin.Default()                         // Creates router with Logger + Recovery middleware
+    // -- Route with path parameter --
+    r.GET("/users/:id", func(c *gin.Context) {
+        id := c.Param("id")                     // Extract path parameter
+        name := c.Query("name")                 // Extract query string (?name=Alice)
+        c.JSON(http.StatusOK, gin.H{            // gin.H is shortcut for map[string]any
+            "id":   id,
+            "name": name,
+    // -- Group routes --
+    api := r.Group("/api")
+        api.GET("/users", listUsers)
+        api.POST("/users", createUser)
+    // -- Bind request body to struct --
+    r.POST("/users", func(c *gin.Context) {
+        var user struct {
+            Name  string \`json:"name" binding:"required"\`
+            Email string \`json:"email" binding:"required,email"\`
+        if err := c.ShouldBindJSON(&user); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusCreated, user)
+    r.Run(":8080")                             // Default :8080
+**Common Patterns:**
+| Pattern | Code |
+| Custom middleware | <code>r.Use(func(c *gin.Context) { /* ... */ c.Next() })</code> |
+| Authentication | <code>c.GetHeader("Authorization")</code> |
+| Rate limiting | <code>github.com/ulule/limiter/v3</code> |
+| File upload | <code>c.FormFile("file")</code> |
+| Static files | <code>r.Static("/static", "./public")</code> |
+| HTML templates | <code>r.LoadHTMLGlob("templates/*")</code> |
+### Echo (Lightweight, idiomatic middleware)
+**Setup:**
+<code>bash
+go get github.com/labstack/echo/v4
+**Core Concepts:**
+<code>go
+    "net/http"
+    "github.com/labstack/echo/v4"
+    "github.com/labstack/echo/v4/middleware"
+    e := echo.New()                            // Create Echo instance
+    // -- Built-in middleware --
+    e.Use(middleware.Logger())                  // Request logging
+    e.Use(middleware.Recover())                 // Panic recovery
+    e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+        AllowOrigins: []string{"*"},
+        AllowMethods: []string{http.MethodGet, http.MethodPost},
+    // -- Group with prefix and middleware --
+    api := e.Group("/api")
+    api.Use(middleware.KeyAuth(func(key string, c echo.Context) (bool, error) {
+        return key == "secret", nil
+    api.GET("/users/:id", func(c echo.Context) error {
+        id := c.Param("id")
+        return c.JSON(http.StatusOK, map[string]string{"id": id})
+    e.Logger.Fatal(e.Start(":8080"))
+**Common Patterns:**
+| Pattern | Code |
+| Custom middleware | <code>e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return func(c echo.Context) error { /* ... */ return next(c) } })</code> |
+| Data binding | <code>c.Bind(&user)</code> |
+| Validation | <code>c.Validate(&user)</code> |
+| Error handling | Custom <code>echo.HTTPErrorHandler</code> |
+| Templates | <code>e.Renderer = customRenderer</code> |
+### Fiber (Express-like, fastest)
+**Setup:**
+<code>bash
+go get github.com/gofiber/fiber/v2
+**Core Concepts:**
+<code>go
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/logger"
+    app := fiber.New()                         // Create Fiber app
+    app.Use(logger.New())                       // Request logging middleware
+    // -- Route with parameter --
+    app.Get("/users/:id", func(c *fiber.Ctx) error {
+        id := c.Params("id")                    // Path parameter
+        return c.JSON(fiber.Map{                // fiber.Map is map[string]any
+            "id": id,
+    // -- Parse request body --
+    app.Post("/users", func(c *fiber.Ctx) error {
+        user := new(struct {
+            Name string \`json:"name"\`
+        if err := c.BodyParser(user); err != nil {
+            return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+        return c.Status(201).JSON(user)
+    app.Listen(":8080")
+## Comparison Tables
+| Feature | Gin | Echo | Fiber | net/http (stdlib) |
+|---------|-----|------|-------|-------------------|
+| Performance | Very high | High | Highest (fasthttp) | Moderate |
+| Router speed | httprouter | Custom radix tree | fasthttp-based | Default mux (slow) |
+| Middleware | <code>gin.HandlerFunc</code> | <code>echo.MiddlewareFunc</code> | <code>fiber.Handler</code> | <code>http.Handler</code> |
+| Context | <code>gin.Context</code> | <code>echo.Context</code> | <code>fiber.Ctx</code> | <code>http.ResponseWriter</code> + <code>*http.Request</code> |
+| Validation | binding tags | struct tags + validator | go-playground/validator | Manual |
+| Community | Largest | Large | Medium | Standard library |
+| Learning curve | Low | Low | Low | Low |
+| Extra features | Binding, rendering, validation middleware | Template rendering, CORS, CSRF | Static file serving, WebSocket | None (minimal) |
+## Common Pitfalls & Anti-patterns
+1. **Ignoring errors** — <code>result, _ := doSomething()</code> silently discards errors. Always handle errors or explicitly ignore with a comment: <code>_ = r.Close() // ignore close error</code>.
+2. **Goroutine leaks** — Goroutines blocked on channel send/receive that never complete. Use <code>context.Context</code> with cancellation and ensure goroutines exit when <code>ctx.Done()</code> fires.
+3. **Capturing loop variables** — Go 1.21 fixed this, but in older versions: <code>for _, v := range slice { go func() { fmt.Println(v) }() }</code> prints the last element repeatedly. Pass <code>v</code> as argument to the closure.
+4. **Using <code>defer</code> inside a loop** — <code>defer</code> runs at function return, not at loop iteration end. Resources accumulate until the function returns. Use explicit close inside loop or move loop body to a helper function.
+5. **Passing values that could be mutated** — Slices and maps are reference types. Passing them without copying can lead to data races or unexpected mutation. Copy with <code>copy(dst, src)</code> or explicit map copy.
+6. **Not checking <code>sql.ErrNoRows</code>** — <code>db.QueryRow().Scan()</code> returns <code>sql.ErrNoRows</code> when no rows found. Check with <code>errors.Is(err, sql.ErrNoRows)</code> instead of treating it as a real error.
+7. **Using <code>interface{}</code> everywhere** — Throws away compile-time type safety. Define explicit interfaces with small method sets. Use generics instead of <code>interface{}</code> / <code>any</code>.
+8. **Panic instead of error return** — Panics are for programmer errors (nil dereference, index out of bounds), not expected failures. Return errors for anything the caller should handle.
+9. **Not using <code>http.TimeoutHandler</code>** — Client connections never die, goroutines pile up. Set <code>Server{ReadTimeout, WriteTimeout, IdleTimeout}</code>.
+10. **Mixing <code>go mod</code> vendor and GOPATH** — Always use Go modules for new projects. Avoid <code>GO111MODULE=off</code>. Run <code>go mod tidy</code> after adding dependencies.
+11. **Default <code>http.Client</code> with no timeout** — The default client has no timeout, causing goroutine leaks on stalled connections. Create a custom client: <code>&http.Client{Timeout: 10 * time.Second}</code>.
+12. **Writing to a closed channel** — Causes a panic. Always use <code>close(ch)</code> only from the sender side, and ensure only one goroutine closes. Use <code>sync.Once</code> if multiple goroutines could close.
+## Complete API Reference
+### net/http
+| Type/Function | Signature | Description |
+|---------------|-----------|-------------|
+| <code>http.HandleFunc</code> | <code>(pattern, func(ResponseWriter, *Request))</code> | Register handler |
+| <code>http.ListenAndServe</code> | <code>(addr, Handler) error</code> | Start HTTP server |
+| <code>http.Server</code> | Struct | Configurable HTTP server |
+| <code>http.Request</code> | Struct | Incoming request |
+| <code>http.ResponseWriter</code> | Interface | Outgoing response |
+| <code>http.Client</code> | Struct | HTTP client |
+| <code>http.NewServeMux</code> | <code>() *ServeMux</code> | Route multiplexer |
+| <code>http.TimeoutHandler</code> | <code>(Handler, Duration, msg) Handler</code> | Wrap with timeout |
+| <code>http.FileServer</code> | <code>(FileSystem) Handler</code> | Static file server |
+| <code>http.Redirect</code> | <code>(ResponseWriter, *Request, url, code)</code> | Redirect response |
+| Function/Method | Description |
+| <code>gin.Default()</code> | Create router with Logger + Recovery middleware |
+| <code>gin.New()</code> | Create bare router (no middleware) |
+| <code>r.GET/POST/PUT/DELETE/PATCH()</code> | Register route by method |
+| <code>r.Use()</code> | Add global middleware |
+| <code>r.Group()</code> | Create route group with prefix |
+| <code>c.Param()</code> | Path parameter |
+| <code>c.Query()</code> | Query parameter |
+| <code>c.PostForm()</code> | Form field |
+| <code>c.ShouldBindJSON()</code> | Bind JSON body to struct |
+| <code>c.ShouldBindQuery()</code> | Bind query string to struct |
+| <code>c.JSON()</code> | Send JSON response |
+| <code>c.String()</code> | Send text response |
+| <code>c.AbortWithStatusJSON()</code> | Short-circuit with JSON error |
+| <code>c.Next()</code> | Continue to next middleware |
+| <code>c.Set()/c.Get()</code> | Store/retrieve context values |
+| Function/Method | Description |
+| <code>echo.New()</code> | Create Echo instance |
+| <code>e.Use()</code> | Add middleware |
+| <code>e.GET/POST/PUT/DELETE()</code> | Register route |
+| <code>e.Group()</code> | Route group with prefix |
+| <code>e.Start()</code> | Start HTTP server |
+| <code>e.Logger</code> | Built-in logger |
+| <code>c.Param()</code> | Path parameter |
+| <code>c.QueryParam()</code> | Query parameter |
+| <code>c.Bind()</code> | Bind request body |
+| <code>c.JSON()</code> | JSON response |
+| <code>c.String()</code> | String response |
+| <code>c.Redirect()</code> | Redirect response |
+| <code>c.Error()</code> | Send error response |
+| Function/Method | Description |
+| <code>fiber.New()</code> | Create Fiber app |
+| <code>app.Use()</code> | Add middleware |
+| <code>app.Get/Post/Put/Delete()</code> | Register route |
+| <code>app.Group()</code> | Route group |
+| <code>app.Listen()</code> | Start HTTP server |
+| <code>c.Params()</code> | Path parameters |
+| <code>c.Query()</code> | Query parameters |
+| <code>c.BodyParser()</code> | Parse request body |
+| <code>c.JSON()</code> | JSON response |
+| <code>c.Status()</code> | Set status code |
+| <code>c.Next()</code> | Next middleware |
+| <code>c.SendString()</code> | Send string |
+1. **Q:** How does Go handle concurrency differently from Node.js and Python?
+   **A:** Go uses goroutines (lightweight threads with ~2KB stacks) multiplexed onto OS threads by the Go scheduler (M:N scheduling). Unlike Node (single-threaded event loop) or Python (GIL-bound threads), Go can run CPU-bound goroutines in parallel across multiple OS threads. Goroutines communicate via channels (CSP model), avoiding shared memory and locks.
+2. **Q:** Explain the <code>defer</code> mechanism. When are deferred functions executed?
+   **A:** <code>defer</code> schedules a function call to run when the surrounding function returns (either normally or via panic). Arguments are evaluated immediately, but the function body runs at return. Multiple defers execute in LIFO order. Common use: closing files/releasing mutexes.
+3. **Q:** What is the difference between <code>var a [5]int</code> and <code>var a []int</code>?
+   **A:** <code>[5]int</code> is an array — fixed size, value type (passing copies all elements). <code>[]int</code> is a slice — a view into an underlying array (pointer + length + capacity), reference type. Use slices unless you specifically need fixed-size arrays.
+4. **Q:** What is the purpose of the <code>context</code> package?
+   **A:** <code>context.Context</code> carries deadlines, cancellation signals, and request-scoped values across API boundaries. Used in HTTP handlers, database queries, and goroutines. <code>context.WithTimeout</code> sets a deadline, <code>context.WithCancel</code> enables manual cancellation, <code>ctx.Done()</code> returns a channel that closes when cancelled.
+5. **Q:** How does Go's garbage collector work compared to Java's?
+   **A:** Go uses a concurrent, non-generational, tri-color mark-sweep GC. It does NOT generational collection like Java. The GC runs concurrently with mutator threads, pausing only for short (sub-millisecond) STW phases. Go's GC is optimized for low latency over throughput, making it suitable for latency-sensitive backend services.
+6. **Q:** What does <code>go mod tidy</code> do?
+   **A:** It adds missing module dependencies and removes unused ones, ensuring <code>go.mod</code> and <code>go.sum</code> match the source code exactly. Always run it after changing imports.
+7. **Q:** How would you implement a rate limiter middleware in Gin?
+   **A:** Use a token bucket or sliding window via <code>sync.Mutex</code> + <code>time.Ticker</code>, or use the <code>ulule/limiter</code> package. The middleware checks the request IP, decrements a counter, and returns 429 if limit exceeded.
+8. **Q:** Compare Gin and Fiber performance characteristics.
+   **A:** Fiber uses <code>fasthttp</code> (a fast HTTP implementation in Go) instead of <code>net/http</code>, giving it a ~30-40% performance advantage over Gin in raw throughput and latency. However, <code>fasthttp</code> deviates from the standard library's <code>http.Handler</code> interface, making Fiber incompatible with standard <code>net/http</code> middleware. Gin uses the standard library's HTTP server and is compatible with most Go HTTP middleware.
+9. **Q:** How do you write a table-driven test in Go?
+   **A:** Define a slice of test cases: <code>var tests = []struct { input string; expected int }{...}</code>. Iterate with <code>for _, tt := range tests { t.Run(tt.input, func(t *testing.T) { ... }) }</code>. Each case specifies input and expected output. This pattern reduces duplication and makes adding new test cases trivial.
+10. **Q:** When should you use <code>sync.Mutex</code> vs channels for goroutine synchronization?
+    **A:** Use channels for passing data between goroutines, and mutexes for protecting shared state. Channels are idiomatic in Go for the "share memory by communicating" philosophy. Mutexes are simpler when the critical section is small (like incrementing a counter). Use <code>sync.RWMutex</code> when reads vastly outnumber writes.\`,
+    // -- Built-in middleware --
+    e.Use(middleware.Logger())                  // Request logging
+    e.Use(middleware.Recover())                 // Panic recovery
+    e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+        AllowOrigins: []string{"*"},
+        AllowMethods: []string{http.MethodGet, http.MethodPost},
+    }))
+
+    // -- Group with prefix and middleware --
+    api := e.Group("/api")
+    api.Use(middleware.KeyAuth(func(key string, c echo.Context) (bool, error) {
+        return key == "secret", nil
+    }))
+
+    api.GET("/users/:id", func(c echo.Context) error {
+        id := c.Param("id")
+        return c.JSON(http.StatusOK, map[string]string{"id": id})
+    })
+
+    e.Logger.Fatal(e.Start(":8080"))
+}
+</code>
+
+**Common Patterns:**
+
+| Pattern | Code |
+|---------|------|
+| Custom middleware | <code>e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return func(c echo.Context) error { /* ... */ return next(c) } })</code> |
+| Data binding | <code>c.Bind(&user)</code> |
+| Validation | <code>c.Validate(&user)</code> |
+| Error handling | Custom <code>echo.HTTPErrorHandler</code> |
+| Templates | <code>e.Renderer = customRenderer</code> |
+
+### Fiber (Express-like, fastest)
+
+**Setup:**
+<code>bash
+go get github.com/gofiber/fiber/v2
+</code>
+
+**Core Concepts:**
+
+<code>go
+package main
+
+import (
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/fiber/v2/middleware/logger"
+)
+
+func main() {
+    app := fiber.New()                         // Create Fiber app
+
+    app.Use(logger.New())                       // Request logging middleware
+
+    // -- Route with parameter --
+    app.Get("/users/:id", func(c *fiber.Ctx) error {
+        id := c.Params("id")                    // Path parameter
+        return c.JSON(fiber.Map{                // fiber.Map is map[string]any
+            "id": id,
+        })
+    })
+
+    // -- Parse request body --
+    app.Post("/users", func(c *fiber.Ctx) error {
+        user := new(struct {
+            Name string \`json:"name"\`
+        })
+        if err := c.BodyParser(user); err != nil {
+            return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+        }
+        return c.Status(201).JSON(user)
+    })
+
+    app.Listen(":8080")
+}
+</code>
+
+---
+
+## Comparison Tables
+
+| Feature | Gin | Echo | Fiber | net/http (stdlib) |
+|---------|-----|------|-------|-------------------|
+| Performance | Very high | High | Highest (fasthttp) | Moderate |
+| Router speed | httprouter | Custom radix tree | fasthttp-based | Default mux (slow) |
+| Middleware | <code>gin.HandlerFunc</code> | <code>echo.MiddlewareFunc</code> | <code>fiber.Handler</code> | <code>http.Handler</code> |
+| Context | <code>gin.Context</code> | <code>echo.Context</code> | <code>fiber.Ctx</code> | <code>http.ResponseWriter</code> + <code>*http.Request</code> |
+| Validation | binding tags | struct tags + validator | go-playground/validator | Manual |
+| Community | Largest | Large | Medium | Standard library |
+| Learning curve | Low | Low | Low | Low |
+| Extra features | Binding, rendering, validation middleware | Template rendering, CORS, CSRF | Static file serving, WebSocket | None (minimal) |
+
+---
+
+## Common Pitfalls & Anti-patterns
+
+1. **Ignoring errors** — <code>result, _ := doSomething()</code> silently discards errors. Always handle errors or explicitly ignore with a comment: <code>_ = r.Close() // ignore close error</code>.
+
+2. **Goroutine leaks** — Goroutines blocked on channel send/receive that never complete. Use <code>context.Context</code> with cancellation and ensure goroutines exit when <code>ctx.Done()</code> fires.
+
+3. **Capturing loop variables** — Go 1.21 fixed this, but in older versions: <code>for _, v := range slice { go func() { fmt.Println(v) }() }</code> prints the last element repeatedly. Pass <code>v</code> as argument to the closure.
+
+4. **Using <code>defer</code> inside a loop** — <code>defer</code> runs at function return, not at loop iteration end. Resources accumulate until the function returns. Use explicit close inside loop or move loop body to a helper function.
+
+5. **Passing values that could be mutated** — Slices and maps are reference types. Passing them without copying can lead to data races or unexpected mutation. Copy with <code>copy(dst, src)</code> or explicit map copy.
+
+6. **Not checking <code>sql.ErrNoRows</code>** — <code>db.QueryRow().Scan()</code> returns <code>sql.ErrNoRows</code> when no rows found. Check with <code>errors.Is(err, sql.ErrNoRows)</code> instead of treating it as a real error.
+
+7. **Using <code>interface{}</code> everywhere** — Throws away compile-time type safety. Define explicit interfaces with small method sets. Use generics instead of <code>interface{}</code> / <code>any</code>.
+
+8. **Panic instead of error return** — Panics are for programmer errors (nil dereference, index out of bounds), not expected failures. Return errors for anything the caller should handle.
+
+9. **Not using <code>http.TimeoutHandler</code>** — Client connections never die, goroutines pile up. Set <code>Server{ReadTimeout, WriteTimeout, IdleTimeout}</code>.
+
+10. **Mixing <code>go mod</code> vendor and GOPATH** — Always use Go modules for new projects. Avoid <code>GO111MODULE=off</code>. Run <code>go mod tidy</code> after adding dependencies.
+
+11. **Default <code>http.Client</code> with no timeout** — The default client has no timeout, causing goroutine leaks on stalled connections. Create a custom client: <code>&http.Client{Timeout: 10 * time.Second}</code>.
+
+12. **Writing to a closed channel** — Causes a panic. Always use <code>close(ch)</code> only from the sender side, and ensure only one goroutine closes. Use <code>sync.Once</code> if multiple goroutines could close.
+
+---
+
+## Complete API Reference
+
+### net/http
+
+| Type/Function | Signature | Description |
+|---------------|-----------|-------------|
+| <code>http.HandleFunc</code> | <code>(pattern, func(ResponseWriter, *Request))</code> | Register handler |
+| <code>http.ListenAndServe</code> | <code>(addr, Handler) error</code> | Start HTTP server |
+| <code>http.Server</code> | Struct | Configurable HTTP server |
+| <code>http.Request</code> | Struct | Incoming request |
+| <code>http.ResponseWriter</code> | Interface | Outgoing response |
+| <code>http.Client</code> | Struct | HTTP client |
+| <code>http.NewServeMux</code> | <code>() *ServeMux</code> | Route multiplexer |
+| <code>http.TimeoutHandler</code> | <code>(Handler, Duration, msg) Handler</code> | Wrap with timeout |
+| <code>http.FileServer</code> | <code>(FileSystem) Handler</code> | Static file server |
+| <code>http.Redirect</code> | <code>(ResponseWriter, *Request, url, code)</code> | Redirect response |
+
+### Gin
+
+| Function/Method | Description |
+|-----------------|-------------|
+| <code>gin.Default()</code> | Create router with Logger + Recovery middleware |
+| <code>gin.New()</code> | Create bare router (no middleware) |
+| <code>r.GET/POST/PUT/DELETE/PATCH()</code> | Register route by method |
+| <code>r.Use()</code> | Add global middleware |
+| <code>r.Group()</code> | Create route group with prefix |
+| <code>c.Param()</code> | Path parameter |
+| <code>c.Query()</code> | Query parameter |
+| <code>c.PostForm()</code> | Form field |
+| <code>c.ShouldBindJSON()</code> | Bind JSON body to struct |
+| <code>c.ShouldBindQuery()</code> | Bind query string to struct |
+| <code>c.JSON()</code> | Send JSON response |
+| <code>c.String()</code> | Send text response |
+| <code>c.AbortWithStatusJSON()</code> | Short-circuit with JSON error |
+| <code>c.Next()</code> | Continue to next middleware |
+| <code>c.Set()/c.Get()</code> | Store/retrieve context values |
+
+### Echo
+
+| Function/Method | Description |
+|-----------------|-------------|
+| <code>echo.New()</code> | Create Echo instance |
+| <code>e.Use()</code> | Add middleware |
+| <code>e.GET/POST/PUT/DELETE()</code> | Register route |
+| <code>e.Group()</code> | Route group with prefix |
+| <code>e.Start()</code> | Start HTTP server |
+| <code>e.Logger</code> | Built-in logger |
+| <code>c.Param()</code> | Path parameter |
+| <code>c.QueryParam()</code> | Query parameter |
+| <code>c.Bind()</code> | Bind request body |
+| <code>c.JSON()</code> | JSON response |
+| <code>c.String()</code> | String response |
+| <code>c.Redirect()</code> | Redirect response |
+| <code>c.Error()</code> | Send error response |
+
+### Fiber
+
+| Function/Method | Description |
+|-----------------|-------------|
+| <code>fiber.New()</code> | Create Fiber app |
+| <code>app.Use()</code> | Add middleware |
+| <code>app.Get/Post/Put/Delete()</code> | Register route |
+| <code>app.Group()</code> | Route group |
+| <code>app.Listen()</code> | Start HTTP server |
+| <code>c.Params()</code> | Path parameters |
+| <code>c.Query()</code> | Query parameters |
+| <code>c.BodyParser()</code> | Parse request body |
+| <code>c.JSON()</code> | JSON response |
+| <code>c.Status()</code> | Set status code |
+| <code>c.Next()</code> | Next middleware |
+| <code>c.SendString()</code> | Send string |
+
+---
+
+## Practice Questions
+
+1. **Q:** How does Go handle concurrency differently from Node.js and Python?
+   **A:** Go uses goroutines (lightweight threads with ~2KB stacks) multiplexed onto OS threads by the Go scheduler (M:N scheduling). Unlike Node (single-threaded event loop) or Python (GIL-bound threads), Go can run CPU-bound goroutines in parallel across multiple OS threads. Goroutines communicate via channels (CSP model), avoiding shared memory and locks.
+
+2. **Q:** Explain the <code>defer</code> mechanism. When are deferred functions executed?
+   **A:** <code>defer</code> schedules a function call to run when the surrounding function returns (either normally or via panic). Arguments are evaluated immediately, but the function body runs at return. Multiple defers execute in LIFO order. Common use: closing files/releasing mutexes.
+
+3. **Q:** What is the difference between <code>var a [5]int</code> and <code>var a []int</code>?
+   **A:** <code>[5]int</code> is an array — fixed size, value type (passing copies all elements). <code>[]int</code> is a slice — a view into an underlying array (pointer + length + capacity), reference type. Use slices unless you specifically need fixed-size arrays.
+
+4. **Q:** What is the purpose of the <code>context</code> package?
+   **A:** <code>context.Context</code> carries deadlines, cancellation signals, and request-scoped values across API boundaries. Used in HTTP handlers, database queries, and goroutines. <code>context.WithTimeout</code> sets a deadline, <code>context.WithCancel</code> enables manual cancellation, <code>ctx.Done()</code> returns a channel that closes when cancelled.
+
+5. **Q:** How does Go's garbage collector work compared to Java's?
+   **A:** Go uses a concurrent, non-generational, tri-color mark-sweep GC. It does NOT generational collection like Java. The GC runs concurrently with mutator threads, pausing only for short (sub-millisecond) STW phases. Go's GC is optimized for low latency over throughput, making it suitable for latency-sensitive backend services.
+
+6. **Q:** What does <code>go mod tidy</code> do?
+   **A:** It adds missing module dependencies and removes unused ones, ensuring <code>go.mod</code> and <code>go.sum</code> match the source code exactly. Always run it after changing imports.
+
+7. **Q:** How would you implement a rate limiter middleware in Gin?
+   **A:** Use a token bucket or sliding window via <code>sync.Mutex</code> + <code>time.Ticker</code>, or use the <code>ulule/limiter</code> package. The middleware checks the request IP, decrements a counter, and returns 429 if limit exceeded.
+
+8. **Q:** Compare Gin and Fiber performance characteristics.
+   **A:** Fiber uses <code>fasthttp</code> (a fast HTTP implementation in Go) instead of <code>net/http</code>, giving it a ~30-40% performance advantage over Gin in raw throughput and latency. However, <code>fasthttp</code> deviates from the standard library's <code>http.Handler</code> interface, making Fiber incompatible with standard <code>net/http</code> middleware. Gin uses the standard library's HTTP server and is compatible with most Go HTTP middleware.
+
+9. **Q:** How do you write a table-driven test in Go?
+   **A:** Define a slice of test cases: <code>var tests = []struct { input string; expected int }{...}</code>. Iterate with <code>for _, tt := range tests { t.Run(tt.input, func(t *testing.T) { ... }) }</code>. Each case specifies input and expected output. This pattern reduces duplication and makes adding new test cases trivial.
+
+10. **Q:** When should you use <code>sync.Mutex</code> vs channels for goroutine synchronization?
+    **A:** Use channels for passing data between goroutines, and mutexes for protecting shared state. Channels are idiomatic in Go for the "share memory by communicating" philosophy. Mutexes are simpler when the critical section is small (like incrementing a counter). Use <code>sync.RWMutex</code> when reads vastly outnumber writes.`,
+            tags: ["Go", "Backend", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-java-spring",
+            title: "Java / Spring Boot",
+            shortDesc: "Complete Java/Spring Boot reference — Spring IoC, JPA/Hibernate, Spring Security, WebFlux, testing, and production patterns.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Spring IoC: dependency injection via annotations (@Component, @Autowired, @Bean).",
+              "JPA/Hibernate: entity mappings, relationships, JPQL, N+1 query prevention.",
+              "Spring Security: authentication filters, OAuth2/JWT resource server, method security.",
+              "WebFlux: reactive programming with Project Reactor (Mono/Flux).",
+              "Testing: @SpringBootTest, Mockito, Testcontainers, @DataJpaTest.",
+            ],
+            content: `## Quick Reference
+Java is a statically-typed, JIT-compiled, object-oriented language running on the JVM (HotSpot/GraalVM). Spring Boot provides auto-configuration, embedded servers (Tomcat, Netty), and dependency injection. Key features: IoC container, AOP, Spring Data JPA (Hibernate ORM), Spring Security, and reactive support via WebFlux (Project Reactor).
+<code>java</code> — static typing, JIT/AOT compiled, garbage collected (G1, ZGC). <code>Spring Boot</code> — opinionated auto-configuration, embedded Tomcat. <code>JPA</code> — ORM standard with Hibernate implementation. <code>WebFlux</code> — reactive stack with Netty + Reactor.
+## Language Fundamentals
+| Category | Details |
+| Paradigm | OOP (classes), functional (lambdas, streams since Java 8) |
+| Typing | Static, strong, nominal |
+| Memory | Garbage collected (G1GC default, ZGC for low-latency) |
+| Compilation | javac -> bytecode -> JIT (HotSpot) or AOT (GraalVM native-image) |
+| Version | Java 21 LTS (latest LTS: 17, 21) |
+| Build tools | Maven, Gradle |
+| Package manager | Maven Central via build tool |
+### Types & Values
+| Category | Types | Example | Notes |
+|----------|-------|---------|-------|
+| Primitive | <code>byte</code> | <code>42</code> | 8-bit signed |
+| Primitive | <code>short</code> | <code>1000</code> | 16-bit signed |
+| Primitive | <code>int</code> | <code>42</code> | 32-bit signed |
+| Primitive | <code>long</code> | <code>42L</code> | 64-bit signed |
+| Primitive | <code>float</code> | <code>3.14f</code> | 32-bit IEEE 754 |
+| Primitive | <code>double</code> | <code>3.14</code> | 64-bit IEEE 754 |
+| Primitive | <code>boolean</code> | <code>true</code> | 1-bit (JVMs typically 8-bit) |
+| Primitive | <code>char</code> | <code>'A'</code> | 16-bit UTF-16 code unit |
+| Reference | <code>String</code> | <code>"hello"</code> | Immutable, UTF-16 |
+| Reference | <code>Object</code> | <code>new Object()</code> | Root of class hierarchy |
+| Reference | Array | <code>new int[3]</code> | Covariant, reified |
+| Reference | <code>record</code> | <code>record Point(int x, int y) {}</code> | Immutable data carrier (Java 14+) |
+| Reference | <code>enum</code> | <code>enum Color { RED, GREEN }</code> | Type-safe constants |
+| Reference | <code>sealed class</code> | <code>sealed class Shape permits Circle, Rect {}</code> | Restricted inheritance (Java 17+) |
+| Reference | <code>Optional<T></code> | <code>Optional.of("x")</code> | Null-safe container |
+### Variables & Control Flow
+<code>java
+// -- Variables --
+var name = "Alice";                    // Local variable type inference (Java 10+)
+int age = 30;                          // Explicit type
+final double PI = 3.14159;             // Immutable reference (like const)
+String nullable = null;                // null is valid for reference types
+// -- Conditionals --
+if (score >= 90) {
+    System.out.println("A");
+} else if (score >= 80) {
+    System.out.println("B");
+    System.out.println("C");
+// -- Switch expressions (Java 14+) --
+String result = switch (day) {
+    case "MONDAY", "FRIDAY" -> "Work";
+    case "SATURDAY", "SUNDAY" -> "Rest";
+    default -> {
+        System.out.println("Midweek");
+        yield "Work";                  // 'yield' returns value from block
+// -- For loops --
+for (int i = 0; i < 5; i++) { /* traditional */ }
+for (String item : list) { /* enhanced for-each */ }
+list.forEach(item -> System.out.println(item));  // Consumer lambda
+// -- While --
+while (condition) { /* pre-check */ }
+do { /* post-check */ } while (condition);
+// -- Exception handling --
+try (var reader = Files.newBufferedReader(path)) {  // Try-with-resources (auto-close)
+    String line = reader.readLine();
+} catch (IOException e) {
+    System.err.println("Error: " + e.getMessage());
+    throw new RuntimeException(e);                  // Wrap checked exception
+    cleanup();                                       // Always runs
+### Functions / Lambdas
+<code>java
+// -- Method declaration --
+public static int add(int a, int b) {
+    // ^access ^modifier ^return ^name ^params
+    return a + b;
+// -- Lambda (functional interface target) --
+// Functional interface: interface with exactly one abstract method
+@FunctionalInterface
+interface Transformer<T, R> {
+    R apply(T input);
+Transformer<String, Integer> stringLength = s -> s.length();
+//                                            ^lambda: param -> body
+// -- Method reference --
+list.stream()
+    .map(String::toUpperCase)           // Equivalent to: s -> s.toUpperCase()
+    .forEach(System.out::println);      // Equivalent to: s -> System.out.println(s)
+// -- Stream API (functional pipeline) --
+int sum = list.stream()
+    .filter(n -> n > 0)                // Predicate
+    .mapToInt(n -> n * 2)              // IntFunction
+    .sum();                             // Terminal operation
+### Generics & Collections
+<code>java
+// -- Generic class --
+public class Box<T> {                   // T is type parameter
+    private T value;
+    public Box(T value) {
+        this.value = value;
+    public T getValue() {
+        return value;
+// -- Wildcards (covariance/contravariance) --
+List<? extends Number> numbers = new ArrayList<Integer>();  // Producer: read only
+List<? super Integer> ints = new ArrayList<Number>();       // Consumer: write only
+// -- Collections framework --
+List<String> list = new ArrayList<>();   // Ordered, random access
+Set<String> set = new HashSet<>();       // No duplicates, O(1)
+Map<String, Integer> map = new HashMap<>();  // Key-value, O(1)
+Queue<String> queue = new LinkedList<>();    // FIFO
+Deque<String> stack = new ArrayDeque<>();    // LIFO (push/pop)
+### Concurrency / Async
+<code>java
+// -- Thread --
+Thread thread = new Thread(() -> {
+    System.out.println("Running in: " + Thread.currentThread().getName());
+thread.start();                          // Start execution
+thread.join();                           // Wait for completion
+// -- ExecutorService (preferred over raw threads) --
+ExecutorService executor = Executors.newFixedThreadPool(10);  // Pool of 10 threads
+Future<String> future = executor.submit(() -> {
+    Thread.sleep(1000);                  // Simulate work
+    return "Result";
+String result = future.get(5, TimeUnit.SECONDS);  // Block with timeout
+executor.shutdown();                     // Graceful shutdown
+// -- CompletableFuture (async chaining, Java 8+) --
+CompletableFuture.supplyAsync(() -> fetchUser())
+    .thenApply(user -> user.getName())
+    .thenAccept(name -> System.out.println(name))
+    .exceptionally(err -> {
+        System.err.println("Error: " + err);
+        return null;
+// -- Virtual threads (Java 21+) --
+// Lightweight threads managed by JVM (not OS)
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    executor.submit(() -> {
+        System.out.println("Virtual thread: " + Thread.currentThread());
+### Module System (JPMS, Java 9+)
+<code>java
+// module-info.java
+module com.example.myapp {
+    requires spring.boot;                // Module dependency
+    requires spring.web;
+    requires transitive com.example.common;  // Transitive dependency
+    exports com.example.myapp.controller;    // Packages visible to other modules
+    opens com.example.myapp.model;           // Open for reflection (Spring, Hibernate)
+### Standard Library Highlights
+| Package | Purpose | Key Classes |
+|---------|---------|-------------|
+| <code>java.util</code> | Collections, utilities | <code>List</code>, <code>Map</code>, <code>Optional</code>, <code>Stream</code>, <code>Random</code> |
+| <code>java.util.concurrent</code> | Concurrency | <code>ExecutorService</code>, <code>CompletableFuture</code>, <code>ConcurrentHashMap</code> |
+| <code>java.io</code> | I/O streams | <code>InputStream</code>, <code>OutputStream</code>, <code>Reader</code>, <code>Writer</code> |
+| <code>java.nio.file</code> | File I/O | <code>Path</code>, <code>Files</code>, <code>FileSystem</code> |
+| <code>java.time</code> | Date/time (Java 8+) | <code>Instant</code>, <code>LocalDate</code>, <code>ZonedDateTime</code>, <code>Duration</code> |
+| <code>java.net</code> | Networking | <code>URI</code>, <code>URL</code>, <code>HttpClient</code> (Java 11+) |
+| <code>java.sql</code> | Database access | <code>Connection</code>, <code>PreparedStatement</code>, <code>ResultSet</code> |
+| <code>java.lang</code> | Core language | <code>String</code>, <code>Thread</code>, <code>System</code>, <code>Math</code> |
+| <code>java.lang.invoke</code> | Method handles | <code>MethodHandle</code>, <code>VarHandle</code> |
+| <code>java.logging</code> | Logging | <code>Logger</code>, <code>Level</code>, <code>Handler</code> |
+## Framework by Framework Reference
+### Spring Boot (MVC, auto-configured)
+**Setup (start.spring.io):**
+<code>xml
+<!-- Maven: pom.xml -->
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.0</version>
+</parent>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+</dependencies>
+**Core Concepts:**
+<code>java
+// -- Main entry point --
+@SpringBootApplication                         // Combines @Configuration @EnableAutoConfiguration @ComponentScan
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+        //   ^^^^ Bootstraps Spring context, embedded Tomcat, auto-configuration
+// -- REST Controller --
+@RestController                                // @Controller + @ResponseBody on all methods
+@RequestMapping("/api/users")                   // Base path for all methods in this controller
+public class UserController {
+    private final UserService userService;      // Injected dependency (final = immutable)
+    // Constructor injection (preferred over @Autowired on field)
+    public UserController(UserService userService) {
+        this.userService = userService;
+    @GetMapping("/{id}")                        // GET /api/users/{id}
+    public ResponseEntity<User> getUser(@PathVariable Long id) {
+        // @PathVariable: binds URL segment to parameter
+        return userService.findById(id)
+            .map(ResponseEntity::ok)            // 200 OK with body
+            .orElse(ResponseEntity.notFound().build());  // 404
+    @PostMapping                                // POST /api/users
+    @ResponseStatus(HttpStatus.CREATED)         // 201 Created
+    public User createUser(@Valid @RequestBody CreateUserRequest request) {
+        // @Valid triggers Bean Validation (jakarta.validation)
+        // @RequestBody binds JSON body to object
+        return userService.create(request);
+// -- Service (business logic) --
+@Service                                        // @Component stereotype for service layer
+@Transactional(readOnly = true)                 // Wraps all methods in a transaction
+public class UserService {
+    private final UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);     // Spring Data JPA implementation
+    @Transactional                              // readOnly = false for this method
+    public User create(CreateUserRequest request) {
+        var user = new User();
+        user.setName(request.name());
+        user.setEmail(request.email());
+        return userRepository.save(user);       // INSERT SQL generated by Hibernate
+// -- Repository (Spring Data JPA) --
+@Repository                                      // @Component stereotype for repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Spring Data JPA implements CRUD at runtime
+    // Query derivation from method name:
+    List<User> findByEmail(String email);        // SELECT * FROM users WHERE email = ?
+    Optional<User> findByNameIgnoreCase(String name);  // WHERE LOWER(name) = LOWER(?)
+    @Query("SELECT u FROM User u WHERE u.email LIKE %:domain")
+    List<User> findByDomain(@Param("domain") String domain);  // Custom JPQL
+// -- Entity (JPA) --
+@Entity                                         // Maps to database table
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-increment
+    private Long id;
+    @Column(nullable = false, length = 100)
+    private String name;
+    @Column(unique = true, nullable = false)
+    private String email;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Order> orders;                 // One-to-many relationship
+    // JPA requires no-arg constructor (protected is fine)
+    protected User() {}
+    // Getters and setters (or use Lombok @Data / @Getter @Setter)
+### Spring WebFlux (Reactive)
+**Setup:**
+<code>xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+**Core Concepts:**
+<code>java
+@RestController
+@RequestMapping("/api/users")
+public class ReactiveUserController {
+    private final ReactiveUserRepository repository;
+    public ReactiveUserController(ReactiveUserRepository repository) {
+        this.repository = repository;
+    @GetMapping
+    public Flux<User> getAllUsers() {
+        // Flux = 0..N items (reactive stream)
+        return repository.findAll();            // Non-blocking DB query
+    @GetMapping("/{id}")
+    public Mono<ResponseEntity<User>> getUser(@PathVariable String id) {
+        // Mono = 0..1 item (reactive single)
+        return repository.findById(id)
+            .map(ResponseEntity::ok)
+            .defaultIfEmpty(ResponseEntity.notFound().build());
+    @PostMapping
+    public Mono<User> createUser(@Valid @RequestBody Mono<CreateUserRequest> request) {
+        return request.flatMap(repository::save);
+// Reactive repository
+public interface ReactiveUserRepository extends ReactiveCrudRepository<User, String> {
+    Flux<User> findByAgeGreaterThan(int age);
+### Spring Security (Auth)
+<code>java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            .csrf(csrf -> csrf.disable())              // Disable CSRF for REST APIs
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // No session
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()   // Public endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()                    // All other requests need auth
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(Customizer.withDefaults()));               // JWT validation
+        return http.build();
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();          // BCrypt hashing for passwords
+**Common Patterns:**
+| Pattern | Implementation |
+| Validation | <code>@Valid</code> + <code>jakarta.validation</code> annotations (<code>@NotBlank</code>, <code>@Email</code>) |
+| Global error handling | <code>@RestControllerAdvice</code> + <code>@ExceptionHandler</code> |
+| Logging | <code>@Slf4j</code> (Lombok) or <code>LoggerFactory.getLogger()</code> |
+| Configuration | <code>application.yml</code> / <code>application.properties</code> |
+| Profiles | <code>@Profile("dev")</code>, <code>spring.profiles.active=prod</code> |
+| Scheduled tasks | <code>@Scheduled(cron = "0 0 * * * *")</code> + <code>@EnableScheduling</code> |
+| Async methods | <code>@Async</code> + <code>@EnableAsync</code> |
+| Caching | <code>@Cacheable("users")</code> + <code>@EnableCaching</code> |
+| Metrics | Micrometer + <code>@Timed</code> |
+## Common Pitfalls & Anti-patterns
+1. **N+1 queries with JPA** — FetchType.LAZY and accessing lazy collections in a loop. Use <code>@EntityGraph</code>, <code>JOIN FETCH</code> in JPQL, or <code>@BatchSize</code>.
+2. **Field injection with <code>@Autowired</code>** — Makes testing harder (cannot mock via constructor). Use constructor injection (implicit or explicit <code>@RequiredArgsConstructor</code>).
+3. **Not configuring connection pool** — HikariCP is the default but needs sensible config: <code>maximumPoolSize</code>, <code>connectionTimeout</code>, <code>idleTimeout</code>. Default pool size of 10 is often too small for production.
+4. **Overusing <code>ThreadLocal</code>** — Holds references across requests in thread-pooled environments, causing memory leaks. Use request-scoped beans or pass context explicitly.
+5. **Catching <code>Exception</code> broadly** — Catches runtime exceptions you should not handle (<code>NullPointerException</code>, <code>ArrayIndexOutOfBounds</code>). Catch specific exceptions.
+6. **Forgetting <code>@Transactional</code> on service methods** — Each JPA operation runs in its own transaction. Without <code>@Transactional</code>, lazy loading fails with <code>LazyInitializationException</code> outside the session.
+7. **Mutable entities as DTOs** — Using JPA entities directly as response DTOs exposes internal state and causes lazy loading issues in serialization. Use separate DTOs with <code>MapStruct</code> or <code>ModelMapper</code>.
+8. **Not using <code>try-with-resources</code>** — Manually closing resources leads to leaks. Use <code>try (var conn = dataSource.getConnection())</code> for auto-close.
+9. **Over-engineering with unnecessary abstractions** — Adding interfaces for every service class (one implementation) adds cognitive load. Add interfaces only when you need polymorphism or proxy-based AOP.
+10. **Ignoring the cost of reflection** — Spring DI, JPA, and Jackson all use reflection. In latency-sensitive paths, cache reflected metadata or use compile-time processing (GraalVM, Quarkus).
+11. **Large <code>application.yml</code> without profiles** — Configuration becomes unmanageable. Use <code>application-dev.yml</code>, <code>application-prod.yml</code> with profile-specific overrides.
+12. **Using <code>@SpringBootTest</code> for every test** — Loads the entire context (slow). Use sliced tests: <code>@WebMvcTest</code>, <code>@DataJpaTest</code>, <code>@JsonTest</code>.
+## Complete API Reference
+### Spring Boot Annotations
+| Annotation | Target | Description |
+|------------|--------|-------------|
+| <code>@SpringBootApplication</code> | Class | Main entry: @Configuration + @EnableAutoConfiguration + @ComponentScan |
+| <code>@RestController</code> | Class | @Controller + @ResponseBody on every handler |
+| <code>@RequestMapping</code> | Class/Method | Base URL mapping |
+| <code>@GetMapping</code> | Method | GET mapping |
+| <code>@PostMapping</code> | Method | POST mapping |
+| <code>@PutMapping</code> | Method | PUT mapping |
+| <code>@DeleteMapping</code> | Method | DELETE mapping |
+| <code>@PatchMapping</code> | Method | PATCH mapping |
+| <code>@PathVariable</code> | Parameter | URL path variable |
+| <code>@RequestParam</code> | Parameter | Query parameter |
+| <code>@RequestBody</code> | Parameter | Request body binding |
+| <code>@ResponseStatus</code> | Method/Exception | HTTP status code |
+| <code>@ExceptionHandler</code> | Method | Handle specific exceptions |
+| <code>@RestControllerAdvice</code> | Class | Global exception handler |
+| <code>@Service</code> | Class | Service stereotype |
+| <code>@Repository</code> | Class | Repository stereotype |
+| <code>@Component</code> | Class | Generic stereotype |
+| <code>@Autowired</code> | Field/Method/Constructor | Dependency injection |
+| <code>@Qualifier</code> | Field/Parameter | Disambiguate beans |
+| <code>@Value</code> | Field | Inject property value |
+| <code>@ConfigurationProperties</code> | Class | Bind properties to object |
+| <code>@Profile</code> | Class/Method | Conditional on active profile |
+| <code>@ConditionalOnProperty</code> | Class/Method | Conditional on property |
+| <code>@Transactional</code> | Method/Class | Declarative transaction |
+| <code>@Cacheable</code> | Method | Cache method result |
+| <code>@CacheEvict</code> | Method | Evict cache entries |
+| <code>@Scheduled</code> | Method | Scheduled task |
+| <code>@Async</code> | Method | Async method execution |
+### Spring Data JPA
+| Annotation/Interface | Description |
+|----------------------|-------------|
+| <code>@Entity</code> | JPA entity class |
+| <code>@Table</code> | Table mapping |
+| <code>@Id</code> | Primary key |
+| <code>@GeneratedValue</code> | Key generation strategy |
+| <code>@Column</code> | Column mapping |
+| <code>@OneToMany</code> | One-to-many relationship |
+| <code>@ManyToOne</code> | Many-to-one relationship |
+| <code>@JoinColumn</code> | Foreign key column |
+| <code>@Query</code> | Custom JPQL or native SQL query |
+| <code>@EntityGraph</code> | Eager fetch graph |
+| <code>JpaRepository<T, ID></code> | Full CRUD + pagination |
+| <code>CrudRepository<T, ID></code> | Basic CRUD |
+| <code>PagingAndSortingRepository</code> | Pagination + sorting |
+| <code>Specification<T></code> | Dynamic query predicates |
+| <code>Page<T></code> | Paginated result |
+| <code>Pageable</code> | Pagination request |
+1. **Q:** Explain the Spring IoC container and dependency injection.
+   **A:** The IoC (Inversion of Control) container manages object lifecycle and dependencies. Beans are created, wired, and destroyed by the container. Constructor injection is preferred: the container resolves constructor parameters from the context. This decouples object creation from business logic and makes testing easier (mocks injected via constructor).
+2. **Q:** What is the difference between <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code>?
+   **A:** All are <code>@Component</code> stereotypes that enable auto-detection. <code>@Service</code> marks business logic (adds no behavior). <code>@Repository</code> marks DAOs (adds translation of persistence exceptions to <code>DataAccessException</code>). <code>@Controller</code> marks web controllers (adds request mapping support).
+3. **Q:** How does Spring Boot auto-configuration work?
+   **A:** <code>@EnableAutoConfiguration</code> scans <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code> on the classpath. Each auto-configuration class has <code>@ConditionalOnClass</code>, <code>@ConditionalOnMissingBean</code>, etc. If the required classes (e.g., Tomcat, H2) are on the classpath and no custom bean exists, Spring Boot creates default beans.
+4. **Q:** Explain the difference between <code>@Transactional</code> propagation levels.
+   **A:** REQUIRED (default): joins existing transaction or creates new. REQUIRES_NEW: suspends existing, creates new. MANDATORY: throws if no existing transaction. NEVER: throws if existing transaction. SUPPORTS: runs with or without transaction. NOT_SUPPORTED: suspends existing. NESTED: savepoint within existing transaction (JDBC only).
+5. **Q:** How do you handle LazyInitializationException in Spring?
+   **A:** Caused by accessing a lazy-loaded JPA association outside a transaction. Solutions: (1) keep transaction open until view renders (<code>OpenSessionInViewFilter</code>, not recommended). (2) use <code>@EntityGraph</code> or <code>JOIN FETCH</code> in queries. (3) use DTO projections. (4) use <code>spring.jpa.open-in-view=false</code> (Spring Boot 3.x default warns about OSIV).
+6. **Q:** Compare Hibernate's <code>SELECT</code>, <code>JOIN</code>, and <code>Batch</code> fetching strategies.
+   **A:** SELECT: one query per entity (N+1 risk). JOIN: single query with SQL JOIN (eager, can cause cartesian product on collections). Batch: <code>@BatchSize</code> loads lazy associations in batches of N. Choose JOIN for single reference, Batch for collections, SELECT only for rarely accessed associations.
+7. **Q:** What is Project Loom and how do virtual threads differ from platform threads?
+   **A:** Virtual threads (Java 21+) are lightweight threads managed by the JVM, not the OS. Millions can exist. They use M:N scheduling (many virtual threads on few platform threads). When a virtual thread blocks on I/O, it is unmounted from the carrier thread and resumed later. This makes thread-per-request models viable again without the overhead of OS threads.
+8. **Q:** How does Spring Security's filter chain work with JWT authentication?
+   **A:** Requests pass through a chain of filters. A custom <code>OncePerRequestFilter</code> extracts the JWT from the <code>Authorization: Bearer <token></code> header, validates it, creates an <code>Authentication</code> object, and sets it in <code>SecurityContextHolder</code>. Subsequent filters see the authenticated user. The <code>SecurityFilterChain</code> bean configures which endpoints need authentication.
+9. **Q:** What is the difference between <code>spring-boot-starter-web</code> and <code>spring-boot-starter-webflux</code>?
+   **A:** <code>starter-web</code> uses Tomcat (Servlet API, blocking I/O). <code>starter-webflux</code> uses Netty (reactive, non-blocking, async). WebFlux supports higher concurrency with fewer threads but requires reactive drivers (MongoDB Reactive, R2DBC). Use WebFlux for high-concurrency I/O-bound services. Use MVC for simplicity, JPA, or existing Servlet API dependencies.
+10. **Q:** How would you implement a rate-limiting filter in Spring Boot?
+     **A:** Implement <code>OncePerRequestFilter</code> and register as a <code>@Component</code>. Use a token bucket algorithm with Bucket4j library. Extract client IP or API key, check rate limit, and return 429 Too Many Requests if exceeded. Add the filter to the <code>SecurityFilterChain</code> or register via <code>FilterRegistrationBean</code>.\`,
+### Spring Security (Auth)
+
+<code>java
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(csrf -> csrf.disable())              // Disable CSRF for REST APIs
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // No session
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()   // Public endpoints
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()                    // All other requests need auth
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .jwt(Customizer.withDefaults()));               // JWT validation
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();          // BCrypt hashing for passwords
+    }
+}
+</code>
+
+**Common Patterns:**
+
+| Pattern | Implementation |
+|---------|---------------|
+| Validation | <code>@Valid</code> + <code>jakarta.validation</code> annotations (<code>@NotBlank</code>, <code>@Email</code>) |
+| Global error handling | <code>@RestControllerAdvice</code> + <code>@ExceptionHandler</code> |
+| Logging | <code>@Slf4j</code> (Lombok) or <code>LoggerFactory.getLogger()</code> |
+| Configuration | <code>application.yml</code> / <code>application.properties</code> |
+| Profiles | <code>@Profile("dev")</code>, <code>spring.profiles.active=prod</code> |
+| Scheduled tasks | <code>@Scheduled(cron = "0 0 * * * *")</code> + <code>@EnableScheduling</code> |
+| Async methods | <code>@Async</code> + <code>@EnableAsync</code> |
+| Caching | <code>@Cacheable("users")</code> + <code>@EnableCaching</code> |
+| Metrics | Micrometer + <code>@Timed</code> |
+
+---
+
+## Common Pitfalls & Anti-patterns
+
+1. **N+1 queries with JPA** — FetchType.LAZY and accessing lazy collections in a loop. Use <code>@EntityGraph</code>, <code>JOIN FETCH</code> in JPQL, or <code>@BatchSize</code>.
+
+2. **Field injection with <code>@Autowired</code>** — Makes testing harder (cannot mock via constructor). Use constructor injection (implicit or explicit <code>@RequiredArgsConstructor</code>).
+
+3. **Not configuring connection pool** — HikariCP is the default but needs sensible config: <code>maximumPoolSize</code>, <code>connectionTimeout</code>, <code>idleTimeout</code>. Default pool size of 10 is often too small for production.
+
+4. **Overusing <code>ThreadLocal</code>** — Holds references across requests in thread-pooled environments, causing memory leaks. Use request-scoped beans or pass context explicitly.
+
+5. **Catching <code>Exception</code> broadly** — Catches runtime exceptions you should not handle (<code>NullPointerException</code>, <code>ArrayIndexOutOfBounds</code>). Catch specific exceptions.
+
+6. **Forgetting <code>@Transactional</code> on service methods** — Each JPA operation runs in its own transaction. Without <code>@Transactional</code>, lazy loading fails with <code>LazyInitializationException</code> outside the session.
+
+7. **Mutable entities as DTOs** — Using JPA entities directly as response DTOs exposes internal state and causes lazy loading issues in serialization. Use separate DTOs with <code>MapStruct</code> or <code>ModelMapper</code>.
+
+8. **Not using <code>try-with-resources</code>** — Manually closing resources leads to leaks. Use <code>try (var conn = dataSource.getConnection())</code> for auto-close.
+
+9. **Over-engineering with unnecessary abstractions** — Adding interfaces for every service class (one implementation) adds cognitive load. Add interfaces only when you need polymorphism or proxy-based AOP.
+
+10. **Ignoring the cost of reflection** — Spring DI, JPA, and Jackson all use reflection. In latency-sensitive paths, cache reflected metadata or use compile-time processing (GraalVM, Quarkus).
+
+11. **Large <code>application.yml</code> without profiles** — Configuration becomes unmanageable. Use <code>application-dev.yml</code>, <code>application-prod.yml</code> with profile-specific overrides.
+
+12. **Using <code>@SpringBootTest</code> for every test** — Loads the entire context (slow). Use sliced tests: <code>@WebMvcTest</code>, <code>@DataJpaTest</code>, <code>@JsonTest</code>.
+
+---
+
+## Complete API Reference
+
+### Spring Boot Annotations
+
+| Annotation | Target | Description |
+|------------|--------|-------------|
+| <code>@SpringBootApplication</code> | Class | Main entry: @Configuration + @EnableAutoConfiguration + @ComponentScan |
+| <code>@RestController</code> | Class | @Controller + @ResponseBody on every handler |
+| <code>@RequestMapping</code> | Class/Method | Base URL mapping |
+| <code>@GetMapping</code> | Method | GET mapping |
+| <code>@PostMapping</code> | Method | POST mapping |
+| <code>@PutMapping</code> | Method | PUT mapping |
+| <code>@DeleteMapping</code> | Method | DELETE mapping |
+| <code>@PatchMapping</code> | Method | PATCH mapping |
+| <code>@PathVariable</code> | Parameter | URL path variable |
+| <code>@RequestParam</code> | Parameter | Query parameter |
+| <code>@RequestBody</code> | Parameter | Request body binding |
+| <code>@ResponseStatus</code> | Method/Exception | HTTP status code |
+| <code>@ExceptionHandler</code> | Method | Handle specific exceptions |
+| <code>@RestControllerAdvice</code> | Class | Global exception handler |
+| <code>@Service</code> | Class | Service stereotype |
+| <code>@Repository</code> | Class | Repository stereotype |
+| <code>@Component</code> | Class | Generic stereotype |
+| <code>@Autowired</code> | Field/Method/Constructor | Dependency injection |
+| <code>@Qualifier</code> | Field/Parameter | Disambiguate beans |
+| <code>@Value</code> | Field | Inject property value |
+| <code>@ConfigurationProperties</code> | Class | Bind properties to object |
+| <code>@Profile</code> | Class/Method | Conditional on active profile |
+| <code>@ConditionalOnProperty</code> | Class/Method | Conditional on property |
+| <code>@Transactional</code> | Method/Class | Declarative transaction |
+| <code>@Cacheable</code> | Method | Cache method result |
+| <code>@CacheEvict</code> | Method | Evict cache entries |
+| <code>@Scheduled</code> | Method | Scheduled task |
+| <code>@Async</code> | Method | Async method execution |
+
+### Spring Data JPA
+
+| Annotation/Interface | Description |
+|----------------------|-------------|
+| <code>@Entity</code> | JPA entity class |
+| <code>@Table</code> | Table mapping |
+| <code>@Id</code> | Primary key |
+| <code>@GeneratedValue</code> | Key generation strategy |
+| <code>@Column</code> | Column mapping |
+| <code>@OneToMany</code> | One-to-many relationship |
+| <code>@ManyToOne</code> | Many-to-one relationship |
+| <code>@JoinColumn</code> | Foreign key column |
+| <code>@Query</code> | Custom JPQL or native SQL query |
+| <code>@EntityGraph</code> | Eager fetch graph |
+| <code>JpaRepository<T, ID></code> | Full CRUD + pagination |
+| <code>CrudRepository<T, ID></code> | Basic CRUD |
+| <code>PagingAndSortingRepository</code> | Pagination + sorting |
+| <code>Specification<T></code> | Dynamic query predicates |
+| <code>Page<T></code> | Paginated result |
+| <code>Pageable</code> | Pagination request |
+
+---
+
+## Practice Questions
+
+1. **Q:** Explain the Spring IoC container and dependency injection.
+   **A:** The IoC (Inversion of Control) container manages object lifecycle and dependencies. Beans are created, wired, and destroyed by the container. Constructor injection is preferred: the container resolves constructor parameters from the context. This decouples object creation from business logic and makes testing easier (mocks injected via constructor).
+
+2. **Q:** What is the difference between <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code>?
+   **A:** All are <code>@Component</code> stereotypes that enable auto-detection. <code>@Service</code> marks business logic (adds no behavior). <code>@Repository</code> marks DAOs (adds translation of persistence exceptions to <code>DataAccessException</code>). <code>@Controller</code> marks web controllers (adds request mapping support).
+
+3. **Q:** How does Spring Boot auto-configuration work?
+   **A:** <code>@EnableAutoConfiguration</code> scans <code>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</code> on the classpath. Each auto-configuration class has <code>@ConditionalOnClass</code>, <code>@ConditionalOnMissingBean</code>, etc. If the required classes (e.g., Tomcat, H2) are on the classpath and no custom bean exists, Spring Boot creates default beans.
+
+4. **Q:** Explain the difference between <code>@Transactional</code> propagation levels.
+   **A:** REQUIRED (default): joins existing transaction or creates new. REQUIRES_NEW: suspends existing, creates new. MANDATORY: throws if no existing transaction. NEVER: throws if existing transaction. SUPPORTS: runs with or without transaction. NOT_SUPPORTED: suspends existing. NESTED: savepoint within existing transaction (JDBC only).
+
+5. **Q:** How do you handle LazyInitializationException in Spring?
+   **A:** Caused by accessing a lazy-loaded JPA association outside a transaction. Solutions: (1) keep transaction open until view renders (<code>OpenSessionInViewFilter</code>, not recommended). (2) use <code>@EntityGraph</code> or <code>JOIN FETCH</code> in queries. (3) use DTO projections. (4) use <code>spring.jpa.open-in-view=false</code> (Spring Boot 3.x default warns about OSIV).
+
+6. **Q:** Compare Hibernate's <code>SELECT</code>, <code>JOIN</code>, and <code>Batch</code> fetching strategies.
+   **A:** SELECT: one query per entity (N+1 risk). JOIN: single query with SQL JOIN (eager, can cause cartesian product on collections). Batch: <code>@BatchSize</code> loads lazy associations in batches of N. Choose JOIN for single reference, Batch for collections, SELECT only for rarely accessed associations.
+
+7. **Q:** What is Project Loom and how do virtual threads differ from platform threads?
+   **A:** Virtual threads (Java 21+) are lightweight threads managed by the JVM, not the OS. Millions can exist. They use M:N scheduling (many virtual threads on few platform threads). When a virtual thread blocks on I/O, it is unmounted from the carrier thread and resumed later. This makes thread-per-request models viable again without the overhead of OS threads.
+
+8. **Q:** How does Spring Security's filter chain work with JWT authentication?
+   **A:** Requests pass through a chain of filters. A custom <code>OncePerRequestFilter</code> extracts the JWT from the <code>Authorization: Bearer <token></code> header, validates it, creates an <code>Authentication</code> object, and sets it in <code>SecurityContextHolder</code>. Subsequent filters see the authenticated user. The <code>SecurityFilterChain</code> bean configures which endpoints need authentication.
+
+9. **Q:** What is the difference between <code>spring-boot-starter-web</code> and <code>spring-boot-starter-webflux</code>?
+   **A:** <code>starter-web</code> uses Tomcat (Servlet API, blocking I/O). <code>starter-webflux</code> uses Netty (reactive, non-blocking, async). WebFlux supports higher concurrency with fewer threads but requires reactive drivers (MongoDB Reactive, R2DBC). Use WebFlux for high-concurrency I/O-bound services. Use MVC for simplicity, JPA, or existing Servlet API dependencies.
+
+10. **Q:** How would you implement a rate-limiting filter in Spring Boot?
+    **A:** Implement <code>OncePerRequestFilter</code> and register as a <code>@Component</code>. Use a token bucket algorithm with Bucket4j library. Extract client IP or API key, check rate limit, and return 429 Too Many Requests if exceeded. Add the filter to the <code>SecurityFilterChain</code> or register via <code>FilterRegistrationBean</code>.`,
+            tags: ["Java", "Spring Boot", "Backend", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-rust-backend",
+            title: "Rust Backend Development",
+            shortDesc: "Complete Rust reference — ownership, Actix-web/Axum, tokio async runtime, SQLx, Diesel, and safe concurrency patterns.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "Ownership: each value has exactly one owner — borrowing (&T, &mut T) with compile-time checks.",
+              "Tokio: async runtime with work-stealing scheduler and I/O drivers.",
+              "Axum: tower-based async HTTP framework with extractors and middleware.",
+              "Diesel vs SQLx: compile-time query checking vs runtime async SQL.",
+              "Testing: built-in test harness, integration tests in tests/, doc-tests.",
+            ],
+            content: `## Quick Reference
+Rust is a systems language with zero-cost abstractions, guaranteed memory safety via ownership/borrowing, and fearless concurrency. For backend development, Axum and Actix-web are the leading HTTP frameworks, running on Tokio (async runtime). Diesel and SQLx provide compile-time checked database queries. Rust's performance is comparable to C++, with the safety of a borrow checker.
+<code>rust</code> — static typing, no GC, borrow checker, algebraic types (enum/struct). <code>tokio</code> — async runtime with work-stealing scheduler. <code>axum</code> — tower-based modular HTTP framework. <code>sqlx</code> — compile-time checked async SQL queries.
+## Language Fundamentals
+| Category | Details |
+| Paradigm | Systems, multi-paradigm (functional, OOP via traits, concurrent) |
+| Typing | Static, strong, nominal, Hindley-Milner-like inference |
+| Memory | Ownership + Borrowing (no GC, no manual free) |
+| Compilation | LLVM-based AOT compiler (rustc), incremental compilation |
+| Edition | 2024 (latest stable, 2026) |
+| Package manager | Cargo (built-in: build, test, doc, publish) |
+| Async runtime | Tokio (most common), async-std, smol |
+### Types & Values
+| Category | Types | Example | Notes |
+|----------|-------|---------|-------|
+| Integer | <code>i8..i128, u8..u128</code> | <code>42i32</code>, <code>0xFFu8</code> | Fixed-size, signed/unsigned |
+| Float | <code>f32, f64</code> | <code>3.14f64</code> | IEEE 754 |
+| Boolean | <code>bool</code> | <code>true</code> | <code>true</code> or <code>false</code> |
+| Char | <code>char</code> | <code>'A'</code> | 4-byte Unicode scalar value |
+| Str | <code>&str</code> | <code>"hello"</code> | UTF-8 slice (borrowed) |
+| String | <code>String</code> | <code>"hello".to_string()</code> | UTF-8 owned, heap-allocated |
+| Tuple | <code>(T, U)</code> | <code>(1, "a")</code> | Fixed-size heterogeneous |
+| Array | <code>[T; N]</code> | <code>[1, 2, 3]</code> | Fixed-size, stack-allocated |
+| Vec | <code>Vec<T></code> | <code>vec![1, 2]</code> | Heap-allocated, growable |
+| Option | <code>Option<T></code> | <code>Some(1)</code>, <code>None</code> | Null safety without null |
+| Result | <code>Result<T, E></code> | <code>Ok(1)</code>, <code>Err("msg")</code> | Error handling |
+| Struct | <code>struct S { x: T }</code> | <code>S { x: 1 }</code> | Named fields |
+| Enum | <code>enum E { A, B(T) }</code> | <code>E::A</code> | Algebraic data type |
+| Box | <code>Box<T></code> | <code>Box::new(1)</code> | Heap allocation |
+| Reference | <code>&T, &mut T</code> | <code>&x</code> | Borrowed (immutable/mutable) |
+| Slice | <code>&[T]</code> | <code>&vec[..]</code> | View into contiguous sequence |
+### Variables & Ownership
+<code>rust
+// -- Variables are immutable by default --
+let x = 5;                               // Immutable binding
+// x = 6;                                // Compile error!
+let mut y = 5;                           // Mutable binding
+y = 6;                                   // OK
+// -- Shadowing (re-declaration in same scope) --
+let name = "Alice";
+let name = name.len();                   // Shadows previous binding, type changes
+// -- Ownership rules --
+// 1. Each value has exactly one owner
+// 2. When owner goes out of scope, value is dropped
+// 3. Move semantics by default (no implicit copy)
+let s2 = s1;                              // s1 is MOVED to s2 -- s1 is no longer valid
+// println!("{}", s1);                    // Compile error: borrow of moved value
+// -- Clone for deep copy --
+let s3 = s2.clone();                      // Heap data is copied (expensive)
+println!("{}", s2);                       // s2 still valid (clone copies, not moves)
+### Borrowing & References
+<code>rust
+// -- Borrowing rules --
+// 1. At any time: one mutable reference OR any number of immutable references
+// 2. References must always be valid (no dangling pointers)
+fn calculate_length(s: &String) -> usize {   // Immutable borrow
+}                                            // s goes out of scope, but String is not dropped
+fn append_world(s: &mut String) {            // Mutable borrow
+    s.push_str(" world");
+let r1 = &s;                                 // Immutable borrow OK
+let r2 = &s;                                 // Multiple immutable borrows OK
+// let r3 = &mut s;                          // Compile error: cannot borrow as mutable
+println!("{}, {}", r1, r2);                  // Immutable references used here
+let r3 = &mut s;                             // OK: no immutable references active
+r3.push_str("!");
+### Control Flow
+<code>rust
+// -- if/else (expression, not statement) --
+let status = if age >= 18 { "adult" } else { "minor" };
+// -- match (exhaustive pattern matching) --
+match value {
+    0 => println!("zero"),
+    1 | 2 => println!("one or two"),           // Pattern alternatives
+    3..=10 => println!("three to ten"),        // Range pattern
+    n if n > 10 => println!("greater: {n}"),   // Guard
+    _ => println!("default"),                  // Catch-all
+// -- Loop with labels --
+'outer: for i in 0..5 {
+    for j in 0..5 {
+        if i + j > 5 {
+            break 'outer;                     // Break outer loop
+// -- while let (pattern matching loop) --
+let mut stack = vec![1, 2, 3];
+while let Some(top) = stack.pop() {
+    println!("{top}");
+// -- if let (convenient single-pattern match) --
+if let Some(value) = optional {
+    println!("Got: {value}");
+### Functions & Generics
+<code>rust
+// -- Function declaration --
+fn add(x: i32, y: i32) -> i32 {               // x, y are parameters
+    x + y                                       // Expression (no semicolon = return)
+// -- Generic function --
+fn first<T>(slice: &[T]) -> Option<&T> {       // T is type parameter
+    slice.first()
+// -- Where clause for complex bounds --
+fn sort<T>(items: &mut [T])
+    T: Ord + Clone,                            // T must be orderable and cloneable
+    items.sort();
+// -- Higher-order function (closure) --
+let double = |x: i64| x * 2;                   // Closure: captures environment
+let result = double(21);                       // 42
+// Closure with move (takes ownership of captured variables)
+let name = String::from("Alice");
+let print_name = move || println!("{name}");   // name moved into closure
+### Traits (Interfaces)
+<code>rust
+// -- Trait definition --
+trait Describable {
+    fn describe(&self) -> String;               // Method signature
+    fn summary(&self) -> String {               // Default implementation
+        format!("Item: {}", self.describe())
+// -- Implementing a trait --
+struct User {
+    name: String,
+    age: u8,
+impl Describable for User {
+    fn describe(&self) -> String {
+        format!("User {} is {} years old", self.name, self.age)
+// -- Trait bounds --
+fn print_description(item: &impl Describable) { // impl Trait syntax (sugar)
+    println!("{}", item.describe());
+// Equivalent with generic syntax:
+fn print_description2<T: Describable>(item: &T) {
+    println!("{}", item.describe());
+// -- Derive macros (auto-implement traits) --
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct Product {
+    id: u64,
+    name: String,
+### Async / Await
+<code>rust
+use tokio;                                      // De-facto async runtime
+// -- Async function (returns impl Future) --
+async fn fetch_user(id: u64) -> Result<User, Error> {
+    //        ^^^^^^ Suspend execution until future completes
+    let response = reqwest::get(format!("https://api.example.com/users/{id}"))
+        .await?;                                // .await yields control to runtime
+    let user = response.json::<User>().await?;
+    Ok(user)
+// -- Main with tokio runtime --
+#[tokio::main]                                  // Macro: wraps main with tokio runtime
+    let user = fetch_user(1).await.unwrap();    // Run async function from sync main
+    println!("{user:?}");
+// -- Concurrent execution --
+async fn run_parallel() {
+    let (user, posts) = tokio::join!(           // Run multiple futures concurrently
+        fetch_user(1),
+        fetch_posts(1),
+// -- Spawn background task --
+tokio::spawn(async move {                       // Spawn on tokio runtime
+    process_long_running_task().await;
+### Module System
+<code>rust
+// src/main.rs (or src/lib.rs)
+mod handlers;                                   // Declares submodule from handlers.rs
+mod models;                                     // or handlers/mod.rs
+// src/handlers.rs
+pub mod user_handlers {                         // Nested module
+    pub fn get_user() {}                        // Public function
+    fn helper() {}                              // Private (default)
+// Using items from another module
+use crate::handlers::user_handlers::get_user;
+use std::collections::HashMap;                  // Standard library
+use serde::{Serialize, Deserialize};            // External crate (Cargo.toml)
+### Standard Library Highlights
+| Module | Purpose | Key Types/Functions |
+|--------|---------|---------------------|
+| <code>std::collections</code> | Data structures | <code>HashMap</code>, <code>HashSet</code>, <code>VecDeque</code>, <code>BTreeMap</code> |
+| <code>std::sync</code> | Concurrency primitives | <code>Arc</code>, <code>Mutex</code>, <code>RwLock</code>, <code>Barrier</code> |
+| <code>std::io</code> | I/O | <code>Read</code>, <code>Write</code>, <code>BufReader</code>, <code>Stdin</code> |
+| <code>std::fs</code> | File system | <code>read_to_string</code>, <code>write</code>, <code>DirBuilder</code> |
+| <code>std::net</code> | Networking | <code>TcpListener</code>, <code>TcpStream</code>, <code>UdpSocket</code> |
+| <code>std::thread</code> | Threading | <code>spawn</code>, <code>sleep</code>, <code>JoinHandle</code> |
+| <code>std::time</code> | Time | <code>Duration</code>, <code>Instant</code>, <code>SystemTime</code> |
+| <code>std::path</code> | Paths | <code>Path</code>, <code>PathBuf</code> |
+| <code>std::env</code> | Environment | <code>args</code>, <code>var</code>, <code>current_dir</code> |
+| <code>std::error</code> | Error handling | <code>Error</code> trait, <code>Box<dyn Error></code> |
+## Framework by Framework Reference
+### Axum (Tokio-native, modular, tower-based)
+**Setup (Cargo.toml):**
+<code>toml
+[dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres"] }
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+**Core Concepts:**
+<code>rust
+    Router,                                          // HTTP router
+    routing::{get, post},                            // Method-specific routing
+    extract::{Path, Query, State, Json},             // Request extractors
+    response::{Json as JsonResponse, IntoResponse},  // Response types
+    http::StatusCode,
+    middleware,
+use serde::{Serialize, Deserialize};
+use sqlx::PgPool;
+// -- Shared application state --
+#[derive(Clone)]
+struct AppState {
+    db: PgPool,                                      // Database connection pool
+// -- Models --
+#[derive(Serialize, Deserialize, sqlx::FromRow)]
+struct User {
+    id: i64,
+    name: String,
+    email: String,
+#[derive(Deserialize)]                               // Request body (deserialize only)
+struct CreateUserRequest {
+    name: String,
+    email: String,
+// -- Handler function (takes extractors as parameters) --
+    Path(id): Path<i64>,                             // Extracts /users/:id path param
+    State(state): State<Arc<AppState>>,              // Injects shared state
+) -> Result<JsonResponse<User>, StatusCode> {        // Returns JSON or error status
+    let user = sqlx::query_as::<_, User>(
+        "SELECT id, name, email FROM users WHERE id = $1"
+    .bind(id)
+    .fetch_optional(&state.db)                       // Executes query on pool
+    .await                                           // Suspends until DB responds
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    user.map(JsonResponse)                           // Wrap in JSON response
+        .ok_or(StatusCode::NOT_FOUND)                // 404 if no user found
+async fn create_user(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<CreateUserRequest>,             // Parses JSON request body
+) -> (StatusCode, JsonResponse<User>) {
+    let user = sqlx::query_as::<_, User>(
+        "INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, email"
+    .bind(&body.name)
+    .bind(&body.email)
+    .fetch_one(&state.db)
+    .unwrap();
+    (StatusCode::CREATED, JsonResponse(user))        // Tuple for status + body
+// -- Auth middleware --
+async fn auth_middleware(
+    mut req: axum::extract::Request,
+    next: middleware::Next,
+) -> Result<impl IntoResponse, StatusCode> {
+    let token = req
+        .headers()
+        .get("Authorization")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("Bearer "))
+        .ok_or(StatusCode::UNAUTHORIZED)?;
+    // Validate token and inject user context
+    req.extensions_mut().insert(token.to_string());
+    Ok(next.run(req).await)
+// -- Application setup --
+    let pool = PgPool::connect("postgres://localhost/mydb").await.unwrap();
+    let state = Arc::new(AppState { db: pool });
+        .route("/users", post(create_user))          // POST /users
+        .route("/users/{id}", get(get_user).patch(update_user))  // GET/PATCH /users/:id
+        .route_layer(middleware::from_fn(auth_middleware))  // Apply auth to all /users routes
+        .with_state(state)                           // Inject shared state
+        .layer(tower_http::cors::CorsLayer::permissive());  // Add CORS
+**Common Patterns:**
+| Pattern | Implementation |
+| State sharing | <code>Arc<AppState></code> via <code>State</code> extractor |
+| Error handling | Custom error type implementing <code>IntoResponse</code> |
+| Validation | <code>validator</code> crate with <code>#[derive(Validate)]</code> |
+| Tracing | <code>tower-http::TraceLayer</code> + <code>tracing</code> crate |
+| Rate limiting | <code>tower::limit::RateLimitLayer</code> |
+| File upload | <code>Multipart</code> extractor from axum-extra |
+### Actix-web (Actor-based, mature)
+**Setup:**
+<code>toml
+[dependencies]
+actix-web = "4"
+actix-rt = "2"
+serde = { version = "1", features = ["derive"] }
+**Core Concepts:**
+<code>rust
+use actix_web::{web, App, HttpServer, HttpResponse, Responder, HttpRequest};
+// -- Handler (returns impl Responder) --
+async fn greet(path: web::Path<String>) -> impl Responder {
+    // web::Path extracts path parameter
+    format!("Hello {}!", path)                       // Any impl Responder works
+// -- Extract query parameters --
+struct UserQuery {
+    page: Option<u32>,
+    per_page: Option<u32>,
+async fn list_users(query: web::Query<UserQuery>) -> impl Responder {
+    let page = query.page.unwrap_or(1);
+    HttpResponse::Ok().json(serde_json::json!({
+        "page": page,
+        "users": []
+// -- Application state --
+struct AppState {
+    db: sqlx::PgPool,
+    data: web::Data<AppState>,                       // Shared state via web::Data
+    path: web::Path<i64>,
+    let id = path.into_inner();
+    HttpResponse::Ok().json(serde_json::json!({"id": id}))
+#[actix_web::main]                                   // actix runtime entry point
+    let pool = sqlx::PgPool::connect("...").await.unwrap();
+    let data = web::Data::new(AppState { db: pool });
+    HttpServer::new(move || {                         // Closure to create app per worker
+            .app_data(data.clone())                  // Inject shared state
+            .route("/users/{id}", web::get().to(get_user))
+            .route("/users", web::get().to(list_users))
+    .bind("0.0.0.0:3000")?
+## Comparison Tables
+| Feature | Axum | Actix-web | Warp |
+|---------|------|-----------|------|
+| Runtime | Tokio | actix-rt (Tokio-based) | Tokio |
+| Philosophy | Modular, tower ecosystem | Actor-based (separate actor per connection) | Filter-based, composable |
+| Router | Router + MethodRouter | resource/route macros | Filter combinators |
+| Extractors | Via FromRequest trait | Via FromRequest trait | Via Filter::and() |
+| State | State<Arc<T>> | web::Data<T> | With<Arc<T>> |
+| Middleware | tower layers | Middleware trait | Filter wrappers |
+| Error handling | IntoResponse for custom errors | actix_web::Error type | Rejection + Reply |
+| Learning curve | Moderate | Moderate | High (filter combinators) |
+| Performance | Very high | Very high | Very high |
+| Community | Large (growing) | Mature, very large | Medium |
+| Ecosystem | tower-http middleware | actix extras | warp filters |
+## Common Pitfalls & Anti-patterns
+1. **Borrow checker fighting** — Trying to mutate data through an immutable reference. Use <code>RefCell</code> (single-threaded interior mutability), <code>Mutex</code>/<code>RwLock</code> (multi-threaded), or restructure to avoid shared mutation.
+2. **Holding <code>MutexGuard</code> across <code>.await</code> points** — If a <code>Mutex</code> guard is held across an <code>.await</code>, it blocks other tasks. Use <code>tokio::sync::Mutex</code> (releases on await) instead of <code>std::sync::Mutex</code>.
+3. **Unbounded task spawning** — <code>tokio::spawn</code> for every request without backpressure. Use <code>Semaphore</code> to limit concurrent tasks, or use connection pooling with bounded channels.
+4. **Using <code>.unwrap()</code> on Results/Options** — Panics on error. Use <code>?</code> to propagate errors, <code>.ok_or()</code> to convert Options, or proper error handling.
+5. **Ignoring <code>#[must_use]</code> warnings** — Futures that are not <code>.await</code>ed are silently discarded. Use <code>tokio::spawn</code> for fire-and-forget tasks.
+6. **Not using <code>tower_http::TraceLayer</code>** — Without request logging, production debugging is painful. Add <code>TraceLayer</code> early in development.
+7. **Large allocations in hot paths** — Frequent <code>String::clone()</code> or <code>vec![].push</code> in tight loops. Use <code>String::from</code> sparingly, reuse buffers, use <code>bytes::Bytes</code> for zero-copy parsing.
+8. **Blocking the async runtime** — Calling <code>std::thread::sleep</code>, <code>std::sync::Mutex::lock</code>, or sync I/O inside async code blocks the worker thread. Use <code>tokio::time::sleep</code>, <code>tokio::sync::Mutex</code>, and <code>spawn_blocking</code> for sync work.
+9. **Not using <code>Arc</code> for shared state** — State must be <code>Clone + Send + Sync</code>. Wrap in <code>Arc</code> for multi-threaded access. Use <code>Arc<AppState></code> pattern.
+10. **Overusing <code>Box<dyn Trait></code>** — Dynamic dispatch has overhead. Use generics (<code>impl Trait</code>) or enums (<code>enum MyEnum { Variant1(T1), Variant2(T2) }</code>) when the set of types is known.
+11. **Not handling graceful shutdown** — <code>axum::serve</code> handles SIGTERM automatically with Tokio, but ensure DB connections, open files, and background tasks are cleaned up.
+12. **Panic in <code>#[tokio::main]</code> causing silent exit** — Use <code>std::process::exit</code> or structured error handling at top level.
+## Complete API Reference
+| Type/Trait | Description |
+| <code>Router::new()</code> | Create new router |
+| <code>router.route(path, method_handler)</code> | Register single route |
+| <code>router.route_layer(layer)</code> | Apply layer to all routes |
+| <code>router.with_state(state)</code> | Inject shared state |
+| <code>router.layer(layer)</code> | Apply tower layer globally |
+| <code>Path<T></code> | Path parameter extractor |
+| <code>Query<T></code> | Query parameter extractor |
+| <code>Json<T></code> | JSON body extractor |
+| <code>State<T></code> | State extractor |
+| <code>Form<T></code> | Form body extractor |
+| <code>Multipart</code> | Multipart form extractor |
+| <code>Extension<T></code> | Extension extractor |
+| <code>Request</code> | Full request access |
+| <code>middleware::from_fn(fn)</code> | Create middleware from function |
+| <code>middleware::Next</code> | Next middleware in chain |
+| <code>JsonResponse<T></code> | JSON response |
+| <code>StatusCode</code> | HTTP status codes |
+| <code>IntoResponse</code> | Trait for response conversion |
+| <code>axum::serve(listener, app)</code> | Start serving |
+### Actix-web
+| Type/Trait | Description |
+| <code>App::new()</code> | Create application |
+| <code>app.route(path, route)</code> | Register route |
+| <code>app.service(scope)</code> | Mount service group |
+| <code>web::scope("/prefix")</code> | URL prefix scope |
+| <code>web::resource("/path")</code> | Resource with multiple methods |
+| <code>web::get().to(handler)</code> | GET handler |
+| <code>web::post().to(handler)</code> | POST handler |
+| <code>web::Path<T></code> | Path parameter extractor |
+| <code>web::Query<T></code> | Query extractor |
+| <code>web::Json<T></code> | JSON body extractor |
+| <code>web::Form<T></code> | Form extractor |
+| <code>web::Data<T></code> | Application state extractor |
+| <code>HttpRequest</code> | Full request access |
+| <code>HttpResponse</code> | Response builder |
+| <code>HttpServer::new(factory)</code> | Create server |
+| <code>server.bind(addr)</code> | Bind to address |
+1. **Q:** Explain the difference between <code>String</code> and <code>&str</code> in Rust.
+   **A:** <code>String</code> is an owned, heap-allocated, growable UTF-8 buffer. It owns its data and frees it when dropped. <code>&str</code> is a borrowed slice of UTF-8 text — it is a reference to a sequence of UTF-8 bytes owned elsewhere (in a <code>String</code>, a string literal, or a byte array). Use <code>String</code> when you need ownership or mutation. Use <code>&str</code> for function parameters (more general).
+2. **Q:** How does Rust's borrow checker guarantee memory safety without a garbage collector?
+   **A:** At compile time, the borrow checker enforces: (1) each value has exactly one owner; (2) references cannot outlive their referent; (3) at any point, either one mutable reference or any number of immutable references to a value. These rules eliminate data races, dangling pointers, double frees, and use-after-free — all without runtime overhead.
+3. **Q:** What is the difference between <code>std::sync::Mutex</code> and <code>tokio::sync::Mutex</code>?
+   **A:** <code>std::sync::Mutex</code> blocks the OS thread when locked. If held across an <code>.await</code>, it blocks the tokio worker thread, starving other tasks. <code>tokio::sync::Mutex</code> yields the task (not the thread) when contended, allowing other tasks to run on the same thread. Use <code>std::sync::Mutex</code> for short critical sections. Use <code>tokio::sync::Mutex</code> when you must hold the lock across <code>.await</code>.
+4. **Q:** How does Axum's extractor pattern work?
+   **A:** Handler function parameters implement the <code>FromRequestParts</code> or <code>FromRequest</code> trait. Each extractor pulls data from the request: <code>Path</code> extracts URL params, <code>Query</code> extracts query string, <code>Json</code> deserializes the body, <code>State</code> retrieves shared state. Extractors run in order. If any extractor fails (e.g., validation error), the request is rejected without calling the handler.
+5. **Q:** What are Rust's <code>Send</code> and <code>Sync</code> traits?
+   **A:** <code>Send</code>: a type is safe to transfer between threads. <code>Sync</code>: a type is safe to share between threads (shared reference <code>&T</code> is <code>Send</code>). Most types are auto-implemented. <code>Rc<T></code> is neither. <code>Arc<T></code> is <code>Send + Sync</code> when <code>T</code> is. <code>Mutex<T></code> is <code>Send + Sync</code>. These traits enable compile-time thread safety verification.
+6. **Q:** How do you handle graceful shutdown in an Axum service?
+   **A:** <code>axum::serve</code> with Tokio handles SIGTERM automatically, draining active connections before shutdown. For custom cleanup, use <code>tokio::signal::ctrl_c()</code> or <code>signal::unix::Signal</code> to listen for termination signals, then call <code>shutdown_handle</code> or use <code>axum::serve</code> with <code>WithGracefulShutdown</code>.
+7. **Q:** Compare SQLx and Diesel for database access in Rust.
+   **A:** SQLx is async-native (works with tokio), uses compile-time checked raw SQL (<code>query_as!("SELECT ...")</code>), and supports PostgreSQL, MySQL, SQLite. Diesel is synchronous (needs <code>spawn_blocking</code> with tokio), provides a type-safe query builder, uses migrations, and supports the same databases. Choose SQLx for async SQL with familiar syntax. Choose Diesel for compile-time query validation with builder DSL.
+8. **Q:** What is the <code>? operator</code> and how does it work with error handling?
+   **A:** <code>?</code> is a short-circuit operator for <code>Result</code> and <code>Option</code>. For <code>Result</code>: if <code>Err(e)</code>, it returns <code>Err(e.into())</code> from the enclosing function. For <code>Option</code>: if <code>None</code>, it returns <code>None</code>. The enclosing function must return <code>Result<T, E></code> or <code>Option<T></code>. The error type is converted via <code>From</code> trait.
+9. **Q:** How do you test an Axum handler?
+   **A:** Use <code>axum::http::Request</code> builder and <code>tower::ServiceExt::oneshot</code> to call the router directly without a server. Example: <code>let response = app.oneshot(request).await.unwrap();</code>. Then assert on <code>response.status()</code> and body. This avoids network overhead and is very fast for unit/integration tests.
+10. **Q:** Explain the <code>#[tokio::main]</code> macro.
+    **A:** It transforms an <code>async fn main</code> into a synchronous <code>main</code> that initializes a tokio runtime and runs the async code. Without it, you must manually create a runtime: <code>let rt = tokio::runtime::Runtime::new().unwrap(); rt.block_on(async { ... })</code>. The macro also supports <code>flavor = "current_thread"</code> for single-threaded (useful in tests).\`,
+|---------|---------------|
+| State sharing | <code>Arc<AppState></code> via <code>State</code> extractor |
+| Error handling | Custom error type implementing <code>IntoResponse</code> |
+| Validation | <code>validator</code> crate with <code>#[derive(Validate)]</code> |
+| Tracing | <code>tower-http::TraceLayer</code> + <code>tracing</code> crate |
+| Rate limiting | <code>tower::limit::RateLimitLayer</code> |
+| File upload | <code>Multipart</code> extractor from axum-extra |
+
+### Actix-web (Actor-based, mature)
+
+**Setup:**
+<code>toml
+[dependencies]
+actix-web = "4"
+actix-rt = "2"
+serde = { version = "1", features = ["derive"] }
+</code>
+
+**Core Concepts:**
+
+<code>rust
+use actix_web::{web, App, HttpServer, HttpResponse, Responder, HttpRequest};
+use serde::Deserialize;
+
+// -- Handler (returns impl Responder) --
+async fn greet(path: web::Path<String>) -> impl Responder {
+    // web::Path extracts path parameter
+    format!("Hello {}!", path)                       // Any impl Responder works
+}
+
+// -- Extract query parameters --
+#[derive(Deserialize)]
+struct UserQuery {
+    page: Option<u32>,
+    per_page: Option<u32>,
+}
+
+async fn list_users(query: web::Query<UserQuery>) -> impl Responder {
+    let page = query.page.unwrap_or(1);
+    HttpResponse::Ok().json(serde_json::json!({
+        "page": page,
+        "users": []
+    }))
+}
+
+// -- Application state --
+struct AppState {
+    db: sqlx::PgPool,
+}
+
+async fn get_user(
+    data: web::Data<AppState>,                       // Shared state via web::Data
+    path: web::Path<i64>,
+) -> impl Responder {
+    let id = path.into_inner();
+    HttpResponse::Ok().json(serde_json::json!({"id": id}))
+}
+
+#[actix_web::main]                                   // actix runtime entry point
+async fn main() -> std::io::Result<()> {
+    let pool = sqlx::PgPool::connect("...").await.unwrap();
+    let data = web::Data::new(AppState { db: pool });
+
+    HttpServer::new(move || {                         // Closure to create app per worker
+        App::new()
+            .app_data(data.clone())                  // Inject shared state
+            .route("/users/{id}", web::get().to(get_user))
+            .route("/users", web::get().to(list_users))
+    })
+    .bind("0.0.0.0:3000")?
+    .run()
+    .await
+}
+</code>
+
+---
+
+## Comparison Tables
+
+| Feature | Axum | Actix-web | Warp |
+|---------|------|-----------|------|
+| Runtime | Tokio | actix-rt (Tokio-based) | Tokio |
+| Philosophy | Modular, tower ecosystem | Actor-based (separate actor per connection) | Filter-based, composable |
+| Router | Router + MethodRouter | resource/route macros | Filter combinators |
+| Extractors | Via FromRequest trait | Via FromRequest trait | Via Filter::and() |
+| State | State<Arc<T>> | web::Data<T> | With<Arc<T>> |
+| Middleware | tower layers | Middleware trait | Filter wrappers |
+| Error handling | IntoResponse for custom errors | actix_web::Error type | Rejection + Reply |
+| Learning curve | Moderate | Moderate | High (filter combinators) |
+| Performance | Very high | Very high | Very high |
+| Community | Large (growing) | Mature, very large | Medium |
+| Ecosystem | tower-http middleware | actix extras | warp filters |
+
+---
+
+## Common Pitfalls & Anti-patterns
+
+1. **Borrow checker fighting** — Trying to mutate data through an immutable reference. Use <code>RefCell</code> (single-threaded interior mutability), <code>Mutex</code>/<code>RwLock</code> (multi-threaded), or restructure to avoid shared mutation.
+
+2. **Holding <code>MutexGuard</code> across <code>.await</code> points** — If a <code>Mutex</code> guard is held across an <code>.await</code>, it blocks other tasks. Use <code>tokio::sync::Mutex</code> (releases on await) instead of <code>std::sync::Mutex</code>.
+
+3. **Unbounded task spawning** — <code>tokio::spawn</code> for every request without backpressure. Use <code>Semaphore</code> to limit concurrent tasks, or use connection pooling with bounded channels.
+
+4. **Using <code>.unwrap()</code> on Results/Options** — Panics on error. Use <code>?</code> to propagate errors, <code>.ok_or()</code> to convert Options, or proper error handling.
+
+5. **Ignoring <code>#[must_use]</code> warnings** — Futures that are not <code>.await</code>ed are silently discarded. Use <code>tokio::spawn</code> for fire-and-forget tasks.
+
+6. **Not using <code>tower_http::TraceLayer</code>** — Without request logging, production debugging is painful. Add <code>TraceLayer</code> early in development.
+
+7. **Large allocations in hot paths** — Frequent <code>String::clone()</code> or <code>vec![].push</code> in tight loops. Use <code>String::from</code> sparingly, reuse buffers, use <code>bytes::Bytes</code> for zero-copy parsing.
+
+8. **Blocking the async runtime** — Calling <code>std::thread::sleep</code>, <code>std::sync::Mutex::lock</code>, or sync I/O inside async code blocks the worker thread. Use <code>tokio::time::sleep</code>, <code>tokio::sync::Mutex</code>, and <code>spawn_blocking</code> for sync work.
+
+9. **Not using <code>Arc</code> for shared state** — State must be <code>Clone + Send + Sync</code>. Wrap in <code>Arc</code> for multi-threaded access. Use <code>Arc<AppState></code> pattern.
+
+10. **Overusing <code>Box<dyn Trait></code>** — Dynamic dispatch has overhead. Use generics (<code>impl Trait</code>) or enums (<code>enum MyEnum { Variant1(T1), Variant2(T2) }</code>) when the set of types is known.
+
+11. **Not handling graceful shutdown** — <code>axum::serve</code> handles SIGTERM automatically with Tokio, but ensure DB connections, open files, and background tasks are cleaned up.
+
+12. **Panic in <code>#[tokio::main]</code> causing silent exit** — Use <code>std::process::exit</code> or structured error handling at top level.
+
+---
+
+## Complete API Reference
+
+### Axum
+
+| Type/Trait | Description |
+|------------|-------------|
+| <code>Router::new()</code> | Create new router |
+| <code>router.route(path, method_handler)</code> | Register single route |
+| <code>router.route_layer(layer)</code> | Apply layer to all routes |
+| <code>router.with_state(state)</code> | Inject shared state |
+| <code>router.layer(layer)</code> | Apply tower layer globally |
+| <code>Path<T></code> | Path parameter extractor |
+| <code>Query<T></code> | Query parameter extractor |
+| <code>Json<T></code> | JSON body extractor |
+| <code>State<T></code> | State extractor |
+| <code>Form<T></code> | Form body extractor |
+| <code>Multipart</code> | Multipart form extractor |
+| <code>Extension<T></code> | Extension extractor |
+| <code>Request</code> | Full request access |
+| <code>middleware::from_fn(fn)</code> | Create middleware from function |
+| <code>middleware::Next</code> | Next middleware in chain |
+| <code>JsonResponse<T></code> | JSON response |
+| <code>StatusCode</code> | HTTP status codes |
+| <code>IntoResponse</code> | Trait for response conversion |
+| <code>axum::serve(listener, app)</code> | Start serving |
+
+### Actix-web
+
+| Type/Trait | Description |
+|------------|-------------|
+| <code>App::new()</code> | Create application |
+| <code>app.route(path, route)</code> | Register route |
+| <code>app.service(scope)</code> | Mount service group |
+| <code>web::scope("/prefix")</code> | URL prefix scope |
+| <code>web::resource("/path")</code> | Resource with multiple methods |
+| <code>web::get().to(handler)</code> | GET handler |
+| <code>web::post().to(handler)</code> | POST handler |
+| <code>web::Path<T></code> | Path parameter extractor |
+| <code>web::Query<T></code> | Query extractor |
+| <code>web::Json<T></code> | JSON body extractor |
+| <code>web::Form<T></code> | Form extractor |
+| <code>web::Data<T></code> | Application state extractor |
+| <code>HttpRequest</code> | Full request access |
+| <code>HttpResponse</code> | Response builder |
+| <code>HttpServer::new(factory)</code> | Create server |
+| <code>server.bind(addr)</code> | Bind to address |
+
+---
+
+## Practice Questions
+
+1. **Q:** Explain the difference between <code>String</code> and <code>&str</code> in Rust.
+   **A:** <code>String</code> is an owned, heap-allocated, growable UTF-8 buffer. It owns its data and frees it when dropped. <code>&str</code> is a borrowed slice of UTF-8 text — it is a reference to a sequence of UTF-8 bytes owned elsewhere (in a <code>String</code>, a string literal, or a byte array). Use <code>String</code> when you need ownership or mutation. Use <code>&str</code> for function parameters (more general).
+
+2. **Q:** How does Rust's borrow checker guarantee memory safety without a garbage collector?
+   **A:** At compile time, the borrow checker enforces: (1) each value has exactly one owner; (2) references cannot outlive their referent; (3) at any point, either one mutable reference or any number of immutable references to a value. These rules eliminate data races, dangling pointers, double frees, and use-after-free — all without runtime overhead.
+
+3. **Q:** What is the difference between <code>std::sync::Mutex</code> and <code>tokio::sync::Mutex</code>?
+   **A:** <code>std::sync::Mutex</code> blocks the OS thread when locked. If held across an <code>.await</code>, it blocks the tokio worker thread, starving other tasks. <code>tokio::sync::Mutex</code> yields the task (not the thread) when contended, allowing other tasks to run on the same thread. Use <code>std::sync::Mutex</code> for short critical sections. Use <code>tokio::sync::Mutex</code> when you must hold the lock across <code>.await</code>.
+
+4. **Q:** How does Axum's extractor pattern work?
+   **A:** Handler function parameters implement the <code>FromRequestParts</code> or <code>FromRequest</code> trait. Each extractor pulls data from the request: <code>Path</code> extracts URL params, <code>Query</code> extracts query string, <code>Json</code> deserializes the body, <code>State</code> retrieves shared state. Extractors run in order. If any extractor fails (e.g., validation error), the request is rejected without calling the handler.
+
+5. **Q:** What are Rust's <code>Send</code> and <code>Sync</code> traits?
+   **A:** <code>Send</code>: a type is safe to transfer between threads. <code>Sync</code>: a type is safe to share between threads (shared reference <code>&T</code> is <code>Send</code>). Most types are auto-implemented. <code>Rc<T></code> is neither. <code>Arc<T></code> is <code>Send + Sync</code> when <code>T</code> is. <code>Mutex<T></code> is <code>Send + Sync</code>. These traits enable compile-time thread safety verification.
+
+6. **Q:** How do you handle graceful shutdown in an Axum service?
+   **A:** <code>axum::serve</code> with Tokio handles SIGTERM automatically, draining active connections before shutdown. For custom cleanup, use <code>tokio::signal::ctrl_c()</code> or <code>signal::unix::Signal</code> to listen for termination signals, then call <code>shutdown_handle</code> or use <code>axum::serve</code> with <code>WithGracefulShutdown</code>.
+
+7. **Q:** Compare SQLx and Diesel for database access in Rust.
+   **A:** SQLx is async-native (works with tokio), uses compile-time checked raw SQL (<code>query_as!("SELECT ...")</code>), and supports PostgreSQL, MySQL, SQLite. Diesel is synchronous (needs <code>spawn_blocking</code> with tokio), provides a type-safe query builder, uses migrations, and supports the same databases. Choose SQLx for async SQL with familiar syntax. Choose Diesel for compile-time query validation with builder DSL.
+
+8. **Q:** What is the <code>? operator</code> and how does it work with error handling?
+   **A:** <code>?</code> is a short-circuit operator for <code>Result</code> and <code>Option</code>. For <code>Result</code>: if <code>Err(e)</code>, it returns <code>Err(e.into())</code> from the enclosing function. For <code>Option</code>: if <code>None</code>, it returns <code>None</code>. The enclosing function must return <code>Result<T, E></code> or <code>Option<T></code>. The error type is converted via <code>From</code> trait.
+
+9. **Q:** How do you test an Axum handler?
+   **A:** Use <code>axum::http::Request</code> builder and <code>tower::ServiceExt::oneshot</code> to call the router directly without a server. Example: <code>let response = app.oneshot(request).await.unwrap();</code>. Then assert on <code>response.status()</code> and body. This avoids network overhead and is very fast for unit/integration tests.
+
+10. **Q:** Explain the <code>#[tokio::main]</code> macro.
+    **A:** It transforms an <code>async fn main</code> into a synchronous <code>main</code> that initializes a tokio runtime and runs the async code. Without it, you must manually create a runtime: <code>let rt = tokio::runtime::Runtime::new().unwrap(); rt.block_on(async { ... })</code>. The macro also supports <code>flavor = "current_thread"</code> for single-threaded (useful in tests).`,
+            tags: ["Rust", "Backend", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-rest-api",
+            title: "REST API Design",
+            shortDesc: "Complete REST API design reference — resource modeling, HTTP methods/status codes, versioning, pagination, HATEOAS, and OpenAPI.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "Resource-oriented design: nouns as resources, HTTP verbs as actions.",
+              "HTTP status codes: 2xx success, 3xx redirection, 4xx client errors, 5xx server errors.",
+              "Versioning strategies: URI path, header, query parameter, content negotiation.",
+              "Pagination: cursor-based vs offset-based — tradeoffs and patterns.",
+              "OpenAPI 3.x: contract-first design with code generation.",
+            ],
+            content: `## Quick Reference
+REST (Representational State Transfer) is an architectural style for designing networked applications. It treats server data as **resources** (nouns) that clients manipulate via **HTTP methods** (verbs). Each resource has a unique URL, and interactions are stateless — every request contains all information needed to process it. Responses use standard HTTP status codes to indicate success, failure, or errors.
+| Constraint | Description |
+| Uniform Interface | Resources identified by URLs, manipulated through representations, self-descriptive messages, HATEOAS |
+| Stateless | Each request contains all context — no server-side sessions |
+| Cacheable | Responses must declare cacheability (Cache-Control header) |
+| Client-Server | Separation of concerns — UI decoupled from data storage |
+| Layered System | Intermediaries (proxies, gateways) can exist between client and server |
+| Code on Demand (opt) | Server can extend client functionality via scripts or applets |
+## HTTP Protocol Reference
+### HTTP Methods
+| Method | CRUD | Safe | Idempotent | Cacheable | Request Body | Response Body |
+|--------|------|------|------------|-----------|-------------|---------------|
+| GET | Read | Yes | Yes | Yes | No | Resource(s) |
+| POST | Create | No | No | No | New resource data | Created resource (201) |
+| PUT | Replace | No | Yes | No | Full representation | Updated resource |
+| PATCH | Partial Update | No | No | No | Partial data (diff) | Updated resource |
+| DELETE | Delete | No | Yes | No | No | Empty or confirmation |
+| HEAD | Read headers | Yes | Yes | Yes | No | Headers only |
+| OPTIONS | Discover | Yes | Yes | No | No | Allowed methods |
+### HTTP Status Codes
+| Code | Category | Meaning | When To Use |
+|------|----------|---------|-------------|
+| 200 | Success | OK | GET, PUT, PATCH success |
+| 201 | Success | Created | POST — resource created |
+| 204 | Success | No Content | DELETE success, PUT with no body |
+| 301 | Redirect | Moved Permanently | Resource URL changed |
+| 304 | Redirect | Not Modified | Conditional GET (ETag) |
+| 400 | Client Error | Bad Request | Malformed syntax, validation failure |
+| 401 | Client Error | Unauthorized | Missing or invalid credentials |
+| 403 | Client Error | Forbidden | Authenticated but not authorized |
+| 404 | Client Error | Not Found | Resource does not exist |
+| 405 | Client Error | Method Not Allowed | Wrong HTTP method for URL |
+| 409 | Client Error | Conflict | Resource state conflict (e.g., duplicate) |
+| 422 | Client Error | Unprocessable Entity | Semantic validation errors |
+| 429 | Client Error | Too Many Requests | Rate limit exceeded |
+| 500 | Server Error | Internal Server Error | Unhandled server exception |
+| 502 | Server Error | Bad Gateway | Upstream service failed |
+| 503 | Server Error | Service Unavailable | Maintenance, overload |
+### Common HTTP Headers
+| Header | Type | Example | Purpose |
+|--------|------|---------|---------|
+| Content-Type | Request/Response | <code>application/json</code> | Media type of payload |
+| Accept | Request | <code>application/json</code> | Desired response media type |
+| Authorization | Request | <code>Bearer &lt;token&gt;</code> | Authentication credentials |
+| Cache-Control | Response | <code>max-age=3600</code> | Caching policy |
+| ETag | Response | <code>&quot;33a64df5&quot;</code> | Resource version for conditional requests |
+| If-None-Match | Request | <code>&quot;33a64df5&quot;</code> | Conditional GET — returns 304 if unchanged |
+| Location | Response | <code>/users/123</code> | URL of newly created resource (201) |
+| Retry-After | Response | <code>120</code> | Rate limit — seconds until retry |
+### Content Negotiation
+Servers use the <code>Accept</code> request header to determine the media type to return. Clients specify their preferred format; servers reply with the best match via <code>Content-Type</code>.
+\`\`\`text
+// Client requests JSON
+// Client requests XML (fallback to JSON)
+Accept: application/xml; q=0.8, application/json; q=1.0
+Common content types: <code>application/json</code>, <code>application/xml</code>, <code>text/csv</code>, <code>multipart/form-data</code>.
+## Resource Design
+### Naming Conventions
+- Use **plural nouns** for collections: <code>/users</code>, <code>/orders</code>, <code>/products</code>
+- Use **singular nouns** for singletons: <code>/profile</code>, <code>/settings</code>
+- Use **kebab-case** for multi-word resources: <code>/order-items</code>, not camelCase or snake_case
+- Use **lowercase** throughout
+- Avoid verbs in URLs — HTTP methods are the verbs
+\`\`\`text
+// Good — resource-oriented
+GET    /users         // List users
+POST   /users         // Create user
+GET    /users/123     // Get user by ID
+PUT    /users/123     // Replace user
+PATCH  /users/123     // Partial update
+DELETE /users/123     // Delete user
+// Bad — action verbs in URL
+GET    /getUsers
+POST  /createUser
+POST  /deleteUser?id=123
+### URL Structure Patterns
+| Pattern | Example | Description |
+|---------|---------|-------------|
+| Collection | <code>/users</code> | List of resources |
+| Item | <code>/users/{id}</code> | Single resource |
+| Nested collection | <code>/users/{id}/orders</code> | Child resources |
+| Nested item | <code>/users/{id}/orders/{orderId}</code> | Single child resource |
+| Action (rare) | <code>/users/{id}/activate</code> | Non-CRUD operation |
+| Search | <code>/search?q=term</code> | Full-text search endpoint |
+### Representing Relations
+| Relation Type | Pattern | Example |
+|---------------|---------|---------|
+| One-to-one | Embedded or sub-resource | <code>/users/{id}/profile</code> |
+| One-to-many | Sub-resource collection | <code>/users/{id}/orders</code> |
+| Many-to-many | Join resource | <code>/courses/{id}/students</code> |
+| Reference by ID | Query parameter | <code>/orders?userId=123</code> |
+### Filtering, Sorting, and Pagination
+Use **query parameters** for filtering, sorting, and pagination. Avoid encoding these in the URL path.
+\`\`\`text
+// Filtering — key=value pairs
+GET /users?role=admin&status=active
+GET /orders?createdAfter=2024-01-01&totalMin=100
+// Sorting — sort param with +/- prefix or field list
+GET /users?sort=createdAt       // ascending
+GET /users?sort=-createdAt      // descending
+GET /users?sort=lastName,firstName  // multiple fields
+// Pagination — offset/limit (simpler) or cursor-based (safer)
+GET /users?offset=0&limit=20    // Page 1, 20 items
+GET /users?offset=20&limit=20   // Page 2, 20 items
+GET /users?cursor=eyJpZCI6MTB9  // Cursor-based (opaque token)
+| Pagination Type | Pros | Cons | When To Use |
+|-----------------|------|------|-------------|
+| Offset/Limit | Simple, skip to page N | Inconsistent if data changes, slow on large offsets | Small datasets, UI with page numbers |
+| Cursor-based | Consistent, fast on large datasets | No random page access, more complex | Real-time feeds, large datasets |
+| Keyset pagination | Fast, stable | Requires indexed sort field | High-throughput APIs |
+## REST Patterns
+### HATEOAS (Hypermedia as the Engine of Application State)
+HATEOAS means API responses include links to related actions, allowing clients to navigate the API dynamically without hardcoding URLs.
+  "id": 123,
+  "name": "Alice",
+  "links": [
+    { "rel": "self", "href": "/users/123", "method": "GET" },
+    { "rel": "orders", "href": "/users/123/orders", "method": "GET" },
+    { "rel": "update", "href": "/users/123", "method": "PUT" },
+    { "rel": "delete", "href": "/users/123", "method": "DELETE" }
+### Versioning Strategies
+| Strategy | Example | Pros | Cons |
+|----------|---------|------|------|
+| URI Path | <code>/api/v1/users</code> | Explicit, easy to route | Clutters URLs, hard to deprecate |
+| Query Parameter | <code>/api/users?version=1</code> | Same URL, flexible | Not cacheable, pollutes params |
+| Custom Header | <code>Accept: application/vnd.api+json;version=1</code> | Clean URLs, RESTful | Harder to test in browser |
+| Content Negotation | <code>Accept: application/vnd.myapp.v1+json</code> | Most RESTful, clean URL | Complex client setup |
+\`\`\`text
+// Versioning via URL path (recommended for simplicity)
+GET /api/v1/users
+POST /api/v1/users
+// Versioning via Accept header (strict REST)
+Accept: application/vnd.myapi.v1+json
+### Idempotency
+An operation is **idempotent** if multiple identical requests have the same effect as a single request. GET, PUT, DELETE, HEAD, OPTIONS are idempotent. POST and PATCH are not.
+\`\`\`text
+// Idempotency key — client-generated UUID to deduplicate requests
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
+// Server stores the key and returns cached response on repeat
+HTTP/1.1 201 Created
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
+### Bulk Operations
+| Pattern | Method | Endpoint | Body |
+|---------|--------|----------|------|
+| Bulk create | POST | <code>/users/bulk</code> | <code>{"users": [...]}</code> |
+| Bulk update | PATCH | <code>/users/bulk</code> | <code>{"updates": [{"id": 1, ...}]}</code> |
+| Bulk delete | DELETE | <code>/users/bulk</code> | <code>{"ids": [1, 2, 3]}</code> |
+### Authentication Methods
+| Method | Mechanism | Use Case |
+|--------|-----------|----------|
+| HTTP Basic | Base64-encoded <code>user:pass</code> in Authorization header | Simple internal APIs, never over non-HTTPS |
+| Bearer Token | <code>Authorization: Bearer &lt;token&gt;</code> | OAuth2, JWT — most common pattern |
+| API Key | Custom header <code>X-API-Key</code> or query param <code>?apiKey=</code> | Public API authentication (low security) |
+| OAuth2 | Authorization code, client credentials, PKCE flows | Third-party access, delegated authorization |
+| JWT | Self-contained token with claims, signed by server | Stateless auth, microservices |
+\`\`\`text
+// Basic Auth (insecure without HTTPS — sends credentials on each request)
+Authorization: Basic base64(username:password)
+// Bearer Token (JWT example)
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMifQ.xxx
+// API Key
+X-API-Key: sk_live_abc123def456
+### Authorization Models
+| Model | Description | Example |
+| RBAC | Role-Based Access Control | <code>admin</code>, <code>editor</code>, <code>viewer</code> roles |
+| ABAC | Attribute-Based Access Control | Policy evaluates user and resource attributes |
+| ACL | Access Control Lists | Per-resource permission lists |
+\`\`\`text
+// RBAC middleware check (pseudo-code)
+function authorize(requiredRole) {
+  return function(req, res, next) {
+    const user = req.user;             // Extract user from JWT
+    if (user.role !== requiredRole) {  // Compare against required role
+      return res.status(403).json({ error: "Forbidden" });
+    next();                            // Proceed to request handler
+Rate limiting protects APIs from abuse and ensures fair usage.
+| Strategy | Description | Example |
+|----------|-------------|---------|
+| Token Bucket | Tokens refill at a fixed rate | <code>100 req/min</code>, burst up to 200 |
+| Leaky Bucket | Requests processed at fixed rate, excess queued | Smooths traffic spikes |
+| Fixed Window | Requests counted per time window | <code>1000 req/hour</code>, resets at boundary |
+| Sliding Window | Rolling time window prevents burst abuse | <code>100 req/min</code> sliding |
+\`\`\`text
+// Rate limit response headers
+X-RateLimit-Limit: 100          // Max requests per window
+X-RateLimit-Remaining: 87       // Remaining requests in current window
+X-RateLimit-Reset: 1620000000   // Window reset timestamp (Unix epoch)
+// Rate limit exceeded — 429 Too Many Requests
+HTTP/1.1 429 Too Many Requests
+Retry-After: 45                 // Seconds until retry
+X-RateLimit-Remaining: 0
+### OWASP Security Checklist
+| Threat | Mitigation |
+| SQL Injection | Use parameterized queries — never interpolate user input into SQL |
+| XSS (Cross-Site Scripting) | Sanitize all user input in responses; set Content-Security-Policy header |
+| CSRF | Use anti-CSRF tokens; set SameSite=Strict cookie attribute |
+| Mass Assignment | Explicit allowlist of writable fields — reject unexpected payload keys |
+| Broken Authentication | Enforce password policies, MFA, short-lived tokens, refresh rotation |
+| Sensitive Data Exposure | Never log tokens, passwords, or PII; use Strict-Transport-Security |
+| Broken Object Level Auth | Validate user ownership of every requested resource |
+| Path Traversal | Reject paths containing <code>../</code> or null bytes |
+## Tooling
+### OpenAPI / Swagger
+OpenAPI 3.x is the industry standard for documenting REST APIs. Declare your API contract in YAML and generate servers, clients, and docs.
+openapi: "3.0.3"              # OpenAPI specification version
+  title: "Users API"          # API name for documentation
+  version: "1.0.0"            # API version (follows semantic versioning)
+  /users:                     # Resource endpoint
+    get:                      # HTTP method
+      summary: "List all users"  # Short description for docs
+      parameters:             # Request parameters
+        - name: limit         # Query parameter name
+          in: query           # Parameter location (query, path, header)
+          schema:             # Parameter type definition
+            type: integer
+            default: 20       # Default value if not provided
+      responses:              # All possible response status codes
+        "200":                # Success response
+          description: "A paginated list of users"
+          content:            # Response body definition
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"  # Reference to schema
+  schemas:
+    User:                     # Reusable schema definition
+          type: integer
+### Postman / Insomnia
+- **Collections**: Group related endpoints with pre-configured headers, auth, and variables
+- **Environments**: Define <code>{{baseUrl}}</code>, <code>{{token}}</code> variables per environment (dev, staging, prod)
+- **Pre-request Scripts**: Automate token refresh and request signing
+- **Tests**: Write assertions on status code, response body, and response time
+- **Mock Servers**: Simulate API responses without a real backend
+### curl
+# GET request with custom headers
+curl -H "Accept: application/json" \\
+     -H "Authorization: Bearer <token>" \\
+     https://api.example.com/v1/users
+# POST with JSON request body
+curl -X POST \\
+     -H "Content-Type: application/json" \\
+     -d '{"name":"Alice","email":"alice@example.com"}' \\
+     https://api.example.com/v1/users
+# PUT (full resource replacement)
+curl -X PUT \\
+     -H "Content-Type: application/json" \\
+     -d '{"name":"Alice Updated","email":"alice@new.com"}' \\
+     https://api.example.com/v1/users/123
+# DELETE a resource
+curl -X DELETE \\
+     -H "Authorization: Bearer <token>" \\
+     https://api.example.com/v1/users/123
+# Follow redirects (-L) and include response headers (-i)
+curl -L -i https://api.example.com/v1/users
+### Code Generation
+| Tool | Input | Output | Language Support |
+|------|-------|--------|------------------|
+| OpenAPI Generator | OpenAPI spec | Client SDK, server stubs | 40+ languages |
+| Swagger Codegen | OpenAPI spec | Client SDK, server stubs | 30+ languages |
+| Postman Codegen | Postman collection | Code snippets | 20+ languages |
+## Common Pitfalls & Anti-patterns
+| # | Pitfall | Why It Is Bad | Correct Approach |
+|---|---------|---------------|------------------|
+| 1 | Verbs in URLs (<code>/getUsers</code>) | Duplicates HTTP method semantics | Use <code>GET /users</code> — methods are the verbs |
+| 2 | Using only GET and POST for everything | Ignores PUT, PATCH, DELETE semantics | Map CRUD operations to proper HTTP methods |
+| 3 | Returning 200 OK for all responses | Clients cannot distinguish success from failure | Use appropriate 4xx and 5xx status codes |
+| 4 | Nested resources beyond 2 levels deep | Creates rigid, brittle URL hierarchies | Use query parameters or flatten the URL structure |
+| 5 | No pagination on list endpoints | Returns too much data, crashes clients | Always paginate with sensible defaults (<code>limit=20</code>) |
+| 6 | Exposing internal database IDs in URLs | Leaks information, enables enumeration | Use UUIDs or opaque slugs for public-facing URLs |
+| 7 | Mixing plural and singular resource names | Inconsistent and confusing API surface | Always use plural for collections, singular for singletons |
+| 8 | Ignoring idempotency for payment or order APIs | Duplicate POSTs cause double charges or duplicates | Use <code>Idempotency-Key</code> header to deduplicate |
+| 9 | Returning stack traces or internal error details | Security risk — exposes implementation details | Return <code>500</code> with generic message; log details server-side |
+| 10 | No versioning or breaking changes without notice | Breaks existing clients in production | Version from day one; deprecate with a grace period |
+| 11 | Over-fetching (always returning full objects) | Wastes bandwidth and database resources | Support sparse fieldsets: <code>?fields=id,name,email</code> |
+| 12 | Under-fetching (N+1 requests from client) | Poor performance, excessive network chattiness | Provide compound documents or consider GraphQL |
+| 13 | Using 200 for validation errors | Clients must parse body to determine the result | Use <code>400</code> for syntactic errors, <code>422</code> for semantic |
+| 14 | No rate limiting implemented | API is vulnerable to DoS and brute-force attacks | Implement rate limiting and return <code>429</code> on exceed |
+| 15 | Storing passwords in plaintext | Critical security failure | Hash with bcrypt or argon2; never log or return passwords |
+## Complete API Reference
+### HTTP Status Codes
+| Code | Name | Method Usage | Description |
+|------|------|-------------|-------------|
+| 200 | OK | GET, PUT, PATCH | Request succeeded with response body |
+| 201 | Created | POST | Resource created successfully |
+| 202 | Accepted | POST, DELETE | Request accepted for async processing |
+| 204 | No Content | DELETE, PUT | Success, no response body returned |
+| 301 | Moved Permanently | GET | Resource has a new permanent URL |
+| 304 | Not Modified | GET | Cached version is still valid (conditional GET) |
+| 400 | Bad Request | All | Malformed syntax or invalid input |
+| 401 | Unauthorized | All | Missing or invalid authentication credentials |
+| 403 | Forbidden | All | Authenticated but not permitted to access |
+| 404 | Not Found | All | Resource does not exist at this URL |
+| 405 | Method Not Allowed | All | HTTP method not supported for this endpoint |
+| 406 | Not Acceptable | GET | Cannot satisfy the Accept header media type |
+| 409 | Conflict | POST, PUT, PATCH | Resource state conflict (e.g., duplicate entry) |
+| 410 | Gone | GET | Resource permanently deleted, no forwarding URL |
+| 415 | Unsupported Media Type | POST, PUT, PATCH | Content-Type header not supported by server |
+| 422 | Unprocessable Entity | POST, PUT, PATCH | Semantic validation failure (e.g., invalid email) |
+| 429 | Too Many Requests | All | Rate limit exceeded, back off and retry |
+| 500 | Internal Server Error | All | Unexpected server-side failure |
+| 502 | Bad Gateway | All | Upstream service returned an invalid response |
+| 503 | Service Unavailable | All | Server overloaded or under maintenance |
+### HTTP Methods Reference
+| Method | Safe | Idempotent | Cacheable | Request Body | Response Body | Use Case |
+|--------|------|------------|-----------|-------------|---------------|----------|
+| GET | Yes | Yes | Yes | No | Yes | Retrieve resources |
+| POST | No | No | No | Yes | Yes | Create new resources |
+| PUT | No | Yes | No | Yes | Yes | Full resource replacement |
+| PATCH | No | No | No | Yes | Yes | Partial resource update |
+| DELETE | No | Yes | No | No | No | Remove a resource |
+| HEAD | Yes | Yes | Yes | No | No (headers only) | Check existence and metadata |
+| OPTIONS | Yes | Yes | Yes | No | Yes | Discover allowed methods |
+### HTTP Headers Reference
+| Header | Type | Example Values | Purpose |
+|--------|------|---------------|---------|
+| <code>Accept</code> | Request | <code>application/json, text/xml; q=0.9</code> | Media types the client can process |
+| <code>Accept-Encoding</code> | Request | <code>gzip, deflate, br</code> | Compression algorithms accepted by client |
+| <code>Accept-Language</code> | Request | <code>en-US, fr; q=0.9</code> | Natural language preference |
+| <code>Authorization</code> | Request | <code>Bearer &lt;token&gt;</code>, <code>Basic &lt;base64&gt;</code> | Authentication credentials |
+| <code>Cache-Control</code> | Both | <code>max-age=3600, no-cache, no-store</code> | Caching directives for proxies and browsers |
+| <code>Connection</code> | Both | <code>keep-alive, close</code> | Control whether connection persists |
+| <code>Content-Encoding</code> | Response | <code>gzip</code> | Encoding applied to the response body |
+| <code>Content-Length</code> | Both | <code>348</code> | Body size in bytes |
+| <code>Content-Type</code> | Both | <code>application/json; charset=utf-8</code> | Media type of the payload body |
+| <code>Cookie</code> | Request | <code>sessionId=abc123</code> | Stored cookies sent by the client |
+| <code>ETag</code> | Response | <code>&quot;33a64df5&quot;</code> | Resource version identifier for caching |
+| <code>Host</code> | Request | <code>api.example.com</code> | Target host (required in HTTP/1.1) |
+| <code>If-Modified-Since</code> | Request | <code>Wed, 21 Oct 2023 07:28:00 GMT</code> | Conditional GET by modification date |
+| <code>If-None-Match</code> | Request | <code>&quot;33a64df5&quot;</code> | Conditional GET by ETag value |
+| <code>Location</code> | Response | <code>/users/123</code> | URL of newly created resource (used with 201) |
+| <code>Origin</code> | Request | <code>https://myapp.com</code> | CORS — origin of the requesting page |
+| <code>Retry-After</code> | Response | <code>120</code> | Seconds to wait before retrying (429, 503) |
+| <code>Set-Cookie</code> | Response | <code>sessionId=abc123; HttpOnly; Secure</code> | Instructs client to store a cookie |
+| <code>User-Agent</code> | Request | <code>curl/7.68.0</code> | Client software identifier |
+| <code>X-Request-ID</code> | Both | <code>550e8400-e29b-41d4-a716-446655440000</code> | Correlation ID for distributed tracing |
+| <code>X-RateLimit-Limit</code> | Response | <code>100</code> | Maximum requests allowed per window |
+| <code>X-RateLimit-Remaining</code> | Response | <code>87</code> | Requests remaining in the current window |
+### Content Types
+| Content Type | Usage | Example |
+|-------------|-------|---------|
+| <code>application/json</code> | Most common — structured data interchange | <code>{"name": "Alice"}</code> |
+| <code>application/xml</code> | Legacy enterprise system integration | <code>&lt;user&gt;&lt;name&gt;Alice&lt;/name&gt;&lt;/user&gt;</code> |
+| <code>application/x-www-form-urlencoded</code> | HTML form submissions | <code>name=Alice&email=alice@x.com</code> |
+| <code>multipart/form-data</code> | File uploads with binary parts | Binary parts separated by boundaries |
+| <code>text/plain</code> | Raw text without formatting | Plain string content |
+| <code>text/csv</code> | Tabular data for export | <code>id,name\n1,Alice\n2,Bob</code> |
+1. **Q:** What is the difference between <code>PUT</code> and <code>PATCH</code>?
+   **A:** <code>PUT</code> replaces the entire resource — missing fields are set to default or null. <code>PATCH</code> applies a partial update (delta) — only included fields are changed. <code>PUT</code> is idempotent; <code>PATCH</code> is not necessarily idempotent.
+2. **Q:** When should you use <code>201 Created</code> vs <code>200 OK</code> vs <code>204 No Content</code>?
+   **A:** <code>201</code> for POST that creates a resource; <code>200</code> for GET, PUT, PATCH returning a body; <code>204</code> for DELETE or when no response body is needed.
+3. **Q:** What is HATEOAS and why does it matter?
+   **A:** HATEOAS includes hypermedia links in responses so clients discover endpoints dynamically. It decouples client and server — the server dictates navigation. Most production APIs skip full HATEOAS but include self and relation links.
+4. **Q:** Explain cursor-based pagination vs offset-based pagination.
+   **A:** Offset-based uses <code>?offset=0&limit=20</code> — simple but inconsistent if items are inserted or deleted (causes duplicates or skips). Cursor-based uses an opaque token (<code>?cursor=eyJpZCI6MTB9</code>) pointing to the last item — consistent under writes, fast on large datasets, but no random page access.
+5. **Q:** How do you make a POST endpoint idempotent?
+   **A:** Use the <code>Idempotency-Key</code> header. The client sends a unique UUID. The server stores the key and its response. On duplicate requests with the same key, the server returns the cached response instead of processing again. Essential for payment and order APIs.
+6. **Q:** What status code should you return for a validation error?
+   **A:** <code>400 Bad Request</code> for syntactic errors (malformed JSON, missing required fields) or <code>422 Unprocessable Entity</code> for semantic validation (email already taken, value out of range). <code>422</code> is more precise for application-level validation.
+7. **Q:** What is content negotiation and how does it work?
+   **A:** The client sends an <code>Accept</code> header listing preferred media types with quality values (<code>q</code>). The server selects the best match and replies with <code>Content-Type</code> set accordingly. If no match is possible, return <code>406 Not Acceptable</code>.
+8. **Q:** How do you handle partial success in a bulk operation?
+   **A:** Return <code>207 Multi-Status</code> with a response body containing per-item results. Each item has its own status code, resource ID, and optional error message so the client knows which operations succeeded and which failed.
+9. **Q:** What is the difference between <code>401 Unauthorized</code> and <code>403 Forbidden</code>?
+   **A:** <code>401</code> means the client is not authenticated (no credentials or invalid credentials). <code>403</code> means the client is authenticated but lacks permission for the requested operation.
+10. **Q:** How should nested resources be structured?
+    **A:** Use <code>/parents/{parentId}/children/{childId}</code> for hierarchical relationships. Avoid deep nesting beyond 2 levels. For many-to-many relationships, use a top-level resource with query filters: <code>/enrollments?courseId=5&studentId=10</code>.`,
+            tags: ["REST", "API Design", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-graphql",
+            title: "GraphQL API Design",
+            shortDesc: "Complete GraphQL reference — schema design, resolvers, N+1 prevention (DataLoader), subscriptions, security, and tooling.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Schema-first vs code-first: tradeoffs between GraphQL schema definition and generated types.",
+              "Resolvers: type-level resolver chain, Dataloader for batching/caching.",
+              "N+1 problem: Dataloader batches requests per tick — deduplication caching.",
+              "Subscriptions: WebSocket-based real-time updates via PubSub engines.",
+              "Security: depth limiting, query cost analysis, rate limiting, persisted queries.",
+            ],
+            content: `## Quick Reference
+GraphQL is a query language and runtime for APIs developed by Facebook in 2012 and open-sourced in 2015. It enables clients to request exactly the data they need from a single endpoint. The schema is defined using Schema Definition Language (SDL) with a strong type system. Operations are classified as queries (data fetching), mutations (data modification), and subscriptions (real-time events).
+- **Single endpoint:** All operations go through <code>/graphql</code>
+- **Client-driven:** Clients specify the exact shape and fields of the response
+- **Strongly typed:** Every field has a defined type — validated at query time
+- **Introspective:** The schema is self-documenting via the introspection system
+## Schema Fundamentals
+### Schema Definition Language (SDL)
+# Define a schema with Query and Mutation entry points
+schema {
+  query: Query    # Root query type — all queries start here
+  mutation: Mutation  # Root mutation type — all mutations start here
+# Object type representing a User
+  id: ID!       # Non-nullable ID field
+  name: String  # Nullable string field
+  email: String! # Non-nullable string field
+  posts: [Post!]! # Non-nullable list of non-nullable Post objects
+  body: String
+  author: User!  # Relationship to another object type
+  createdAt: DateTime  # Custom scalar
+### Type System
+| Type Category | SDL Keyword | Description |
+|---|---|---|
+| Object type | <code>type</code> | A type with fields — the core building block |
+| Scalar type | Built-in or <code>scalar</code> | Leaf values — no sub-fields |
+| Enum type | <code>enum</code> | A set of named values |
+| Interface | <code>interface</code> | Abstract type — fields shared across implementing types |
+| Union | <code>union</code> | A type that is one of several object types (no shared fields) |
+| Input type | <code>input</code> | Object-like type used for mutation arguments |
+### Built-in Scalars
+| Scalar | Description |
+|---|---|
+| <code>Int</code> | Signed 32-bit integer |
+| <code>Float</code> | Double-precision IEEE 754 floating point |
+| <code>String</code> | UTF-8 encoded string |
+| <code>Boolean</code> | <code>true</code> or <code>false</code> |
+| <code>ID</code> | Unique identifier — serialized as a string but parsed as ID |
+### Custom Scalars
+# Declare a custom scalar
+scalar DateTime
+scalar JSON
+scalar URL
+# Server-side implementation specifies serialization/deserialization
+# Example with Apollo Server
+const dateTimeScalar = new GraphQLScalarType({
+  name: 'DateTime',
+  description: 'ISO-8601 compliant date-time string',
+  serialize: (value) => value.toISOString(),  // Send to client
+  parseValue: (value) => new Date(value),      // Receive from client variable
+  parseLiteral: (ast) => new Date(ast.value),  // Receive from client query
+### Enums
+# Enum type with a fixed set of values
+enum PostStatus {
+  DRAFT      # Default — not yet published
+  PUBLISHED  # Visible to all readers
+  ARCHIVED   # Hidden but retained
+  status: PostStatus!  # Must be one of the enum values
+# Query with enum argument
+  postsByStatus(status: PostStatus!): [Post!]!
+### Interfaces
+# Interface — implementing types must include these fields
+interface Node {
+# Type implementing the Node interface
+type User implements Node {
+  id: ID!         # From interface
+  createdAt: DateTime!  # From interface
+  name: String!   # Type-specific field
+  email: String!  # Type-specific field
+type Post implements Node {
+  body: String
+# Query using inline fragments to access type-specific fields
+  nodes {
+    createdAt
+    ... on User {
+      name    # Only available on User type
+    ... on Post {
+      title   # Only available on Post type
+### Unions
+# Union — one of several object types, no shared fields guaranteed
+union SearchResult = User | Post | Comment
+  search(term: String!): [SearchResult!]!
+# Query requires inline fragments to access fields
+  search(term: "graphql") {
+    ... on User {
+    ... on Post {
+    ... on Comment {
+      author
+### Input Types
+# Input type for mutation arguments
+input CreateUserInput {
+  age: Int
+input UpdateUserInput {
+  name: String    # Nullable means field is optional
+  age: Int
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+## Queries & Mutations
+### Query Root
+# Define query entry points
+  me: User                    # Fetch the current user
+  user(id: ID!): User         # Fetch a user by ID — argument required
+  users(limit: Int = 10): [User!]!  # Fetch users with default limit
+  posts(status: PostStatus): [Post!]!  # Filter posts by optional status
+### Mutation Root
+# Define mutation entry points
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+### Field Arguments
+# Arguments can be on any field, not just root fields
+  posts(first: Int = 10, after: String): [Post!]!  # Pagination args on field
+### Aliases
+# Aliases let you request the same field with different arguments
+  activeUsers: users(status: ACTIVE) {  # Alias 'activeUsers'
+  inactiveUsers: users(status: INACTIVE) {  # Alias 'inactiveUsers'
+### Fragments
+# Reusable fragment — share field selections
+fragment UserFields on User {
+  avatar {   # Nested fragment fields
+    width
+    height
+# Use the fragment in a query
+  me {
+    ...UserFields  # Spread operator includes all fragment fields
+  user(id: "123") {
+    ...UserFields
+    posts {   # Additional fields beyond the fragment
+### Variables
+# Query with variable definitions ($userId: ID!)
+query GetUser($userId: ID!) {
+  user(id: $userId) {
+# Variables sent separately from the query document
+#   "userId": "123"
+# Variables with defaults
+query GetUsers($limit: Int = 20, $offset: Int = 0) {
+  users(limit: $limit, offset: $offset) {
+### Directives
+# @include — include field only if condition is true
+query getUser($includeEmail: Boolean!) {
+  user(id: "123") {
+    email @include(if: $includeEmail)  # Conditionally included
+# @skip — skip field if condition is true
+query getUser($hideEmail: Boolean!) {
+  user(id: "123") {
+    email @skip(if: $hideEmail)  # Conditionally skipped
+# @deprecated — mark a field as deprecated in the schema
+  oldField: String @deprecated(reason: "Use 'newField' instead")
+  newField: String!
+### Resolver Chain
+// Resolver map — each field maps to a resolver function
+    // Parent is root, args contains { id }, context is shared, info has query AST
+    user: (parent, args, context, info) => {
+      return context.db.users.findById(args.id);  // Fetch user from database
+    // Parent is the User object returned by Query.user
+    posts: (parent, args, context, info) => {
+      return context.db.posts.findByAuthorId(parent.id);  // Fetch posts for this user
+### Default Resolvers
+// If a resolver is not defined for a field, GraphQL uses the default:
+// It looks up parent[fieldName]
+    user: (parent, args, context) => {
+      return { id: '1', name: 'Alice', email: 'alice@example.com' };
+      // No resolver needed for id, name, email — defaults work
+  // User resolver is optional — defaults handle simple property access
+### DataLoader Pattern (N+1 Prevention)
+// DataLoader batches and caches database requests
+// Without DataLoader: N+1 queries for N posts each fetching its author
+// With DataLoader: 1 query for the list + 1 batched query for all authors
+import DataLoader from 'dataloader';
+// Create a DataLoader for batch-loading users by ID
+const userLoader = new DataLoader(async (ids) => {
+  // ids is an array of all user IDs requested in this tick
+  const users = await db.users.findByIds(ids);  // Single batched query: SELECT * FROM users WHERE id IN (...)
+  // Must return results in the same order as ids
+  return ids.map((id) => users.find((u) => u.id === id));
+  Post: {
+    author: (parent, args, context) => {
+      // DataLoader batches all calls in the same tick
+      return context.loaders.userLoader.load(parent.authorId);  // Does NOT query yet — queues the ID
+// Creating a per-request DataLoader ensures cache isolation between requests
+const createLoaders = () => ({
+  userLoader: new DataLoader(async (ids) => {
+    const users = await db.users.findByIds(ids);
+    return ids.map((id) => users.find((u) => u.id === id));
+  postLoader: new DataLoader(async (ids) => {
+    const posts = await db.posts.findByIds(ids);
+    return ids.map((id) => posts.find((p) => p.id === id));
+// Apollo Server context factory
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => ({
+    loaders: createLoaders(),  // Fresh loaders per request
+    user: await authenticate(req),  // Auth context
+### Batching & Caching Behavior
+| Feature | Behavior |
+|---|---|
+| Batching | Multiple <code>load()</code> calls in the same tick are batched into one function call |
+| Cache | In-memory cache within the same DataLoader instance — prevents duplicate loads |
+| Per-request | Create a new DataLoader per request to avoid stale data across requests |
+| Priming | <code>loader.prime(key, value)</code> pre-populates the cache |
+// Manual cache priming — useful for data already fetched
+    user: async (parent, args, context) => {
+      const user = await db.users.findById(args.id);  // Already fetched the user
+      // Prime the loader so subsequent loads of this user don't hit the DB again
+      context.loaders.userLoader.prime(args.id, user);
+## Subscriptions
+### WebSocket Transport
+# Schema subscription type
+type Subscription {
+  postCreated: Post!          # Fires when a new post is created
+  userUpdated(userId: ID!): User!  # Fires for specific user updates with filter
+// Apollo Server setup with WebSocket support
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { createServer } from 'http';
+import express from 'express';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+const httpServer = createServer(app);
+// Create WebSocket server for subscriptions
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/graphql',  // Subscription endpoint
+// Schema and resolvers with subscription support
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+// Clean up WebSocket connections on server shutdown
+const serverCleanup = useServer({ schema }, wsServer);
+const server = new ApolloServer({
+  schema,
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+      async serverWillStart() {
+          async drainServer() {
+            await serverCleanup.dispose();  // Gracefully close WebSocket connections
+await server.start();
+app.use('/graphql', expressMiddleware(server));
+await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+### PubSub Engines
+// PubSub pattern: publisher emits events, subscribers receive them
+import { PubSub } from 'graphql-subscriptions';  // In-memory PubSub (not for production)
+// For production, use a real PubSub engine like Redis
+// import { RedisPubSub } from 'graphql-redis-subscriptions';
+const pubsub = new PubSub();  // Replace with RedisPubSub in production
+  Mutation: {
+    createPost: async (parent, args, context) => {
+      const post = await context.db.posts.create(args.input);
+      // Publish event — all subscribers to 'POST_CREATED' receive it
+      pubsub.publish('POST_CREATED', { postCreated: post });
+      return post;
+  Subscription: {
+    postCreated: {
+      // Subscribe method — returns an async iterator
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),  // Listen for POST_CREATED events
+    userUpdated: {
+      // Subscribe with filter — only fire for the requested userId
+      subscribe: (parent, args) => {
+        const iterator = pubsub.asyncIterator(['USER_UPDATED']);
+        // Return an async iterator that filters events based on args
+          [Symbol.asyncIterator]() {
+              async next() {
+                const { value, done } = await iterator.next();
+                // Skip events where the userId doesn't match
+                if (value.userUpdated.userId !== args.userId) {
+                  return { value: undefined, done: false };  // Skip — keep waiting
+                return { value, done };
+            };
+### Connection Management
+| Aspect | Recommendation |
+|---|---|
+| Authentication | Authenticate on WebSocket upgrade via <code>connectionParams</code> |
+| Reconnection | Client auto-reconnects with exponential backoff |
+| Heartbeat | Server sends <code>ping</code> frames periodically |
+| Disconnect | Clean up resources in <code>drainServer</code> plugin |
+| Backpressure | Queue or drop events if client is too slow to consume |
+// Client-side subscription with authentication and reconnection
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: 'ws://localhost:4000/graphql',
+    connectionParams: {
+      authToken: localStorage.getItem('token'),  // Send auth token on connection
+    retryAttempts: Infinity,  // Infinite retries for reconnection
+    shouldRetry: () => true,  // Always attempt to reconnect on disconnect
+### Defense Measures
+| Measure | Description | Implementation |
+|---|---|---|
+| Depth limiting | Reject queries that exceed max nesting depth | <code>graphql-depth-limit</code> or <code>graphql-query-complexity</code> |
+| Complexity analysis | Reject queries exceeding a cost budget | Assign costs to fields (e.g., <code>1</code> for simple, <code>10</code> for expensive) |
+| Rate limiting | Limit operations per IP/user per time window | Redis-based sliding window or token bucket |
+| Persisted operations | Only allow pre-registered queries | Prevent arbitrary query execution |
+| Authentication | Verify identity before resolving | JWT, session tokens, OAuth2 |
+| Authorization | Check permissions per field/resource | RBAC or ABAC in resolvers |
+| Timeouts | Enforce per-resolver execution limits | Promise.race or Apollo's <code>plugin</code> |
+### Depth Limiting & Complexity
+// Depth limiting — prevents deeply nested recursive queries
+import depthLimit from 'graphql-depth-limit';
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [depthLimit(7)],  // Reject queries nested more than 7 levels deep
+// Query complexity analysis — assign costs and enforce budget
+import { createComplexityLimitRule } from 'graphql-validation-complexity';
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [
+    createComplexityLimitRule(1000, {  // Maximum total cost of 1000
+      onCost: (cost) => console.log('Query cost: ' + cost),  // Log each query's cost
+### Persisted Operations
+// Only allow pre-registered queries — reject all others
+import { ApolloServer } from '@apollo/server';
+const persistedQueries = new Map([
+  ['hash123abc', 'query { me { id name email } }'],  // Hash -> query mapping
+  ['hash456def', 'query GetUser($id: ID!) { user(id: $id) { id name } }'],
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    // Custom persisted query store
+    store: {
+      get: async (hash) => persistedQueries.get(hash),  // Look up query by hash
+      set: async (hash, query) => {},  // No-op — do not allow registering new queries
+    ttl: 3600,  // Cache TTL in seconds
+### Authentication in Resolvers
+// Context-based authentication
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    // Extract token from Authorization header
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return { user: null };  // Not authenticated — resolvers handle access control
+      const user = await verifyToken(token);  // Validate JWT or session token
+      return { user };
+    } catch {
+      return { user: null };  // Invalid token — treat as unauthenticated
+// Resolver-level authorization
+    me: (parent, args, context) => {
+      if (!context.user) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+      return context.user;
+    adminDashboard: (parent, args, context) => {
+      if (!context.user || context.user.role !== 'ADMIN') {
+        throw new GraphQLError('Forbidden', {
+          extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+      // Only admins reach this code
+      return getDashboardData();
+## Tooling
+### Comparison
+| Tool | Purpose | Key Feature |
+|---|---|---|
+| GraphiQL | In-browser IDE | Interactive schema explorer, docs, query history |
+| Apollo Studio | Managed GraphQL platform | Schema registry, tracing, metrics, explorer |
+| GraphQL Code Generator | Type-safe code gen | Generates TypeScript types from SDL |
+| Apollo Federation | Distributed graph | Compose multiple subgraphs into one supergraph |
+| GraphQL Inspector | Schema diff/validation | Detect breaking changes in CI |
+| Altair | Feature-rich client | GraphQL client with collections, environments |
+### GraphQL Code Generator
+# graphql-codegen.yml — configuration file
+overwrite: true
+schema: './src/schema.graphql'              # Path to your SDL
+documents: './src/**/*.graphql'             # Path to your operations
+  ./src/generated/graphql.ts:               # Output file
+      - typescript                          # Generate TypeScript types from SDL
+      - typescript-resolvers                # Generate resolver types
+      - typescript-operations               # Generate typed operations from documents
+      scalars:
+        DateTime: string                    # Map custom scalars to TS types
+        JSON: Record<string, unknown>
+### Federation
+# Subgraph A — users service
+type User @key(fields: "id") {   # @key marks this type as an entity
+extend type Query {
+  users: [User!]!
+# Subgraph B — posts service
+type Post @key(fields: "id") {
+  authorId: ID!
+  author: User @requires(fields: "authorId")  # Resolve author from other subgraph
+extend type User @key(fields: "id") {  # Extend User type from subgraph A
+  id: ID! @external                    # Mark fields that come from another subgraph
+  posts: [Post!]!                      # Add subgraph-specific fields
+extend type Query {
+| Technique | Description | Impact |
+|---|---|---|
+| DataLoader | Batch + cache database calls per request | Eliminates N+1 queries |
+| Field-level caching | Cache expensive computed fields with short TTL | Reduces compute per request |
+| Persisted queries | Clients send hash instead of full query | Reduces bytes over the wire |
+| <code>@defer</code> directive | Defer non-critical fragments | Faster initial response |
+| <code>@stream</code> directive | Stream list items incrementally | Faster list rendering |
+| Query batching | Send multiple operations in one HTTP request | Reduces round trips |
+| Response compression | gzip/brotli compression on responses | Reduces bandwidth |
+### @defer and @stream
+# @defer — send non-critical data after the initial response
+  user(id: "123") {
+    ...UserPosts @defer  # Post data arrives in a subsequent chunk
+fragment UserPosts on User {
+# @stream — send list items one by one as they become available
+    name @stream  # Names stream in asynchronously
+### Field-Level Caching
+// Cache expensive fields with a short TTL
+import LRUCache from 'lru-cache';
+const expensiveComputationCache = new LRUCache({
+  max: 100,       // Max 100 cached results
+  ttl: 60_000,    // TTL of 60 seconds
+    // Computed field that is expensive to calculate
+    computedField: (parent, args, context) => {
+      const cacheKey = 'computed:' + parent.id;
+      const cached = expensiveComputationCache.get(cacheKey);
+      if (cached) return cached;  // Return cached value if available
+      const result = performExpensiveComputation(parent);  // Expensive operation
+      expensiveComputationCache.set(cacheKey, result);  // Cache the result
+## Common Pitfalls & Anti-Patterns
+| # | Pitfall | Problem | Solution |
+|---|---|---|---|
+| 1 | N+1 queries | Fetching list items triggers N individual queries | Use DataLoader to batch database calls |
+| 2 | Over-fetching via public fields | Client requests a field that computes expensive joins | Field-level authorization + cost analysis |
+| 3 | No query depth limit | Malicious client sends deeply nested query crashing the server | Use <code>graphql-depth-limit</code> validation rule |
+| 4 | Exposing internal IDs | Leaking database primary keys to clients | Use opaque global IDs (e.g., Relay-style node IDs) |
+| 5 | Throwing raw errors | Stack traces leak server internals to clients | Catch errors in resolvers and return safe error messages |
+| 6 | Mutations returning nothing | Client has no way to update its cache without response | Always return the affected object from mutations |
+| 7 | Sharing DataLoader across requests | Cache pollution between different users | Create fresh DataLoader per request in context factory |
+| 8 | Not using input types | Mutations with 10+ arguments become unreadable | Group mutation arguments into input types |
+| 9 | Ignoring null propagation | A resolver throwing nulls an entire parent field | Implement error boundaries and nullable fields |
+| 10 | Rest-style thinking | Exposing separate endpoints instead of a unified graph | Design schema around client use cases, not database tables |
+| 11 | No pagination on list fields | Returning all items at once causes memory issues | Always paginate list fields with <code>first</code>/<code>after</code> (cursor-based) |
+| 12 | Subscriptions without auth | Any client can subscribe to real-time events | Authenticate on WebSocket connect + filter events server-side |
+## Complete API Reference
+### SDL Keywords
+| Keyword | Usage |
+|---|---|
+| <code>type</code> | Define an object type |
+| <code>interface</code> | Define an interface (implemented by object types) |
+| <code>union</code> | Define a union (one of several object types) |
+| <code>enum</code> | Define a enum type with named values |
+| <code>input</code> | Define an input object type (for arguments) |
+| <code>scalar</code> | Define a custom scalar type |
+| <code>schema</code> | Define the schema root (query, mutation, subscription) |
+| <code>extend</code> | Add fields to an existing type (type extension) |
+| <code>directive</code> | Define a custom directive |
+| <code>implements</code> | Specify which interface(s) a type implements |
+| <code>null</code> | Null value |
+| <code>!</code> | Non-null modifier (field cannot be null) |
+| <code>[Type]</code> | List modifier (field is a list) |
+### Built-in Directives
+| Directive | Location | Description |
+|---|---|---|
+| <code>@deprecated(reason: String)</code> | FIELD_DEFINITION | Mark a field as deprecated |
+| <code>@include(if: Boolean!)</code> | FIELD | Include field only if condition is true |
+| <code>@skip(if: Boolean!)</code> | FIELD | Skip field if condition is true |
+| <code>@specifiedBy(url: String!)</code> | SCALAR | Link a custom scalar to its specification |
+### Apollo Server Options
+| Option | Type | Description |
+|---|---|---|
+| <code>typeDefs</code> | DocumentNode / String[] | Schema definition (SDL string or AST) |
+| <code>resolvers</code> | ResolversObject | Resolver map |
+| <code>context</code> | Function / Object | Shared context for all resolvers (called per request) |
+| <code>plugins</code> | ApolloServerPlugin[] | Lifecycle plugins (logging, metrics, drain) |
+| <code>validationRules</code> | ValidationRule[] | Additional validation rules (depth, complexity) |
+| <code>persistedQueries</code> | PersistedQueryOptions | Persisted query store configuration |
+| <code>introspection</code> | Boolean | Enable/disable introspection (disable in production) |
+| <code>csrfPrevention</code> | CSRFPreventionOptions | CSRF protection config |
+| <code>status400ForVariableCoercionErrors</code> | Boolean | Return 400 for variable coercion errors |
+1. **Q:** What is the N+1 problem in GraphQL and how does DataLoader solve it?
+   **A:** The N+1 problem occurs when fetching a list of N items triggers N additional queries for related data (e.g., fetching N posts, each querying the author). DataLoader solves this by batching all <code>load()</code> calls within the same tick into a single batched function call (e.g., <code>SELECT * FROM users WHERE id IN (...)</code>). It also caches results per request, preventing duplicate loads for the same key.
+2. **Q:** Explain the difference between a GraphQL interface and a union.
+   **A:** An <code>interface</code> defines shared fields that all implementing types must include. Clients can query shared fields directly and use inline fragments for type-specific fields. A <code>union</code> is a collection of object types that share no guaranteed fields — clients must use inline fragments to access any field. Use interfaces when types share common fields; use unions when types are unrelated.
+3. **Q:** How do you implement authentication in GraphQL?
+   **A:** Authentication is handled in the context factory. Extract the token from request headers (e.g., <code>Authorization: Bearer <token></code>), validate it (JWT verification, session lookup), and attach the user to the context. Resolvers then check <code>context.user</code> and throw a <code>GraphQLError</code> with code <code>UNAUTHENTICATED</code> (401) or <code>FORBIDDEN</code> (403) if unauthorized.
+4. **Q:** What are persisted queries and why are they useful?
+   **A:** Persisted queries replace the full query document with a hash. The server looks up the hash in a pre-registered store to retrieve the actual query. Benefits: (1) smaller payloads over the wire, (2) prevention of arbitrary query execution (security), (3) stable query identification for monitoring and analytics.
+5. **Q:** Compare cursor-based pagination vs offset-based pagination in GraphQL.
+   **A:** Cursor-based pagination uses <code>first</code>/<code>after</code> parameters with opaque cursors (often base64-encoded IDs). It is stable under data changes (new items don't shift results). Offset-based pagination uses <code>limit</code>/<code>offset</code>. It is simpler but unstable — inserting or deleting items shifts the offset, causing duplicates or missed items. GraphQL best practice recommends cursor-based pagination (Relay Connection spec).
+6. **Q:** What is the purpose of the <code>@defer</code> and <code>@stream</code> directives?
+   **A:** <code>@defer</code> marks a fragment as non-critical — the server sends the initial response immediately and delivers deferred data in subsequent chunks. <code>@stream</code> marks list items to be sent incrementally as they become available. Both improve perceived performance by reducing time-to-first-byte.
+7. **Q:** How does Apollo Federation enable a distributed GraphQL architecture?
+   **A:** Federation composes multiple subgraphs (each owned by a different team) into a single supergraph. Each subgraph defines its types and extends types from other subgraphs using <code>@key</code>, <code>@external</code>, and <code>@requires</code> directives. A router/gateway (Apollo Router or <code>@apollo/gateway</code>) composes the subgraph schemas and routes incoming requests to the correct subgraphs automatically.
+8. **Q:** How do you prevent malicious queries from crashing your GraphQL server?
+   **A:** Implement a layered defense: (1) depth limiting — reject queries beyond a max nesting level, (2) query complexity analysis — assign costs to fields and enforce a total budget, (3) rate limiting — limit operations per user/IP, (4) persisted queries — only allow pre-registered operations, (5) timeout per resolver to prevent runaway execution, (6) disable introspection in production.
+9. **Q:** Explain the resolver chain and how arguments flow between resolvers.
+   **A:** Each field in a GraphQL query maps to a resolver function. The resolver receives four arguments: <code>parent</code> (the result of the parent field's resolver), <code>args</code> (field arguments), <code>context</code> (shared per-request state), and <code>info</code> (query AST metadata). The parent resolver returns a value that becomes the <code>parent</code> for child field resolvers. This chain enables GraphQL to resolve deeply nested queries efficiently.
+10. **Q:** What are the differences between <code>graphql-subscriptions</code> PubSub and <code>graphql-redis-subscriptions</code>?
+    **A:** <code>graphql-subscriptions</code> PubSub is an in-memory event emitter — suitable for single-process servers but loses events on restart and does not scale across multiple instances. <code>graphql-redis-subscriptions</code> uses Redis pub/sub channels — events survive process restarts and all server instances receive events, enabling horizontal scaling. For production with multiple replicas, always use Redis or another external PubSub engine.\`,
+import express from 'express';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+
+const app = express();
+const httpServer = createServer(app);
+
+// Create WebSocket server for subscriptions
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: '/graphql',  // Subscription endpoint
+});
+
+// Schema and resolvers with subscription support
+const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+// Clean up WebSocket connections on server shutdown
+const serverCleanup = useServer({ schema }, wsServer);
+
+const server = new ApolloServer({
+  schema,
+  plugins: [
+    ApolloServerPluginDrainHttpServer({ httpServer }),
+    {
+      async serverWillStart() {
+        return {
+          async drainServer() {
+            await serverCleanup.dispose();  // Gracefully close WebSocket connections
+          },
+        };
+      },
+    },
+  ],
+});
+
+await server.start();
+app.use('/graphql', expressMiddleware(server));
+await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+\`\`\`
+
+### PubSub Engines
+
+\`\`\`javascript
+// PubSub pattern: publisher emits events, subscribers receive them
+import { PubSub } from 'graphql-subscriptions';  // In-memory PubSub (not for production)
+
+// For production, use a real PubSub engine like Redis
+// import { RedisPubSub } from 'graphql-redis-subscriptions';
+
+const pubsub = new PubSub();  // Replace with RedisPubSub in production
+
+const resolvers = {
+  Mutation: {
+    createPost: async (parent, args, context) => {
+      const post = await context.db.posts.create(args.input);
+      // Publish event — all subscribers to 'POST_CREATED' receive it
+      pubsub.publish('POST_CREATED', { postCreated: post });
+      return post;
+    },
+  },
+  Subscription: {
+    postCreated: {
+      // Subscribe method — returns an async iterator
+      subscribe: () => pubsub.asyncIterator(['POST_CREATED']),  // Listen for POST_CREATED events
+    },
+    userUpdated: {
+      // Subscribe with filter — only fire for the requested userId
+      subscribe: (parent, args) => {
+        const iterator = pubsub.asyncIterator(['USER_UPDATED']);
+        // Return an async iterator that filters events based on args
+        return {
+          [Symbol.asyncIterator]() {
+            return {
+              async next() {
+                const { value, done } = await iterator.next();
+                // Skip events where the userId doesn't match
+                if (value.userUpdated.userId !== args.userId) {
+                  return { value: undefined, done: false };  // Skip — keep waiting
+                }
+                return { value, done };
+              },
+            };
+          },
+        };
+      },
+    },
+  },
+};
+\`\`\`
+
+### Connection Management
+
+| Aspect | Recommendation |
+|---|---|
+| Authentication | Authenticate on WebSocket upgrade via <code>connectionParams</code> |
+| Reconnection | Client auto-reconnects with exponential backoff |
+| Heartbeat | Server sends <code>ping</code> frames periodically |
+| Disconnect | Clean up resources in <code>drainServer</code> plugin |
+| Backpressure | Queue or drop events if client is too slow to consume |
+
+\`\`\`javascript
+// Client-side subscription with authentication and reconnection
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+const wsLink = new GraphQLWsLink(
+  createClient({
+    url: 'ws://localhost:4000/graphql',
+    connectionParams: {
+      authToken: localStorage.getItem('token'),  // Send auth token on connection
+    },
+    retryAttempts: Infinity,  // Infinite retries for reconnection
+    shouldRetry: () => true,  // Always attempt to reconnect on disconnect
+  })
+);
+\`\`\`
+
+---
+
+## Security
+
+### Defense Measures
+
+| Measure | Description | Implementation |
+|---|---|---|
+| Depth limiting | Reject queries that exceed max nesting depth | <code>graphql-depth-limit</code> or <code>graphql-query-complexity</code> |
+| Complexity analysis | Reject queries exceeding a cost budget | Assign costs to fields (e.g., <code>1</code> for simple, <code>10</code> for expensive) |
+| Rate limiting | Limit operations per IP/user per time window | Redis-based sliding window or token bucket |
+| Persisted operations | Only allow pre-registered queries | Prevent arbitrary query execution |
+| Authentication | Verify identity before resolving | JWT, session tokens, OAuth2 |
+| Authorization | Check permissions per field/resource | RBAC or ABAC in resolvers |
+| Timeouts | Enforce per-resolver execution limits | Promise.race or Apollo's <code>plugin</code> |
+
+### Depth Limiting & Complexity
+
+\`\`\`javascript
+// Depth limiting — prevents deeply nested recursive queries
+import depthLimit from 'graphql-depth-limit';
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [depthLimit(7)],  // Reject queries nested more than 7 levels deep
+});
+\`\`\`
+
+\`\`\`javascript
+// Query complexity analysis — assign costs and enforce budget
+import { createComplexityLimitRule } from 'graphql-validation-complexity';
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationRules: [
+    createComplexityLimitRule(1000, {  // Maximum total cost of 1000
+      onCost: (cost) => console.log('Query cost: ' + cost),  // Log each query's cost
+    }),
+  ],
+});
+\`\`\`
+
+### Persisted Operations
+
+\`\`\`javascript
+// Only allow pre-registered queries — reject all others
+import { ApolloServer } from '@apollo/server';
+
+const persistedQueries = new Map([
+  ['hash123abc', 'query { me { id name email } }'],  // Hash -> query mapping
+  ['hash456def', 'query GetUser($id: ID!) { user(id: $id) { id name } }'],
+]);
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  persistedQueries: {
+    // Custom persisted query store
+    store: {
+      get: async (hash) => persistedQueries.get(hash),  // Look up query by hash
+      set: async (hash, query) => {},  // No-op — do not allow registering new queries
+    },
+    ttl: 3600,  // Cache TTL in seconds
+  },
+});
+\`\`\`
+
+### Authentication in Resolvers
+
+\`\`\`javascript
+// Context-based authentication
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    // Extract token from Authorization header
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return { user: null };  // Not authenticated — resolvers handle access control
+    }
+    try {
+      const user = await verifyToken(token);  // Validate JWT or session token
+      return { user };
+    } catch {
+      return { user: null };  // Invalid token — treat as unauthenticated
+    }
+  },
+});
+
+// Resolver-level authorization
+const resolvers = {
+  Query: {
+    me: (parent, args, context) => {
+      if (!context.user) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED', http: { status: 401 } },
+        });
+      }
+      return context.user;
+    },
+    adminDashboard: (parent, args, context) => {
+      if (!context.user || context.user.role !== 'ADMIN') {
+        throw new GraphQLError('Forbidden', {
+          extensions: { code: 'FORBIDDEN', http: { status: 403 } },
+        });
+      }
+      // Only admins reach this code
+      return getDashboardData();
+    },
+  },
+};
+\`\`\`
+
+---
+
+## Tooling
+
+### Comparison
+
+| Tool | Purpose | Key Feature |
+|---|---|---|
+| GraphiQL | In-browser IDE | Interactive schema explorer, docs, query history |
+| Apollo Studio | Managed GraphQL platform | Schema registry, tracing, metrics, explorer |
+| GraphQL Code Generator | Type-safe code gen | Generates TypeScript types from SDL |
+| Apollo Federation | Distributed graph | Compose multiple subgraphs into one supergraph |
+| GraphQL Inspector | Schema diff/validation | Detect breaking changes in CI |
+| Altair | Feature-rich client | GraphQL client with collections, environments |
+
+### GraphQL Code Generator
+
+\`\`\`yaml
+# graphql-codegen.yml — configuration file
+overwrite: true
+schema: './src/schema.graphql'              # Path to your SDL
+documents: './src/**/*.graphql'             # Path to your operations
+generates:
+  ./src/generated/graphql.ts:               # Output file
+    plugins:
+      - typescript                          # Generate TypeScript types from SDL
+      - typescript-resolvers                # Generate resolver types
+      - typescript-operations               # Generate typed operations from documents
+    config:
+      scalars:
+        DateTime: string                    # Map custom scalars to TS types
+        JSON: Record<string, unknown>
+\`\`\`
+
+### Federation
+
+\`\`\`graphql
+# Subgraph A — users service
+type User @key(fields: "id") {   # @key marks this type as an entity
+  id: ID!
+  name: String!
+  email: String!
+}
+
+extend type Query {
+  users: [User!]!
+}
+\`\`\`
+
+\`\`\`graphql
+# Subgraph B — posts service
+type Post @key(fields: "id") {
+  id: ID!
+  title: String!
+  authorId: ID!
+  author: User @requires(fields: "authorId")  # Resolve author from other subgraph
+}
+
+extend type User @key(fields: "id") {  # Extend User type from subgraph A
+  id: ID! @external                    # Mark fields that come from another subgraph
+  posts: [Post!]!                      # Add subgraph-specific fields
+}
+
+extend type Query {
+  posts: [Post!]!
+}
+\`\`\`
+
+---
+
+## Performance
+
+| Technique | Description | Impact |
+|---|---|---|
+| DataLoader | Batch + cache database calls per request | Eliminates N+1 queries |
+| Field-level caching | Cache expensive computed fields with short TTL | Reduces compute per request |
+| Persisted queries | Clients send hash instead of full query | Reduces bytes over the wire |
+| <code>@defer</code> directive | Defer non-critical fragments | Faster initial response |
+| <code>@stream</code> directive | Stream list items incrementally | Faster list rendering |
+| Query batching | Send multiple operations in one HTTP request | Reduces round trips |
+| Response compression | gzip/brotli compression on responses | Reduces bandwidth |
+
+### @defer and @stream
+
+\`\`\`graphql
+# @defer — send non-critical data after the initial response
+query {
+  user(id: "123") {
+    id
+    name
+    ...UserPosts @defer  # Post data arrives in a subsequent chunk
+  }
+}
+
+fragment UserPosts on User {
+  posts {
+    title
+    body
+  }
+}
+\`\`\`
+
+\`\`\`graphql
+# @stream — send list items one by one as they become available
+query {
+  users {
+    id
+    name @stream  # Names stream in asynchronously
+  }
+}
+\`\`\`
+
+### Field-Level Caching
+
+\`\`\`javascript
+// Cache expensive fields with a short TTL
+import LRUCache from 'lru-cache';
+
+const expensiveComputationCache = new LRUCache({
+  max: 100,       // Max 100 cached results
+  ttl: 60_000,    // TTL of 60 seconds
+});
+
+const resolvers = {
+  User: {
+    // Computed field that is expensive to calculate
+    computedField: (parent, args, context) => {
+      const cacheKey = 'computed:' + parent.id;
+      const cached = expensiveComputationCache.get(cacheKey);
+      if (cached) return cached;  // Return cached value if available
+      const result = performExpensiveComputation(parent);  // Expensive operation
+      expensiveComputationCache.set(cacheKey, result);  // Cache the result
+      return result;
+    },
+  },
+};
+\`\`\`
+
+---
+
+## Common Pitfalls & Anti-Patterns
+
+| # | Pitfall | Problem | Solution |
+|---|---|---|---|
+| 1 | N+1 queries | Fetching list items triggers N individual queries | Use DataLoader to batch database calls |
+| 2 | Over-fetching via public fields | Client requests a field that computes expensive joins | Field-level authorization + cost analysis |
+| 3 | No query depth limit | Malicious client sends deeply nested query crashing the server | Use <code>graphql-depth-limit</code> validation rule |
+| 4 | Exposing internal IDs | Leaking database primary keys to clients | Use opaque global IDs (e.g., Relay-style node IDs) |
+| 5 | Throwing raw errors | Stack traces leak server internals to clients | Catch errors in resolvers and return safe error messages |
+| 6 | Mutations returning nothing | Client has no way to update its cache without response | Always return the affected object from mutations |
+| 7 | Sharing DataLoader across requests | Cache pollution between different users | Create fresh DataLoader per request in context factory |
+| 8 | Not using input types | Mutations with 10+ arguments become unreadable | Group mutation arguments into input types |
+| 9 | Ignoring null propagation | A resolver throwing nulls an entire parent field | Implement error boundaries and nullable fields |
+| 10 | Rest-style thinking | Exposing separate endpoints instead of a unified graph | Design schema around client use cases, not database tables |
+| 11 | No pagination on list fields | Returning all items at once causes memory issues | Always paginate list fields with <code>first</code>/<code>after</code> (cursor-based) |
+| 12 | Subscriptions without auth | Any client can subscribe to real-time events | Authenticate on WebSocket connect + filter events server-side |
+
+---
+
+## Complete API Reference
+
+### SDL Keywords
+
+| Keyword | Usage |
+|---|---|
+| <code>type</code> | Define an object type |
+| <code>interface</code> | Define an interface (implemented by object types) |
+| <code>union</code> | Define a union (one of several object types) |
+| <code>enum</code> | Define a enum type with named values |
+| <code>input</code> | Define an input object type (for arguments) |
+| <code>scalar</code> | Define a custom scalar type |
+| <code>schema</code> | Define the schema root (query, mutation, subscription) |
+| <code>extend</code> | Add fields to an existing type (type extension) |
+| <code>directive</code> | Define a custom directive |
+| <code>implements</code> | Specify which interface(s) a type implements |
+| <code>null</code> | Null value |
+| <code>!</code> | Non-null modifier (field cannot be null) |
+| <code>[Type]</code> | List modifier (field is a list) |
+
+### Built-in Directives
+
+| Directive | Location | Description |
+|---|---|---|
+| <code>@deprecated(reason: String)</code> | FIELD_DEFINITION | Mark a field as deprecated |
+| <code>@include(if: Boolean!)</code> | FIELD | Include field only if condition is true |
+| <code>@skip(if: Boolean!)</code> | FIELD | Skip field if condition is true |
+| <code>@specifiedBy(url: String!)</code> | SCALAR | Link a custom scalar to its specification |
+
+### Apollo Server Options
+
+| Option | Type | Description |
+|---|---|---|
+| <code>typeDefs</code> | DocumentNode / String[] | Schema definition (SDL string or AST) |
+| <code>resolvers</code> | ResolversObject | Resolver map |
+| <code>context</code> | Function / Object | Shared context for all resolvers (called per request) |
+| <code>plugins</code> | ApolloServerPlugin[] | Lifecycle plugins (logging, metrics, drain) |
+| <code>validationRules</code> | ValidationRule[] | Additional validation rules (depth, complexity) |
+| <code>persistedQueries</code> | PersistedQueryOptions | Persisted query store configuration |
+| <code>introspection</code> | Boolean | Enable/disable introspection (disable in production) |
+| <code>csrfPrevention</code> | CSRFPreventionOptions | CSRF protection config |
+| <code>status400ForVariableCoercionErrors</code> | Boolean | Return 400 for variable coercion errors |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the N+1 problem in GraphQL and how does DataLoader solve it?
+   **A:** The N+1 problem occurs when fetching a list of N items triggers N additional queries for related data (e.g., fetching N posts, each querying the author). DataLoader solves this by batching all <code>load()</code> calls within the same tick into a single batched function call (e.g., <code>SELECT * FROM users WHERE id IN (...)</code>). It also caches results per request, preventing duplicate loads for the same key.
+
+2. **Q:** Explain the difference between a GraphQL interface and a union.
+   **A:** An <code>interface</code> defines shared fields that all implementing types must include. Clients can query shared fields directly and use inline fragments for type-specific fields. A <code>union</code> is a collection of object types that share no guaranteed fields — clients must use inline fragments to access any field. Use interfaces when types share common fields; use unions when types are unrelated.
+
+3. **Q:** How do you implement authentication in GraphQL?
+   **A:** Authentication is handled in the context factory. Extract the token from request headers (e.g., <code>Authorization: Bearer <token></code>), validate it (JWT verification, session lookup), and attach the user to the context. Resolvers then check <code>context.user</code> and throw a <code>GraphQLError</code> with code <code>UNAUTHENTICATED</code> (401) or <code>FORBIDDEN</code> (403) if unauthorized.
+
+4. **Q:** What are persisted queries and why are they useful?
+   **A:** Persisted queries replace the full query document with a hash. The server looks up the hash in a pre-registered store to retrieve the actual query. Benefits: (1) smaller payloads over the wire, (2) prevention of arbitrary query execution (security), (3) stable query identification for monitoring and analytics.
+
+5. **Q:** Compare cursor-based pagination vs offset-based pagination in GraphQL.
+   **A:** Cursor-based pagination uses <code>first</code>/<code>after</code> parameters with opaque cursors (often base64-encoded IDs). It is stable under data changes (new items don't shift results). Offset-based pagination uses <code>limit</code>/<code>offset</code>. It is simpler but unstable — inserting or deleting items shifts the offset, causing duplicates or missed items. GraphQL best practice recommends cursor-based pagination (Relay Connection spec).
+
+6. **Q:** What is the purpose of the <code>@defer</code> and <code>@stream</code> directives?
+   **A:** <code>@defer</code> marks a fragment as non-critical — the server sends the initial response immediately and delivers deferred data in subsequent chunks. <code>@stream</code> marks list items to be sent incrementally as they become available. Both improve perceived performance by reducing time-to-first-byte.
+
+7. **Q:** How does Apollo Federation enable a distributed GraphQL architecture?
+   **A:** Federation composes multiple subgraphs (each owned by a different team) into a single supergraph. Each subgraph defines its types and extends types from other subgraphs using <code>@key</code>, <code>@external</code>, and <code>@requires</code> directives. A router/gateway (Apollo Router or <code>@apollo/gateway</code>) composes the subgraph schemas and routes incoming requests to the correct subgraphs automatically.
+
+8. **Q:** How do you prevent malicious queries from crashing your GraphQL server?
+   **A:** Implement a layered defense: (1) depth limiting — reject queries beyond a max nesting level, (2) query complexity analysis — assign costs to fields and enforce a total budget, (3) rate limiting — limit operations per user/IP, (4) persisted queries — only allow pre-registered operations, (5) timeout per resolver to prevent runaway execution, (6) disable introspection in production.
+
+9. **Q:** Explain the resolver chain and how arguments flow between resolvers.
+   **A:** Each field in a GraphQL query maps to a resolver function. The resolver receives four arguments: <code>parent</code> (the result of the parent field's resolver), <code>args</code> (field arguments), <code>context</code> (shared per-request state), and <code>info</code> (query AST metadata). The parent resolver returns a value that becomes the <code>parent</code> for child field resolvers. This chain enables GraphQL to resolve deeply nested queries efficiently.
+
+10. **Q:** What are the differences between <code>graphql-subscriptions</code> PubSub and <code>graphql-redis-subscriptions</code>?
+    **A:** <code>graphql-subscriptions</code> PubSub is an in-memory event emitter — suitable for single-process servers but loses events on restart and does not scale across multiple instances. <code>graphql-redis-subscriptions</code> uses Redis pub/sub channels — events survive process restarts and all server instances receive events, enabling horizontal scaling. For production with multiple replicas, always use Redis or another external PubSub engine.`,
+            tags: ["GraphQL", "API Design", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-grpc",
+            title: "gRPC API Design",
+            shortDesc: "Complete gRPC reference — Protocol Buffers, service definitions, streaming patterns, interceptors, load balancing, and ecosystem.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Protocol Buffers: .proto files, scalar types, enums, oneof, maps, and packages.",
+              "Service definitions: unary, server-streaming, client-streaming, bidirectional streaming.",
+              "Interceptors: client-side and server-side middleware for logging, auth, metrics.",
+              "Load balancing: client-side load balancing with name resolution and stickiness.",
+              "Ecosystem: gRPC-gateway (REST/JSON), reflection, health checking, channelz.",
+            ],
+            content: `## Quick Reference
+gRPC is a high-performance RPC framework built on HTTP/2 and Protocol Buffers. It enables strongly-typed, language-agnostic API contracts defined in <code>.proto</code> files. Services support four communication patterns: unary (request-response), server-streaming, client-streaming, and bidirectional streaming. Protobuf serialization produces compact binary payloads that are 3-10x smaller than JSON. gRPC is ideal for microservice-to-microservice communication, mobile backends, and real-time streaming scenarios where performance and type safety matter.
+### .proto File Anatomy
+syntax = "proto3";                    // Declare proto3 syntax (required; proto2 also available)
+package payment.v1;                   // Namespace to avoid name collisions across proto files
+import "google/protobuf/timestamp.proto";  // Import well-known types for common patterns
+option go_package = "payment/v1;paymentpb"; // Go-specific: package path and generated package name
+option java_package = "com.payment.v1";     // Java-specific: generated Java package
+option java_multiple_files = true;          // Java-specific: generate separate files per message
+// Payment message — the core domain entity
+message Payment {
+  string id = 1;                             // UUID, field number 1
+  double amount = 2;                         // 8-byte floating point, field number 2
+  Currency currency = 3;                     // Enum type, field number 3
+  string description = 4;                    // UTF-8 string, field number 4
+  google.protobuf.Timestamp created_at = 5;  // Well-known type, field number 5
+  oneof payment_method {                     // Exactly one of these fields must be set
+    string card_token = 6;                   // Tokenized credit card
+    string bank_account_uri = 7;             // Direct bank transfer URI
+  map<string, string> metadata = 8;          // Arbitrary key-value pairs, field number 8
+  PaymentStatus status = 9;                  // Enum type, field number 9
+  repeated string tags = 10;                 // Repeated field (list), field number 10
+### Scalar Types
+| Proto Type | C++ Type | Go Type | Java Type | Python Type | Notes |
+|------------|----------|---------|-----------|-------------|-------|
+| <code>double</code> | <code>double</code> | <code>float64</code> | <code>double</code> | <code>float</code> | 8-byte IEEE-754 |
+| <code>float</code> | <code>float</code> | <code>float32</code> | <code>float</code> | <code>float</code> | 4-byte IEEE-754 |
+| <code>int32</code> | <code>int32</code> | <code>int32</code> | <code>int</code> | <code>int</code> | Variable-length; inefficient for negatives |
+| <code>int64</code> | <code>int64</code> | <code>int64</code> | <code>long</code> | <code>int</code> | Variable-length; inefficient for negatives |
+| <code>uint32</code> | <code>uint32</code> | <code>uint32</code> | <code>int</code> | <code>int</code> | Variable-length unsigned |
+| <code>uint64</code> | <code>uint64</code> | <code>uint64</code> | <code>long</code> | <code>int</code> | Variable-length unsigned |
+| <code>sint32</code> | <code>int32</code> | <code>int32</code> | <code>int</code> | <code>int</code> | Zig-zag encoding for signed numbers |
+| <code>sint64</code> | <code>int64</code> | <code>int64</code> | <code>long</code> | <code>int</code> | Zig-zag encoding for signed numbers |
+| <code>fixed32</code> | <code>uint32</code> | <code>uint32</code> | <code>int</code> | <code>int</code> | 4-byte fixed; fast for values > 2^28 |
+| <code>fixed64</code> | <code>uint64</code> | <code>uint64</code> | <code>long</code> | <code>int</code> | 8-byte fixed; fast for values > 2^56 |
+| <code>sfixed32</code> | <code>int32</code> | <code>int32</code> | <code>int</code> | <code>int</code> | 4-byte signed fixed |
+| <code>sfixed64</code> | <code>int64</code> | <code>int64</code> | <code>long</code> | <code>int</code> | 8-byte signed fixed |
+| <code>bool</code> | <code>bool</code> | <code>bool</code> | <code>boolean</code> | <code>bool</code> | 1-byte |
+| <code>string</code> | <code>string</code> | <code>string</code> | <code>String</code> | <code>str</code> | UTF-8 encoded; must be valid UTF-8 |
+| <code>bytes</code> | <code>string</code> | <code>[]byte</code> | <code>ByteString</code> | <code>bytes</code> | Arbitrary byte sequence; not validated |
+### Enums
+enum Currency {
+  CURRENCY_UNSPECIFIED = 0;       // Default zero value; always required as first enum value
+  CURRENCY_USD = 1;               // US Dollar
+  CURRENCY_EUR = 2;               // Euro
+  CURRENCY_GBP = 3;               // British Pound
+  CURRENCY_JPY = 4;               // Japanese Yen
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0; // Default zero value
+  PAYMENT_STATUS_PENDING = 1;     // Payment initiated but not completed
+  PAYMENT_STATUS_COMPLETED = 2;   // Payment successfully processed
+  PAYMENT_STATUS_FAILED = 3;      // Payment processing failed
+  PAYMENT_STATUS_REFUNDED = 4;    // Payment was refunded after completion
+### Message Composition and Nesting
+// Address nested inside a customer message
+message Customer {
+  // Nested message type — scoped within Customer
+  message Address {
+    string street = 1;
+    string city = 2;
+    string state = 3;
+    string zip = 4;
+    string country = 5;
+  Address shipping_address = 4;     // Uses the nested type
+  Address billing_address = 5;      // Same nested type reused
+  enum Tier {                        // Nested enum
+    TIER_UNSPECIFIED = 0;
+    TIER_STANDARD = 1;
+    TIER_PREMIUM = 2;
+    TIER_ENTERPRISE = 3;
+  Tier tier = 6;
+### Oneof
+// Notification can be delivered via exactly one channel
+message Notification {
+  string message = 2;
+  oneof channel {                    // Only one of these fields is set at a time
+    string email = 3;                // Email address for email delivery
+    string sms = 4;                  // Phone number for SMS delivery
+    string push_token = 5;           // Device push notification token
+// Setting one field in a oneof clears all other fields in that oneof automatically
+### Maps
+message Config {
+  map<string, string> settings = 1;    // Map keys must be string or integral types
+  map<string, FeatureFlag> flags = 2;  // Map values can be any message type
+  map<int32, double> scores = 3;       // Integral key type with numeric value
+// Maps maintain insertion order during serialization (Go) but are unordered in proto3
+### Packages and Imports
+// File: common/v1/types.proto
+package common.v1;                      // Package declaration avoids name collisions
+option go_package = "common/v1;commonpb";
+message Money {
+  string currency_code = 1;
+  int64 units = 2;                      // Whole units (e.g., dollars)
+  int32 nanos = 3;                      // Nano-fractions (e.g., 500,000,000 = 50 cents)
+// File: payment/v1/payment.proto
+package payment.v1;
+import "common/v1/types.proto";         // Import from another package
+import "google/protobuf/timestamp.proto"; // Well-known type from google
+option go_package = "payment/v1;paymentpb";
+message Transaction {
+  common.v1.Money amount = 2;           // Fully qualified reference to imported type
+  google.protobuf.Timestamp created_at = 3;
+## Service Definitions
+### Unary RPC — Single request, single response
+service PaymentService {
+  // ProcessPayment: client sends one PaymentRequest, server replies with one PaymentResponse
+  rpc ProcessPayment(PaymentRequest) returns (PaymentResponse) {
+    option idempotency_level = IDEMPOTENT;  // Hint: this RPC can be safely retried
+message PaymentRequest {
+  string order_id = 1;
+  double amount = 2;
+  string currency = 3;
+  string card_token = 4;
+message PaymentResponse {
+  string transaction_id = 1;
+  PaymentStatus status = 2;
+  string message = 3;
+### Server-Streaming RPC — Client sends one request, server sends multiple responses
+service TransactionService {
+  // ListTransactions: client requests filter, server streams matching transactions
+  rpc ListTransactions(TransactionFilter) returns (stream Transaction) {
+    option google.api.http = {              // gRPC-gateway annotation for REST mapping
+      get: "/v1/transactions"
+message TransactionFilter {
+  string account_id = 1;
+  int32 page_size = 2;                      // Max number of items per stream batch
+### Client-Streaming RPC — Client sends multiple requests, server sends one response
+service LogService {
+  // IngestLogs: client streams many log entries, server returns aggregate summary
+  rpc IngestLogs(stream LogEntry) returns (IngestSummary);
+message LogEntry {
+  string service_name = 1;
+  string level = 2;                         // "info", "warn", "error"
+  string message = 3;
+  int64 timestamp_unix = 4;
+message IngestSummary {
+  int32 total_received = 1;
+  int32 error_count = 2;
+  string earliest_timestamp = 3;
+  string latest_timestamp = 4;
+### Bidirectional Streaming RPC — Both sides stream independently
+service ChatService {
+  // Chat: peer-to-peer messaging over a single long-lived stream
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+message ChatMessage {
+  string room_id = 1;
+  string sender_id = 2;
+  string text = 3;
+  int64 sent_at_unix = 4;
+// The server can interleave responses with client messages; ordering is preserved per-stream
+## Code Generation
+### protoc Compiler
+# Install protoc (Protocol Buffers compiler) — version 3.21+ recommended
+# Download from https://github.com/protocolbuffers/protobuf/releases
+# Generate Go code from .proto file
+protoc --proto_path=protos \
+  --go_out=. \
+  --go_opt=paths=source_relative \
+  --go-grpc_out=. \
+  --go-grpc_opt=paths=source_relative \
+  protos/payment/v1/payment.proto
+# --proto_path (-I): root directory for proto imports
+# --go_out: output directory for generated Go message code
+# --go-grpc_out: output directory for generated Go gRPC service code
+# paths=source_relative: mirror proto file directory structure in output
+### Language Plugins
+| Plugin Binary | Language | Command Flag | Output |
+|--------------|----------|-------------|--------|
+| <code>protoc-gen-go</code> | Go | <code>--go_out</code> | Message structs + marshal/unmarshal methods |
+| <code>protoc-gen-go-grpc</code> | Go | <code>--go-grpc_out</code> | Client interface + server interface + registration |
+| <code>protoc-gen-java</code> | Java | <code>--java_out</code> | Builder pattern classes for each message |
+| <code>protoc-gen-grpc-java</code> | Java | <code>--grpc-java_out</code> | Abstract stub classes (blocking, future, async) |
+| <code>protoc-gen-python</code> | Python | <code>--python_out</code> | Message classes with <code>SerializeToString</code> |
+| <code>protoc-gen-grpc-python</code> | Python | <code>--grpc_python_out</code> | Client/server stubs using <code>grpc.aio</code> |
+| <code>grpc_tools_node_protoc</code> | Node.js | <code>--grpc_out</code> | JavaScript/TypeScript message + service classes |
+| <code>protoc-gen-grpc-web</code> | gRPC-Web | <code>--grpc-web_out</code> | Browser-compatible JS client stubs |
+| <code>buf generate</code> | All (Buf) | <code>buf generate</code> | Unified code generation via <code>buf.gen.yaml</code> config |
+### Generated Stubs
+// This file is auto-generated by protoc-gen-go-grpc. DO NOT EDIT.
+package paymentpb
+  context "context"     // Context for deadlines, cancellation, and metadata
+  grpc "google.golang.org/grpc"  // gRPC framework
+  codes "google.golang.org/grpc/codes"  // gRPC status codes
+  status "google.golang.org/grpc/status"  // gRPC error status type
+// PaymentServiceServer is the server API for PaymentService — implement this interface
+type PaymentServiceServer interface {
+  ProcessPayment(context.Context, *PaymentRequest) (*PaymentResponse, error)
+  mustEmbedUnimplementedPaymentServiceServer()  // Forward-compatibility guard
+// PaymentServiceClient is the client API for PaymentService
+type PaymentServiceClient interface {
+  ProcessPayment(ctx context.Context, in *PaymentRequest, opts ...grpc.CallOption) (*PaymentResponse, error)
+// RegisterPaymentServiceServer registers the server implementation with the gRPC server
+func RegisterPaymentServiceServer(s grpc.ServiceRegistrar, srv PaymentServiceServer) {
+  s.RegisterService(&PaymentService_ServiceDesc, srv)
+// NewPaymentServiceClient creates a new client stub
+func NewPaymentServiceClient(cc grpc.ClientConnInterface) PaymentServiceClient {
+  return &paymentServiceClient{cc}
+// Generated TypeScript client stub (using @grpc/grpc-js and @grpc/proto-loader)
+import * as grpc from "@grpc/grpc-js";          // gRPC Node.js implementation
+import * as protoLoader from "@grpc/proto-loader"; // Dynamic proto file loader
+// Load proto definition at runtime
+const packageDefinition = protoLoader.loadSync(
+  "protos/payment/v1/payment.proto",          // Path to .proto file
+    keepCase: true,                            // Preserve original field name casing
+    longs: String,                             // Represent int64 as string
+    enums: String,                             // Represent enum values as strings
+    defaults: true,                            // Include default values in output
+    oneofs: true,                              // Enable oneof support
+// Create a client stub
+const paymentClient = new paymentPackage.payment.v1.PaymentService(
+  "localhost:50051",                           // Server address
+  grpc.credentials.createInsecure()            // Transport credentials
+## gRPC Concepts
+### HTTP/2 Multiplexing
+gRPC uses HTTP/2 as its transport layer. HTTP/2 allows multiple streams to share a single TCP connection, eliminating head-of-line blocking that plagues HTTP/1.1. Each gRPC call is mapped to one HTTP/2 stream, and the framework handles framing, multiplexing, and flow control transparently.
+Single TCP Connection
+├── Stream 1 → Unary RPC (request + response)
+├── Stream 2 → Server-streaming RPC (request + N responses)
+├── Stream 3 → Bidirectional streaming (open-ended)
+└── Stream 4 → Client-streaming RPC (N requests + response)
+All streams progress concurrently without blocking each other
+### Protobuf Serialization
+Protocol Buffers encode messages in a compact binary format. Each field is tagged with its field number and wire type, enabling forward and backward compatibility. Varint encoding uses fewer bytes for small integers, and field presence is determined by the wire format rather than default values.
+Protobuf wire format (simplified):
+┌────────────────┬────────────────┬─────────────────────┐
+│ Tag (varint)   │ Length (varint)│ Value               │
+│ (field_number  │ (if length-    │ (wire-type-specific)│
+│  << 3 | type)  │  delimited)    │                     │
+└────────────────┴────────────────┴─────────────────────┘
+Tag = (field_number << 3) | wire_type
+Wire types: 0=varint, 1=64-bit, 2=length-delimited, 5=32-bit
+### Deadlines and Timeouts
+gRPC clients should always set a deadline (absolute time) or timeout (duration) on every RPC. If the server does not respond within the deadline, the client cancels the call with status <code>DEADLINE_EXCEEDED</code>.
+// Go: Set a 5-second timeout on every RPC call
+defer cancel()  // Always call cancel to release resources
+resp, err := client.ProcessPayment(ctx, req)
+if err != nil {
+  // Check if the error is a deadline exceeded
+  if status.Code(err) == codes.DeadlineExceeded {
+    log.Println("RPC timed out — consider retrying or failing gracefully")
+// TypeScript: Set a 10-second deadline on the call
+const deadline = new Date();
+deadline.setSeconds(deadline.getSeconds() + 10);
+call = client.ProcessPayment(
+  request,
+  { deadline: deadline },     // gRPC-js deadline option
+  (error, response) => {
+    if (error && error.code === grpc.status.DEADLINE_EXCEEDED) {
+      console.error("Request timed out");
+### Cancellation
+Context cancellation propagates from client to server over HTTP/2 RST_STREAM frames. The server can detect cancellation via its context channel and abort expensive work.
+// Server-side: check if the client cancelled the request
+func (s *PaymentServer) ProcessPayment(ctx context.Context, req *PaymentRequest) (*PaymentResponse, error) {
+  select {
+  case <-ctx.Done():                          // Client cancelled or deadline exceeded
+    return nil, status.Errorf(codes.Canceled, "request cancelled by client")
+    // Continue processing
+  // ... do heavy work, periodically checking ctx.Done()
+### Metadata (Headers)
+Metadata is key-value data that accompanies gRPC calls, similar to HTTP headers. Use it for auth tokens, request IDs, tracing headers, and other cross-cutting concerns.
+// Client-side: attach metadata to outgoing context
+import "google.golang.org/grpc/metadata"
+md := metadata.Pairs(
+  "authorization", "Bearer eyJhbGciOiJIUzI1NiIs...",  // Auth token
+  "x-request-id", "abc-123-def-456",                     // Trace identifier
+  "x-client-version", "1.2.3",                           // Client version for analytics
+ctx := metadata.NewOutgoingContext(context.Background(), md)
+// Send the RPC with metadata attached
+resp, err := client.ProcessPayment(ctx, req)
+// Server-side: extract metadata from incoming context
+import "google.golang.org/grpc/metadata"
+func (s *PaymentServer) ProcessPayment(ctx context.Context, req *PaymentRequest) (*PaymentResponse, error) {
+  md, ok := metadata.FromIncomingContext(ctx)
+  if !ok {
+    return nil, status.Errorf(codes.Unauthenticated, "missing metadata")
+  // Extract auth token
+  authTokens := md.Get("authorization")
+  if len(authTokens) == 0 {
+    return nil, status.Errorf(codes.Unauthenticated, "missing authorization header")
+  token := authTokens[0]
+  // Extract request ID for logging
+  requestIDs := md.Get("x-request-id")
+  if len(requestIDs) > 0 {
+    log.Printf("Processing request %s", requestIDs[0])
+  // Set response headers
+  grpc.SetHeader(ctx, metadata.Pairs("x-processed-by", "payment-server-v2"))
+  return &PaymentResponse{Status: PAYMENT_STATUS_COMPLETED}, nil
+## Streaming Patterns
+### Server Push (Server-Streaming)
+// Server: push stock price updates to the client every second
+func (s *MarketService) SubscribePrices(req *PriceRequest, stream pb.MarketService_SubscribePricesServer) error {
+  ticker := time.NewTicker(1 * time.Second)   // Emit update every 1 second
+  defer ticker.Stop()
+  for {
+    select {
+    case <-stream.Context().Done():            // Client disconnected
+      log.Println("Client unsubscribed")
+      return nil
+    case <-ticker.C:
+      price := fetchCurrentPrice(req.Symbol)    // Get latest price from data source
+      if err := stream.Send(&PriceUpdate{
+        Symbol:    req.Symbol,
+        Price:     price,
+        Timestamp: timestamppb.Now(),
+      }); err != nil {
+        return err                              // Stream broken (client disconnected or network error)
+### Client Upload (Client-Streaming)
+// Server: receive a stream of file chunks and reassemble the file
+func (s *FileService) UploadFile(stream pb.FileService_UploadFileServer) error {
+  var fileBuffer bytes.Buffer                   // Buffer to accumulate chunks
+  var fileName string
+  for {
+    chunk, err := stream.Recv()                 // Read next chunk from client stream
+    if err == io.EOF {                          // Client finished sending
+      // Save the complete file
+      result := saveFile(fileName, fileBuffer.Bytes())
+      return stream.SendAndClose(&UploadResponse{
+        FileName:  fileName,
+        SizeBytes: int32(fileBuffer.Len()),
+        Checksum:  result.Checksum,
+    if err != nil {
+      return status.Errorf(codes.Internal, "failed to read chunk: %v", err)
+    if fileName == "" {
+      fileName = chunk.FileName                 // First chunk contains filename
+    fileBuffer.Write(chunk.Data)                // Append chunk data to buffer
+### Bidirectional Chat
+// Server: bidirectional chat — receives messages and broadcasts to all connected clients
+func (s *ChatServer) Chat(stream pb.ChatService_ChatServer) error {
+  // Register this client in a room
+  firstMsg, err := stream.Recv()
+  if err != nil {
+  room := s.getOrCreateRoom(firstMsg.RoomId)
+  client := room.Join(stream)
+  defer room.Leave(client.ID)
+  // Broadcast join notification to other clients in the room
+  room.Broadcast(&ChatMessage{
+    SenderId:   "system",
+    Text:       client.ID + " joined the room",
+    SentAtUnix: time.Now().Unix(),
+  }, client.ID)
+  // Read messages from this client and broadcast to others
+  for {
+    msg, err := stream.Recv()
+    if err == io.EOF {                          // Client closed the stream gracefully
+      return nil
+    if err != nil {
+      return err                                // Stream error
+    msg.SentAtUnix = time.Now().Unix()
+    room.Broadcast(msg, client.ID)              // Send to all other clients in the room
+### Flow Control
+HTTP/2 flow control prevents a fast sender from overwhelming a slow receiver. gRPC implements stream-level and connection-level flow control using WINDOW_UPDATE frames. The default stream window is 64 KB, and the connection window is 1 MB.
+HTTP/2 Flow Control Window
+│ Connection Window (default: 1 MB)                    │
+│  ┌────────────────────────────────────────────────┐  │
+│  │ Stream 1 Window (default: 64 KB)               │  │
+│  └────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────┐  │
+│  │ Stream 2 Window (default: 64 KB)               │  │
+│  └────────────────────────────────────────────────┘  │
+│                    ...                                │
+// Each WINDOW_UPDATE frame increases the available window size
+// The receiver controls the pace — sender cannot send more bytes than the window allows
+## Interceptors
+### Client-Side Interceptor (Unary)
+// LoggingUnaryClientInterceptor logs every RPC call made by the client
+func LoggingUnaryClientInterceptor(
+  ctx context.Context,
+  method string,              // Full gRPC method name (e.g., "/payment.v1.PaymentService/ProcessPayment")
+  req interface{},            // Request message
+  reply interface{},          // Response message (populated after call)
+  cc *grpc.ClientConn,        // Client connection
+  invoker grpc.UnaryInvoker,  // The actual RPC invoker
+  opts ...grpc.CallOption,    // Additional call options
+  start := time.Now()
+  log.Printf("gRPC client call: method=%s", method)
+  err := invoker(ctx, method, req, reply, cc, opts...)  // Execute the actual RPC
+  duration := time.Since(start)
+  if err != nil {
+    log.Printf("gRPC client error: method=%s duration=%v error=%v", method, duration, err)
+    log.Printf("gRPC client success: method=%s duration=%v", method, duration)
+### Server-Side Interceptor (Unary)
+// AuthUnaryServerInterceptor validates a JWT token from the metadata before allowing the RPC
+func AuthUnaryServerInterceptor(
+  ctx context.Context,
+  req interface{},              // The incoming RPC request
+  info *grpc.UnaryServerInfo,   // Contains method name and server info
+  handler grpc.UnaryHandler,    // The actual RPC handler
+) (interface{}, error) {
+  md, ok := metadata.FromIncomingContext(ctx)
+  if !ok {
+    return nil, status.Errorf(codes.Unauthenticated, "no metadata provided")
+  authTokens := md.Get("authorization")
+  if len(authTokens) == 0 {
+    return nil, status.Errorf(codes.Unauthenticated, "no authorization token")
+  token := authTokens[0]
+  claims, err := validateJWT(token)         // Custom JWT validation function
+  if err != nil {
+    return nil, status.Errorf(codes.Unauthenticated, "invalid token: %v", err)
+  // Inject validated claims into context for downstream handlers
+  newCtx := context.WithValue(ctx, "claims", claims)
+  return handler(newCtx, req)              // Execute the actual handler with enriched context
+### Server-Side Interceptor (Streaming)
+// MetricsStreamServerInterceptor counts active streams and tracks duration
+func MetricsStreamServerInterceptor(
+  srv interface{},              // The server instance
+  ss grpc.ServerStream,         // Server-side stream object
+  info *grpc.StreamServerInfo,  // Contains method name and stream type
+  handler grpc.StreamHandler,   // The actual stream handler
+  activeStreams.Inc()                      // Increment Prometheus gauge for active streams
+  defer activeStreams.Dec()                // Decrement on stream completion
+  start := time.Now()
+  err := handler(srv, ss)                  // Execute the actual stream handler
+  duration := time.Since(start)
+  streamDuration.WithLabelValues(
+    info.FullMethod,                       // Tag metric with method name
+  ).Observe(duration.Seconds())            // Record duration in Prometheus histogram
+### Applying Interceptors
+// Client-side: chain multiple interceptors when creating the connection
+conn, err := grpc.Dial(
+  "localhost:50051",
+  grpc.WithInsecure(),                     // Skip TLS (development only)
+  grpc.WithUnaryInterceptor(LoggingUnaryClientInterceptor),  // Single unary interceptor
+  // For multiple unary interceptors, use grpc.WithChainUnaryInterceptor
+  // grpc.WithChainUnaryInterceptor(authInterceptor, loggingInterceptor, metricsInterceptor),
+// Server-side: register interceptors when creating the server
+server := grpc.NewServer(
+  grpc.UnaryInterceptor(AuthUnaryServerInterceptor),     // Single unary interceptor
+  // grpc.ChainUnaryInterceptor(loggingInterceptor, authInterceptor, metricsInterceptor),
+  grpc.StreamInterceptor(MetricsStreamServerInterceptor), // Stream interceptor
+paymentpb.RegisterPaymentServiceServer(server, &PaymentServer{})
+### Client-Side Load Balancing
+gRPC supports client-side load balancing where the client maintains a list of server addresses and selects one per RPC call using a pluggable policy.
+// Use round_robin load balancing with DNS name resolution
+conn, err := grpc.Dial(
+  "dns:///payment-service.example.com:50051",  // DNS name to resolve
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+      { "round_robin": {} }                    // Distribute requests evenly across backends
+  }\`),
+### Name Resolution
+| Resolver Scheme | Format | Description |
+|----------------|--------|-------------|
+| <code>dns</code> | <code>dns:///host:port</code> | Standard DNS resolution with SRV record fallback |
+| <code>passthrough</code> | <code>passthrough:///address</code> | Use address as-is (default if no scheme specified) |
+| <code>unix</code> | <code>unix:///path/to/socket</code> | Unix domain socket connection |
+| Custom | <code>myresolver:///...</code> | Implement <code>resolver.Builder</code> for custom logic |
+### Stickiness (Consistent Hashing)
+// Consistent hash ring for sticky sessions — same client always reaches the same backend
+// Requires a custom load balancing policy
+conn, err := grpc.Dial(
+  "dns:///session-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+        "ring_hash": {                        // Consistent-hashing load balancer
+          "minRingSize": 10,                  // Minimum virtual node ring size
+          "maxRingSize": 100                  // Maximum virtual node ring size
+  }\`),
+### Weighted Routing
+// Weighted round-robin: route more traffic to powerful instances
+// This uses the weighted_target balancer (gRPC-Go 1.45+)
+conn, err := grpc.Dial(
+  "weighted:///payment-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+        "weighted_target": {
+          "targets": {
+            "payment-service-a:50051": { "weight": 3 },  // Gets 3x more traffic
+            "payment-service-b:50051": { "weight": 1 },  // Gets 1x more traffic
+            "payment-service-c:50051": { "weight": 1 }   // Gets 1x more traffic
+  }\`),
+### Retry Throttling
+// Configure automatic retry with backoff and throttling
+conn, err := grpc.Dial(
+  "dns:///payment-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "methodConfig": [{
+      "name": [{"service": "payment.v1.PaymentService"}],
+      "retryPolicy": {
+        "maxAttempts": 4,                    // Try up to 4 times (1 original + 3 retries)
+        "initialBackoff": "0.1s",            // Start with 100ms backoff
+        "maxBackoff": "5s",                  // Cap backoff at 5 seconds
+        "backoffMultiplier": 2,              // Double backoff each retry
+        "retryableStatusCodes": [            // Only retry on these status codes
+          "UNAVAILABLE",
+          "DEADLINE_EXCEEDED",
+          "RESOURCE_EXHAUSTED"
+  }\`),
+## Ecosystem
+### gRPC-Gateway (REST / JSON)
+gRPC-Gateway generates a reverse proxy that exposes gRPC services as RESTful JSON APIs.
+// Annotate RPC with google.api.http option to define REST mapping
+service PaymentService {
+  rpc ProcessPayment(PaymentRequest) returns (PaymentResponse) {
+    option (google.api.http) = {
+      post: "/v1/payments"                   // HTTP method and path
+      body: "*"                              // Use entire request as JSON body
+  rpc GetPayment(GetPaymentRequest) returns (PaymentResponse) {
+    option (google.api.http) = {
+      get: "/v1/payments/{payment_id}"       // Path parameter from request field
+  rpc ListTransactions(TransactionFilter) returns (stream Transaction) {
+    option (google.api.http) = {
+      get: "/v1/transactions"                // Streaming endpoint becomes server-sent events
+message GetPaymentRequest {
+  string payment_id = 1;                     // Maps to {payment_id} in the URL path
+# Generate gRPC-Gateway code from annotated proto files
+protoc -I protos \
+  --grpc-gateway_out=. \
+  --grpc-gateway_opt=paths=source_relative \
+  --grpc-gateway_opt=generate_unbound_methods=true \
+  protos/payment/v1/payment.proto
+# Output: payment.pb.gw.go — contains the HTTP reverse proxy handler
+### gRPC Reflection
+Reflection allows clients to discover service definitions at runtime without needing the .proto file.
+// Server: enable reflection for tooling like grpcurl and Evans CLI
+import "google.golang.org/grpc/reflection"
+server := grpc.NewServer()
+paymentpb.RegisterPaymentServiceServer(server, &PaymentServer{})
+// Register reflection service — clients can now list services and methods
+reflection.Register(server)
+// Client: use grpcurl to interact without proto file
+// grpcurl -plaintext localhost:50051 list
+// grpcurl -plaintext localhost:50051 list payment.v1.PaymentService
+// grpcurl -plaintext -d '{"order_id": "123"}' localhost:50051 payment.v1.PaymentService/ProcessPayment
+### Health Checking
+// Server: enable the standard health check service from grpc-health-probing
+import "google.golang.org/grpc/health"
+import "google.golang.org/grpc/health/grpc_health_v1"
+server := grpc.NewServer()
+// Create health checker and register the standard health service
+healthChecker := health.NewServer()
+grpc_health_v1.RegisterHealthServer(server, healthChecker)
+// Mark service as healthy (or SERVING)
+healthChecker.SetServingStatus("payment.v1.PaymentService", grpc_health_v1.HealthCheckResponse_SERVING)
+healthChecker.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)  // "" means overall server
+// Later: mark service as not serving during graceful shutdown
+// healthChecker.SetServingStatus("payment.v1.PaymentService", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
+// server.GracefulStop()
+# Probe health using grpc_health_probe (Kubernetes-ready)
+grpc_health_probe -addr=localhost:50051 -service=payment.v1.PaymentService
+# Exit code 0 = healthy, exit code 1 = unhealthy
+### Channelz
+Channelz is a built-in debugging tool that exposes internal gRPC state (connections, subchannels, streams, calls).
+// Server: enable channelz to expose debug information via a separate gRPC service
+import "google.golang.org/grpc/channelz/service"
+server := grpc.NewServer()
+// Register the channelz service on the same or a different server
+// Accessible via the channelz gRPC service
+service.RegisterChannelzServiceToServer(server)
+// Or enable the channelz HTTP endpoint for browser-based debugging
+// go tooling: open (http://localhost:8080/debug/channelz) for visual view
+# Query channelz using grpcurl on the running server
+grpcurl -plaintext localhost:50051 list grpc.channelz.v1.Channelz
+grpcurl -plaintext localhost:50051 grpc.channelz.v1.Channelz/GetTopChannels
+grpcurl -plaintext localhost:50051 grpc.channelz.v1.Channelz/GetServers
+# Returns JSON with all active connections, subchannels, and call counts
+## Common Pitfalls and Anti-patterns
+| Pitfall | Description | Solution |
+|---------|-------------|----------|
+| Not setting deadlines | Client RPCs hang forever if server is unreachable | Always set a context deadline or timeout on every RPC call |
+| Large messages (>4 MB) | gRPC default max message size is 4 MB; larger messages cause errors | Tune <code>grpc.MaxRecvMsgSize</code> and <code>grpc.MaxSendMsgSize</code>; consider streaming for large payloads |
+| Using default port | Port 50051 is the default but is often blocked in production networks | Use a registered port (e.g., 443 with TLS) or configure load balancer properly |
+| Ignoring context cancellation | Server continues processing after client disconnects, wasting resources | Check <code>ctx.Done()</code> in long-running handlers and streaming loops |
+| Not using TLS in production | Sends unencrypted payloads including auth tokens | Always enable TLS with mTLS for production gRPC deployments |
+| Long-lived streaming without keepalive | Proxies and load balancers close idle connections | Enable HTTP/2 keepalive pings (<code>grpc.KeepaliveParams</code> on server, <code>grpc.WithKeepaliveParams</code> on client) |
+| Circular proto imports | Protobuf does not support circular imports between files | Restructure shared types into a separate common proto package |
+| Using too many fields (>1000 per message) | Proto wire format performance degrades with very large messages | Split large messages into smaller domain-specific messages |
+| Zero-value ambiguity in proto3 | Proto3 omits default values on the wire; you cannot distinguish <code>0</code> from unset for scalars | Use wrapper types (<code>google.protobuf.Int64Value</code>) when presence matters |
+| Missing error detail types | Returning generic <code>UNKNOWN</code> errors makes debugging impossible | Use <code>google.rpc.Status</code> with rich error details (<code>BadRequest</code>, <code>PreconditionFailure</code>, etc.) |
+| Blocking main goroutine on <code>server.Serve()</code> | Blocks the main thread and prevents clean shutdown signal handling | Run <code>server.Serve()</code> in a goroutine and catch OS signals for graceful shutdown |
+| Not registering reflection | Every client must bundle .proto files for debugging | Always register the reflection service in development and staging environments |
+| Forgetting to close client connections | Leaks file descriptors and goroutines on the client side | Call <code>conn.Close()</code> when the client connection is no longer needed |
+| Using <code>nil</code> context | Panics at runtime when gRPC tries to read metadata from a nil context | Always derive context from <code>context.Background()</code> or <code>context.TODO()</code> |
+| Ignoring rate limiting on server | One aggressive client can saturate server resources | Implement server-side rate limiting with <code>grpc.RateLimiter</code> or middleware |
+## Complete API Reference
+### Protobuf Scalar Types
+| Proto Type | Description | Go Type | Java Type | Python Type | Default | Encoding |
+|------------|-------------|---------|-----------|-------------|---------|----------|
+| <code>double</code> | 8-byte IEEE-754 float | <code>float64</code> | <code>double</code> | <code>float</code> | 0.0 | 64-bit (wire type 1) |
+| <code>float</code> | 4-byte IEEE-754 float | <code>float32</code> | <code>float</code> | <code>float</code> | 0.0 | 32-bit (wire type 5) |
+| <code>int32</code> | Variable-length signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>int64</code> | Variable-length signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>uint32</code> | Variable-length unsigned int | <code>uint32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>uint64</code> | Variable-length unsigned int | <code>uint64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>sint32</code> | Zig-zag encoded signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>sint64</code> | Zig-zag encoded signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>fixed32</code> | 4-byte unsigned int | <code>uint32</code> | <code>int</code> | <code>int</code> | 0 | 32-bit (wire type 5) |
+| <code>fixed64</code> | 8-byte unsigned int | <code>uint64</code> | <code>long</code> | <code>int</code> | 0 | 64-bit (wire type 1) |
+| <code>sfixed32</code> | 4-byte signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | 32-bit (wire type 5) |
+| <code>sfixed64</code> | 8-byte signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | 64-bit (wire type 1) |
+| <code>bool</code> | Boolean (true/false) | <code>bool</code> | <code>boolean</code> | <code>bool</code> | false | Varint (wire type 0) |
+| <code>string</code> | UTF-8 encoded text | <code>string</code> | <code>String</code> | <code>str</code> | "" | Length-delimited (wire type 2) |
+| <code>bytes</code> | Arbitrary byte sequence | <code>[]byte</code> | <code>ByteString</code> | <code>bytes</code> | empty | Length-delimited (wire type 2) |
+### gRPC Status Codes
+| Code | Number | HTTP Mapping | Description |
+|------|--------|-------------|-------------|
+| <code>OK</code> | 0 | 200 | The operation completed successfully |
+| <code>CANCELLED</code> | 1 | 499 | The operation was cancelled by the caller |
+| <code>UNKNOWN</code> | 2 | 500 | Unknown error; use for unexpected exceptions |
+| <code>INVALID_ARGUMENT</code> | 3 | 400 | Client specified an invalid argument |
+| <code>DEADLINE_EXCEEDED</code> | 4 | 504 | Deadline expired before the operation completed |
+| <code>NOT_FOUND</code> | 5 | 404 | Some requested entity was not found |
+| <code>ALREADY_EXISTS</code> | 6 | 409 | Entity already exists (idempotent creation) |
+| <code>PERMISSION_DENIED</code> | 7 | 403 | Caller does not have permission to execute the operation |
+| <code>RESOURCE_EXHAUSTED</code> | 8 | 429 | Resource quota exhausted or rate limit exceeded |
+| <code>FAILED_PRECONDITION</code> | 9 | 400 | System is not in the correct state for the operation |
+| <code>ABORTED</code> | 10 | 409 | Operation aborted (e.g., concurrency conflict) |
+| <code>OUT_OF_RANGE</code> | 11 | 400 | Operation was attempted past the valid range |
+| <code>UNIMPLEMENTED</code> | 12 | 501 | Operation is not implemented or not supported |
+| <code>INTERNAL</code> | 13 | 500 | Internal errors (e.g., broken invariants) |
+| <code>UNAVAILABLE</code> | 14 | 503 | Service is currently unavailable (transient) |
+| <code>DATA_LOSS</code> | 15 | 500 | Unrecoverable data loss or corruption |
+| <code>UNAUTHENTICATED</code> | 16 | 401 | Request lacks valid authentication credentials |
+### Service Option Reference
+package reference.v1;
+service MyService {
+  // Idempotency level — hints to clients whether retries are safe
+  rpc SafeRetry(MyRequest) returns (MyResponse) {
+    option idempotency_level = IDEMPOTENT;       // Safe to retry; same result each time
+  rpc UnsafeWrite(MyRequest) returns (MyResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;  // Read-only; no side effects
+    // option idempotency_level = IDEMPOTENCY_UNKNOWN;  // Default; retry behavior unspecified
+// Common method options imported from google.api
+import "google/api/annotations.proto";     // HTTP binding support
+import "google/api/client.proto";          // Client library configuration
+import "google/api/field_behavior.proto";   // Field behavior hints (REQUIRED, OUTPUT_ONLY, etc.)
+import "google/api/resource.proto";         // Resource name patterns
+message MyRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,  // Client must set this field
+    (google.api.resource_reference) = {
+      type: "example.com/MyResource"          // Resource type for documentation
+  int32 page_size = 2 [
+    (google.api.field_behavior) = OPTIONAL    // Client may omit (default applied server-side)
+import "google/protobuf/descriptor.proto";  // For custom options
+// Custom option extension pattern (advanced)
+extend google.protobuf.MethodOptions {
+  optional bool rate_limit = 50000;            // Custom field number in extension range
+service RateLimitedService {
+  rpc ExpensiveOp(MyRequest) returns (MyResponse) {
+    option (rate_limit) = true;                // Apply custom rate-limiting behavior
+1. What are the four types of RPC in gRPC, and when would you choose each one over the others?
+2. Explain how HTTP/2 multiplexing benefits gRPC compared to HTTP/1.1 REST APIs. What problem does it solve?
+3. Why does proto3 omit default values (zero values) during serialization? How can you model a field where you need to distinguish between <code>0</code> and unset?
+4. Describe the difference between a unary interceptor and a stream interceptor. Write a server-side interceptor that measures and logs RPC duration.
+5. How does client-side load balancing work in gRPC? Compare round_robin, ring_hash (consistent hashing), and weighted_target policies with specific use cases.
+6. What is the purpose of gRPC reflection, and how does it improve developer experience? Provide a sample grpcurl workflow.
+7. You have a large file upload scenario (500 MB). Should you use a unary RPC or a client-streaming RPC? Explain the trade-offs and any configuration changes needed.
+8. A production gRPC service is experiencing intermittent failures with status code <code>UNAVAILABLE</code>. List three possible causes and the corresponding remediation steps.
+9. Design a proto file for a notification service that supports email, SMS, and push notifications. Use oneof, enums, and at least one well-known type.
+10. Your team wants to expose the gRPC service to browser-based clients that cannot use HTTP/2. How would you accomplish this, and what additional considerations arise?
+            tags: ["gRPC", "API Design", "Cheat Sheet"],
+            id: "cheat-database",
+            title: "Database Design & SQL",
+            shortDesc: "Complete database reference — normalization, indexing, query optimization, transactions, ACID, NoSQL tradeoffs, and ORMs.",
+            readTimeMin: 5,
+              "Normalization: 1NF, 2NF, 3NF, BCNF — reducing redundancy while preserving dependencies.",
+              "Indexing: B-tree, hash, GiST, GIN — when each applies and query plan analysis.",
+              "ACID: Atomicity, Consistency, Isolation, Durability — isolation levels and phenomena.",
+              "Query optimization: EXPLAIN ANALYZE, index-only scans, covering indexes, JOIN strategies.",
+              "NoSQL tradeoffs: document (MongoDB), wide-column (Cassandra), graph (Neo4j) — CAP theorem.",
+  }
+
+  // Inject validated claims into context for downstream handlers
+  newCtx := context.WithValue(ctx, "claims", claims)
+  return handler(newCtx, req)              // Execute the actual handler with enriched context
+}
+\`\`\`
+
+### Server-Side Interceptor (Streaming)
+
+\`\`\`go
+// MetricsStreamServerInterceptor counts active streams and tracks duration
+func MetricsStreamServerInterceptor(
+  srv interface{},              // The server instance
+  ss grpc.ServerStream,         // Server-side stream object
+  info *grpc.StreamServerInfo,  // Contains method name and stream type
+  handler grpc.StreamHandler,   // The actual stream handler
+) error {
+  activeStreams.Inc()                      // Increment Prometheus gauge for active streams
+  defer activeStreams.Dec()                // Decrement on stream completion
+
+  start := time.Now()
+  err := handler(srv, ss)                  // Execute the actual stream handler
+  duration := time.Since(start)
+
+  streamDuration.WithLabelValues(
+    info.FullMethod,                       // Tag metric with method name
+  ).Observe(duration.Seconds())            // Record duration in Prometheus histogram
+
+  return err
+}
+\`\`\`
+
+### Applying Interceptors
+
+\`\`\`go
+// Client-side: chain multiple interceptors when creating the connection
+conn, err := grpc.Dial(
+  "localhost:50051",
+  grpc.WithInsecure(),                     // Skip TLS (development only)
+  grpc.WithUnaryInterceptor(LoggingUnaryClientInterceptor),  // Single unary interceptor
+  // For multiple unary interceptors, use grpc.WithChainUnaryInterceptor
+  // grpc.WithChainUnaryInterceptor(authInterceptor, loggingInterceptor, metricsInterceptor),
+)
+
+// Server-side: register interceptors when creating the server
+server := grpc.NewServer(
+  grpc.UnaryInterceptor(AuthUnaryServerInterceptor),     // Single unary interceptor
+  // grpc.ChainUnaryInterceptor(loggingInterceptor, authInterceptor, metricsInterceptor),
+  grpc.StreamInterceptor(MetricsStreamServerInterceptor), // Stream interceptor
+)
+paymentpb.RegisterPaymentServiceServer(server, &PaymentServer{})
+\`\`\`
+
+---
+
+## Load Balancing
+
+### Client-Side Load Balancing
+
+gRPC supports client-side load balancing where the client maintains a list of server addresses and selects one per RPC call using a pluggable policy.
+
+\`\`\`go
+// Use round_robin load balancing with DNS name resolution
+conn, err := grpc.Dial(
+  "dns:///payment-service.example.com:50051",  // DNS name to resolve
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+      { "round_robin": {} }                    // Distribute requests evenly across backends
+    ]
+  }\`),
+)
+\`\`\`
+
+### Name Resolution
+
+| Resolver Scheme | Format | Description |
+|----------------|--------|-------------|
+| <code>dns</code> | <code>dns:///host:port</code> | Standard DNS resolution with SRV record fallback |
+| <code>passthrough</code> | <code>passthrough:///address</code> | Use address as-is (default if no scheme specified) |
+| <code>unix</code> | <code>unix:///path/to/socket</code> | Unix domain socket connection |
+| Custom | <code>myresolver:///...</code> | Implement <code>resolver.Builder</code> for custom logic |
+
+### Stickiness (Consistent Hashing)
+
+\`\`\`go
+// Consistent hash ring for sticky sessions — same client always reaches the same backend
+// Requires a custom load balancing policy
+conn, err := grpc.Dial(
+  "dns:///session-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+      {
+        "ring_hash": {                        // Consistent-hashing load balancer
+          "minRingSize": 10,                  // Minimum virtual node ring size
+          "maxRingSize": 100                  // Maximum virtual node ring size
+        }
+      }
+    ]
+  }\`),
+)
+\`\`\`
+
+### Weighted Routing
+
+\`\`\`go
+// Weighted round-robin: route more traffic to powerful instances
+// This uses the weighted_target balancer (gRPC-Go 1.45+)
+conn, err := grpc.Dial(
+  "weighted:///payment-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "loadBalancingConfig": [
+      {
+        "weighted_target": {
+          "targets": {
+            "payment-service-a:50051": { "weight": 3 },  // Gets 3x more traffic
+            "payment-service-b:50051": { "weight": 1 },  // Gets 1x more traffic
+            "payment-service-c:50051": { "weight": 1 }   // Gets 1x more traffic
+          }
+        }
+      }
+    ]
+  }\`),
+)
+\`\`\`
+
+### Retry Throttling
+
+\`\`\`go
+// Configure automatic retry with backoff and throttling
+conn, err := grpc.Dial(
+  "dns:///payment-service.example.com:50051",
+  grpc.WithInsecure(),
+  grpc.WithDefaultServiceConfig(\`{
+    "methodConfig": [{
+      "name": [{"service": "payment.v1.PaymentService"}],
+      "retryPolicy": {
+        "maxAttempts": 4,                    // Try up to 4 times (1 original + 3 retries)
+        "initialBackoff": "0.1s",            // Start with 100ms backoff
+        "maxBackoff": "5s",                  // Cap backoff at 5 seconds
+        "backoffMultiplier": 2,              // Double backoff each retry
+        "retryableStatusCodes": [            // Only retry on these status codes
+          "UNAVAILABLE",
+          "DEADLINE_EXCEEDED",
+          "RESOURCE_EXHAUSTED"
+        ]
+      }
+    }]
+  }\`),
+)
+\`\`\`
+
+---
+
+## Ecosystem
+
+### gRPC-Gateway (REST / JSON)
+
+gRPC-Gateway generates a reverse proxy that exposes gRPC services as RESTful JSON APIs.
+
+\`\`\`protobuf
+// Annotate RPC with google.api.http option to define REST mapping
+service PaymentService {
+  rpc ProcessPayment(PaymentRequest) returns (PaymentResponse) {
+    option (google.api.http) = {
+      post: "/v1/payments"                   // HTTP method and path
+      body: "*"                              // Use entire request as JSON body
+    };
+  }
+
+  rpc GetPayment(GetPaymentRequest) returns (PaymentResponse) {
+    option (google.api.http) = {
+      get: "/v1/payments/{payment_id}"       // Path parameter from request field
+    };
+  }
+
+  rpc ListTransactions(TransactionFilter) returns (stream Transaction) {
+    option (google.api.http) = {
+      get: "/v1/transactions"                // Streaming endpoint becomes server-sent events
+    };
+  }
+}
+
+message GetPaymentRequest {
+  string payment_id = 1;                     // Maps to {payment_id} in the URL path
+}
+\`\`\`
+
+\`\`\`bash
+# Generate gRPC-Gateway code from annotated proto files
+protoc -I protos \
+  --grpc-gateway_out=. \
+  --grpc-gateway_opt=paths=source_relative \
+  --grpc-gateway_opt=generate_unbound_methods=true \
+  protos/payment/v1/payment.proto
+
+# Output: payment.pb.gw.go — contains the HTTP reverse proxy handler
+\`\`\`
+
+### gRPC Reflection
+
+Reflection allows clients to discover service definitions at runtime without needing the .proto file.
+
+\`\`\`go
+// Server: enable reflection for tooling like grpcurl and Evans CLI
+import "google.golang.org/grpc/reflection"
+
+server := grpc.NewServer()
+paymentpb.RegisterPaymentServiceServer(server, &PaymentServer{})
+
+// Register reflection service — clients can now list services and methods
+reflection.Register(server)
+
+// Client: use grpcurl to interact without proto file
+// grpcurl -plaintext localhost:50051 list
+// grpcurl -plaintext localhost:50051 list payment.v1.PaymentService
+// grpcurl -plaintext -d '{"order_id": "123"}' localhost:50051 payment.v1.PaymentService/ProcessPayment
+\`\`\`
+
+### Health Checking
+
+\`\`\`go
+// Server: enable the standard health check service from grpc-health-probing
+import "google.golang.org/grpc/health"
+import "google.golang.org/grpc/health/grpc_health_v1"
+
+server := grpc.NewServer()
+
+// Create health checker and register the standard health service
+healthChecker := health.NewServer()
+grpc_health_v1.RegisterHealthServer(server, healthChecker)
+
+// Mark service as healthy (or SERVING)
+healthChecker.SetServingStatus("payment.v1.PaymentService", grpc_health_v1.HealthCheckResponse_SERVING)
+healthChecker.SetServingStatus("", grpc_health_v1.HealthCheckResponse_SERVING)  // "" means overall server
+
+// Later: mark service as not serving during graceful shutdown
+// healthChecker.SetServingStatus("payment.v1.PaymentService", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
+// server.GracefulStop()
+\`\`\`
+
+\`\`\`bash
+# Probe health using grpc_health_probe (Kubernetes-ready)
+grpc_health_probe -addr=localhost:50051 -service=payment.v1.PaymentService
+# Exit code 0 = healthy, exit code 1 = unhealthy
+\`\`\`
+
+### Channelz
+
+Channelz is a built-in debugging tool that exposes internal gRPC state (connections, subchannels, streams, calls).
+
+\`\`\`go
+// Server: enable channelz to expose debug information via a separate gRPC service
+import "google.golang.org/grpc/channelz/service"
+
+server := grpc.NewServer()
+
+// Register the channelz service on the same or a different server
+// Accessible via the channelz gRPC service
+service.RegisterChannelzServiceToServer(server)
+
+// Or enable the channelz HTTP endpoint for browser-based debugging
+// go tooling: open (http://localhost:8080/debug/channelz) for visual view
+\`\`\`
+
+\`\`\`bash
+# Query channelz using grpcurl on the running server
+grpcurl -plaintext localhost:50051 list grpc.channelz.v1.Channelz
+grpcurl -plaintext localhost:50051 grpc.channelz.v1.Channelz/GetTopChannels
+grpcurl -plaintext localhost:50051 grpc.channelz.v1.Channelz/GetServers
+# Returns JSON with all active connections, subchannels, and call counts
+\`\`\`
+
+---
+
+## Common Pitfalls and Anti-patterns
+
+| Pitfall | Description | Solution |
+|---------|-------------|----------|
+| Not setting deadlines | Client RPCs hang forever if server is unreachable | Always set a context deadline or timeout on every RPC call |
+| Large messages (>4 MB) | gRPC default max message size is 4 MB; larger messages cause errors | Tune <code>grpc.MaxRecvMsgSize</code> and <code>grpc.MaxSendMsgSize</code>; consider streaming for large payloads |
+| Using default port | Port 50051 is the default but is often blocked in production networks | Use a registered port (e.g., 443 with TLS) or configure load balancer properly |
+| Ignoring context cancellation | Server continues processing after client disconnects, wasting resources | Check <code>ctx.Done()</code> in long-running handlers and streaming loops |
+| Not using TLS in production | Sends unencrypted payloads including auth tokens | Always enable TLS with mTLS for production gRPC deployments |
+| Long-lived streaming without keepalive | Proxies and load balancers close idle connections | Enable HTTP/2 keepalive pings (<code>grpc.KeepaliveParams</code> on server, <code>grpc.WithKeepaliveParams</code> on client) |
+| Circular proto imports | Protobuf does not support circular imports between files | Restructure shared types into a separate common proto package |
+| Using too many fields (>1000 per message) | Proto wire format performance degrades with very large messages | Split large messages into smaller domain-specific messages |
+| Zero-value ambiguity in proto3 | Proto3 omits default values on the wire; you cannot distinguish <code>0</code> from unset for scalars | Use wrapper types (<code>google.protobuf.Int64Value</code>) when presence matters |
+| Missing error detail types | Returning generic <code>UNKNOWN</code> errors makes debugging impossible | Use <code>google.rpc.Status</code> with rich error details (<code>BadRequest</code>, <code>PreconditionFailure</code>, etc.) |
+| Blocking main goroutine on <code>server.Serve()</code> | Blocks the main thread and prevents clean shutdown signal handling | Run <code>server.Serve()</code> in a goroutine and catch OS signals for graceful shutdown |
+| Not registering reflection | Every client must bundle .proto files for debugging | Always register the reflection service in development and staging environments |
+| Forgetting to close client connections | Leaks file descriptors and goroutines on the client side | Call <code>conn.Close()</code> when the client connection is no longer needed |
+| Using <code>nil</code> context | Panics at runtime when gRPC tries to read metadata from a nil context | Always derive context from <code>context.Background()</code> or <code>context.TODO()</code> |
+| Ignoring rate limiting on server | One aggressive client can saturate server resources | Implement server-side rate limiting with <code>grpc.RateLimiter</code> or middleware |
+
+---
+
+## Complete API Reference
+
+### Protobuf Scalar Types
+
+| Proto Type | Description | Go Type | Java Type | Python Type | Default | Encoding |
+|------------|-------------|---------|-----------|-------------|---------|----------|
+| <code>double</code> | 8-byte IEEE-754 float | <code>float64</code> | <code>double</code> | <code>float</code> | 0.0 | 64-bit (wire type 1) |
+| <code>float</code> | 4-byte IEEE-754 float | <code>float32</code> | <code>float</code> | <code>float</code> | 0.0 | 32-bit (wire type 5) |
+| <code>int32</code> | Variable-length signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>int64</code> | Variable-length signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>uint32</code> | Variable-length unsigned int | <code>uint32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>uint64</code> | Variable-length unsigned int | <code>uint64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>sint32</code> | Zig-zag encoded signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>sint64</code> | Zig-zag encoded signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | Varint (wire type 0) |
+| <code>fixed32</code> | 4-byte unsigned int | <code>uint32</code> | <code>int</code> | <code>int</code> | 0 | 32-bit (wire type 5) |
+| <code>fixed64</code> | 8-byte unsigned int | <code>uint64</code> | <code>long</code> | <code>int</code> | 0 | 64-bit (wire type 1) |
+| <code>sfixed32</code> | 4-byte signed int | <code>int32</code> | <code>int</code> | <code>int</code> | 0 | 32-bit (wire type 5) |
+| <code>sfixed64</code> | 8-byte signed int | <code>int64</code> | <code>long</code> | <code>int</code> | 0 | 64-bit (wire type 1) |
+| <code>bool</code> | Boolean (true/false) | <code>bool</code> | <code>boolean</code> | <code>bool</code> | false | Varint (wire type 0) |
+| <code>string</code> | UTF-8 encoded text | <code>string</code> | <code>String</code> | <code>str</code> | "" | Length-delimited (wire type 2) |
+| <code>bytes</code> | Arbitrary byte sequence | <code>[]byte</code> | <code>ByteString</code> | <code>bytes</code> | empty | Length-delimited (wire type 2) |
+
+### gRPC Status Codes
+
+| Code | Number | HTTP Mapping | Description |
+|------|--------|-------------|-------------|
+| <code>OK</code> | 0 | 200 | The operation completed successfully |
+| <code>CANCELLED</code> | 1 | 499 | The operation was cancelled by the caller |
+| <code>UNKNOWN</code> | 2 | 500 | Unknown error; use for unexpected exceptions |
+| <code>INVALID_ARGUMENT</code> | 3 | 400 | Client specified an invalid argument |
+| <code>DEADLINE_EXCEEDED</code> | 4 | 504 | Deadline expired before the operation completed |
+| <code>NOT_FOUND</code> | 5 | 404 | Some requested entity was not found |
+| <code>ALREADY_EXISTS</code> | 6 | 409 | Entity already exists (idempotent creation) |
+| <code>PERMISSION_DENIED</code> | 7 | 403 | Caller does not have permission to execute the operation |
+| <code>RESOURCE_EXHAUSTED</code> | 8 | 429 | Resource quota exhausted or rate limit exceeded |
+| <code>FAILED_PRECONDITION</code> | 9 | 400 | System is not in the correct state for the operation |
+| <code>ABORTED</code> | 10 | 409 | Operation aborted (e.g., concurrency conflict) |
+| <code>OUT_OF_RANGE</code> | 11 | 400 | Operation was attempted past the valid range |
+| <code>UNIMPLEMENTED</code> | 12 | 501 | Operation is not implemented or not supported |
+| <code>INTERNAL</code> | 13 | 500 | Internal errors (e.g., broken invariants) |
+| <code>UNAVAILABLE</code> | 14 | 503 | Service is currently unavailable (transient) |
+| <code>DATA_LOSS</code> | 15 | 500 | Unrecoverable data loss or corruption |
+| <code>UNAUTHENTICATED</code> | 16 | 401 | Request lacks valid authentication credentials |
+
+### Service Option Reference
+
+\`\`\`protobuf
+syntax = "proto3";
+
+package reference.v1;
+
+service MyService {
+  // Idempotency level — hints to clients whether retries are safe
+  rpc SafeRetry(MyRequest) returns (MyResponse) {
+    option idempotency_level = IDEMPOTENT;       // Safe to retry; same result each time
+  }
+
+  rpc UnsafeWrite(MyRequest) returns (MyResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;  // Read-only; no side effects
+    // option idempotency_level = IDEMPOTENCY_UNKNOWN;  // Default; retry behavior unspecified
+  }
+}
+
+// Common method options imported from google.api
+import "google/api/annotations.proto";     // HTTP binding support
+import "google/api/client.proto";          // Client library configuration
+import "google/api/field_behavior.proto";   // Field behavior hints (REQUIRED, OUTPUT_ONLY, etc.)
+import "google/api/resource.proto";         // Resource name patterns
+
+message MyRequest {
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,  // Client must set this field
+    (google.api.resource_reference) = {
+      type: "example.com/MyResource"          // Resource type for documentation
+    }
+  ];
+  int32 page_size = 2 [
+    (google.api.field_behavior) = OPTIONAL    // Client may omit (default applied server-side)
+  ];
+}
+
+import "google/protobuf/descriptor.proto";  // For custom options
+
+// Custom option extension pattern (advanced)
+extend google.protobuf.MethodOptions {
+  optional bool rate_limit = 50000;            // Custom field number in extension range
+}
+
+service RateLimitedService {
+  rpc ExpensiveOp(MyRequest) returns (MyResponse) {
+    option (rate_limit) = true;                // Apply custom rate-limiting behavior
+  }
+}
+\`\`\`
+
+---
+
+## Practice Questions
+
+1. What are the four types of RPC in gRPC, and when would you choose each one over the others?
+
+2. Explain how HTTP/2 multiplexing benefits gRPC compared to HTTP/1.1 REST APIs. What problem does it solve?
+
+3. Why does proto3 omit default values (zero values) during serialization? How can you model a field where you need to distinguish between <code>0</code> and unset?
+
+4. Describe the difference between a unary interceptor and a stream interceptor. Write a server-side interceptor that measures and logs RPC duration.
+
+5. How does client-side load balancing work in gRPC? Compare round_robin, ring_hash (consistent hashing), and weighted_target policies with specific use cases.
+
+6. What is the purpose of gRPC reflection, and how does it improve developer experience? Provide a sample grpcurl workflow.
+
+7. You have a large file upload scenario (500 MB). Should you use a unary RPC or a client-streaming RPC? Explain the trade-offs and any configuration changes needed.
+
+8. A production gRPC service is experiencing intermittent failures with status code <code>UNAVAILABLE</code>. List three possible causes and the corresponding remediation steps.
+
+9. Design a proto file for a notification service that supports email, SMS, and push notifications. Use oneof, enums, and at least one well-known type.
+
+10. Your team wants to expose the gRPC service to browser-based clients that cannot use HTTP/2. How would you accomplish this, and what additional considerations arise?
+`,
+            tags: ["gRPC", "API Design", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-database",
+            title: "Database Design & SQL",
+            shortDesc: "Complete database reference — normalization, indexing, query optimization, transactions, ACID, NoSQL tradeoffs, and ORMs.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Normalization: 1NF, 2NF, 3NF, BCNF — reducing redundancy while preserving dependencies.",
+              "Indexing: B-tree, hash, GiST, GIN — when each applies and query plan analysis.",
+              "ACID: Atomicity, Consistency, Isolation, Durability — isolation levels and phenomena.",
+              "Query optimization: EXPLAIN ANALYZE, index-only scans, covering indexes, JOIN strategies.",
+              "NoSQL tradeoffs: document (MongoDB), wide-column (Cassandra), graph (Neo4j) — CAP theorem.",
+            ],
+            content: `## Quick Reference
+Database design structures data to reduce redundancy, ensure integrity, and enable efficient queries. SQL is the standard language for relational databases. Tables organize data into rows and columns, primary keys uniquely identify rows, foreign keys establish relationships, and indexes speed retrieval. Normalization eliminates duplication across levels (1NF, 2NF, 3NF, BCNF). Transactions ensure groups of operations succeed or fail together (ACID). Choosing SQL vs NoSQL depends on consistency, scale, and query pattern requirements.
+## Relational Fundamentals
+### Tables, Rows, and Columns
+A <code>table</code> organizes data into rows (records) and columns (attributes):
+<code>-- Create a table with columns and constraints</code>
+<code>CREATE TABLE users (</code>
+<code>    id SERIAL PRIMARY KEY,                -- Auto-incrementing integer primary key</code>
+<code>    email VARCHAR(255) NOT NULL UNIQUE,   -- Must be unique and cannot be NULL</code>
+<code>    username VARCHAR(100) NOT NULL,       -- Required field</code>
+<code>    age INTEGER CHECK (age >= 0),         -- Must satisfy the condition</code>
+<code>    role VARCHAR(20) DEFAULT 'viewer',    -- Default value if not provided</code>
+<code>    created_at TIMESTAMP DEFAULT NOW()    -- Automatically set to current time</code>
+<code>);</code>
+### Primary Keys
+A <code>PRIMARY KEY</code> uniquely identifies each row. It must be unique and NOT NULL. Can be a single column or composite.
+<code>-- Single-column primary key with UUID</code>
+<code>CREATE TABLE orders (</code>
+<code>    order_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),  -- UUID avoids sequential guessability</code>
+<code>    total DECIMAL(10,2) NOT NULL,</code>
+<code>    status VARCHAR(20) DEFAULT 'pending'</code>
+<code>);</code>
+<code>-- Composite primary key: two columns together form the unique identifier</code>
+<code>CREATE TABLE order_items (</code>
+<code>    order_id UUID NOT NULL,</code>
+<code>    product_id INTEGER NOT NULL,</code>
+<code>    quantity INTEGER NOT NULL,</code>
+<code>    price DECIMAL(10,2) NOT NULL,</code>
+<code>    PRIMARY KEY (order_id, product_id)   -- Each combination must be unique</code>
+<code>);</code>
+### Foreign Keys
+A <code>FOREIGN KEY</code> links a column to the primary key of another table, enforcing referential integrity.
+<code>-- Foreign key ensures every order references an existing user</code>
+<code>CREATE TABLE orders (</code>
+<code>    order_id UUID PRIMARY KEY,</code>
+<code>    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,  -- Delete orders when user deleted</code>
+<code>    total DECIMAL(10,2) NOT NULL</code>
+<code>);</code>
+<code>-- Referential actions available:</code>
+<code>-- ON DELETE CASCADE      Delete child rows when parent is deleted</code>
+<code>-- ON DELETE SET NULL     Set child FK to NULL when parent is deleted</code>
+<code>-- ON DELETE RESTRICT     Prevent parent deletion if children exist</code>
+<code>-- ON DELETE NO ACTION    Same as RESTRICT (deferred in some databases)</code>
+### Constraints Reference
+| Constraint | Purpose | Example |
+|---|---|---|
+| <code>NOT NULL</code> | Column cannot contain NULL | <code>email VARCHAR(255) NOT NULL</code> |
+| <code>UNIQUE</code> | All values must be distinct | <code>username VARCHAR(100) UNIQUE</code> |
+| <code>PRIMARY KEY</code> | Unique row identifier (NOT NULL + UNIQUE) | <code>id SERIAL PRIMARY KEY</code> |
+| <code>FOREIGN KEY</code> | Value must exist in another table | <code>user_id INTEGER REFERENCES users(id)</code> |
+| <code>CHECK</code> | Value must satisfy a boolean expression | <code>CHECK (age >= 0 AND age < 150)</code> |
+| <code>DEFAULT</code> | Default value when none provided | <code>active BOOLEAN DEFAULT true</code> |
+| <code>EXCLUSION</code> | No two rows satisfy a condition (PG) | <code>EXCLUDE USING gist (period WITH &&)</code> |
+## Normalization
+Normalization reduces redundancy and avoids update/insert/delete anomalies. Each normal form adds stricter rules.
+### First Normal Form (1NF)
+Each column must contain atomic values. No repeating groups or arrays.
+<code>-- BAD (violates 1NF): Multiple phone numbers in one column as comma-separated string</code>
+<code>CREATE TABLE contacts_bad (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100),</code>
+<code>    phones VARCHAR(500)  -- Contains "555-0100,555-0101,555-0102" (not atomic)</code>
+<code>);</code>
+<code>-- GOOD (1NF compliant): Each phone number is its own row</code>
+<code>CREATE TABLE contacts (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100) NOT NULL</code>
+<code>);</code>
+<code>CREATE TABLE contact_phones (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,</code>
+<code>    phone VARCHAR(20) NOT NULL  -- Each value is atomic, one per row</code>
+<code>);</code>
+### Second Normal Form (2NF)
+Must be in 1NF AND every non-key column must depend on the entire primary key (no partial dependency). Relevant only for composite keys.
+<code>-- BAD (violates 2NF): product_name depends only on product_id, not on the full PK (order_id, product_id)</code>
+<code>CREATE TABLE order_details_bad (</code>
+<code>    order_id INTEGER,</code>
+<code>    product_id INTEGER,</code>
+<code>    quantity INTEGER,</code>
+<code>    product_name VARCHAR(100),  -- Partial dependency on product_id alone</code>
+<code>    PRIMARY KEY (order_id, product_id)</code>
+<code>);</code>
+<code>-- GOOD (2NF compliant): Split product info into its own table</code>
+<code>CREATE TABLE products (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100) NOT NULL</code>
+<code>);</code>
+<code>CREATE TABLE order_details (</code>
+<code>    order_id INTEGER,</code>
+<code>    product_id INTEGER REFERENCES products(id),</code>
+<code>    quantity INTEGER NOT NULL,</code>
+<code>    PRIMARY KEY (order_id, product_id)</code>
+<code>);</code>
+### Third Normal Form (3NF)
+Must be in 2NF AND every non-key column must depend only on the primary key (no transitive dependency).
+<code>-- BAD (violates 3NF): city_name depends on zip_code, not on user_id (transitive dependency)</code>
+<code>CREATE TABLE users_bad (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100),</code>
+<code>    zip_code VARCHAR(10),</code>
+<code>    city_name VARCHAR(100)  -- Depends on zip_code, not directly on id</code>
+<code>);</code>
+<code>-- GOOD (3NF compliant): City is determined by zip_code, extracted to its own table</code>
+<code>CREATE TABLE users (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100),</code>
+<code>    zip_code VARCHAR(10) REFERENCES zip_codes(code)</code>
+<code>);</code>
+<code>CREATE TABLE zip_codes (</code>
+<code>    code VARCHAR(10) PRIMARY KEY,</code>
+<code>    city_name VARCHAR(100) NOT NULL</code>
+<code>);</code>
+### Boyce-Codd Normal Form (BCNF)
+A stricter version of 3NF where every determinant (column determining another) must be a candidate key.
+<code>-- BAD (violates BCNF): professor determines subject, but professor is not a candidate key</code>
+<code>CREATE TABLE enrollments_bad (</code>
+<code>    student_id INTEGER,</code>
+<code>    subject VARCHAR(100),</code>
+<code>    professor VARCHAR(100),  -- professor determines subject, not a key here</code>
+<code>    PRIMARY KEY (student_id, subject)</code>
+<code>);</code>
+<code>-- GOOD (BCNF compliant): Split so professor is a key in its own table</code>
+<code>CREATE TABLE enrollments (</code>
+<code>    student_id INTEGER,</code>
+<code>    professor_id INTEGER,</code>
+<code>    PRIMARY KEY (student_id, professor_id)</code>
+<code>);</code>
+<code>CREATE TABLE professors (</code>
+<code>    id SERIAL PRIMARY KEY,</code>
+<code>    name VARCHAR(100) NOT NULL,</code>
+<code>    subject VARCHAR(100) NOT NULL</code>
+<code>);</code>
+### Denormalization Tradeoffs
+| Aspect | Normalized | Denormalized |
+|---|---|---|
+| Storage | Less storage (no redundancy) | More storage (duplicated data) |
+| Read speed | Slower (more JOINs) | Faster (fewer JOINs) |
+| Write speed | Faster (one place to update) | Slower (must update multiple copies) |
+| Consistency | Higher (single source of truth) | Lower (risk of drift) |
+| Best for | OLTP (transactional workloads) | OLAP (analytical / reporting) |
+| Example | E-commerce order processing | Dashboard with precomputed aggregates |
+## Data Types
+### PostgreSQL Type Reference
+| Category | Type | Bytes | Range / Description |
+|---|---|---|---|
+| Integer | <code>SMALLINT</code> | 2 | -32,768 to 32,767 |
+| Integer | <code>INTEGER</code> | 4 | -2.1 billion to 2.1 billion |
+| Integer | <code>BIGINT</code> | 8 | -9.2 quintillion to 9.2 quintillion |
+| Serial | <code>SERIAL</code> | 4 | Auto-incrementing (1 to 2.1 billion) |
+| Serial | <code>BIGSERIAL</code> | 8 | Auto-incrementing large range |
+| Float | <code>REAL</code> | 4 | 6 decimal digits precision |
+| Float | <code>DOUBLE PRECISION</code> | 8 | 15 decimal digits precision |
+| Numeric | <code>NUMERIC(p,s)</code> | variable | Exact precision (e.g., <code>NUMERIC(10,2)</code>) |
+| Char | <code>CHAR(n)</code> | n | Fixed-length, space-padded |
+| Char | <code>VARCHAR(n)</code> | variable | Variable-length with limit |
+| Char | <code>TEXT</code> | variable | Unlimited length |
+| Binary | <code>BYTEA</code> | variable | Raw byte sequences |
+| Temporal | <code>DATE</code> | 4 | Date only (YYYY-MM-DD) |
+| Temporal | <code>TIME</code> | 8 | Time without time zone |
+| Temporal | <code>TIMESTAMP</code> | 8 | Date and time without time zone |
+| Temporal | <code>TIMESTAMPTZ</code> | 8 | Date and time with time zone |
+| Temporal | <code>INTERVAL</code> | 16 | Time duration |
+| UUID | <code>UUID</code> | 16 | Universally Unique Identifier |
+| JSON | <code>JSON</code> | variable | Exact JSON text (no indexing) |
+| JSON | <code>JSONB</code> | variable | Binary JSON (GIN-indexable, operators) |
+| Array | <code>INTEGER[]</code> | variable | Array of any type |
+| Enum | <code>CREATE TYPE</code> | variable | User-defined enumerated type |
+| Network | <code>INET</code> | variable | IPv4 or IPv6 address |
+| Geometric | <code>POINT</code> | 16 | Point on a plane (x, y) |
+| Range | <code>INT4RANGE</code> | variable | Range of integers (e.g., <code>[1,10)</code>) |
+| Bit | <code>BIT VARYING(n)</code> | variable | Variable-length bit string |
+| Full text | <code>TSVECTOR</code> | variable | Document vector for full-text search |
+### JSONB Operators
+| Operator | Description | Example |
+|---|---|---|
+| <code>-></code> | Get JSON field as JSON | <code>data->'name'</code> |
+| <code>->></code> | Get JSON field as text | <code>data->>'name'</code> |
+| <code>#></code> | Get path as JSON | <code>data#>'{address,city}'</code> |
+| <code>#>></code> | Get path as text | <code>data#>>'{address,city}'</code> |
+| <code>@></code> | Contains (left contains right) | <code>data @> '{"tags": ["sql"]}'::jsonb</code> |
+| <code>?</code> | Key exists | <code>data ? 'email'</code> |
+| <code>?|</code> | Any of keys exist | <code>data ?| array['a', 'b']</code> |
+| <code>?&</code> | All keys exist | <code>data ?& array['a', 'b']</code> |
+| <code>||</code> | Concatenate jsonb | <code>data || '{"new_key": "value"}'::jsonb</code> |
+| <code>-</code> | Delete key | <code>data - 'unwanted_key'</code> |
+## SQL Reference
+### SELECT
+<code>-- Basic SELECT with all major clauses in order of evaluation (numbers show execution order)</code>
+<code>SELECT                          -- Step 6: Project columns</code>
+<code>    u.id,</code>
+<code>    u.username,</code>
+<code>    COUNT(o.id) AS order_count,  -- Aggregate function with alias</code>
+<code>    ROW_NUMBER() OVER (          -- Window function: rank within partition</code>
+<code>        PARTITION BY u.role     -- Reset row number for each role</code>
+<code>        ORDER BY u.created_at   -- Order rows within each partition</code>
+<code>    ) AS role_rank</code>
+<code>FROM users u                    -- Step 1: Source tables</code>
+<code>LEFT JOIN orders o ON u.id = o.user_id  -- Step 2: JOIN</code>
+<code>WHERE u.active = true           -- Step 3: Filter rows (before grouping)</code>
+<code>GROUP BY u.id, u.username, u.role, u.created_at  -- Step 4: Group rows for aggregation</code>
+<code>HAVING COUNT(o.id) > 0          -- Step 5: Filter groups (after GROUP BY)</code>
+<code>ORDER BY order_count DESC       -- Step 7: Sort results</code>
+<code>LIMIT 10                        -- Step 8: Maximum rows to return</code>
+<code>OFFSET 0;                       -- Step 9: Rows to skip (for pagination)</code>
+### INSERT
+<code>-- Single row insert</code>
+<code>INSERT INTO users (username, email, age)</code>
+<code>VALUES ('alice', 'alice@example.com', 30);</code>
+<code>-- Multi-row insert (more efficient than multiple single inserts)</code>
+<code>INSERT INTO users (username, email, age)</code>
+<code>VALUES</code>
+<code>    ('bob', 'bob@example.com', 25),</code>
+<code>    ('carol', 'carol@example.com', 28),</code>
+<code>    ('dave', 'dave@example.com', 35);</code>
+<code>-- Insert from SELECT (common for ETL pipelines and archiving)</code>
+<code>INSERT INTO user_archive (id, username, email, deleted_at)</code>
+<code>SELECT id, username, email, NOW()</code>
+<code>FROM users</code>
+<code>WHERE active = false;            -- Only archive inactive users</code>
+<code>-- Upsert: INSERT ... ON CONFLICT DO UPDATE (PostgreSQL)</code>
+<code>INSERT INTO users (id, username, email, counter)</code>
+<code>VALUES (1, 'alice', 'alice@new.com', 1)</code>
+<code>ON CONFLICT (id) DO UPDATE       -- If id=1 already exists, update instead</code>
+<code>SET</code>
+<code>    email = EXCLUDED.email,      -- EXCLUDED refers to the row that would have been inserted</code>
+<code>    counter = users.counter + 1, -- Increment counter on each upsert</code>
+<code>    updated_at = NOW();</code>
+<code>-- RETURNING clause (PostgreSQL) returns affected rows for confirmation</code>
+<code>INSERT INTO users (username, email)</code>
+<code>VALUES ('new_user', 'new@example.com')</code>
+<code>RETURNING id, created_at;        -- Returns generated id and timestamp</code>
+### UPDATE
+<code>-- Basic update with WHERE to limit affected rows</code>
+<code>UPDATE users</code>
+<code>SET</code>
+<code>    email = 'updated@example.com',</code>
+<code>    updated_at = NOW()</code>
+<code>WHERE id = 42;                   -- Only update user with id 42</code>
+<code>-- Update with correlated subquery (PostgreSQL FROM clause)</code>
+<code>UPDATE products p</code>
+<code>SET</code>
+<code>    display_price = p.base_price * (1 - COALESCE(d.discount_pct, 0))</code>
+<code>FROM discounts d                 -- PostgreSQL-specific: join in UPDATE</code>
+<code>WHERE d.product_id = p.id</code>
+<code>AND d.is_active = true;          -- Only apply active discounts</code>
+<code>-- Update with RETURNING for auditing</code>
+<code>UPDATE users</code>
+<code>SET status = 'archived'</code>
+<code>WHERE last_login < NOW() - INTERVAL '365 days'</code>
+<code>RETURNING id, username, status;  -- Log which rows were affected</code>
+### DELETE
+<code>-- Delete specific rows matching a condition</code>
+<code>DELETE FROM sessions</code>
+<code>WHERE expires_at < NOW();        -- Remove expired sessions</code>
+<code>-- Delete using a JOIN condition (PostgreSQL USING syntax)</code>
+<code>DELETE FROM order_items oi</code>
+<code>USING orders o                   -- USING is PostgreSQL-specific for DELETE joins</code>
+<code>WHERE oi.order_id = o.id</code>
+<code>AND o.status = 'cancelled';      -- Only delete items from cancelled orders</code>
+<code>-- Delete with RETURNING for audit trail</code>
+<code>DELETE FROM temp_data</code>
+<code>WHERE created_at < NOW() - INTERVAL '7 days'</code>
+<code>RETURNING id;                    -- Return deleted IDs for logging</code>
+### WHERE Clause Operators
+| Operator | Description | Example |
+|---|---|---|
+| <code>=</code> | Equal | <code>WHERE status = 'active'</code> |
+| <code><></code> or <code>!=</code> | Not equal | <code>WHERE role <> 'admin'</code> |
+| <code>></code>, <code><</code> | Greater than, less than | <code>WHERE age > 18</code> |
+| <code>>=</code>, <code><=</code> | Greater/less than or equal | <code>WHERE price <= 100</code> |
+| <code>BETWEEN</code> | Inclusive range | <code>WHERE age BETWEEN 18 AND 65</code> |
+| <code>LIKE</code> | Pattern match (% wildcard, _ single) | <code>WHERE name LIKE 'A%'</code> |
+| <code>ILIKE</code> | Case-insensitive LIKE (PostgreSQL) | <code>WHERE name ILIKE 'alice'</code> |
+| <code>IN</code> | Value in a set | <code>WHERE status IN ('active', 'pending')</code> |
+| <code>IS NULL</code> | Is NULL (cannot use = NULL) | <code>WHERE deleted_at IS NULL</code> |
+| <code>IS NOT NULL</code> | Is not NULL | <code>WHERE email IS NOT NULL</code> |
+| <code>EXISTS</code> | Subquery returns any rows | <code>WHERE EXISTS (SELECT 1 FROM orders WHERE user_id = users.id)</code> |
+| <code>ANY</code> | Compares to any subquery result | <code>WHERE id = ANY (SELECT user_id FROM orders)</code> |
+| <code>ALL</code> | Compares to all subquery results | <code>WHERE price > ALL (SELECT base_price FROM discounts)</code> |
+### Aggregate Functions
+| Function | Description | Example |
+|---|---|---|
+| <code>COUNT(*)</code> | Count all rows | <code>SELECT COUNT(*) FROM users</code> |
+| <code>COUNT(DISTINCT col)</code> | Count distinct values | <code>SELECT COUNT(DISTINCT role) FROM users</code> |
+| <code>SUM(col)</code> | Sum of values | <code>SELECT SUM(amount) FROM payments</code> |
+| <code>AVG(col)</code> | Average value | <code>SELECT AVG(price) FROM products</code> |
+| <code>MIN(col)</code> | Minimum value | <code>SELECT MIN(created_at) FROM users</code> |
+| <code>MAX(col)</code> | Maximum value | <code>SELECT MAX(salary) FROM employees</code> |
+| <code>STRING_AGG(col, delim)</code> | Concatenate values (PostgreSQL) | <code>SELECT STRING_AGG(name, ', ') FROM users</code> |
+| <code>ARRAY_AGG(col)</code> | Collect values into array (PG) | <code>SELECT ARRAY_AGG(id) FROM users</code> |
+### Window Functions
+<code>-- Window functions perform calculations across rows related to the current row</code>
+<code>SELECT</code>
+<code>    name,</code>
+<code>    department,</code>
+<code>    salary,</code>
+<code>    RANK() OVER (ORDER BY salary DESC) AS rank,           -- Rank with gaps (1, 1, 3)</code>
+<code>    DENSE_RANK() OVER (ORDER BY salary DESC) AS dense,    -- Rank without gaps (1, 1, 2)</code>
+<code>    ROW_NUMBER() OVER (ORDER BY salary DESC) AS row_num,  -- Unique row number (1, 2, 3)</code>
+<code>    LAG(salary, 1) OVER (ORDER BY salary) AS prev_salary, -- Previous row's value</code>
+<code>    LEAD(salary, 1) OVER (ORDER BY salary) AS next_salary, -- Next row's value</code>
+<code>    AVG(salary) OVER (PARTITION BY department) AS dept_avg, -- Average per department</code>
+<code>    SUM(salary) OVER (ORDER BY salary ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_total</code>
+<code>FROM employees;</code>
+## JOINs
+JOINs combine rows from two or more tables based on a related column.
+### INNER JOIN
+Returns only rows with matching values in both tables.
+<code>-- INNER JOIN: only users who have placed at least one order</code>
+<code>SELECT u.name, o.id AS order_id, o.total</code>
+<code>FROM users u</code>
+<code>INNER JOIN orders o ON u.id = o.user_id;  -- Users without orders are excluded</code>
+Users:            Orders:           Result (INNER JOIN):
++----+------+    +----+---------+    +------+--------+-------+
+| id | name |    | id | user_id |    | name | ord_id | total |
++----+------+    +----+---------+    +------+--------+-------+
+| 1  | A    |    | 101 | 1       |    | A    | 101    | 50    |
+| 2  | B    |    | 102 | 1       |    | A    | 102    | 30    |
+| 3  | C    |    | 103 | 2       |    | B    | 103    | 20    |
++----+------+    +----+---------+    +------+--------+-------+
+### LEFT JOIN (LEFT OUTER JOIN)
+Returns all rows from the left table, with matching rows from the right table. NULLs where no match.
+<code>-- LEFT JOIN: all users, with their orders (NULL if no orders)</code>
+<code>SELECT u.name, o.id AS order_id, o.total</code>
+<code>FROM users u</code>
+<code>LEFT JOIN orders o ON u.id = o.user_id;</code>
+Users:            Orders:           Result (LEFT JOIN):
++----+------+    +----+---------+    +------+--------+-------+
+| id | name |    | id | user_id |    | name | ord_id | total |
++----+------+    +----+---------+    +------+--------+-------+
+| 1  | A    |    | 101 | 1       |    | A    | 101    | 50    |
+| 2  | B    |    | 102 | 1       |    | A    | 102    | 30    |
+| 3  | C    |    | 103 | 2       |    | B    | 103    | 20    |
++----+------+    +----+---------+    | C    | NULL   | NULL  |
+                                     +------+--------+-------+
+### RIGHT JOIN (RIGHT OUTER JOIN)
+Returns all rows from the right table, with matching rows from the left table. Opposite of LEFT JOIN.
+<code>-- RIGHT JOIN: all orders, with their users (NULL if user missing)</code>
+<code>SELECT u.name, o.id AS order_id, o.total</code>
+<code>FROM users u</code>
+<code>RIGHT JOIN orders o ON u.id = o.user_id;</code>
+### FULL JOIN (FULL OUTER JOIN)
+Returns all rows from both tables, with NULLs where no match exists.
+<code>-- FULL JOIN: all users and all orders, matched where possible</code>
+<code>SELECT u.name, o.id AS order_id, o.total</code>
+<code>FROM users u</code>
+<code>FULL JOIN orders o ON u.id = o.user_id;</code>
+### CROSS JOIN
+Cartesian product: every row from table A paired with every row from table B.
+<code>-- CROSS JOIN: every possible combination (use with caution)</code>
+<code>SELECT sizes.name AS size, colors.name AS color</code>
+<code>FROM sizes</code>
+<code>CROSS JOIN colors;              -- Produces rows = len(sizes) * len(colors)</code>
+### SELF JOIN
+A table joined with itself. Requires table aliases.
+<code>-- SELF JOIN: find employee-manager relationships in one table</code>
+<code>SELECT e.name AS employee, m.name AS manager</code>
+<code>FROM employees e</code>
+<code>LEFT JOIN employees m ON e.manager_id = m.id;  -- e and m are aliases for the same table</code>
+### LATERAL JOIN (PostgreSQL)
+Allows a subquery in the FROM clause to reference columns from preceding FROM items. Evaluated once per row.
+<code>-- LATERAL: for each user, get the 3 most recent orders</code>
+<code>SELECT u.name, recent.order_id, recent.total</code>
+<code>FROM users u</code>
+<code>LEFT JOIN LATERAL (</code>
+<code>    SELECT o.id AS order_id, o.total    -- This subquery runs once per user</code>
+<code>    FROM orders o</code>
+<code>    WHERE o.user_id = u.id              -- References the outer u.id</code>
+<code>    ORDER BY o.created_at DESC</code>
+<code>    LIMIT 3</code>
+<code>) recent ON true;</code>
+### JOIN Summary
+| JOIN Type | Returns |
+|---|---|
+| <code>INNER JOIN</code> | Only rows where both tables match |
+| <code>LEFT JOIN</code> | All left rows, right columns NULL where no match |
+| <code>RIGHT JOIN</code> | All right rows, left columns NULL where no match |
+| <code>FULL JOIN</code> | All rows from both tables, NULLs where no match |
+| <code>CROSS JOIN</code> | Every combination of rows (Cartesian product) |
+| <code>SELF JOIN</code> | Table joined with itself (requires aliases) |
+| <code>LATERAL JOIN</code> | Subquery evaluated per row of outer table |
+## Indexing
+Indexes speed up data retrieval at the cost of slower writes and storage.
+### Index Types
+| Type | Description | Best For | Example |
+|---|---|---|---|
+| <code>B-tree</code> | Balanced tree; default index type | Equality and range queries, sorting | <code>CREATE INDEX idx_email ON users(email);</code> |
+| <code>Hash</code> | Hash table; equality only | Exact lookups only | <code>CREATE INDEX idx_id ON users USING hash (id);</code> |
+| <code>GiST</code> | Generalized Search Tree | Full-text search, geometric data, ranges | <code>CREATE INDEX idx_tsv ON docs USING gist (tsv);</code> |
+| <code>GIN</code> | Generalized Inverted Index | JSONB, arrays, full-text search (multiple keys per row) | <code>CREATE INDEX idx_tags ON articles USING gin (tags);</code> |
+| <code>BRIN</code> | Block Range Index | Very large tables with naturally ordered data (logs, time series) | <code>CREATE INDEX idx_created ON logs USING brin (created_at);</code> |
+### Composite Indexes
+Indexes on multiple columns. Column order matters significantly.
+<code>-- Composite index: column order affects which queries use it</code>
+<code>CREATE INDEX idx_user_status_created</code>
+<code>ON users (status, created_at DESC);  -- First status, then created_at</code>
+<code>-- This index supports:</code>
+<code>SELECT * FROM users WHERE status = 'active' ORDER BY created_at DESC;       -- Fully uses index</code>
+<code>SELECT * FROM users WHERE status = 'active' AND created_at > '2023-01-01'; -- Fully uses index</code>
+<code>SELECT * FROM users WHERE status = 'active';                                -- Uses first column</code>
+<code>-- This does NOT use the index:</code>
+<code>SELECT * FROM users ORDER BY created_at DESC;  -- Cannot skip the first column (status)</code>
+### Partial Indexes
+Index only a subset of rows. Smaller and faster than full indexes.
+<code>-- Partial index: only index active users (95% of queries filter by active=true)</code>
+<code>CREATE INDEX idx_active_users_email</code>
+<code>ON users (email)</code>
+<code>WHERE active = true;  -- Index contains only active users</code>
+### Covering Indexes (INCLUDE)
+Store extra column values in the index to avoid table lookups.
+<code>-- Covering index: index has all columns needed by queries</code>
+<code>CREATE INDEX idx_covering</code>
+<code>ON orders (user_id)</code>
+<code>INCLUDE (total, status, created_at);  -- These values are stored in the index itself</code>
+<code>-- This query can be answered entirely from the index (index-only scan):</code>
+<code>SELECT total, status, created_at</code>
+<code>FROM orders</code>
+<code>WHERE user_id = 42;                   -- No need to read the table heap</code>
+### EXPLAIN ANALYZE
+<code>-- Analyze a query plan (run in production carefully)</code>
+<code>EXPLAIN ANALYZE</code>
+<code>SELECT u.name, COUNT(o.id) AS order_count</code>
+<code>FROM users u</code>
+<code>LEFT JOIN orders o ON u.id = o.user_id</code>
+<code>WHERE u.active = true</code>
+<code>GROUP BY u.id</code>
+<code>ORDER BY order_count DESC</code>
+<code>LIMIT 10;</code>
+                                                          QUERY PLAN
+------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=100.50..120.30 rows=10 width=72) (actual time=15.2..15.4 rows=10 loops=1)
+   ->  Sort  (cost=100.50..105.50 rows=2000 width=72) (actual time=15.2..15.3 rows=10 loops=1)
+         Sort Key: (count(o.id)) DESC
+         Sort Method: top-N heapsort  Memory: 25kB
+         ->  HashAggregate  (cost=40.00..80.00 rows=2000 width=72) (actual time=10.1..12.0 rows=2000 loops=1)
+               Group Key: u.id
+               ->  Hash Right Join  (cost=10.00..30.00 rows=2000 width=40) (actual time=1.5..5.0 rows=2000 loops=1)
+                     Hash Cond: (o.user_id = u.id)
+                     ->  Seq Scan on orders o  (cost=0.00..10.00 rows=500 width=8) (actual time=0.1..0.5 rows=500 loops=1)
+                     ->  Hash  (cost=5.00..5.00 rows=200 width=32) (actual time=1.0..1.0 rows=200 loops=1)
+                           ->  Seq Scan on users u  (cost=0.00..5.00 rows=200 width=32) (actual time=0.1..0.3 rows=200 loops=1)
+                                 Filter: active = true
+ Planning Time: 0.5 ms
+ Execution Time: 15.8 ms
+Key terms in EXPLAIN output:
+- <code>cost=100.50..120.30</code> -- Estimated cost (first number is startup cost, second is total)
+- <code>actual time=15.2..15.4</code> -- Actual execution time in ms
+- <code>rows=10</code> -- Number of rows actually returned
+- <code>loops=1</code> -- How many times the node executed
+- <code>Seq Scan</code> -- Sequential scan (reading entire table)
+- <code>Index Scan</code> -- Index lookup returning to table for rows
+- <code>Index Only Scan</code> -- All needed data in index (fastest)
+- <code>Bitmap Scan</code> -- Combines multiple index scans via bitmap
+- <code>Hash Join</code> -- One table built into hash, other probed against it
+- <code>Merge Join</code> -- Both tables sorted, then merged
+- <code>Nested Loop</code> -- For each row in outer, scan inner (best for small result sets)
+## Transactions and Isolation
+### ACID Properties
+| Property | Meaning | Example |
+|---|---|---|
+| **A**tomicity | All operations succeed or all roll back | Transfer debit/credit must both complete |
+| **C**onsistency | Database always in valid state after transaction | Constraints and rules enforced at commit |
+| **I**solation | Concurrent transactions do not interfere | Each transaction sees a consistent snapshot |
+| **D**urability | Committed data persists after crash | WAL (Write-Ahead Log) written to disk |
+### Transaction Syntax
+<code>-- Explicit transaction with savepoint and rollback</code>
+<code>BEGIN;                              -- Start transaction</code>
+<code>    UPDATE accounts SET balance = balance - 100 WHERE id = 1;</code>
+<code>    SAVEPOINT my_savepoint;          -- Create a savepoint</code>
+<code>    UPDATE accounts SET balance = balance + 100 WHERE id = 2;</code>
+<code>    -- Something went wrong, rollback to savepoint</code>
+<code>    ROLLBACK TO SAVEPOINT my_savepoint;  -- Undo only the second update</code>
+<code>    UPDATE accounts SET balance = balance + 100 WHERE id = 3;</code>
+<code>COMMIT;                             -- Commit all changes</code>
+### Isolation Levels and Phenomena
+| Isolation Level | Dirty Read | Non-Repeatable Read | Phantom Read | Serialization Anomaly |
+|---|---|---|---|---|
+| <code>READ UNCOMMITTED</code> | Possible | Possible | Possible | Possible |
+| <code>READ COMMITTED</code> | Prevented | Possible | Possible | Possible |
+| <code>REPEATABLE READ</code> | Prevented | Prevented | Possible (PG prevents) | Possible |
+| <code>SERIALIZABLE</code> | Prevented | Prevented | Prevented | Prevented |
+### Read Phenomena Explained
+| Phenomenon | Description | Example |
+|---|---|---|
+| **Dirty read** | Read data written by uncommitted transaction | T1 writes row, T2 reads it, T1 rolls back -- T2 saw phantom data |
+| **Non-repeatable read** | Same query returns different results within transaction | T1 reads row, T2 updates it and commits, T1 re-reads -- gets new value |
+| **Phantom read** | Same query returns different rows within transaction | T1 reads range, T2 inserts row in range and commits, T1 re-reads -- sees new row |
+| **Serialization anomaly** | Result of concurrent execution differs from any serial order | Two concurrent transactions produce result not possible if run sequentially |
+### MVCC (Multi-Version Concurrency Control)
+PostgreSQL implements isolation using MVCC. Every transaction sees a snapshot of data as of a point in time.
+<code>-- Each row has hidden system columns used by MVCC:</code>
+<code>-- xmin: the transaction ID that created this row version</code>
+<code>-- xmax: the transaction ID that deleted/updated this row version (0 if live)</code>
+<code>-- When a row is updated, PostgreSQL creates a new version; old version remains</code>
+<code>-- until vacuum removes it</code>
+<code>-- Check transaction visibility with txid_current()</code>
+<code>SELECT txid_current(), xmin, xmax, * FROM users;</code>
+### Setting Isolation Level
+<code>-- Set isolation level for a transaction</code>
+<code>BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;</code>
+<code>-- All reads and writes in this transaction see a consistent snapshot</code>
+<code>-- The database checks for serialization conflicts at commit time</code>
+<code>UPDATE accounts SET balance = balance - 100 WHERE id = 1;</code>
+<code>COMMIT;                            -- If conflict detected, this transaction is rolled back</code>
+## Query Optimization
+### Scan Types
+| Scan Type | When Used | Speed | Example |
+|---|---|---|---|
+| <code>Seq Scan</code> | Full table scan; used when no index or table is small | Slow for large tables | <code>SELECT * FROM users;</code> |
+| <code>Index Scan</code> | Index lookup + heap fetch for non-index columns | Fast for selective queries | <code>SELECT * FROM users WHERE id = 42;</code> |
+| <code>Index Only Scan</code> | All needed columns in the index (no heap access) | Fastest | <code>SELECT id FROM users WHERE id < 100;</code> |
+| <code>Bitmap Scan</code> | Combines multiple indexes with bitwise operations | Medium | <code>SELECT * FROM users WHERE status = 'active' AND age > 18;</code> |
+### JOIN Strategies
+| Strategy | When Used | Memory | Example Scenario |
+|---|---|---|---|
+| <code>Nested Loop</code> | Small outer table, indexed inner join | Low | User + few orders (indexed on user_id) |
+| <code>Hash Join</code> | One table fits in memory, no index needed | High (hash table) | Large unindexed join |
+| <code>Merge Join</code> | Both tables sorted on join key | Low | Pre-sorted or index-ordered data |
+### CTE vs Subquery
+<code>-- CTE (Common Table Expression) with WITH clause</code>
+<code>-- CTEs are optimization fences in PostgreSQL: materialized separately</code>
+<code>WITH recent_orders AS (</code>
+<code>    SELECT * FROM orders WHERE created_at > NOW() - INTERVAL '30 days'</code>
+<code>)</code>
+<code>SELECT u.name, COUNT(ro.id) AS recent_count</code>
+<code>FROM users u</code>
+<code>LEFT JOIN recent_orders ro ON u.id = ro.user_id</code>
+<code>GROUP BY u.id;</code>
+<code>-- Subquery: inlined and can be optimized together with outer query</code>
+<code>SELECT u.name, (</code>
+<code>    SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id  -- Correlated subquery</code>
+<code>) AS order_count</code>
+<code>FROM users u;</code>
+<code>-- Key difference:</code>
+<code>-- CTE is materialized once (may cause performance issues for large datasets)</code>
+<code>-- Subquery can be inlined and optimized as part of the whole query plan</code>
+<code>-- In PostgreSQL 12+, CTEs can be inlined if not referenced multiple times</code>
+### Optimization Tips
+1. Use <code>EXPLAIN ANALYZE</code> before optimizing to understand the actual query plan
+2. Look for <code>Seq Scan</code> on large tables -- add an index
+3. Prefer <code>Index Only Scan</code> by using covering indexes with <code>INCLUDE</code>
+4. Avoid <code>SELECT *</code> in production queries -- only fetch needed columns
+5. Use <code>LIMIT</code> to reduce work for the planner
+6. Avoid functions on indexed columns in WHERE: <code>WHERE DATE(created_at) = '2023-01-01'</code> defeats the index; use <code>WHERE created_at >= '2023-01-01' AND created_at < '2023-01-02'</code>
+7. Prefer <code>EXISTS</code> over <code>IN</code> for large subquery results
+8. Monitor slow query log and set <code>log_min_duration_statement</code>
+## NoSQL Tradeoffs
+### Database Types
+| Type | Database | Data Model | Use Case | Strengths | Weaknesses |
+|---|---|---|---|---|---|
+| Document | MongoDB | JSON-like documents | Content management, catalogs, flexible schema | Schema flexibility, rich queries, horizontal scaling | No ACID across documents, joins are expensive |
+| Key-Value | Redis | Key-value pairs | Caching, session store, real-time counters | Extremely fast (in-memory), simple data model | Limited querying, memory-bound |
+| Wide-Column | Cassandra | Column families | Time-series, IoT, large-scale writes | High write throughput, linear scalability, no single point of failure | No JOINs, eventual consistency, complex data modeling |
+| Graph | Neo4j | Nodes + edges (relationships) | Social networks, recommendation engines, fraud detection | Natural for connected data, fast traversals | Difficult to shard, can be memory-intensive |
+### CAP Theorem
+A distributed database can only guarantee two of three properties simultaneously:
+| Property | Meaning |
+|---|---|
+| **C**onsistency | Every read receives the most recent write or an error |
+| **A**vailability | Every request receives a (non-error) response, without guarantee it contains the latest write |
+| **P**artition Tolerance | System continues to operate despite network failures between nodes |
+| Database | CAP Preference | Typical Behavior |
+|---|---|---|
+| MongoDB | CP (default), AP (configurable) | Primary handles writes; secondaries can become primary during partition |
+| Cassandra | AP | All nodes accept writes; last-write-wins conflict resolution |
+| Redis (cluster) | AP | Asynchronous replication; can lose data on failover without WAIT |
+| Neo4j | CP (single cluster), AP (multi-datacenter) | Causal clustering ensures consistency within datacenter |
+| PostgreSQL (Citus) | CP | Single-master replication, strong consistency |
+### Eventual Consistency
+In AP systems, data changes propagate asynchronously. After a write stops, all replicas converge to the same state.
+<code>-- In an eventually consistent system (like Cassandra):</code>
+<code>-- Write to node A: user_1 = {name: "Alice", role: "admin"}</code>
+<code>-- Read from node B (before replication): user_1 might still show old data</code>
+<code>-- After propagation: both nodes agree</code>
+<code>-- Consistency levels in Cassandra (from strongest to weakest):</code>
+<code>-- ALL         All nodes must respond (highest consistency, lowest availability)</code>
+<code>-- QUORUM      Majority of replicas must respond</code>
+<code>-- ONE         One replica responds (lowest consistency, highest availability)</code>
+### When to Choose NoSQL over SQL
+| Choose SQL (PostgreSQL) | Choose NoSQL |
+|---|---|
+| Data has clear, stable relationships | Schema is fluid and changes frequently |
+| Need ACID transactions | Need high write throughput at scale |
+| Complex queries, JOINs, aggregations | Simple key-based access patterns |
+| Reporting and analytics with consistent data | Time-series data with append-heavy loads |
+| Strict consistency requirements | Can tolerate eventual consistency |
+## ORMs
+### Active Record vs Data Mapper
+| Aspect | Active Record | Data Mapper |
+|---|---|---|
+| Pattern | Each model wraps a table row | Models are plain objects, mappers handle persistence |
+| Example | Ruby on Rails ActiveRecord, Laravel Eloquent, TypeORM | Doctrine (PHP), SQLAlchemy (Python), Hibernate (Java) |
+| API | <code>user.save()</code>, <code>User.find(42)</code> | <code>entityManager.save(user)</code>, <code>entityManager.find(User, 42)</code> |
+| Coupling | Tight (model knows about DB) | Loose (model is agnostic to storage) |
+| Testing | Requires mocking the ORM | Easier to unit test models independently |
+| Best for | Rapid prototyping, small to medium apps | Complex domain logic, large enterprise apps |
+<code>-- Active Record style (TypeORM entity):</code>
+<code>@Entity()</code>
+<code>class User {</code>
+<code>    @PrimaryGeneratedColumn()</code>
+<code>    id: number;</code>
+<code>    @Column()</code>
+<code>    name: string;</code>
+<code>    @Column()</code>
+<code>    email: string;</code>
+<code>    save() { /* built-in ORM method */ }</code>
+<code>}</code>
+<code>// Usage: User.create({ name: 'Alice', email: 'alice@ex.com' })</code>
+<code>-- Data Mapper style (TypeORM repository):</code>
+<code>@Entity()</code>
+<code>class User {</code>
+<code>    @PrimaryGeneratedColumn()</code>
+<code>    id: number;</code>
+<code>    @Column()</code>
+<code>    name: string;</code>
+<code>    @Column()</code>
+<code>    email: string;</code>
+<code>}</code>
+<code>// Usage: userRepository.save(new User())</code>
+<code>// The model is plain, the repository handles persistence</code>
+### Lazy vs Eager Loading
+| Strategy | Description | Example | When to Use |
+|---|---|---|---|
+| **Lazy** | Related data loaded only when accessed | <code>user.orders</code> triggers a SQL query | Data not always needed; avoid N+1 queries |
+| **Eager** | Related data loaded upfront via JOIN | <code>User.find(1, { include: { orders: true } })</code> | Always need the relation; one query instead of N+1 |
+<code>-- N+1 problem with lazy loading:</code>
+<code>// 1 query to get all users + N queries for each user's orders = N+1 queries</code>
+<code>const users = await User.find();             -- Query 1: SELECT * FROM users</code>
+<code>for (const user of users) {</code>
+<code>    console.log(await user.orders);           -- Query 2..N: SELECT * FROM orders WHERE user_id = ?</code>
+<code>}</code>
+<code>-- Eager loading solves N+1:</code>
+<code>const users = await User.find({               -- 1 query with JOIN</code>
+<code>    relations: ['orders']</code>
+<code>});</code>
+<code>for (const user of users) {</code>
+<code>    console.log(user.orders);                  -- No additional queries</code>
+<code>}</code>
+### Migration Tools
+| Tool | Language | Description |
+|---|---|---|
+| <code>knex migrate:make</code> | Node.js | SQL-based migrations with up/down functions |
+| <code>typeorm migration:create</code> | Node.js | Auto-generates migration from entity changes |
+| <code>Alembic</code> | Python | SQLAlchemy migration tool, auto-detection |
+| <code>Flyway</code> | Java/SQL | Versioned SQL migrations, works with any JDBC DB |
+| <code>Liquibase</code> | Java/SQL | XML/YAML/JSON/SQL changelogs, supports rollbacks |
+### Query Builder vs Raw SQL
+| Aspect | Query Builder (Knex) | Raw SQL |
+|---|---|---|
+| Readability | <code>knex('users').where('id', 42)</code> | <code>SELECT * FROM users WHERE id = 42</code> |
+| Dynamic queries | Easy: chain methods conditionally | Error-prone: string concatenation |
+| SQL injection | Safe (parameterized by default) | Safe with parameters, dangerous with concatenation |
+| Complex queries | Can be awkward (window functions, CTEs) | Full power of SQL |
+| Database abstraction | Switch DB by changing config | Tied to specific database dialect |
+## Common Pitfalls and Anti-patterns
+1. **N+1 query problem** -- Loading the same related data repeatedly in a loop. Use eager loading, JOINs, or batch loading (DataLoader) to reduce N+1 queries to 1 query.
+2. **SELECT * in production** -- Fetching all columns when only a few are needed increases I/O, memory, and prevents index-only scans. Always specify the exact columns needed.
+3. **No indexes on foreign keys** -- JOINs on foreign key columns without indexes force sequential scans. Always index foreign key columns used in JOIN conditions.
+4. **Using functions on indexed columns in WHERE** -- <code>WHERE DATE(created_at) = '2023-01-01'</code> cannot use the index on <code>created_at</code>. Use range conditions instead: <code>WHERE created_at >= '2023-01-01' AND created_at < '2023-01-02'</code>.
+5. **Storing JSON when relational modeling is appropriate** -- Using <code>JSONB</code> as a catch-all for everything bypasses type safety, constraints, and indexing. Use JSONB only when schema is truly dynamic or for denormalized read models.
+6. **Not using EXPLAIN ANALYZE before optimization** -- Guessing which part of a query is slow leads to optimizing the wrong thing. Always measure with <code>EXPLAIN ANALYZE</code> first.
+7. **Long-running transactions** -- Holding transactions open for seconds locks rows, blocks other writers, and causes deadlocks. Keep transactions short. Never let user input delay a transaction commit.
+8. **Omitting WHERE clause in UPDATE/DELETE** -- <code>UPDATE users SET status = 'inactive';</code> without a WHERE affects every row. Always verify your WHERE condition. Use <code>BEGIN ... ROLLBACK</code> in development to preview affected rows with <code>SELECT</code> first.
+9. **Over-indexing** -- Every index slows down writes (INSERT, UPDATE, DELETE). Indexes consume storage and maintenance (autovacuum) resources. Index columns that are actually queried, not every column.
+10. **Ignoring connection pooling** -- Opening a new database connection per request exhausts database connections (usually 100-500 max). Use a connection pool (PgBouncer, pg-pool, HikariCP) to reuse connections.
+11. **One-size-fits-all char/varchar** -- Using <code>VARCHAR(255)</code> for all text fields wastes space in multi-byte encodings and can mislead about the data domain. Use <code>TEXT</code> with CHECK constraints or appropriate lengths.
+12. **No migration strategy** -- Making schema changes directly on production without version-controlled migrations leads to drift, lost changes, and broken deployments. Always use a migration tool.
+13. **Deadlocks from inconsistent lock ordering** -- Transaction A locks row 1 then row 2; Transaction B locks row 2 then row 1. Always acquire locks in the same order (e.g., by primary key) to prevent deadlocks.
+14. **Assuming all databases support the same SQL** -- MySQL, PostgreSQL, SQLite, and SQL Server differ in JSON support, window functions, INSERT ... RETURNING, and DDL transactions. Know your database's specific features.
+## Complete API Reference
+### SQL Keywords
+| Keyword | Purpose | Example |
+|---|---|---|
+| <code>SELECT</code> | Retrieve data from tables | <code>SELECT name, age FROM users</code> |
+| <code>FROM</code> | Specify source table(s) | <code>FROM users</code> |
+| <code>WHERE</code> | Filter rows | <code>WHERE age > 18</code> |
+| <code>JOIN</code> | Combine rows from multiple tables | <code>JOIN orders ON users.id = orders.user_id</code> |
+| <code>GROUP BY</code> | Group rows for aggregation | <code>GROUP BY department</code> |
+| <code>HAVING</code> | Filter groups after aggregation | <code>HAVING COUNT(*) > 5</code> |
+| <code>ORDER BY</code> | Sort results | <code>ORDER BY created_at DESC</code> |
+| <code>LIMIT</code> | Limit number of rows returned | <code>LIMIT 100</code> |
+| <code>OFFSET</code> | Skip rows (for pagination) | <code>OFFSET 200</code> |
+| <code>DISTINCT</code> | Remove duplicate rows | <code>SELECT DISTINCT status</code> |
+| <code>UNION</code> | Combine results of two queries (dedup) | <code>SELECT name FROM a UNION SELECT name FROM b</code> |
+| <code>INTERSECT</code> | Rows common to both queries | <code>SELECT id FROM a INTERSECT SELECT id FROM b</code> |
+| <code>EXCEPT</code> | Rows in first but not second | <code>SELECT id FROM a EXCEPT SELECT id FROM b</code> |
+| <code>INSERT</code> | Add rows to a table | <code>INSERT INTO users VALUES (1, 'Alice')</code> |
+| <code>UPDATE</code> | Modify existing rows | <code>UPDATE users SET name = 'Bob' WHERE id = 1</code> |
+| <code>DELETE</code> | Remove rows from a table | <code>DELETE FROM users WHERE id = 1</code> |
+| <code>TRUNCATE</code> | Remove all rows (faster than DELETE) | <code>TRUNCATE TABLE temp_data</code> |
+| <code>CREATE</code> | Create database objects | <code>CREATE TABLE, CREATE INDEX, CREATE VIEW</code> |
+| <code>ALTER</code> | Modify database objects | <code>ALTER TABLE users ADD COLUMN phone VARCHAR(20)</code> |
+| <code>DROP</code> | Delete database objects | <code>DROP TABLE users</code> |
+| <code>CREATE INDEX</code> | Create an index | <code>CREATE INDEX idx_name ON users (name)</code> |
+| <code>CREATE VIEW</code> | Create a virtual table from a query | <code>CREATE VIEW active_users AS SELECT * FROM users WHERE active = true</code> |
+| <code>WITH</code> | Common Table Expression (CTE) | <code>WITH cte AS (SELECT ...) SELECT * FROM cte</code> |
+| <code>EXPLAIN</code> | Show query execution plan | <code>EXPLAIN ANALYZE SELECT * FROM users</code> |
+| <code>VACUUM</code> | Reclaim storage (PostgreSQL) | <code>VACUUM ANALYZE users</code> |
+### PostgreSQL Functions
+| Function | Purpose | Example |
+|---|---|---|
+| <code>NOW()</code> | Current timestamp | <code>SELECT NOW()</code> |
+| <code>CURRENT_DATE</code> | Current date | <code>SELECT CURRENT_DATE</code> |
+| <code>EXTRACT(field FROM source)</code> | Extract date part | <code>EXTRACT(YEAR FROM created_at)</code> |
+| <code>DATE_TRUNC(field, source)</code> | Truncate timestamp to precision | <code>DATE_TRUNC('month', created_at)</code> |
+| <code>AGE(timestamp1, timestamp2)</code> | Calculate interval between dates | <code>AGE(NOW(), created_at)</code> |
+| <code>COALESCE(val1, val2, ...)</code> | Return first non-null value | <code>COALESCE(discount, 0)</code> |
+| <code>NULLIF(expr1, expr2)</code> | Return NULL if equal | <code>NULLIF(price, 0)</code> |
+| <code>GREATEST(val1, val2, ...)</code> | Return largest value | <code>GREATEST(price, 100)</code> |
+| <code>LEAST(val1, val2, ...)</code> | Return smallest value | <code>LEAST(price, 500)</code> |
+| <code>UPPER(str)</code> | Convert to uppercase | <code>UPPER(name)</code> |
+| <code>LOWER(str)</code> | Convert to lowercase | <code>LOWER(email)</code> |
+| <code>LENGTH(str)</code> | String length | <code>LENGTH(description)</code> |
+| <code>SUBSTRING(str FROM pattern)</code> | Extract substring | <code>SUBSTRING(email FROM '@(.*)')</code> |
+| <code>REPLACE(str, from, to)</code> | Replace substring | <code>REPLACE(name, 'old', 'new')</code> |
+| <code>TRIM(str)</code> | Remove leading/trailing spaces | <code>TRIM('  hello  ')</code> |
+| <code>CONCAT(str1, str2)</code> | Concatenate strings | <code>CONCAT(first_name, ' ', last_name)</code> |
+| <code>FORMAT(format, ...)</code> | Format string (sprintf style) | <code>FORMAT('Hello %s', name)</code> |
+| <code>GEN_RANDOM_UUID()</code> | Generate UUID v4 (PG) | <code>GEN_RANDOM_UUID()</code> |
+| <code>PG_CANCEL_BACKEND(pid)</code> | Cancel a running query | <code>SELECT PG_CANCEL_BACKEND(12345)</code> |
+| <code>PG_TERMINATE_BACKEND(pid)</code> | Terminate a connection | <code>SELECT PG_TERMINATE_BACKEND(12345)</code> |
+### Isolation Levels
+| Level | PostgreSQL Support | Default in PostgreSQL | Anomalies Prevented |
+|---|---|---|---|
+| <code>READ UNCOMMITTED</code> | Treated as READ COMMITTED | No | Dirty reads (handled by MVCC) |
+| <code>READ COMMITTED</code> | Yes | **Yes** | Dirty reads |
+| <code>REPEATABLE READ</code> | Yes | No | Dirty reads, non-repeatable reads |
+| <code>SERIALIZABLE</code> | Yes | No | Dirty reads, non-repeatable reads, phantoms, serialization anomalies |
+### Index Types
+| Type | DB Support | Key Use |
+|---|---|---|
+| <code>B-tree</code> | All major databases | Default; equality + range queries, sorting |
+| <code>Hash</code> | PostgreSQL, MySQL (MEMORY) | Equality comparisons only; not for ORDER BY or range |
+| <code>GiST</code> | PostgreSQL | Full-text search, geometric data, range types, nearest-neighbor |
+| <code>GIN</code> | PostgreSQL | JSONB, arrays, full-text search (inverted index) |
+| <code>BRIN</code> | PostgreSQL | Very large, naturally ordered tables (logs, time series) |
+| <code>SP-GiST</code> | PostgreSQL | Partitioned search trees (quadtrees, k-d trees) |
+| <code>Bloom</code> | PostgreSQL (extension) | Probabilistic filter for equality on many columns |
+### JOIN Types
+| JOIN Type | SQL Standard | Description |
+|---|---|---|
+| <code>INNER JOIN</code> | Yes | Returns only matching rows from both tables |
+| <code>LEFT OUTER JOIN</code> | Yes | All rows from left, NULLs where right has no match |
+| <code>RIGHT OUTER JOIN</code> | Yes | All rows from right, NULLs where left has no match |
+| <code>FULL OUTER JOIN</code> | Yes | All rows from both, NULLs where no match |
+| <code>CROSS JOIN</code> | Yes | Cartesian product (every combination) |
+| <code>NATURAL JOIN</code> | Yes | Join on columns with same name (avoid -- implicit) |
+| <code>LATERAL JOIN</code> | Yes (PostgreSQL, 9.3+) | Subquery evaluated per row of outer table |
+| <code>SELF JOIN</code> | N/A (table joined to itself) | Any join type where both sides are the same table |
+1. **Q:** What is the difference between 2NF and 3NF?
+   **A:** 2NF removes partial dependencies (non-key column depends on part of a composite key). 3NF removes transitive dependencies (non-key column depends on another non-key column). Both require 1NF first.
+2. **Q:** When would you choose a BRIN index over a B-tree index?
+   **A:** BRIN is best for very large tables where data is naturally ordered (e.g., time-series logs, sensor data). BRIN indexes are tiny (thousands of times smaller than B-tree) but less precise. B-tree is better for exact lookups, range queries, and when data is not physically ordered.
+3. **Q:** What is the difference between READ COMMITTED and REPEATABLE READ isolation levels?
+   **A:** READ COMMITTED allows non-repeatable reads (same query within a transaction can return different results if another transaction commits changes). REPEATABLE READ prevents this by using a snapshot of data as of the first query. PostgreSQL's REPEATABLE READ also prevents phantom reads (unlike the SQL standard).
+4. **Q:** What causes the N+1 query problem and how do you fix it?
+   **A:** N+1 happens when an ORM lazy-loads related data in a loop: 1 query to fetch parent rows + N queries for each child relation. Fix by using eager loading (JOIN), batch loading (DataLoader), or explicitly joining in a single query.
+5. **Q:** How does PostgreSQL's MVCC work at a high level?
+   **A:** Each row version stores xmin (creating transaction ID) and xmax (deleting/updating transaction ID). When a row is updated, PostgreSQL creates a new version; old versions remain for concurrent transactions that started before the update. VACUUM removes old versions no longer visible to any active transaction.
+6. **Q:** What is a covering index and why is it beneficial?
+   **A:** A covering index includes all columns needed by a query, either as indexed columns or via the INCLUDE clause. The database can answer the query entirely from the index (index-only scan) without accessing the table heap, reducing I/O significantly.
+7. **Q:** When should you denormalize a database schema?
+   **A:** Denormalize when read performance is critical and you can tolerate some data redundancy: reporting dashboards, read-heavy APIs with precomputed aggregates, or when JOINs on normalized tables are too slow. Accept the tradeoff of slower writes and higher storage.
+8. **Q:** What is the CAP theorem and how does it apply to database selection?
+   **A:** CAP states a distributed system can guarantee only two of Consistency, Availability, and Partition Tolerance. CP systems (PostgreSQL, MongoDB default) choose consistency over availability during partitions. AP systems (Cassandra, Redis) choose availability, accepting eventual consistency.
+9. **Q:** What does EXPLAIN ANALYZE tell you that plain EXPLAIN does not?
+   **A:** EXPLAIN ANALYZE executes the query and shows actual execution times, row counts, and loop counts alongside estimated costs. Plain EXPLAIN shows only estimates, which can be inaccurate due to outdated statistics or complex WHERE clauses.
+10. **Q:** What is the difference between a CTE and a subquery?
+    **A:** A CTE (WITH clause) is defined before the main query and can be referenced multiple times. In PostgreSQL, CTEs act as optimization fences (materialized separately) unless inlined. Subqueries are part of the FROM or WHERE clause and are typically inlined into the overall query plan, allowing the planner to optimize holistically.
+11. **Q:** How do you prevent deadlocks in a transaction-heavy system?
+    **A:** Always access tables and rows in the same order across all transactions. Keep transactions short. Use timeout settings (deadlock_timeout in PostgreSQL). For high-contention rows, consider application-level queuing or optimistic locking.
+12. **Q:** What is the difference between Active Record and Data Mapper ORM patterns?
+    **A:** Active Record tightly couples model and persistence (each model instance has save/delete methods). Data Mapper keeps models as plain objects with a separate repository/entity manager handling persistence. Active Record is faster to prototype; Data Mapper gives cleaner separation of concerns for complex domains.
+            tags: ["Database", "SQL", "Cheat Sheet"],
+            id: "cheat-auth",
+            title: "Authentication & Authorization",
+            shortDesc: "Complete auth reference — JWT, OAuth 2.0, OIDC, SAML, session management, RBAC/ABAC, and security best practices.",
+            readTimeMin: 5,
+              "JWT: header.payload.signature — stateless auth, RS256 vs HS256, expiry and rotation.",
+              "OAuth 2.0: authorization code flow, PKCE, client credentials, refresh tokens.",
+              "OIDC: identity layer on OAuth 2.0 — ID token, UserInfo endpoint, scopes.",
+              "Session management: server-side sessions vs JWTs — revocation tradeoffs.",
+              "RBAC vs ABAC: role-based vs attribute-based access control — policy evaluation.",
+<code>    @Column()</code>
+<code>    name: string;</code>
+<code>    @Column()</code>
+<code>    email: string;</code>
+<code>    save() { /* built-in ORM method */ }</code>
+<code>}</code>
+
+<code>// Usage: User.create({ name: 'Alice', email: 'alice@ex.com' })</code>
+
+<code>-- Data Mapper style (TypeORM repository):</code>
+<code>@Entity()</code>
+<code>class User {</code>
+<code>    @PrimaryGeneratedColumn()</code>
+<code>    id: number;</code>
+<code>    @Column()</code>
+<code>    name: string;</code>
+<code>    @Column()</code>
+<code>    email: string;</code>
+<code>}</code>
+
+<code>// Usage: userRepository.save(new User())</code>
+<code>// The model is plain, the repository handles persistence</code>
+
+### Lazy vs Eager Loading
+
+| Strategy | Description | Example | When to Use |
+|---|---|---|---|
+| **Lazy** | Related data loaded only when accessed | <code>user.orders</code> triggers a SQL query | Data not always needed; avoid N+1 queries |
+| **Eager** | Related data loaded upfront via JOIN | <code>User.find(1, { include: { orders: true } })</code> | Always need the relation; one query instead of N+1 |
+
+<code>-- N+1 problem with lazy loading:</code>
+<code>// 1 query to get all users + N queries for each user's orders = N+1 queries</code>
+<code>const users = await User.find();             -- Query 1: SELECT * FROM users</code>
+<code>for (const user of users) {</code>
+<code>    console.log(await user.orders);           -- Query 2..N: SELECT * FROM orders WHERE user_id = ?</code>
+<code>}</code>
+
+<code>-- Eager loading solves N+1:</code>
+<code>const users = await User.find({               -- 1 query with JOIN</code>
+<code>    relations: ['orders']</code>
+<code>});</code>
+<code>for (const user of users) {</code>
+<code>    console.log(user.orders);                  -- No additional queries</code>
+<code>}</code>
+
+### Migration Tools
+
+| Tool | Language | Description |
+|---|---|---|
+| <code>knex migrate:make</code> | Node.js | SQL-based migrations with up/down functions |
+| <code>typeorm migration:create</code> | Node.js | Auto-generates migration from entity changes |
+| <code>Alembic</code> | Python | SQLAlchemy migration tool, auto-detection |
+| <code>Flyway</code> | Java/SQL | Versioned SQL migrations, works with any JDBC DB |
+| <code>Liquibase</code> | Java/SQL | XML/YAML/JSON/SQL changelogs, supports rollbacks |
+
+### Query Builder vs Raw SQL
+
+| Aspect | Query Builder (Knex) | Raw SQL |
+|---|---|---|
+| Readability | <code>knex('users').where('id', 42)</code> | <code>SELECT * FROM users WHERE id = 42</code> |
+| Dynamic queries | Easy: chain methods conditionally | Error-prone: string concatenation |
+| SQL injection | Safe (parameterized by default) | Safe with parameters, dangerous with concatenation |
+| Complex queries | Can be awkward (window functions, CTEs) | Full power of SQL |
+| Database abstraction | Switch DB by changing config | Tied to specific database dialect |
+
+---
+
+## Common Pitfalls and Anti-patterns
+
+1. **N+1 query problem** -- Loading the same related data repeatedly in a loop. Use eager loading, JOINs, or batch loading (DataLoader) to reduce N+1 queries to 1 query.
+
+2. **SELECT * in production** -- Fetching all columns when only a few are needed increases I/O, memory, and prevents index-only scans. Always specify the exact columns needed.
+
+3. **No indexes on foreign keys** -- JOINs on foreign key columns without indexes force sequential scans. Always index foreign key columns used in JOIN conditions.
+
+4. **Using functions on indexed columns in WHERE** -- <code>WHERE DATE(created_at) = '2023-01-01'</code> cannot use the index on <code>created_at</code>. Use range conditions instead: <code>WHERE created_at >= '2023-01-01' AND created_at < '2023-01-02'</code>.
+
+5. **Storing JSON when relational modeling is appropriate** -- Using <code>JSONB</code> as a catch-all for everything bypasses type safety, constraints, and indexing. Use JSONB only when schema is truly dynamic or for denormalized read models.
+
+6. **Not using EXPLAIN ANALYZE before optimization** -- Guessing which part of a query is slow leads to optimizing the wrong thing. Always measure with <code>EXPLAIN ANALYZE</code> first.
+
+7. **Long-running transactions** -- Holding transactions open for seconds locks rows, blocks other writers, and causes deadlocks. Keep transactions short. Never let user input delay a transaction commit.
+
+8. **Omitting WHERE clause in UPDATE/DELETE** -- <code>UPDATE users SET status = 'inactive';</code> without a WHERE affects every row. Always verify your WHERE condition. Use <code>BEGIN ... ROLLBACK</code> in development to preview affected rows with <code>SELECT</code> first.
+
+9. **Over-indexing** -- Every index slows down writes (INSERT, UPDATE, DELETE). Indexes consume storage and maintenance (autovacuum) resources. Index columns that are actually queried, not every column.
+
+10. **Ignoring connection pooling** -- Opening a new database connection per request exhausts database connections (usually 100-500 max). Use a connection pool (PgBouncer, pg-pool, HikariCP) to reuse connections.
+
+11. **One-size-fits-all char/varchar** -- Using <code>VARCHAR(255)</code> for all text fields wastes space in multi-byte encodings and can mislead about the data domain. Use <code>TEXT</code> with CHECK constraints or appropriate lengths.
+
+12. **No migration strategy** -- Making schema changes directly on production without version-controlled migrations leads to drift, lost changes, and broken deployments. Always use a migration tool.
+
+13. **Deadlocks from inconsistent lock ordering** -- Transaction A locks row 1 then row 2; Transaction B locks row 2 then row 1. Always acquire locks in the same order (e.g., by primary key) to prevent deadlocks.
+
+14. **Assuming all databases support the same SQL** -- MySQL, PostgreSQL, SQLite, and SQL Server differ in JSON support, window functions, INSERT ... RETURNING, and DDL transactions. Know your database's specific features.
+
+---
+
+## Complete API Reference
+
+### SQL Keywords
+
+| Keyword | Purpose | Example |
+|---|---|---|
+| <code>SELECT</code> | Retrieve data from tables | <code>SELECT name, age FROM users</code> |
+| <code>FROM</code> | Specify source table(s) | <code>FROM users</code> |
+| <code>WHERE</code> | Filter rows | <code>WHERE age > 18</code> |
+| <code>JOIN</code> | Combine rows from multiple tables | <code>JOIN orders ON users.id = orders.user_id</code> |
+| <code>GROUP BY</code> | Group rows for aggregation | <code>GROUP BY department</code> |
+| <code>HAVING</code> | Filter groups after aggregation | <code>HAVING COUNT(*) > 5</code> |
+| <code>ORDER BY</code> | Sort results | <code>ORDER BY created_at DESC</code> |
+| <code>LIMIT</code> | Limit number of rows returned | <code>LIMIT 100</code> |
+| <code>OFFSET</code> | Skip rows (for pagination) | <code>OFFSET 200</code> |
+| <code>DISTINCT</code> | Remove duplicate rows | <code>SELECT DISTINCT status</code> |
+| <code>UNION</code> | Combine results of two queries (dedup) | <code>SELECT name FROM a UNION SELECT name FROM b</code> |
+| <code>INTERSECT</code> | Rows common to both queries | <code>SELECT id FROM a INTERSECT SELECT id FROM b</code> |
+| <code>EXCEPT</code> | Rows in first but not second | <code>SELECT id FROM a EXCEPT SELECT id FROM b</code> |
+| <code>INSERT</code> | Add rows to a table | <code>INSERT INTO users VALUES (1, 'Alice')</code> |
+| <code>UPDATE</code> | Modify existing rows | <code>UPDATE users SET name = 'Bob' WHERE id = 1</code> |
+| <code>DELETE</code> | Remove rows from a table | <code>DELETE FROM users WHERE id = 1</code> |
+| <code>TRUNCATE</code> | Remove all rows (faster than DELETE) | <code>TRUNCATE TABLE temp_data</code> |
+| <code>CREATE</code> | Create database objects | <code>CREATE TABLE, CREATE INDEX, CREATE VIEW</code> |
+| <code>ALTER</code> | Modify database objects | <code>ALTER TABLE users ADD COLUMN phone VARCHAR(20)</code> |
+| <code>DROP</code> | Delete database objects | <code>DROP TABLE users</code> |
+| <code>CREATE INDEX</code> | Create an index | <code>CREATE INDEX idx_name ON users (name)</code> |
+| <code>CREATE VIEW</code> | Create a virtual table from a query | <code>CREATE VIEW active_users AS SELECT * FROM users WHERE active = true</code> |
+| <code>WITH</code> | Common Table Expression (CTE) | <code>WITH cte AS (SELECT ...) SELECT * FROM cte</code> |
+| <code>EXPLAIN</code> | Show query execution plan | <code>EXPLAIN ANALYZE SELECT * FROM users</code> |
+| <code>VACUUM</code> | Reclaim storage (PostgreSQL) | <code>VACUUM ANALYZE users</code> |
+
+### PostgreSQL Functions
+
+| Function | Purpose | Example |
+|---|---|---|
+| <code>NOW()</code> | Current timestamp | <code>SELECT NOW()</code> |
+| <code>CURRENT_DATE</code> | Current date | <code>SELECT CURRENT_DATE</code> |
+| <code>EXTRACT(field FROM source)</code> | Extract date part | <code>EXTRACT(YEAR FROM created_at)</code> |
+| <code>DATE_TRUNC(field, source)</code> | Truncate timestamp to precision | <code>DATE_TRUNC('month', created_at)</code> |
+| <code>AGE(timestamp1, timestamp2)</code> | Calculate interval between dates | <code>AGE(NOW(), created_at)</code> |
+| <code>COALESCE(val1, val2, ...)</code> | Return first non-null value | <code>COALESCE(discount, 0)</code> |
+| <code>NULLIF(expr1, expr2)</code> | Return NULL if equal | <code>NULLIF(price, 0)</code> |
+| <code>GREATEST(val1, val2, ...)</code> | Return largest value | <code>GREATEST(price, 100)</code> |
+| <code>LEAST(val1, val2, ...)</code> | Return smallest value | <code>LEAST(price, 500)</code> |
+| <code>UPPER(str)</code> | Convert to uppercase | <code>UPPER(name)</code> |
+| <code>LOWER(str)</code> | Convert to lowercase | <code>LOWER(email)</code> |
+| <code>LENGTH(str)</code> | String length | <code>LENGTH(description)</code> |
+| <code>SUBSTRING(str FROM pattern)</code> | Extract substring | <code>SUBSTRING(email FROM '@(.*)')</code> |
+| <code>REPLACE(str, from, to)</code> | Replace substring | <code>REPLACE(name, 'old', 'new')</code> |
+| <code>TRIM(str)</code> | Remove leading/trailing spaces | <code>TRIM('  hello  ')</code> |
+| <code>CONCAT(str1, str2)</code> | Concatenate strings | <code>CONCAT(first_name, ' ', last_name)</code> |
+| <code>FORMAT(format, ...)</code> | Format string (sprintf style) | <code>FORMAT('Hello %s', name)</code> |
+| <code>GEN_RANDOM_UUID()</code> | Generate UUID v4 (PG) | <code>GEN_RANDOM_UUID()</code> |
+| <code>PG_CANCEL_BACKEND(pid)</code> | Cancel a running query | <code>SELECT PG_CANCEL_BACKEND(12345)</code> |
+| <code>PG_TERMINATE_BACKEND(pid)</code> | Terminate a connection | <code>SELECT PG_TERMINATE_BACKEND(12345)</code> |
+
+### Isolation Levels
+
+| Level | PostgreSQL Support | Default in PostgreSQL | Anomalies Prevented |
+|---|---|---|---|
+| <code>READ UNCOMMITTED</code> | Treated as READ COMMITTED | No | Dirty reads (handled by MVCC) |
+| <code>READ COMMITTED</code> | Yes | **Yes** | Dirty reads |
+| <code>REPEATABLE READ</code> | Yes | No | Dirty reads, non-repeatable reads |
+| <code>SERIALIZABLE</code> | Yes | No | Dirty reads, non-repeatable reads, phantoms, serialization anomalies |
+
+### Index Types
+
+| Type | DB Support | Key Use |
+|---|---|---|
+| <code>B-tree</code> | All major databases | Default; equality + range queries, sorting |
+| <code>Hash</code> | PostgreSQL, MySQL (MEMORY) | Equality comparisons only; not for ORDER BY or range |
+| <code>GiST</code> | PostgreSQL | Full-text search, geometric data, range types, nearest-neighbor |
+| <code>GIN</code> | PostgreSQL | JSONB, arrays, full-text search (inverted index) |
+| <code>BRIN</code> | PostgreSQL | Very large, naturally ordered tables (logs, time series) |
+| <code>SP-GiST</code> | PostgreSQL | Partitioned search trees (quadtrees, k-d trees) |
+| <code>Bloom</code> | PostgreSQL (extension) | Probabilistic filter for equality on many columns |
+
+### JOIN Types
+
+| JOIN Type | SQL Standard | Description |
+|---|---|---|
+| <code>INNER JOIN</code> | Yes | Returns only matching rows from both tables |
+| <code>LEFT OUTER JOIN</code> | Yes | All rows from left, NULLs where right has no match |
+| <code>RIGHT OUTER JOIN</code> | Yes | All rows from right, NULLs where left has no match |
+| <code>FULL OUTER JOIN</code> | Yes | All rows from both, NULLs where no match |
+| <code>CROSS JOIN</code> | Yes | Cartesian product (every combination) |
+| <code>NATURAL JOIN</code> | Yes | Join on columns with same name (avoid -- implicit) |
+| <code>LATERAL JOIN</code> | Yes (PostgreSQL, 9.3+) | Subquery evaluated per row of outer table |
+| <code>SELF JOIN</code> | N/A (table joined to itself) | Any join type where both sides are the same table |
+
+---
+
+## Practice Questions
+
+1. **Q:** What is the difference between 2NF and 3NF?
+   **A:** 2NF removes partial dependencies (non-key column depends on part of a composite key). 3NF removes transitive dependencies (non-key column depends on another non-key column). Both require 1NF first.
+
+2. **Q:** When would you choose a BRIN index over a B-tree index?
+   **A:** BRIN is best for very large tables where data is naturally ordered (e.g., time-series logs, sensor data). BRIN indexes are tiny (thousands of times smaller than B-tree) but less precise. B-tree is better for exact lookups, range queries, and when data is not physically ordered.
+
+3. **Q:** What is the difference between READ COMMITTED and REPEATABLE READ isolation levels?
+   **A:** READ COMMITTED allows non-repeatable reads (same query within a transaction can return different results if another transaction commits changes). REPEATABLE READ prevents this by using a snapshot of data as of the first query. PostgreSQL's REPEATABLE READ also prevents phantom reads (unlike the SQL standard).
+
+4. **Q:** What causes the N+1 query problem and how do you fix it?
+   **A:** N+1 happens when an ORM lazy-loads related data in a loop: 1 query to fetch parent rows + N queries for each child relation. Fix by using eager loading (JOIN), batch loading (DataLoader), or explicitly joining in a single query.
+
+5. **Q:** How does PostgreSQL's MVCC work at a high level?
+   **A:** Each row version stores xmin (creating transaction ID) and xmax (deleting/updating transaction ID). When a row is updated, PostgreSQL creates a new version; old versions remain for concurrent transactions that started before the update. VACUUM removes old versions no longer visible to any active transaction.
+
+6. **Q:** What is a covering index and why is it beneficial?
+   **A:** A covering index includes all columns needed by a query, either as indexed columns or via the INCLUDE clause. The database can answer the query entirely from the index (index-only scan) without accessing the table heap, reducing I/O significantly.
+
+7. **Q:** When should you denormalize a database schema?
+   **A:** Denormalize when read performance is critical and you can tolerate some data redundancy: reporting dashboards, read-heavy APIs with precomputed aggregates, or when JOINs on normalized tables are too slow. Accept the tradeoff of slower writes and higher storage.
+
+8. **Q:** What is the CAP theorem and how does it apply to database selection?
+   **A:** CAP states a distributed system can guarantee only two of Consistency, Availability, and Partition Tolerance. CP systems (PostgreSQL, MongoDB default) choose consistency over availability during partitions. AP systems (Cassandra, Redis) choose availability, accepting eventual consistency.
+
+9. **Q:** What does EXPLAIN ANALYZE tell you that plain EXPLAIN does not?
+   **A:** EXPLAIN ANALYZE executes the query and shows actual execution times, row counts, and loop counts alongside estimated costs. Plain EXPLAIN shows only estimates, which can be inaccurate due to outdated statistics or complex WHERE clauses.
+
+10. **Q:** What is the difference between a CTE and a subquery?
+    **A:** A CTE (WITH clause) is defined before the main query and can be referenced multiple times. In PostgreSQL, CTEs act as optimization fences (materialized separately) unless inlined. Subqueries are part of the FROM or WHERE clause and are typically inlined into the overall query plan, allowing the planner to optimize holistically.
+
+11. **Q:** How do you prevent deadlocks in a transaction-heavy system?
+    **A:** Always access tables and rows in the same order across all transactions. Keep transactions short. Use timeout settings (deadlock_timeout in PostgreSQL). For high-contention rows, consider application-level queuing or optimistic locking.
+
+12. **Q:** What is the difference between Active Record and Data Mapper ORM patterns?
+    **A:** Active Record tightly couples model and persistence (each model instance has save/delete methods). Data Mapper keeps models as plain objects with a separate repository/entity manager handling persistence. Active Record is faster to prototype; Data Mapper gives cleaner separation of concerns for complex domains.
+`,
+            tags: ["Database", "SQL", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-auth",
+            title: "Authentication & Authorization",
+            shortDesc: "Complete auth reference — JWT, OAuth 2.0, OIDC, SAML, session management, RBAC/ABAC, and security best practices.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "JWT: header.payload.signature — stateless auth, RS256 vs HS256, expiry and rotation.",
+              "OAuth 2.0: authorization code flow, PKCE, client credentials, refresh tokens.",
+              "OIDC: identity layer on OAuth 2.0 — ID token, UserInfo endpoint, scopes.",
+              "Session management: server-side sessions vs JWTs — revocation tradeoffs.",
+              "RBAC vs ABAC: role-based vs attribute-based access control — policy evaluation.",
+            ],
+            content: `## Quick Reference
+- **Authentication** verifies identity ("who you are"); **Authorization** determines access ("what you can do").
+- Never roll your own crypto — use standard libraries (bcrypt, argon2, OAuth 2.0, OIDC).
+- Prefer server-side sessions for classic web apps; use JWTs for distributed/stateless APIs with short expiry.
+- Always enforce HTTPS, set <code>HttpOnly</code> + <code>Secure</code> + <code>SameSite</code> on cookies, and validate all tokens server-side.
+- Follow principle of least privilege: grant only the permissions a user needs, and rotate secrets regularly.
+## Authentication Fundamentals
+Authentication confirms a user's identity through one or more **factors**:
+| Factor | Examples | Notes |
+|--------|----------|-------|
+| Something you **know** | Password, PIN, security answer | Most common; vulnerable to phishing, brute force |
+| Something you **have** | TOTP token, SMS code, hardware key (FIDO2/WebAuthn) | Phishing-resistant when using WebAuthn |
+| Something you **are** | Fingerprint, face scan, iris scan | Biometric; requires trusted hardware, privacy considerations |
+**Multi-Factor Authentication (MFA)** combines two or more factors. At minimum, require password + TOTP or WebAuthn. MFA reduces credential-stuffing risk by >99%.
+## Session-based Auth
+The server maintains session state; the client presents a session ID via cookie or header.
+| Concept | Details |
+| **Server-side sessions** | Session data stored in memory, Redis, or DB. Client only holds a random session ID. Easy to revoke — delete the session from the store. |
+| **Session ID generation** | Use a cryptographically random, high-entropy value (e.g., <code>crypto.randomUUID()</code> in Node.js). Minimum 128 bits. |
+| **Cookie flags** | <code>HttpOnly</code> — prevents JS access (XSS mitigation). <code>Secure</code> — sent only over HTTPS. <code>SameSite=Lax</code> or <code>Strict</code> — mitigates CSRF. |
+| **Session fixation prevention** | Regenerate session ID after login: <code>req.session.regenerate()</code> (Express) or <code>session.changeId()</code>. |
+| **Expiry & idle timeout** | Set absolute expiry (e.g., 24h) and sliding idle timeout (e.g., 30 min of inactivity). |
+// Example: Express session configuration with secure defaults
+import session from "express-session"; // Import the session middleware
+import RedisStore from "connect-redis"; // Session storage in Redis for scalability
+  session({
+    store: new RedisStore({ client: redisClient }),  // Store sessions in Redis
+    secret: process.env.SESSION_SECRET,              // Sign the session ID cookie
+    name: "sessionId",                                // Cookie name (not the default "connect.sid")
+    cookie: {
+      httpOnly: true,                                 // Prevent XSS from reading the cookie
+      secure: process.env.NODE_ENV === "production",  // HTTPS only in production
+      sameSite: "lax",                                // CSRF protection: top-level navigations allowed
+      maxAge: 1000 * 60 * 30,                         // 30-minute idle timeout in milliseconds
+    resave: false,           // Don't save session if unmodified
+    saveUninitialized: false,// Don't create session until something is stored
+    rolling: true,           // Reset maxAge on every response (sliding expiry)
+// On login: regenerate session ID to prevent fixation
+app.post("/login", async (req, res) => {
+  req.session.regenerate((err) => {   // Generate a new session ID
+    if (err) return res.status(500).json({ error: "Session error" });
+    req.session.userId = user.id;     // Store user identifier in session
+    req.session.role = user.role;     // Store role for authorization checks
+    res.json({ ok: true });
+// On logout: destroy the session entirely
+app.post("/logout", (req, res) => {
+  req.session.destroy((err) => {      // Remove session data from store
+    if (err) return res.status(500).json({ error: "Logout error" });
+    res.clearCookie("sessionId");    // Delete the cookie on client side
+    res.json({ ok: true });
+## JWT (JSON Web Tokens)
+A self-contained token format: <code>header.payload.signature</code>.
+\`\`\`text
+// JWT structure: three Base64URL-encoded segments separated by dots
+[Base64URL(header)].[Base64URL(payload)].[signature]
+// Decoded header
+  "alg": "RS256",   // Signing algorithm
+  "typ": "JWT"      // Token type
+// Decoded payload (example)
+  "sub": "user_abc123",             // Subject — the user identifier
+  "iss": "https://auth.example.com",// Issuer — who created the token
+  "aud": "https://api.example.com", // Audience — intended recipient
+  "exp": 1893456000,                // Expiration time (Unix epoch seconds)
+  "iat": 1711920000,                // Issued at
+  "jti": "unique-token-id-456"      // JWT ID — unique identifier for this token
+| Algorithm | Type | Key | Speed | Use Case |
+|-----------|------|-----|-------|----------|
+| **HS256** | Symmetric | Shared secret | Fast | Single service, internal microservices |
+| **RS256** | Asymmetric | Private key sign, public key verify | Slower | Distributed systems, third-party verifiers |
+| **ES256** | Asymmetric (ECDSA) | EC key pair | Fast | Mobile/low-power devices (smaller signature) |
+**Token Rotation & Refresh:**
+- **Access token**: short-lived (5–15 min). Contains claims for authorization.
+- **Refresh token**: long-lived (days/weeks). Stored securely; used only via the <code>/token</code> endpoint.
+- **Rotation**: issue a new refresh token with every refresh. The old refresh token is invalidated (prevents replay).
+- **Blacklisting**: for emergency revocation, maintain a denylist of <code>jti</code> values in Redis with TTL matching token expiry.
+// Example: JWT signing and verification with RS256
+import jwt from "jsonwebtoken";  // Library for JWT creation and validation
+import { readFileSync } from "fs";
+const privateKey = readFileSync("./keys/private.pem", "utf8"); // Keep private key secret!
+const publicKey = readFileSync("./keys/public.pem", "utf8");   // Safe to distribute
+// Sign a token (called during login or token refresh)
+function createAccessToken(userId: string, role: string): string {
+  return jwt.sign(
+    { sub: userId, role },                     // Payload claims
+    privateKey,                                 // Signing key (private for RS256)
+      algorithm: "RS256",                       // Asymmetric algorithm
+      expiresIn: "15m",                         // Short-lived access token
+      issuer: "https://auth.example.com",
+      audience: "https://api.example.com",
+      jwtid: crypto.randomUUID(),               // Unique token ID for blacklisting
+// Verify a token (called on every protected request)
+function verifyAccessToken(token: string): jwt.JwtPayload {
+    const payload = jwt.verify(token, publicKey, {        // Verify with public key
+      algorithms: ["RS256"],                               // Explicitly allow only RS256
+      issuer: "https://auth.example.com",
+      audience: "https://api.example.com",
+    }) as jwt.JwtPayload;
+    return payload;
+    throw new Error("Invalid or expired token");           // Token tampered or expired
+OAuth 2.0 is a delegation protocol — it allows a third-party app to access resources on behalf of a user without sharing the user's password.
+### Roles
+| Role | Description |
+| **Resource Owner** | The user who authorizes access to their data. |
+| **Client** | The application requesting access (web, mobile, SPA). |
+| **Authorization Server** | Issues tokens after authenticating the resource owner and obtaining authorization. |
+| **Resource Server** | Hosts the protected resources; validates access tokens. |
+### Grant Types
+| Grant Type | Use Case | Tokens | Refresh Token | Notes |
+|------------|----------|--------|---------------|-------|
+| **Authorization Code** | Server-side web app | Auth code to access + refresh | Yes | Most secure; auth code sent server-side |
+| **PKCE** | SPA / mobile app | Auth code to access + refresh | Yes | Adds <code>code_challenge</code>; prevents interception |
+| **Client Credentials** | Machine-to-machine | Access token only | No | No user context; for service accounts |
+| **Resource Owner Password** | Legacy / trusted (deprecated) | Access + refresh | Yes | Exposes password to client; avoid |
+| **Implicit** | Legacy SPA (deprecated) | Access token (fragment) | No | No client auth; security issues |
+// Example: OAuth 2.0 authorization code flow with PKCE (for SPA)
+import crypto from "crypto";  // Node.js crypto module for challenge generation
+// Step 1: Generate PKCE challenge pair
+function generatePKCE() {
+  const verifier = crypto.randomBytes(32).toString("base64url"); // Random 32-byte code verifier
+  const challenge = crypto
+    .createHash("sha256")               // SHA-256 hash
+    .update(verifier)                   // Hash the verifier...
+    .digest("base64url");               // ...and Base64URL-encode the digest
+  return { verifier, challenge };
+// Step 2: Redirect user to authorization server
+const { verifier, challenge } = generatePKCE();
+const authUrl = new URL("https://auth.example.com/authorize");
+authUrl.searchParams.set("response_type", "code");          // Request authorization code
+authUrl.searchParams.set("client_id", "my-app-client-id");  // Registered client ID
+authUrl.searchParams.set("redirect_uri", "https://myapp.com/callback"); // Where to redirect
+authUrl.searchParams.set("code_challenge", challenge);       // PKCE challenge
+authUrl.searchParams.set("code_challenge_method", "S256");   // Challenge method
+authUrl.searchParams.set("scope", "openid profile email");   // Requested scopes
+authUrl.searchParams.set("state", crypto.randomUUID());      // CSRF token (anti-forgery)
+// Step 3: Exchange authorization code for tokens (server-side)
+async function exchangeCode(code: string, verifier: string) {
+  const response = await fetch("https://auth.example.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code", // OAuth 2.0 grant type
+      code,                             // The authorization code from step 2
+      redirect_uri: "https://myapp.com/callback", // Must match the original
+      client_id: "my-app-client-id",
+      code_verifier: verifier,          // PKCE verifier (proves possession)
+  const tokens = await response.json(); // Contains access_token, refresh_token, id_token (if OIDC)
+  return tokens;
+### Scopes
+Scope strings define the granularity of access. Common OIDC scopes: <code>openid</code>, <code>profile</code>, <code>email</code>, <code>address</code>, <code>phone</code>. Custom scopes follow the pattern <code>api:read</code>, <code>api:write</code>.
+OIDC is an identity layer on top of OAuth 2.0. It adds authentication and user profile information.
+| Concept | Description |
+| **ID Token** | A JWT containing identity claims (<code>sub</code>, <code>name</code>, <code>email</code>, etc.). Returned alongside the access token. |
+| **UserInfo Endpoint** | Protected endpoint returning user attributes. Called with the access token. |
+| **Discovery Document** | JSON at <code>/.well-known/openid-configuration</code> listing all endpoints and supported features. |
+| **RP-Initiated Logout** | OIDC mechanism to log out from both the relying party (RP) and the identity provider (IdP). |
+\`\`\`text
+// Example: ID Token payload (decoded JWT)
+  "iss": "https://accounts.example.com",       // Issuer identifier
+  "sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890", // Subject — unique user ID
+  "aud": "my-client-id",                        // Audience — the client app
+  "exp": 1893456000,                            // Expiration
+  "iat": 1711920000,                            // Issued at
+  "nonce": "random-nonce-value",                // Replay protection (matches the auth request)
+  "at_hash": "base64url(hash of access token)", // Access token hash (token binding)
+  "c_hash": "base64url(hash of auth code)",     // Code hash (code binding)
+  "auth_time": 1711919000,                      // Time of authentication
+  "name": "Jane Doe",                           // User's display name
+  "email": "jane@example.com",                  // Email address
+  "email_verified": true                        // Whether email was verified
+## SAML 2.0
+SAML 2.0 is an XML-based SSO protocol, common in enterprise environments.
+| Concept | Description |
+| **Assertion** | XML document containing authentication and attribute statements, signed by the IdP. |
+| **IdP-Initiated SSO** | User starts at the identity provider; IdP pushes an assertion to the SP via HTTP POST. |
+| **SP-Initiated SSO** | User starts at the service provider; SP redirects to IdP, which responds with assertion. |
+| **XML Signatures** | Assertions are signed using <code><ds:Signature></code> elements (W3C XML Signature standard). |
+| **Metadata Exchange** | IdP and SP exchange XML metadata documents containing endpoints, certificates, and bindings. |
+\`\`\`xml
+<!-- SAML 2.0 Response (simplified) -->
+<samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                ID="response-abc123" Version="2.0"
+                IssueInstant="2026-04-01T12:00:00Z"
+                Destination="https://sp.example.com/acs">
+  <saml:Issuer xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion">
+    https://idp.example.com/metadata                    <!-- Identity provider entity ID -->
+  </saml:Issuer>
+  <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+    <!-- ... XML signature elements: SignedInfo, SignatureValue, KeyInfo ... -->
+  </ds:Signature>
+  <samlp:Status>
+    <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+  </samlp:Status>
+  <saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                  ID="assertion-456" Version="2.0"
+                  IssueInstant="2026-04-01T12:00:00Z">
+    <saml:Issuer>https://idp.example.com/metadata</saml:Issuer>
+    <saml:Subject>
+      <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">
+        jane.doe@example.com                    <!-- User identifier -->
+      </saml:NameID>
+      <saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer">
+        <saml:SubjectConfirmationData NotOnOrAfter="2026-04-01T12:10:00Z"
+                                      Recipient="https://sp.example.com/acs"/>
+      </saml:SubjectConfirmation>
+    </saml:Subject>
+    <saml:Conditions NotBefore="2026-04-01T11:55:00Z"
+                      NotOnOrAfter="2026-04-01T12:10:00Z">
+      <saml:AudienceRestriction>
+        <saml:Audience>https://sp.example.com/metadata</saml:Audience>
+      </saml:AudienceRestriction>
+    </saml:Conditions>
+    <saml:AuthnStatement AuthnInstant="2026-04-01T12:00:00Z"
+                          SessionIndex="session-789">
+      <saml:AuthnContext>
+        <saml:AuthnContextClassRef>
+          urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport
+        </saml:AuthnContextClassRef>
+      </saml:AuthnContext>
+    </saml:AuthnStatement>
+    <saml:AttributeStatement>
+      <saml:Attribute Name="email" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml:AttributeValue>jane.doe@example.com</saml:AttributeValue>
+      </saml:Attribute>
+      <saml:Attribute Name="role" NameFormat="urn:oasis:names:tc:SAML:2.0:attrname-format:basic">
+        <saml:AttributeValue>admin</saml:AttributeValue>
+      </saml:Attribute>
+    </saml:AttributeStatement>
+  </saml:Assertion>
+</samlp:Response>
+## Authorization Models
+| Model | Full Name | Basis | Example | Tools |
+|-------|-----------|-------|---------|-------|
+| **RBAC** | Role-Based Access Control | User roles | <code>admin</code>, <code>editor</code>, <code>viewer</code> | Built into most frameworks |
+| **ABAC** | Attribute-Based Access Control | User/resource/environment attributes | <code>department == "engineering" && region == "us"</code> | OPA, AWS IAM |
+| **ReBAC** | Relationship-Based Access Control | Graph relationships | <code>user is member of org that owns document</code> | Google Zanzibar, SpiceDB, Auth0 FGA |
+| **PBAC** | Policy-Based Access Control | Declarative policies | <code>allow read if user.role == "admin" and resource.visibility == "public"</code> | Casbin, OPA, AWS Cedar |
+# Example: RBAC middleware in Python (FastAPI) with policy enforcement
+from functools import wraps          # Decorator for wrapping route handlers
+from fastapi import HTTPException    # HTTP error responses
+# Role-permission mapping (static policy)
+ROLE_PERMISSIONS = {
+    "admin": ["read", "write", "delete", "manage_users"],  # Admin has all permissions
+    "editor": ["read", "write"],                            # Editor can read and write
+    "viewer": ["read"],                                     # Viewer can only read
+def require_permission(permission: str):
+    """Decorator that checks if the current user has the required permission."""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            request = kwargs.get("request")     # Extract request from route params
+            user_role = request.user.role       # Assume middleware sets request.user
+            if permission not in ROLE_PERMISSIONS.get(user_role, []):  # Check permission
+                raise HTTPException(
+                    status_code=403,                        # Forbidden
+                    detail=f"Missing required permission: {permission}"
+                )
+            return await func(*args, **kwargs)  # Permission granted — call the handler
+        return wrapper
+    return decorator
+# Usage: decorate your route
+@router.get("/documents/{doc_id}")
+@require_permission("read")                     # Only users with "read" can access
+async def get_document(doc_id: str, request: Request):
+    return {"id": doc_id, "content": "Secret document"}
+\`\`\`rego
+# Example: OPA (Open Policy Agent) policy for ABAC — written in Rego language
+package app.auth                           # Package name for the policy
+# Default decision: deny access unless explicitly allowed
+default allow = false
+# Allow access if the user is an admin of the document's organization
+allow {
+    input.user.role == "admin"             # User has the admin role
+    input.user.org_id == input.doc.org_id  # User belongs to the document's org
+# Allow access if the user created the document (creator always has access)
+allow {
+    input.doc.created_by == input.user.id  # Document creator check
+    input.action == "read"                 # Only read access for creator
+# Allow read access to public documents for any authenticated user
+allow {
+    input.doc.visibility == "public"       # Document is publicly visible
+    input.action == "read"                 # Only read operations
+    input.user.authenticated               # User must be logged in
+# Rate limiting: block if more than 100 requests per minute
+# (typically enforced at the API gateway, not in OPA)
+## API Security
+### Authentication Methods
+| Method | How It Works | Use Case |
+|--------|-------------|----------|
+| **API Key** | Static key sent in header (<code>X-API-Key</code>) | Simple, server-to-server; low security |
+| **HMAC Signing** | Request body + secret to HMAC signature in header | Prevents tampering; used by AWS SigV4 |
+| **mutual TLS (mTLS)** | Both client and server present TLS certificates | Zero-trust, service mesh, B2B |
+| **Bearer Token** | <code>Authorization: Bearer <token></code> | JWT, OAuth 2.0 access tokens |
+### Security Headers
+| Header | Purpose | Example |
+| <code>Content-Security-Policy</code> | Prevents XSS by restricting resource sources | <code>default-src 'self'</code> |
+| <code>Strict-Transport-Security</code> | Enforces HTTPS; prevents downgrade attacks | <code>max-age=31536000; includeSubDomains</code> |
+| <code>X-Frame-Options</code> | Prevents clickjacking by blocking framing | <code>DENY</code> |
+| <code>X-Content-Type-Options</code> | Prevents MIME sniffing | <code>nosniff</code> |
+| <code>Referrer-Policy</code> | Controls Referrer header data | <code>strict-origin-when-cross-origin</code> |
+### CORS & CSRF
+| Concept | Mitigation |
+| **CORS** (Cross-Origin Resource Sharing) | Configure <code>Access-Control-Allow-Origin</code> to specific domains, not <code>*</code> for credentials. |
+| **CSRF** (Cross-Site Request Forgery) | Use <code>SameSite=Strict/Lax</code> cookies, CSRF tokens in forms, or custom headers (<code>X-Requested-With</code>). For APIs, require <code>Origin</code>/<code>Referer</code> validation. |
+// Example: CORS and security headers configuration in Express
+import helmet from "helmet";          // Security headers middleware for Express
+// Apply helmet defaults plus custom overrides
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],           // Only allow resources from same origin
+      scriptSrc: ["'self'", "https://trusted-cdn.com"], // Allow scripts from self and CDN
+      styleSrc: ["'self'", "'unsafe-inline'"],           // Allow inline styles
+      imgSrc: ["'self'", "data:"],      // Allow images from self and data URIs
+  hsts: {
+    maxAge: 31536000,                   // 1 year in seconds — enforce HTTPS
+    includeSubDomains: true,            // Apply to all subdomains
+    preload: true,                      // Submit to browser preload list
+  frameguard: { action: "deny" },       // X-Frame-Options: DENY — prevent clickjacking
+// CORS configuration
+import cors from "cors";                // Cross-Origin Resource Sharing middleware
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"], // Whitelist
+  credentials: true,                    // Allow cookies/auth headers
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allowed request headers
+  maxAge: 86400,                        // Cache preflight results for 24 hours
+## Password Management
+### Hashing Algorithms
+| Algorithm | Design | Salt | Memory-Hard | Recommended? |
+|-----------|--------|------|-------------|--------------|
+| **bcrypt** | Adaptive hash; cost factor determines work | Auto (embedded in hash) | No | Yes — de facto standard |
+| **argon2** | Password-hashing competition winner | Auto | Yes | Yes — modern, preferred |
+| **scrypt** | Memory-hard key derivation | Auto | Yes | Yes — good alternative |
+// Example: Password hashing and verification with bcrypt
+import bcrypt from "bcrypt";  // BCrypt hashing library (uses Blowfish cipher)
+const SALT_ROUNDS = 12;       // Cost factor — higher is slower (more secure)
+// Hash a password during registration
+async function hashPassword(plaintext: string): Promise<string> {
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);  // Generate a random salt
+  const hash = await bcrypt.hash(plaintext, salt); // Hash: returns $2b$12$<salt><hash>
+  return hash;  // Store this hash in the database (includes salt)
+// Verify a password during login
+async function verifyPassword(plaintext: string, storedHash: string): Promise<boolean> {
+  const match = await bcrypt.compare(plaintext, storedHash); // Compare securely
+  return match;  // true if password matches, false otherwise
+### NIST Password Guidelines (SP 800-63B)
+| Requirement | Detail |
+| Minimum length | 8 characters (12+ recommended) |
+| Maximum length | At least 64 characters (don't truncate) |
+| Complexity rules | No composition rules (no mandatory uppercase/digit/symbol) |
+| Check against breach lists | Reject passwords found in known breaches (Have I Been Pwned API) |
+| Rate limiting | Lock account after 5–10 failed attempts (increasing delays) |
+| Storage | Hash with a memory-hard algorithm (argon2, bcrypt, scrypt); never encrypt |
+// Example: Account lockout logic
+const MAX_ATTEMPTS = 5;                  // Maximum consecutive failed login attempts
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // Lockout period: 15 minutes
+// Check if account is locked
+async function isAccountLocked(user: User): Promise<boolean> {
+  if (user.lockedUntil && user.lockedUntil > new Date()) {  // Still locked?
+    return true;  // Account is temporarily locked
+  if (user.failedAttempts >= MAX_ATTEMPTS) {                // Exceeded max attempts?
+    user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS); // Set lockout expiry
+    await user.save();
+  return false;  // Account is not locked
+// On failed login: increment attempt counter
+async function recordFailedAttempt(user: User): Promise<void> {
+  user.failedAttempts += 1;                                // Increment counter
+  if (user.failedAttempts >= MAX_ATTEMPTS) {
+    user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS); // Lock the account
+  await user.save();
+// On successful login: reset the counter
+async function resetFailedAttempts(user: User): Promise<void> {
+  user.failedAttempts = 0;   // Clear the counter
+  user.lockedUntil = null;   // Remove any lockout
+  await user.save();
+## Common Pitfalls & Anti-patterns
+| # | Pitfall | Why It's Dangerous | Solution |
+|---|---------|--------------------|----------|
+| 1 | Storing passwords in plaintext | Any breach exposes all user credentials. | Always hash with bcrypt/argon2/scrypt. |
+| 2 | Using JWT as a session replacement without short expiry | JWTs cannot be revoked server-side (unless blacklisted). | Use short TTL (5-15 min) and refresh tokens. Never store sensitive data in payload. |
+| 3 | Ignoring token blacklisting for sensitive actions | A leaked token works until it expires. | Maintain a Redis blacklist of <code>jti</code> values for high-value operations. |
+| 4 | Exposing internal error messages in auth responses | Attackers can enumerate valid users or debug endpoints. | Return generic messages: "Invalid credentials", not "User not found". |
+| 5 | Accepting JWTs without verifying signature or algorithm | Attacker can forge tokens by changing <code>alg</code> to <code>none</code> or symmetric key. | Always verify signature and explicitly whitelist allowed algorithms. |
+| 6 | Using <code>SameSite=None</code> without <code>Secure</code> | Cookie leaks over HTTP — vulnerable to interception. | Always pair <code>SameSite=None</code> with <code>Secure</code>. Prefer <code>Lax</code> or <code>Strict</code>. |
+| 7 | Failing to rotate secrets and keys | Compromised keys give permanent access. | Rotate signing keys, API keys, and secrets on a schedule (e.g., every 90 days). |
+| 8 | Overly permissive CORS (e.g., <code>Access-Control-Allow-Origin: *</code>) with credentials | Any website can make authenticated requests to your API. | Never use <code>*</code> with <code>credentials: true</code>. Whitelist specific origins. |
+| 9 | Logging or leaking tokens in URLs or logs | Tokens captured in server logs, referrer headers, or browser history. | Transmit tokens in <code>Authorization</code> headers only. Redact tokens in logs. |
+| 10 | Insufficient rate limiting on auth endpoints | Brute-force, credential stuffing, and enumeration attacks. | Rate-limit login, registration, password reset, and token refresh endpoints. |
+| 11 | Using user-controlled input in <code>redirect_uri</code> validation | Open redirect vulnerability — attacker steals auth codes. | Validate redirect URIs against a strict whitelist; reject any wildcard matches. |
+| 12 | Storing API keys in client-side code (SPA, mobile) | Keys are trivially extracted from source code or network traffic. | Use a BFF (Backend for Frontend) or proxy; never embed secrets in client bundles. |
+## Complete API Reference
+### JWT Claim Registry (Registered Claims)
+| Claim | Full Name | Required? | Description |
+|-------|-----------|-----------|-------------|
+| <code>iss</code> | Issuer | Optional | Identifies the principal that issued the JWT. |
+| <code>sub</code> | Subject | Optional | Identifies the subject of the JWT (usually the user ID). |
+| <code>aud</code> | Audience | Optional | Recipient(s) the JWT is intended for. |
+| <code>exp</code> | Expiration Time | Recommended | Unix timestamp after which the JWT must not be accepted. |
+| <code>nbf</code> | Not Before | Optional | Unix timestamp before which the JWT must not be accepted. |
+| <code>iat</code> | Issued At | Optional | Unix timestamp when the JWT was issued. |
+| <code>jti</code> | JWT ID | Optional | Unique identifier for the token (used for blacklisting). |
+### OAuth 2.0 Grant Types
+| Grant Type | Authorization Code in URL? | Client Secret Required? | Refresh Token? | Security Profile |
+|------------|---------------------------|------------------------|----------------|------------------|
+| Authorization Code | Yes (code) | Yes (confidential clients) | Yes | High — code travels server-side |
+| Authorization Code + PKCE | Yes (code + challenge) | No | Yes | High — prevents auth code interception |
+| Client Credentials | No | Yes | No | Medium — no user context |
+| Device Code | No (user logs in on separate device) | No | Yes | Medium — for input-constrained devices |
+| Implicit (deprecated) | No (token in URL fragment) | No | No | Low — token exposed in URL |
+### OIDC Scopes
+| Scope | Returns | Description |
+|-------|---------|-------------|
+| <code>openid</code> | <code>sub</code> (required) | Signals OIDC protocol; always required for OIDC. |
+| <code>profile</code> | <code>name</code>, <code>given_name</code>, <code>family_name</code>, <code>picture</code>, etc. | Basic profile attributes. |
+| <code>email</code> | <code>email</code>, <code>email_verified</code> | Email address and verification status. |
+| <code>address</code> | <code>address</code> (JSON object) | Formatted postal address. |
+| <code>phone</code> | <code>phone_number</code>, <code>phone_number_verified</code> | Phone number and verification status. |
+### HTTP Security Headers
+| Header | Recommended Value | Protection |
+|--------|-------------------|------------|
+| <code>Content-Security-Policy</code> | <code>default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'</code> | XSS, data injection |
+| <code>Strict-Transport-Security</code> | <code>max-age=31536000; includeSubDomains; preload</code> | SSL stripping, MITM |
+| <code>X-Frame-Options</code> | <code>DENY</code> | Clickjacking |
+| <code>X-Content-Type-Options</code> | <code>nosniff</code> | MIME sniffing |
+| <code>Referrer-Policy</code> | <code>strict-origin-when-cross-origin</code> | Referrer leakage |
+| <code>Permissions-Policy</code> | <code>camera=(), microphone=(), geolocation=()</code> | Feature restriction |
+| <code>Cache-Control</code> | <code>no-store</code> (for auth responses) | Sensitive data caching |
+### Password Hashing Parameters
+| Algorithm | Min Cost/Iterations | Salt Length | Recommended Configuration |
+|-----------|-------------------|-------------|--------------------------|
+| bcrypt | 10 | 16 bytes (auto) | <code>bcrypt.hash(password, 12)</code> |
+| argon2id | 2 iterations, 19 MiB memory, 1 parallelism | 16 bytes (auto) | <code>argon2.hash(password, { type: argon2.Argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 })</code> |
+| scrypt | N=16384, r=8, p=1 | 16 bytes (auto) | <code>scrypt.hash(password, { N: 16384, r: 8, p: 1, maxmem: 134217728 })</code> |
+1. **What is the difference between authentication and authorization?** Provide a real-world analogy.
+   - Answer: Authentication verifies identity ("who you are" — showing your ID at airport security). Authorization grants permissions ("what you can do" — your boarding pass determines which gate you access).
+2. **Explain the OAuth 2.0 authorization code flow with PKCE. Why is PKCE necessary for SPAs?**
+   - Answer: PKCE adds a <code>code_challenge</code> (SHA-256 hash of a random verifier) to the authorization request. The client proves possession of the verifier when exchanging the code. This prevents interception attacks because a stolen authorization code cannot be exchanged without the original verifier — critical for SPAs that cannot keep a client secret confidential.
+3. **Compare HS256 and RS256 for JWT signing. When would you choose one over the other?**
+   - Answer: HS256 is symmetric (same key signs and verifies), making it faster but requiring secure key distribution. RS256 is asymmetric (private key signs, public key verifies), enabling third-party verification and safe public key sharing. Choose RS256 for distributed systems and HS256 for tightly coupled internal services.
+4. **A user claims their session was hijacked. How would you investigate and mitigate?**
+   - Answer: Immediately invalidate the session. Check logs for unusual IP/location, user-agent changes, or multiple concurrent sessions from different geographies. Mitigate by rotating session IDs, enforcing <code>HttpOnly</code>/<code>Secure</code>/<code>SameSite</code> cookies, and implementing IP binding (tie session to IP — though this can break for legitimate mobile users).
+5. **Design a token revocation strategy for a JWT-based system.**
+   - Answer: Use short-lived access tokens (5–15 min) with refresh tokens (1–7 days). Maintain a Redis blacklist keyed by <code>jti</code> with TTL matching token expiry. On logout or password change, add the current token's <code>jti</code> to the blacklist. Issue a new refresh token on each rotation, invalidating the previous one. For emergencies, increment a <code>tokenVersion</code> field on the user record (invalidates all tokens for that user).
+6. **What is the difference between RBAC and ABAC? Give an example where ABAC is more appropriate.**
+   - Answer: RBAC grants access based on the user's role (e.g., "admin can access all documents"). ABAC uses attributes of the user, resource, and environment (e.g., "managers in the finance department during business hours can access financial reports for their region"). ABAC is more flexible for complex, multi-dimensional policies.
+7. **List three techniques to prevent CSRF attacks on a session-based web application.**
+   - Answer: (1) Set <code>SameSite=Strict</code> or <code>Lax</code> on the session cookie. (2) Include a CSRF token (anti-forgery token) in every form and validate it server-side. (3) Check the <code>Origin</code> and <code>Referer</code> headers on state-changing requests.
+8. **Why should you never store passwords in plaintext? What properties should a password hashing algorithm have?**
+   - Answer: Plaintext storage exposes all credentials in any breach. A password hashing algorithm must be (a) computationally expensive (slow), (b) memory-hard (resists GPU/ASIC attacks), (c) include a unique random salt per password, and (d) produce a consistent output for verification. bcrypt, argon2, and scrypt satisfy all these properties.
+9. **Explain the role of refresh tokens in OAuth 2.0 and how token rotation improves security.**
+   - Answer: Refresh tokens are long-lived credentials that allow obtaining new access tokens without re-authentication. Token rotation issues a new refresh token with each refresh and invalidates the previous one. This limits the window of a leaked refresh token: even if stolen, the attacker can only use it once before rotation invalidates it.
+10. **What headers and cookie flags make a session cookie secure? Be specific.**
+    - Answer: <code>HttpOnly</code> (prevents JS access), <code>Secure</code> (HTTPS only), <code>SameSite=Lax</code> or <code>Strict</code> (CSRF protection), <code>Max-Age</code> or <code>Expires</code> (session lifetime), <code>Path=/</code> (scope). The <code>Domain</code> attribute should be set explicitly to avoid wide scope.\`,
+import bcrypt from "bcrypt";  // BCrypt hashing library (uses Blowfish cipher)
+
+const SALT_ROUNDS = 12;       // Cost factor — higher is slower (more secure)
+
+// Hash a password during registration
+async function hashPassword(plaintext: string): Promise<string> {
+  const salt = await bcrypt.genSalt(SALT_ROUNDS);  // Generate a random salt
+  const hash = await bcrypt.hash(plaintext, salt); // Hash: returns $2b$12$<salt><hash>
+  return hash;  // Store this hash in the database (includes salt)
+}
+
+// Verify a password during login
+async function verifyPassword(plaintext: string, storedHash: string): Promise<boolean> {
+  const match = await bcrypt.compare(plaintext, storedHash); // Compare securely
+  return match;  // true if password matches, false otherwise
+}
+\`\`\`
+
+### NIST Password Guidelines (SP 800-63B)
+
+| Requirement | Detail |
+|-------------|--------|
+| Minimum length | 8 characters (12+ recommended) |
+| Maximum length | At least 64 characters (don't truncate) |
+| Complexity rules | No composition rules (no mandatory uppercase/digit/symbol) |
+| Check against breach lists | Reject passwords found in known breaches (Have I Been Pwned API) |
+| Rate limiting | Lock account after 5–10 failed attempts (increasing delays) |
+| Storage | Hash with a memory-hard algorithm (argon2, bcrypt, scrypt); never encrypt |
+
+\`\`\`typescript
+// Example: Account lockout logic
+const MAX_ATTEMPTS = 5;                  // Maximum consecutive failed login attempts
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // Lockout period: 15 minutes
+
+// Check if account is locked
+async function isAccountLocked(user: User): Promise<boolean> {
+  if (user.lockedUntil && user.lockedUntil > new Date()) {  // Still locked?
+    return true;  // Account is temporarily locked
+  }
+  if (user.failedAttempts >= MAX_ATTEMPTS) {                // Exceeded max attempts?
+    user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS); // Set lockout expiry
+    await user.save();
+    return true;
+  }
+  return false;  // Account is not locked
+}
+
+// On failed login: increment attempt counter
+async function recordFailedAttempt(user: User): Promise<void> {
+  user.failedAttempts += 1;                                // Increment counter
+  if (user.failedAttempts >= MAX_ATTEMPTS) {
+    user.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS); // Lock the account
+  }
+  await user.save();
+}
+
+// On successful login: reset the counter
+async function resetFailedAttempts(user: User): Promise<void> {
+  user.failedAttempts = 0;   // Clear the counter
+  user.lockedUntil = null;   // Remove any lockout
+  await user.save();
+}
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It's Dangerous | Solution |
+|---|---------|--------------------|----------|
+| 1 | Storing passwords in plaintext | Any breach exposes all user credentials. | Always hash with bcrypt/argon2/scrypt. |
+| 2 | Using JWT as a session replacement without short expiry | JWTs cannot be revoked server-side (unless blacklisted). | Use short TTL (5-15 min) and refresh tokens. Never store sensitive data in payload. |
+| 3 | Ignoring token blacklisting for sensitive actions | A leaked token works until it expires. | Maintain a Redis blacklist of <code>jti</code> values for high-value operations. |
+| 4 | Exposing internal error messages in auth responses | Attackers can enumerate valid users or debug endpoints. | Return generic messages: "Invalid credentials", not "User not found". |
+| 5 | Accepting JWTs without verifying signature or algorithm | Attacker can forge tokens by changing <code>alg</code> to <code>none</code> or symmetric key. | Always verify signature and explicitly whitelist allowed algorithms. |
+| 6 | Using <code>SameSite=None</code> without <code>Secure</code> | Cookie leaks over HTTP — vulnerable to interception. | Always pair <code>SameSite=None</code> with <code>Secure</code>. Prefer <code>Lax</code> or <code>Strict</code>. |
+| 7 | Failing to rotate secrets and keys | Compromised keys give permanent access. | Rotate signing keys, API keys, and secrets on a schedule (e.g., every 90 days). |
+| 8 | Overly permissive CORS (e.g., <code>Access-Control-Allow-Origin: *</code>) with credentials | Any website can make authenticated requests to your API. | Never use <code>*</code> with <code>credentials: true</code>. Whitelist specific origins. |
+| 9 | Logging or leaking tokens in URLs or logs | Tokens captured in server logs, referrer headers, or browser history. | Transmit tokens in <code>Authorization</code> headers only. Redact tokens in logs. |
+| 10 | Insufficient rate limiting on auth endpoints | Brute-force, credential stuffing, and enumeration attacks. | Rate-limit login, registration, password reset, and token refresh endpoints. |
+| 11 | Using user-controlled input in <code>redirect_uri</code> validation | Open redirect vulnerability — attacker steals auth codes. | Validate redirect URIs against a strict whitelist; reject any wildcard matches. |
+| 12 | Storing API keys in client-side code (SPA, mobile) | Keys are trivially extracted from source code or network traffic. | Use a BFF (Backend for Frontend) or proxy; never embed secrets in client bundles. |
+
+## Complete API Reference
+
+### JWT Claim Registry (Registered Claims)
+
+| Claim | Full Name | Required? | Description |
+|-------|-----------|-----------|-------------|
+| <code>iss</code> | Issuer | Optional | Identifies the principal that issued the JWT. |
+| <code>sub</code> | Subject | Optional | Identifies the subject of the JWT (usually the user ID). |
+| <code>aud</code> | Audience | Optional | Recipient(s) the JWT is intended for. |
+| <code>exp</code> | Expiration Time | Recommended | Unix timestamp after which the JWT must not be accepted. |
+| <code>nbf</code> | Not Before | Optional | Unix timestamp before which the JWT must not be accepted. |
+| <code>iat</code> | Issued At | Optional | Unix timestamp when the JWT was issued. |
+| <code>jti</code> | JWT ID | Optional | Unique identifier for the token (used for blacklisting). |
+
+### OAuth 2.0 Grant Types
+
+| Grant Type | Authorization Code in URL? | Client Secret Required? | Refresh Token? | Security Profile |
+|------------|---------------------------|------------------------|----------------|------------------|
+| Authorization Code | Yes (code) | Yes (confidential clients) | Yes | High — code travels server-side |
+| Authorization Code + PKCE | Yes (code + challenge) | No | Yes | High — prevents auth code interception |
+| Client Credentials | No | Yes | No | Medium — no user context |
+| Device Code | No (user logs in on separate device) | No | Yes | Medium — for input-constrained devices |
+| Implicit (deprecated) | No (token in URL fragment) | No | No | Low — token exposed in URL |
+
+### OIDC Scopes
+
+| Scope | Returns | Description |
+|-------|---------|-------------|
+| <code>openid</code> | <code>sub</code> (required) | Signals OIDC protocol; always required for OIDC. |
+| <code>profile</code> | <code>name</code>, <code>given_name</code>, <code>family_name</code>, <code>picture</code>, etc. | Basic profile attributes. |
+| <code>email</code> | <code>email</code>, <code>email_verified</code> | Email address and verification status. |
+| <code>address</code> | <code>address</code> (JSON object) | Formatted postal address. |
+| <code>phone</code> | <code>phone_number</code>, <code>phone_number_verified</code> | Phone number and verification status. |
+
+### HTTP Security Headers
+
+| Header | Recommended Value | Protection |
+|--------|-------------------|------------|
+| <code>Content-Security-Policy</code> | <code>default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'</code> | XSS, data injection |
+| <code>Strict-Transport-Security</code> | <code>max-age=31536000; includeSubDomains; preload</code> | SSL stripping, MITM |
+| <code>X-Frame-Options</code> | <code>DENY</code> | Clickjacking |
+| <code>X-Content-Type-Options</code> | <code>nosniff</code> | MIME sniffing |
+| <code>Referrer-Policy</code> | <code>strict-origin-when-cross-origin</code> | Referrer leakage |
+| <code>Permissions-Policy</code> | <code>camera=(), microphone=(), geolocation=()</code> | Feature restriction |
+| <code>Cache-Control</code> | <code>no-store</code> (for auth responses) | Sensitive data caching |
+
+### Password Hashing Parameters
+
+| Algorithm | Min Cost/Iterations | Salt Length | Recommended Configuration |
+|-----------|-------------------|-------------|--------------------------|
+| bcrypt | 10 | 16 bytes (auto) | <code>bcrypt.hash(password, 12)</code> |
+| argon2id | 2 iterations, 19 MiB memory, 1 parallelism | 16 bytes (auto) | <code>argon2.hash(password, { type: argon2.Argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 })</code> |
+| scrypt | N=16384, r=8, p=1 | 16 bytes (auto) | <code>scrypt.hash(password, { N: 16384, r: 8, p: 1, maxmem: 134217728 })</code> |
+
+## Practice Questions
+
+1. **What is the difference between authentication and authorization?** Provide a real-world analogy.
+   - Answer: Authentication verifies identity ("who you are" — showing your ID at airport security). Authorization grants permissions ("what you can do" — your boarding pass determines which gate you access).
+
+2. **Explain the OAuth 2.0 authorization code flow with PKCE. Why is PKCE necessary for SPAs?**
+   - Answer: PKCE adds a <code>code_challenge</code> (SHA-256 hash of a random verifier) to the authorization request. The client proves possession of the verifier when exchanging the code. This prevents interception attacks because a stolen authorization code cannot be exchanged without the original verifier — critical for SPAs that cannot keep a client secret confidential.
+
+3. **Compare HS256 and RS256 for JWT signing. When would you choose one over the other?**
+   - Answer: HS256 is symmetric (same key signs and verifies), making it faster but requiring secure key distribution. RS256 is asymmetric (private key signs, public key verifies), enabling third-party verification and safe public key sharing. Choose RS256 for distributed systems and HS256 for tightly coupled internal services.
+
+4. **A user claims their session was hijacked. How would you investigate and mitigate?**
+   - Answer: Immediately invalidate the session. Check logs for unusual IP/location, user-agent changes, or multiple concurrent sessions from different geographies. Mitigate by rotating session IDs, enforcing <code>HttpOnly</code>/<code>Secure</code>/<code>SameSite</code> cookies, and implementing IP binding (tie session to IP — though this can break for legitimate mobile users).
+
+5. **Design a token revocation strategy for a JWT-based system.**
+   - Answer: Use short-lived access tokens (5–15 min) with refresh tokens (1–7 days). Maintain a Redis blacklist keyed by <code>jti</code> with TTL matching token expiry. On logout or password change, add the current token's <code>jti</code> to the blacklist. Issue a new refresh token on each rotation, invalidating the previous one. For emergencies, increment a <code>tokenVersion</code> field on the user record (invalidates all tokens for that user).
+
+6. **What is the difference between RBAC and ABAC? Give an example where ABAC is more appropriate.**
+   - Answer: RBAC grants access based on the user's role (e.g., "admin can access all documents"). ABAC uses attributes of the user, resource, and environment (e.g., "managers in the finance department during business hours can access financial reports for their region"). ABAC is more flexible for complex, multi-dimensional policies.
+
+7. **List three techniques to prevent CSRF attacks on a session-based web application.**
+   - Answer: (1) Set <code>SameSite=Strict</code> or <code>Lax</code> on the session cookie. (2) Include a CSRF token (anti-forgery token) in every form and validate it server-side. (3) Check the <code>Origin</code> and <code>Referer</code> headers on state-changing requests.
+
+8. **Why should you never store passwords in plaintext? What properties should a password hashing algorithm have?**
+   - Answer: Plaintext storage exposes all credentials in any breach. A password hashing algorithm must be (a) computationally expensive (slow), (b) memory-hard (resists GPU/ASIC attacks), (c) include a unique random salt per password, and (d) produce a consistent output for verification. bcrypt, argon2, and scrypt satisfy all these properties.
+
+9. **Explain the role of refresh tokens in OAuth 2.0 and how token rotation improves security.**
+   - Answer: Refresh tokens are long-lived credentials that allow obtaining new access tokens without re-authentication. Token rotation issues a new refresh token with each refresh and invalidates the previous one. This limits the window of a leaked refresh token: even if stolen, the attacker can only use it once before rotation invalidates it.
+
+10. **What headers and cookie flags make a session cookie secure? Be specific.**
+    - Answer: <code>HttpOnly</code> (prevents JS access), <code>Secure</code> (HTTPS only), <code>SameSite=Lax</code> or <code>Strict</code> (CSRF protection), <code>Max-Age</code> or <code>Expires</code> (session lifetime), <code>Path=/</code> (scope). The <code>Domain</code> attribute should be set explicitly to avoid wide scope.`,
+            tags: ["Authentication", "Authorization", "Security", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-caching",
+            title: "Caching Strategies",
+            shortDesc: "Complete caching reference — HTTP caching, CDN, Redis/Memcached, cache invalidation patterns, and distributed caching topologies.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "HTTP caching: Cache-Control, ETag, Last-Modified, Vary headers — validation vs expiration.",
+              "CDN: edge caching, origin pull vs push, cache keys and purge strategies.",
+              "Redis: data structures, expiration policies, LRU eviction, persistence (RDB/AOF).",
+              "Cache invalidation: TTL, write-through, write-behind, cache-aside, refresh-ahead.",
+              "Distributed caching: consistent hashing, Redis Cluster, sharding, hot key mitigation.",
+            ],
+            content: `## Quick Reference
+Caching reduces latency, decreases server load, and improves system resilience by storing frequently accessed data in a fast retrieval layer. HTTP caching uses headers like <code>Cache-Control</code> and <code>ETag</code> to control browser/proxy caching. CDNs cache content at edge locations near users. Redis provides in-memory data structures with built-in eviction policies. The hardest problem in caching is invalidation — knowing when stale data must be refreshed. A well-designed caching strategy balances freshness, consistency, and performance.
+## HTTP Caching
+### Cache-Control Directives
+| Directive | Meaning | Example |
+|-----------|---------|---------|
+| <code>max-age=&lt;seconds&gt;</code> | Response is fresh for N seconds after generation | <code>Cache-Control: max-age=3600</code> |
+| <code>no-cache</code> | Must revalidate with origin before using cached copy | <code>Cache-Control: no-cache</code> |
+| <code>no-store</code> | Must not cache the response at all | <code>Cache-Control: no-store</code> |
+| <code>must-revalidate</code> | Once stale, must contact origin; no stale serving | <code>Cache-Control: must-revalidate</code> |
+| <code>public</code> | May be cached by any cache (browser, CDN, proxy) | <code>Cache-Control: public, max-age=3600</code> |
+| <code>private</code> | May only be cached by the browser (not CDN/proxy) | <code>Cache-Control: private, max-age=3600</code> |
+| <code>s-maxage</code> | Overrides max-age for shared caches (CDN, proxy) | <code>Cache-Control: s-maxage=3600, max-age=0</code> |
+### ETag (Entity Tag)
+ETags identify a specific version of a resource. Strong ETags change when the content bytes change; weak ETags (prefix <code>W/</code>) change only on semantic changes.
+# Server response
+ETag: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+# Client conditional request (cache is stale)
+If-None-Match: "33a64df551425fcc55e4d42a148795d9f25f89d4"
+# Server response if unchanged
+HTTP/1.1 304 Not Modified  # Empty body — cache considers this still fresh
+# Server response if changed
+ETag: "55e4d42a148795d9f33a64df551425fcc25f89d4"
+### Last-Modified / If-Modified-Since
+A timestamp-based alternative (weaker than ETag — only precise to the second).
+# Server response
+Last-Modified: Wed, 21 Oct 2025 07:28:00 GMT
+# Client request
+If-Modified-Since: Wed, 21 Oct 2025 07:28:00 GMT
+# Server response if not modified
+HTTP/1.1 304 Not Modified
+### Vary Header
+The <code>Vary</code> header tells caches that the response varies based on request headers, so cache keys must include those headers.
+| Vary Value | Meaning |
+|------------|---------|
+| <code>Vary: Accept-Encoding</code> | Different cache entries for gzip vs plain |
+| <code>Vary: Accept-Language</code> | Different cache entries per language |
+| <code>Vary: Authorization</code> | Never serve authenticated response to an anonymous user |
+| <code>Vary: Origin</code> | Different entries per CORS origin |
+## CDN Caching
+CDNs cache content at edge nodes geographically close to users.
+| Concept | Description |
+| Edge Caching | Content cached at hundreds of globally-distributed Points of Presence (PoPs) |
+| Origin Pull | CDN fetches from origin on cache miss; origin sets TTL via <code>Cache-Control</code> |
+| Origin Push | Content proactively uploaded to the CDN (e.g., S3 + CloudFront invalidation) |
+| Cache Key | The identifier used to look up a cached object — typically URL + relevant headers |
+| Cache Purge | Forcibly removing cached objects (also called "invalidation" or "ban") |
+| Geo-distribution | PoP selection based on DNS resolution (GeoDNS) or Anycast routing |
+| Shield / PoP Hierarchy | A "shield" layer sits between edge and origin, aggregating misses to reduce origin load |
+| Stale-while-revalidate | Serve stale content while fetching fresh version in the background |
+### Invalidation Strategies
+| Strategy | Mechanism | Notes |
+|----------|-----------|-------|
+| TTL expiration | <code>Cache-Control: max-age</code> | Simplest; delay between update and propagation |
+| Versioned URLs | <code>/static/main.a1b2c3.js</code> | Immutable content, long TTL; purge via deploy |
+| API purge | POST to CDN purge API | Targeted removal; costly at scale |
+| Wildcard purge | <code>/*</code> or prefix pattern | Coarse; high cache-fill cost |
+| Cache tag purge | <code>Cache-Tag: user:123</code> | Tag-based invalidation (Fastly, Cloudflare) |
+## Redis Data Structures
+| Structure | Command Examples | Best For |
+|-----------|------------------|----------|
+| String | <code>SET</code>, <code>GET</code>, <code>INCR</code>, <code>MGET</code>, <code>SETEX</code> | Session data, counters, simple cache values |
+| List | <code>LPUSH</code>, <code>RPOP</code>, <code>LLEN</code>, <code>LRANGE</code> | Queues, message buffers, timeline feeds |
+| Set | <code>SADD</code>, <code>SREM</code>, <code>SMEMBERS</code>, <code>SISMEMBER</code>, <code>SINTER</code> | Tags, unique visitors, friend relationships |
+| Sorted Set | <code>ZADD</code>, <code>ZRANK</code>, <code>ZRANGE</code>, <code>ZREVRANGE</code>, <code>ZINCRBY</code> | Leaderboards, rate-limiter sliding windows, priority queues |
+| Hash | <code>HSET</code>, <code>HGET</code>, <code>HGETALL</code>, <code>HINCRBY</code> | Objects (user profiles), partial updates |
+| Stream | <code>XADD</code>, <code>XREAD</code>, <code>XREADGROUP</code>, <code>XRANGE</code> | Event logs, activity feeds, Kafka-style message streaming |
+| Bitmap | <code>SETBIT</code>, <code>GETBIT</code>, <code>BITCOUNT</code>, <code>BITOP</code> | Feature flags, bloom filters, daily active users |
+| HyperLogLog | <code>PFADD</code>, <code>PFCOUNT</code>, <code>PFMERGE</code> | Approximate unique counts (~0.81% error) |
+| Geospatial | <code>GEOADD</code>, <code>GEODIST</code>, <code>GEORADIUS</code>, <code>GEOPOS</code> | Nearby places, location-based queries |
+### Common Redis Commands by Data Type
+| Command | Signature | Description |
+|---------|-----------|-------------|
+| <code>SET</code> | <code>SET key value [NX\|XX] [EX seconds\|PX ms]</code> | Set key to value with optional expiry |
+| <code>GET</code> | <code>GET key</code> | Get value at key |
+| <code>DEL</code> | <code>DEL key [key ...]</code> | Delete one or more keys |
+| <code>EXPIRE</code> | <code>EXPIRE key seconds</code> | Set TTL in seconds |
+| <code>TTL</code> | <code>TTL key</code> | Get remaining TTL (-1 = none, -2 = not found) |
+| <code>INCR</code> | <code>INCR key</code> | Atomically increment integer value |
+| <code>LPUSH</code> | <code>LPUSH key value [value ...]</code> | Prepend value(s) to list |
+| <code>RPOP</code> | <code>RPOP key</code> | Remove and get last element |
+| <code>SADD</code> | <code>SADD key member [member ...]</code> | Add member(s) to set |
+| <code>ZADD</code> | <code>ZADD key score member [score member ...]</code> | Add member with score to sorted set |
+| <code>HSET</code> | <code>HSET key field value [field value ...]</code> | Set field(s) in hash |
+| <code>XADD</code> | <code>XADD key * field value [field value ...]</code> | Append entry to stream (auto-generated ID) |
+| <code>GEOADD</code> | <code>GEOADD key longitude latitude member</code> | Add geospatial point |
+## Cache Eviction
+Eviction happens when a cache reaches its memory limit and needs to free space for new entries.
+### Eviction Policies
+| Policy | Description | Use Case |
+|--------|-------------|----------|
+| TTL (expiration) | Entries removed after a fixed time-to-live | Session data, temporary tokens |
+| LRU (Least Recently Used) | Evicts entries not accessed for the longest time | General-purpose caching |
+| LFU (Least Frequently Used) | Evicts entries accessed least often | Content with skewed popularity |
+| FIFO (First In, First Out) | Evicts the oldest entry regardless of access | Stateless, ordered workloads |
+| Random | Evicts a random entry | Edge case / when no policy matters |
+| MRU (Most Recently Used) | Evicts newest entries | Specialized (e.g., looping access patterns) |
+### Redis maxmemory-policy Options
+| Policy | Scope | Eviction Target |
+|--------|-------|-----------------|
+| <code>noeviction</code> | All keys | Returns error on write when memory limit reached |
+| <code>allkeys-lru</code> | All keys | Evict least recently used key among all keys |
+| <code>allkeys-lfu</code> | All keys | Evict least frequently used key among all keys |
+| <code>allkeys-random</code> | All keys | Evict random key |
+| <code>volatile-lru</code> | Keys with TTL set | Evict LRU among keys with an expiry |
+| <code>volatile-lfu</code> | Keys with TTL set | Evict LFU among keys with an expiry |
+| <code>volatile-ttl</code> | Keys with TTL set | Evict key with shortest remaining TTL |
+| <code>volatile-random</code> | Keys with TTL set | Evict random key among keys with an expiry |
+# Configure in redis.conf
+maxmemory 4gb                     # Maximum memory Redis should use
+maxmemory-policy allkeys-lru      # Eviction policy (default: noeviction)
+## Cache Patterns
+### Cache-aside (Lazy Loading)
+The application checks the cache first; on a miss, it loads from the database and populates the cache.
+def get_user(user_id):
+    # Read from cache first
+    user = cache.get(f"user:{user_id}")
+    if user is None:
+        # Cache miss — load from database
+        user = db.query("SELECT * FROM users WHERE id = ?", user_id)
+        if user:
+            # Populate cache with TTL
+            cache.set(f"user:{user_id}", user, ttl=3600)
+### Read-through
+The cache layer itself loads the data from the database on a miss (transparent to the application).
+# Pseudocode for a read-through cache library
+class ReadThroughCache:
+    def __init__(self, redis_client, db_loader, ttl=3600):
+        self.cache = redis_client     # Redis connection
+        self.loader = db_loader       # Function that loads from DB
+        self.ttl = ttl                # Default TTL in seconds
+    def get(self, key):
+        value = self.cache.get(key)
+        if value is None:
+            # Automatically load from DB and populate cache
+            value = self.loader(key)
+            self.cache.setex(key, self.ttl, value)
+        return value
+cache = ReadThroughCache(redis, load_user_from_db, ttl=300)
+user = cache.get("user:42")          # Miss triggers automatic DB load
+### Write-through
+Every write goes through the cache first, which writes to the database synchronously.
+def write_through(cache, db, key, value, ttl=3600):
+    # Write to database first (or cache first, order matters)
+    db.write(key, value)              # Write to primary store
+    cache.setex(key, ttl, value)      # Update or populate cache
+### Write-behind (Write-back)
+Writes go to the cache immediately and are asynchronously flushed to the database.
+import asyncio
+class WriteBehindCache:
+    def __init__(self, redis_client, db_writer, flush_interval=5):
+        self.cache = redis_client
+        self.writer = db_writer       # Async DB writer
+        self.queue = asyncio.Queue()  # Buffer of pending writes
+        self.flush_interval = flush_interval  # Seconds between batch flushes
+    async def set(self, key, value):
+        self.cache.set(key, value)    # Immediate cache update
+        await self.queue.put((key, value))  # Enqueue for DB write
+    async def _flush_loop(self):
+        while True:
+            batch = []
+            # Collect all pending writes in batch
+            while not self.queue.empty():
+                batch.append(await self.queue.get())
+            if batch:
+                self.writer.batch_write(batch)  # Bulk DB flush
+            await asyncio.sleep(self.flush_interval)
+### Refresh-ahead
+The cache proactively refreshes an entry before it expires, based on access patterns.
+def get_with_refresh_ahead(cache, key, loader, ttl=300, refresh_before=60):
+    value = cache.get(key)
+    if value is None:
+        # Cache miss — load synchronously
+        value = loader(key)
+        cache.setex(key, ttl, value)
+    else:
+        remaining = cache.ttl(key)
+        # If about to expire (within refresh_before seconds), refresh async
+        if remaining is not None and remaining < refresh_before:
+            asyncio.create_task(refresh_cache(cache, key, loader, ttl))
+async def refresh_cache(cache, key, loader, ttl):
+    new_value = loader(key)           # Load fresh data
+    cache.setex(key, ttl, new_value)  # Reset TTL
+## Distributed Caching
+### Consistent Hashing
+Consistent hashing maps keys to nodes so that only <code>1/N</code> of keys are remapped when a node is added or removed. This minimizes cache misses during scaling.
+import hashlib
+class ConsistentHashRing:
+    def __init__(self, nodes=None, virtual_nodes=150):
+        self.virtual_nodes = virtual_nodes  # Virtual replicas per node for better distribution
+        self.ring = {}                      # Hash -> node mapping
+        self.nodes = set()
+        if nodes:
+            for node in nodes:
+                self.add_node(node)
+    def _hash(self, key):
+        # SHA-256 hash for uniform distribution
+        return int(hashlib.sha256(key.encode()).hexdigest(), 16)
+    def add_node(self, node):
+        self.nodes.add(node)
+        # Add virtual node replicas on the ring
+        for i in range(self.virtual_nodes):
+            virtual_key = self._hash(f"{node}:{i}")
+            self.ring[virtual_key] = node
+    def remove_node(self, node):
+        self.nodes.discard(node)
+        for i in range(self.virtual_nodes):
+            virtual_key = self._hash(f"{node}:{i}")
+            del self.ring[virtual_key]
+    def get_node(self, key):
+        if not self.ring:
+            return None
+        hash_value = self._hash(key)
+        # Find the first node clockwise from the key's hash position
+        sorted_keys = sorted(self.ring.keys())
+        for ring_key in sorted_keys:
+            if hash_value <= ring_key:
+                return self.ring[ring_key]
+        # Wrap around to the first node
+        return self.ring[sorted_keys[0]]
+### Redis Cluster
+| Feature | Description |
+| Sharding | Data auto-partitioned across 16384 hash slots |
+| Replication | Each master has 1+ replicas for failover |
+| No central proxy | Clients connect directly to the correct node (MOVED redirect) |
+| Min nodes | Minimum 3 master nodes recommended |
+| Hash slots | <code>HASH_SLOT = CRC16(key) % 16384</code> |
+| Resharding | Slots can be migrated online without downtime |
+| Hot key | A single key receiving disproportionate traffic — handled via local caching or key splitting |
+# Create a 6-node cluster (3 masters, 3 replicas)
+redis-cli --cluster create \
+  127.0.0.1:6379 127.0.0.1:6380 127.0.0.1:6381 \
+  127.0.0.1:6382 127.0.0.1:6383 127.0.0.1:6384 \
+  --cluster-replicas 1
+# Check cluster info
+redis-cli -c -p 6379 cluster info
+redis-cli -c -p 6379 cluster nodes
+### Sentinel for High Availability
+| Component | Role |
+| Sentinel | Monitors master health; performs automatic failover |
+| Quorum | Minimum sentinels that must agree master is down (e.g., 2 of 3) |
+| Split-brain | Network partition causes both old and new master to accept writes |
+| SDOWN | Subjective down (one sentinel thinks master is down) |
+| ODOWN | Objective down (quorum reached — failover triggered) |
+### Hot Key Mitigation
+| Strategy | Description |
+| Local cache | Cache the hot key in the application JVM (e.g., Caffeine) to absorb reads |
+| Key fan-out | Replicate the key across N shards (e.g., <code>user:42:0</code> ... <code>user:42:9</code>) and distribute reads |
+| Read replicas | Offload hot-key reads to Redis replicas (eventually consistent) |
+| Rate limiting | Throttle access to a hot key at the application layer |
+| Strategy | Mechanism | Latency | Consistency |
+|----------|-----------|---------|-------------|
+| TTL-based | Set <code>max-age</code> / <code>EXPIRE</code>; entry auto-destructs | Low | Eventual |
+| Event-driven | Publish cache-purge event on write; subscribers evict the key | Medium | Strong (with sync purge) |
+| Versioned keys | Key includes a version number: <code>user:v2:42</code> | Low | Strong (atomic version bump) |
+| Write-through | Update cache synchronously on every write | High | Strong |
+| Cache stampede prevention | Mutex lock on first miss; probabilistic early expiration | Medium | Eventual |
+### Cache Stampede Prevention
+A cache stampede (also called "thundering herd") occurs when many concurrent requests miss the cache simultaneously and all hit the database.
+import threading
+class StampedeSafeCache:
+    def __init__(self, redis_client):
+        self.cache = redis_client
+        self.lock = threading.Lock()
+    def get_or_compute(self, key, compute_func, ttl=300):
+        value = self.cache.get(key)
+        if value is not None:
+            return value
+        # Acquire mutex — only one thread computes
+        if self.lock.acquire(blocking=False):
+            try:
+                value = compute_func()          # Expensive DB call
+                self.cache.setex(key, ttl, value)
+                return value
+            finally:
+                self.lock.release()
+        else:
+            # Another thread is computing — wait and retry
+            import time
+            time.sleep(0.05)                   # Brief backoff
+            value = self.cache.get(key)
+            if value is not None:
+                return value
+            # Fallback: compute anyway (very rare)
+            return compute_func()
+Alternative: probabilistic early expiration (set TTL + random jitter, refresh before TTL expires).
+## Local Caching
+In-process caches store data in the application's memory (heap or off-heap), avoiding network round-trips.
+| Cache | Language | Features |
+|-------|----------|----------|
+| Caffeine | Java | Window-TinyLFU, async loading, record stats, near O(1) |
+| Guava Cache | Java | LRU, expire after write/access, weak keys/values |
+| Ehcache | Java | Tiered (heap/off-heap/disk), JSR-107 (JCache) |
+| LRU Map | Any | Simple LinkedHashMap-based, bounded by size |
+| std::map / unordered_map | C++ | Manual eviction logic |
+// Caffeine example — production-grade Java cache
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+Cache<String, User> userCache = Caffeine.newBuilder()
+    .maximumSize(10_000)                  // Maximum 10,000 entries in cache
+    .expireAfterWrite(5, TimeUnit.MINUTES) // Entries auto-expire 5 min after write
+    .recordStats()                        // Track hit rate, miss rate, load times
+    .build(key -> database.loadUser(key)); // Read-through loader function
+User user = userCache.get("user:42");     // Loads via read-through if absent
+### JVM Heap vs Off-heap
+| Aspect | On-heap | Off-heap |
+|--------|---------|----------|
+| Memory area | JVM heap (GC managed) | Direct memory (native) |
+| GC pressure | High for large caches | None (no GC) |
+| Serialization | Not needed (object references) | Required (byte arrays) |
+| Max size | Limited by heap size + GC overhead | Limited by physical RAM |
+| Speed | Fastest (direct reference) | Slower (serialization cost) |
+| Example | Caffeine, Guava | Ehcache off-heap tier, Redis (process) |
+## Common Pitfalls and Anti-patterns
+| # | Pitfall | Why It Hurts | Solution |
+|---|---------|-------------|----------|
+| 1 | Caching everything without a TTL | Stale data served indefinitely; memory exhaustion | Set explicit TTL on every entry; classify data by staleness tolerance |
+| 2 | No cache invalidation strategy | Users see stale data even after updates | Implement TTL-based, event-driven, or version-based invalidation |
+| 3 | Using Redis as a primary database | Data loss on restart (without AOF); expensive queries | Redis is a cache + ephemeral store; keep authoritative data in a DB |
+| 4 | Cache stampede on hot keys | Thousands of DB queries when a popular key expires | Use mutex locking, probabilistic early expiration, or refresh-ahead |
+| 5 | Ignoring <code>Vary</code> header | CDN serves wrong content for different clients (e.g., auth vs. anonymous) | Set <code>Vary: Accept-Encoding, Authorization</code> correctly |
+| 6 | Single point of failure with Redis | Cache goes down, all requests hit the DB | Use Redis Sentinel or Cluster for HA |
+| 7 | Over-caching with no eviction policy | Memory fills up; OOM kills the cache process | Set <code>maxmemory</code> and an appropriate <code>maxmemory-policy</code> |
+| 8 | Short TTL negating cache benefits | Data expires too quickly, causing high cache-miss rate | Increase TTL to match staleness budget; use stale-while-revalidate |
+| 9 | Cache key collisions | Different resources map to the same cache key, serving wrong data | Use namespaced keys: <code>entity:type:id</code> (e.g., <code>user:profile:42</code>) |
+| 10 | Not monitoring cache hit ratio | You do not know if caching is effective | Track <code>hit_rate = hits / (hits + misses)</code>; alert on drops below threshold |
+| 11 | DDoS via cache keys containing user input | Cache poisoning / memory exhaustion from unbounded keys | Sanitize keys; restrict key length; use hash of input for long values |
+| 12 | Write-behind without idempotency checks | Duplicate writes on retry cause data corruption | Make write operation idempotent; deduplicate by message ID |
+| 13 | Inconsistent hash ring after node changes | Massive cache miss cascade ("clogged drain") on node restart | Use consistent hashing with virtual nodes; pre-warm caches |
+| 14 | Storing large objects in Redis | Blocks the event loop; wastes memory with fragmentation | Split large objects; use compression; store metadata in Redis, blob in S3 |
+## Complete API Reference
+### HTTP Cache-Control Directives
+| Directive | Target | Effect | Example |
+|-----------|--------|--------|---------|
+| <code>max-age=&lt;sec&gt;</code> | All caches | Maximum time response is considered fresh | <code>max-age=3600</code> |
+| <code>s-maxage=&lt;sec&gt;</code> | Shared caches (CDN, proxy) | Overrides <code>max-age</code> for shared caches | <code>s-maxage=3600</code> |
+| <code>no-cache</code> | All caches | Must revalidate with origin before serving | <code>no-cache</code> |
+| <code>no-store</code> | All caches | Must not cache response at all | <code>no-store</code> |
+| <code>public</code> | All caches | May be cached by any cache | <code>public</code> |
+| <code>private</code> | Browser caches | May only be cached by browser | <code>private</code> |
+| <code>must-revalidate</code> | All caches | Once stale, must contact origin | <code>must-revalidate</code> |
+| <code>proxy-revalidate</code> | Shared caches | Same as must-revalidate but only for proxies | <code>proxy-revalidate</code> |
+| <code>immutable</code> | Browser caches | Content never changes; skip revalidation | <code>immutable</code> |
+| <code>stale-while-revalidate=&lt;sec&gt;</code> | All caches | Serve stale content while revalidating for this window | <code>stale-while-revalidate=86400</code> |
+| <code>stale-if-error=&lt;sec&gt;</code> | All caches | Serve stale content if origin returns an error | <code>stale-if-error=86400</code> |
+### Redis Commands by Data Type
+| Data Type | Command | Signature | Time Complexity |
+|-----------|---------|-----------|-----------------|
+| String | SET | <code>SET key value [NX\|XX] [EX seconds\|PX ms]</code> | O(1) |
+| String | GET | <code>GET key</code> | O(1) |
+| String | MSET | <code>MSET key value [key value ...]</code> | O(N) |
+| String | INCR | <code>INCR key</code> | O(1) |
+| List | LPUSH | <code>LPUSH key value [value ...]</code> | O(1) per element |
+| List | RPOP | <code>RPOP key</code> | O(1) |
+| List | LRANGE | <code>LRANGE key start stop</code> | O(S+N) |
+| Set | SADD | <code>SADD key member [member ...]</code> | O(1) per member |
+| Set | SISMEMBER | <code>SISMEMBER key member</code> | O(1) |
+| Set | SINTER | <code>SINTER key [key ...]</code> | O(N*M) |
+| Sorted Set | ZADD | <code>ZADD key score member [score member ...]</code> | O(log N) per member |
+| Sorted Set | ZRANGE | <code>ZRANGE key start stop [WITHSCORES]</code> | O(log N + M) |
+| Sorted Set | ZREVRANK | <code>ZREVRANK key member</code> | O(log N) |
+| Hash | HSET | <code>HSET key field value [field value ...]</code> | O(1) per field |
+| Hash | HGET | <code>HGET key field</code> | O(1) |
+| Hash | HGETALL | <code>HGETALL key</code> | O(N) |
+| Stream | XADD | <code>XADD key [MAXLEN ~ count] * field value</code> | O(1) |
+| Stream | XREAD | <code>XREAD COUNT count STREAMS key [key ...] id [id ...]</code> | O(N) |
+| Stream | XREADGROUP | <code>XREADGROUP GROUP group consumer COUNT count STREAMS key id</code> | O(N) |
+| Bitmap | SETBIT | <code>SETBIT key offset value</code> | O(1) |
+| Bitmap | BITCOUNT | <code>BITCOUNT key [start end]</code> | O(N) |
+| HyperLogLog | PFADD | <code>PFADD key element [element ...]</code> | O(1) |
+| HyperLogLog | PFCOUNT | <code>PFCOUNT key [key ...]</code> | O(1) |
+| Geospatial | GEOADD | <code>GEOADD key longitude latitude member [longitude latitude member ...]</code> | O(log N) per member |
+| Geospatial | GEORADIUS | <code>GEORADIUS key longitude latitude radius m\|km\|mi\|ft</code> | O(N + log N) |
+| Generic | DEL | <code>DEL key [key ...]</code> | O(N) |
+| Generic | EXPIRE | <code>EXPIRE key seconds</code> | O(1) |
+| Generic | TTL | <code>TTL key</code> | O(1) |
+| Generic | EXISTS | <code>EXISTS key [key ...]</code> | O(1) |
+### Eviction Policies
+| Policy | Redis Config | Description |
+|--------|-------------|-------------|
+| No eviction | <code>noeviction</code> | Write operations return error when memory limit is reached |
+| LRU (all keys) | <code>allkeys-lru</code> | Evict least recently used key from all keys |
+| LFU (all keys) | <code>allkeys-lfu</code> | Evict least frequently used key from all keys |
+| Random (all keys) | <code>allkeys-random</code> | Evict random key from all keys |
+| LRU (volatile) | <code>volatile-lru</code> | Evict LRU among keys with TTL set |
+| LFU (volatile) | <code>volatile-lfu</code> | Evict LFU among keys with TTL set |
+| TTL | <code>volatile-ttl</code> | Evict key with shortest TTL |
+| Random (volatile) | <code>volatile-random</code> | Evict random key among keys with TTL |
+### CDN Headers
+| Header | Purpose | Example |
+| <code>Cache-Control</code> | TTL and caching rules | <code>public, max-age=31536000, immutable</code> |
+| <code>CDN-Cache-Control</code> | CDN-specific override (some CDNs) | <code>CDN-Cache-Control: max-age=60</code> |
+| <code>CloudFront-Cache-Control</code> | AWS CloudFront override | <code>CloudFront-Cache-Control: max-age=60</code> |
+| <code>Surrogate-Control</code> | CDN-specific rules (legacy, Fastly) | <code>Surrogate-Control: max-age=3600</code> |
+| <code>Cache-Tag</code> | Invalidate by tag (Fastly, Cloudflare) | <code>Cache-Tag: product:123, category:shoes</code> |
+| <code>Age</code> | How many seconds the object has been in the CDN cache | <code>Age: 12345</code> |
+| <code>CF-Cache-Status</code> | Cloudflare cache status (HIT, MISS, DYNAMIC, etc.) | Debugging only |
+| <code>X-Cache</code> | Generic cache hit/miss status | <code>X-Cache: HIT from proxy-server</code> |
+1. You have an API endpoint that returns a user's profile. The profile changes at most once per hour. What Cache-Control header would you set? What conditional headers should the client send on subsequent requests?
+2. Your Redis instance is running out of memory. You have some keys with TTLs and others without. You want to keep as many active sessions (which all have TTLs) as possible. Which <code>maxmemory-policy</code> should you choose, and why?
+3. A social media feed endpoint sees 10,000 requests per second for the same hot key. When the cache entry expires, all 10,000 requests hit the database simultaneously. Name three strategies to prevent this cache stampede.
+4. Your application is deployed across multiple regions with a CDN. You update a product price in the origin database. Five minutes later, some regions still show the old price. List three possible causes — one related to CDN TTL, one to cache key design, and one to CDN purge propagation.
+5. Design a write-behind cache for an e-commerce inventory system. What happens if the application crashes before the write-behind flusher writes to the database? How would you make this safe?
+6. You have a Redis Cluster with 6 nodes (3 masters, 3 replicas). A new product launch causes one key — <code>product:launch:123</code> — to receive 80% of all traffic. Describe how you would mitigate this hot key issue at the application, cache, and network levels.
+7. Compare cache-aside and read-through caching. Under what conditions would you choose one over the other?
+8. Your mobile app caches API responses on the device. You want to push an invalidation to all clients when data changes. What approaches exist? Discuss the trade-offs between polling (TTL), push notifications (FCM/APNs), and version-based APIs.
+9. A colleague proposes setting no TTL on any cache entry and relying entirely on manual purges. What are at least three risks of this approach, and what operational safeguards would you demand?
+10. You are caching database query results in Redis. A user updates their email address. Describe a complete invalidation flow that ensures the stale cached result is never served again, covering database update, cache eviction, and concurrent request handling.
+            tags: ["Caching", "Redis", "Cheat Sheet"],
+            id: "cheat-messaging",
+            title: "Message Queues & Event-Driven Architecture",
+            shortDesc: "Complete messaging reference — RabbitMQ, Kafka, SQS/SNS, event sourcing, CQRS, and stream processing patterns.",
+            readTimeMin: 5,
+              "Message brokers: RabbitMQ (AMQP), Kafka (log-based), SQS/SNS (cloud-managed).",
+              "Patterns: pub/sub, competing consumers, dead letter queues, at-least-once delivery.",
+              "Kafka: topics, partitions, consumer groups, offset management, exactly-once semantics.",
+              "Event sourcing: storing state changes as an append-only event log.",
+              "CQRS: separate read and write models — materialized views for queries.",
+
+---
+
+## Local Caching
+
+In-process caches store data in the application's memory (heap or off-heap), avoiding network round-trips.
+
+| Cache | Language | Features |
+|-------|----------|----------|
+| Caffeine | Java | Window-TinyLFU, async loading, record stats, near O(1) |
+| Guava Cache | Java | LRU, expire after write/access, weak keys/values |
+| Ehcache | Java | Tiered (heap/off-heap/disk), JSR-107 (JCache) |
+| LRU Map | Any | Simple LinkedHashMap-based, bounded by size |
+| std::map / unordered_map | C++ | Manual eviction logic |
+
+\`\`\`java
+// Caffeine example — production-grade Java cache
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+Cache<String, User> userCache = Caffeine.newBuilder()
+    .maximumSize(10_000)                  // Maximum 10,000 entries in cache
+    .expireAfterWrite(5, TimeUnit.MINUTES) // Entries auto-expire 5 min after write
+    .recordStats()                        // Track hit rate, miss rate, load times
+    .build(key -> database.loadUser(key)); // Read-through loader function
+
+// Usage
+User user = userCache.get("user:42");     // Loads via read-through if absent
+\`\`\`
+
+### JVM Heap vs Off-heap
+
+| Aspect | On-heap | Off-heap |
+|--------|---------|----------|
+| Memory area | JVM heap (GC managed) | Direct memory (native) |
+| GC pressure | High for large caches | None (no GC) |
+| Serialization | Not needed (object references) | Required (byte arrays) |
+| Max size | Limited by heap size + GC overhead | Limited by physical RAM |
+| Speed | Fastest (direct reference) | Slower (serialization cost) |
+| Example | Caffeine, Guava | Ehcache off-heap tier, Redis (process) |
+
+---
+
+## Common Pitfalls and Anti-patterns
+
+| # | Pitfall | Why It Hurts | Solution |
+|---|---------|-------------|----------|
+| 1 | Caching everything without a TTL | Stale data served indefinitely; memory exhaustion | Set explicit TTL on every entry; classify data by staleness tolerance |
+| 2 | No cache invalidation strategy | Users see stale data even after updates | Implement TTL-based, event-driven, or version-based invalidation |
+| 3 | Using Redis as a primary database | Data loss on restart (without AOF); expensive queries | Redis is a cache + ephemeral store; keep authoritative data in a DB |
+| 4 | Cache stampede on hot keys | Thousands of DB queries when a popular key expires | Use mutex locking, probabilistic early expiration, or refresh-ahead |
+| 5 | Ignoring <code>Vary</code> header | CDN serves wrong content for different clients (e.g., auth vs. anonymous) | Set <code>Vary: Accept-Encoding, Authorization</code> correctly |
+| 6 | Single point of failure with Redis | Cache goes down, all requests hit the DB | Use Redis Sentinel or Cluster for HA |
+| 7 | Over-caching with no eviction policy | Memory fills up; OOM kills the cache process | Set <code>maxmemory</code> and an appropriate <code>maxmemory-policy</code> |
+| 8 | Short TTL negating cache benefits | Data expires too quickly, causing high cache-miss rate | Increase TTL to match staleness budget; use stale-while-revalidate |
+| 9 | Cache key collisions | Different resources map to the same cache key, serving wrong data | Use namespaced keys: <code>entity:type:id</code> (e.g., <code>user:profile:42</code>) |
+| 10 | Not monitoring cache hit ratio | You do not know if caching is effective | Track <code>hit_rate = hits / (hits + misses)</code>; alert on drops below threshold |
+| 11 | DDoS via cache keys containing user input | Cache poisoning / memory exhaustion from unbounded keys | Sanitize keys; restrict key length; use hash of input for long values |
+| 12 | Write-behind without idempotency checks | Duplicate writes on retry cause data corruption | Make write operation idempotent; deduplicate by message ID |
+| 13 | Inconsistent hash ring after node changes | Massive cache miss cascade ("clogged drain") on node restart | Use consistent hashing with virtual nodes; pre-warm caches |
+| 14 | Storing large objects in Redis | Blocks the event loop; wastes memory with fragmentation | Split large objects; use compression; store metadata in Redis, blob in S3 |
+
+---
+
+## Complete API Reference
+
+### HTTP Cache-Control Directives
+
+| Directive | Target | Effect | Example |
+|-----------|--------|--------|---------|
+| <code>max-age=&lt;sec&gt;</code> | All caches | Maximum time response is considered fresh | <code>max-age=3600</code> |
+| <code>s-maxage=&lt;sec&gt;</code> | Shared caches (CDN, proxy) | Overrides <code>max-age</code> for shared caches | <code>s-maxage=3600</code> |
+| <code>no-cache</code> | All caches | Must revalidate with origin before serving | <code>no-cache</code> |
+| <code>no-store</code> | All caches | Must not cache response at all | <code>no-store</code> |
+| <code>public</code> | All caches | May be cached by any cache | <code>public</code> |
+| <code>private</code> | Browser caches | May only be cached by browser | <code>private</code> |
+| <code>must-revalidate</code> | All caches | Once stale, must contact origin | <code>must-revalidate</code> |
+| <code>proxy-revalidate</code> | Shared caches | Same as must-revalidate but only for proxies | <code>proxy-revalidate</code> |
+| <code>immutable</code> | Browser caches | Content never changes; skip revalidation | <code>immutable</code> |
+| <code>stale-while-revalidate=&lt;sec&gt;</code> | All caches | Serve stale content while revalidating for this window | <code>stale-while-revalidate=86400</code> |
+| <code>stale-if-error=&lt;sec&gt;</code> | All caches | Serve stale content if origin returns an error | <code>stale-if-error=86400</code> |
+
+### Redis Commands by Data Type
+
+| Data Type | Command | Signature | Time Complexity |
+|-----------|---------|-----------|-----------------|
+| String | SET | <code>SET key value [NX\|XX] [EX seconds\|PX ms]</code> | O(1) |
+| String | GET | <code>GET key</code> | O(1) |
+| String | MSET | <code>MSET key value [key value ...]</code> | O(N) |
+| String | INCR | <code>INCR key</code> | O(1) |
+| List | LPUSH | <code>LPUSH key value [value ...]</code> | O(1) per element |
+| List | RPOP | <code>RPOP key</code> | O(1) |
+| List | LRANGE | <code>LRANGE key start stop</code> | O(S+N) |
+| Set | SADD | <code>SADD key member [member ...]</code> | O(1) per member |
+| Set | SISMEMBER | <code>SISMEMBER key member</code> | O(1) |
+| Set | SINTER | <code>SINTER key [key ...]</code> | O(N*M) |
+| Sorted Set | ZADD | <code>ZADD key score member [score member ...]</code> | O(log N) per member |
+| Sorted Set | ZRANGE | <code>ZRANGE key start stop [WITHSCORES]</code> | O(log N + M) |
+| Sorted Set | ZREVRANK | <code>ZREVRANK key member</code> | O(log N) |
+| Hash | HSET | <code>HSET key field value [field value ...]</code> | O(1) per field |
+| Hash | HGET | <code>HGET key field</code> | O(1) |
+| Hash | HGETALL | <code>HGETALL key</code> | O(N) |
+| Stream | XADD | <code>XADD key [MAXLEN ~ count] * field value</code> | O(1) |
+| Stream | XREAD | <code>XREAD COUNT count STREAMS key [key ...] id [id ...]</code> | O(N) |
+| Stream | XREADGROUP | <code>XREADGROUP GROUP group consumer COUNT count STREAMS key id</code> | O(N) |
+| Bitmap | SETBIT | <code>SETBIT key offset value</code> | O(1) |
+| Bitmap | BITCOUNT | <code>BITCOUNT key [start end]</code> | O(N) |
+| HyperLogLog | PFADD | <code>PFADD key element [element ...]</code> | O(1) |
+| HyperLogLog | PFCOUNT | <code>PFCOUNT key [key ...]</code> | O(1) |
+| Geospatial | GEOADD | <code>GEOADD key longitude latitude member [longitude latitude member ...]</code> | O(log N) per member |
+| Geospatial | GEORADIUS | <code>GEORADIUS key longitude latitude radius m\|km\|mi\|ft</code> | O(N + log N) |
+| Generic | DEL | <code>DEL key [key ...]</code> | O(N) |
+| Generic | EXPIRE | <code>EXPIRE key seconds</code> | O(1) |
+| Generic | TTL | <code>TTL key</code> | O(1) |
+| Generic | EXISTS | <code>EXISTS key [key ...]</code> | O(1) |
+
+### Eviction Policies
+
+| Policy | Redis Config | Description |
+|--------|-------------|-------------|
+| No eviction | <code>noeviction</code> | Write operations return error when memory limit is reached |
+| LRU (all keys) | <code>allkeys-lru</code> | Evict least recently used key from all keys |
+| LFU (all keys) | <code>allkeys-lfu</code> | Evict least frequently used key from all keys |
+| Random (all keys) | <code>allkeys-random</code> | Evict random key from all keys |
+| LRU (volatile) | <code>volatile-lru</code> | Evict LRU among keys with TTL set |
+| LFU (volatile) | <code>volatile-lfu</code> | Evict LFU among keys with TTL set |
+| TTL | <code>volatile-ttl</code> | Evict key with shortest TTL |
+| Random (volatile) | <code>volatile-random</code> | Evict random key among keys with TTL |
+
+### CDN Headers
+
+| Header | Purpose | Example |
+|--------|---------|---------|
+| <code>Cache-Control</code> | TTL and caching rules | <code>public, max-age=31536000, immutable</code> |
+| <code>CDN-Cache-Control</code> | CDN-specific override (some CDNs) | <code>CDN-Cache-Control: max-age=60</code> |
+| <code>CloudFront-Cache-Control</code> | AWS CloudFront override | <code>CloudFront-Cache-Control: max-age=60</code> |
+| <code>Surrogate-Control</code> | CDN-specific rules (legacy, Fastly) | <code>Surrogate-Control: max-age=3600</code> |
+| <code>Cache-Tag</code> | Invalidate by tag (Fastly, Cloudflare) | <code>Cache-Tag: product:123, category:shoes</code> |
+| <code>Age</code> | How many seconds the object has been in the CDN cache | <code>Age: 12345</code> |
+| <code>CF-Cache-Status</code> | Cloudflare cache status (HIT, MISS, DYNAMIC, etc.) | Debugging only |
+| <code>X-Cache</code> | Generic cache hit/miss status | <code>X-Cache: HIT from proxy-server</code> |
+
+---
+
+## Practice Questions
+
+1. You have an API endpoint that returns a user's profile. The profile changes at most once per hour. What Cache-Control header would you set? What conditional headers should the client send on subsequent requests?
+
+2. Your Redis instance is running out of memory. You have some keys with TTLs and others without. You want to keep as many active sessions (which all have TTLs) as possible. Which <code>maxmemory-policy</code> should you choose, and why?
+
+3. A social media feed endpoint sees 10,000 requests per second for the same hot key. When the cache entry expires, all 10,000 requests hit the database simultaneously. Name three strategies to prevent this cache stampede.
+
+4. Your application is deployed across multiple regions with a CDN. You update a product price in the origin database. Five minutes later, some regions still show the old price. List three possible causes — one related to CDN TTL, one to cache key design, and one to CDN purge propagation.
+
+5. Design a write-behind cache for an e-commerce inventory system. What happens if the application crashes before the write-behind flusher writes to the database? How would you make this safe?
+
+6. You have a Redis Cluster with 6 nodes (3 masters, 3 replicas). A new product launch causes one key — <code>product:launch:123</code> — to receive 80% of all traffic. Describe how you would mitigate this hot key issue at the application, cache, and network levels.
+
+7. Compare cache-aside and read-through caching. Under what conditions would you choose one over the other?
+
+8. Your mobile app caches API responses on the device. You want to push an invalidation to all clients when data changes. What approaches exist? Discuss the trade-offs between polling (TTL), push notifications (FCM/APNs), and version-based APIs.
+
+9. A colleague proposes setting no TTL on any cache entry and relying entirely on manual purges. What are at least three risks of this approach, and what operational safeguards would you demand?
+
+10. You are caching database query results in Redis. A user updates their email address. Describe a complete invalidation flow that ensures the stale cached result is never served again, covering database update, cache eviction, and concurrent request handling.
+`,
+            tags: ["Caching", "Redis", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-messaging",
+            title: "Message Queues & Event-Driven Architecture",
+            shortDesc: "Complete messaging reference — RabbitMQ, Kafka, SQS/SNS, event sourcing, CQRS, and stream processing patterns.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Message brokers: RabbitMQ (AMQP), Kafka (log-based), SQS/SNS (cloud-managed).",
+              "Patterns: pub/sub, competing consumers, dead letter queues, at-least-once delivery.",
+              "Kafka: topics, partitions, consumer groups, offset management, exactly-once semantics.",
+              "Event sourcing: storing state changes as an append-only event log.",
+              "CQRS: separate read and write models — materialized views for queries.",
+            ],
+            content: `## Quick Reference
+Message queues decouple producers from consumers by acting as a durable buffer between services. A **producer** sends messages to a broker; a **consumer** receives them asynchronously. **RabbitMQ** uses the AMQP model with exchanges and bindings for flexible routing. **Apache Kafka** is a distributed log partitioned across brokers, optimized for high-throughput replay. **Cloud-managed** services (SQS, SNS, Pub/Sub, Service Bus) eliminate operational overhead. Choosing the right broker and delivery semantics is critical: at-least-once is common, exactly-once requires idempotent consumers or transactional coordination.
+## Message Broker Concepts
+| Concept | Description |
+| **Producer** | An application that publishes messages to a broker |
+| **Consumer** | An application that subscribes and processes messages from a broker |
+| **Queue** | A named buffer that stores messages until consumed (FIFO per queue) |
+| **Topic** | A named channel to which producers publish; consumers subscribe to topics (pub/sub model) |
+| **Exchange** | A routing component (RabbitMQ) that receives messages from producers and routes them to queues based on rules |
+| **Binding** | A link between an exchange and a queue, with an optional routing key |
+| **Routing Key** | A string attribute on a message that the exchange uses to decide which queue(s) to deliver to |
+| **Partition** | A shard of a Kafka topic; each partition is an ordered, immutable log |
+| **Offset** | A sequential ID (integer) assigned to each message within a Kafka partition, used for tracking consumption progress |
+### How Messages Flow
+// Producer sends message to broker
+Producer --[publish]--> Broker (Exchange / Topic)
+                    Binding   |   Routing Key
+                              v
+                          Queue / Partition
+                    Consumer --[poll / push]
+### Key Differences Between Queues and Topics
+| Aspect | Queue | Topic |
+|--------|-------|-------|
+| Delivery | One consumer gets each message | All subscribers get each message |
+| Model | Point-to-point (competing consumers) | Pub/sub (broadcast) |
+| Persistence | Usually durable by default | Messages are retained for a retention period (Kafka) or discarded after delivery (most other) |
+| Use case | Work queues, task distribution | Event notifications, data streaming |
+## RabbitMQ (AMQP)
+RabbitMQ implements the **AMQP 0-9-1** model. Producers send messages to **exchanges**, which route them to **queues** via **bindings**.
+### Exchange Types
+| Exchange Type | Routing Logic | Example Use |
+|---------------|---------------|-------------|
+| **direct** | Routes to queue whose binding key exactly matches the message routing key | Point-to-point delivery |
+| **topic** | Routes using wildcard patterns: <code>*</code> matches one word, <code>#</code> matches zero or more words | Event routing by category (e.g., <code>order.created</code>, <code>order.*</code>) |
+| **fanout** | Routes to ALL bound queues, ignoring the routing key | Broadcast events (e.g., cache invalidation) |
+| **headers** | Routes based on message header attributes instead of routing key | Complex routing logic not expressible with routing keys |
+### Declaring an Exchange and Queue (JavaScript with amqplib)
+// Import the amqplib client library
+const amqp = require("amqplib");
+async function setup() {
+  // Connect to RabbitMQ server on localhost
+  const connection = await amqp.connect("amqp://localhost");
+  // Create a channel — all operations happen on a channel
+  const channel = await connection.createChannel();
+  // Declare a direct exchange named "orders"
+  // Arguments: exchange name, type, options { durable: true survives broker restart }
+  await channel.assertExchange("orders", "direct", { durable: true });
+  // Declare a queue named "order.created.queue" with persistence
+  // { durable: true } means queue survives broker restart
+  await channel.assertQueue("order.created.queue", { durable: true });
+  // Bind the queue to the exchange with routing key "order.created"
+  // Messages sent with routing key "order.created" will land in this queue
+  await channel.bindQueue("order.created.queue", "orders", "order.created");
+  console.log("Exchange, queue, and binding created successfully");
+setup().catch(console.error);
+### Message TTL and Dead Letter Exchanges
+// Queue with 60-second message TTL and a dead letter exchange
+// Messages that expire or are rejected go to the DLX
+await channel.assertQueue("orders.with.ttl", {
+  durable: true,
+  // Messages expire after 60000ms in the queue if not consumed
+  arguments: {
+    "x-message-ttl": 60000,
+    // Name of the exchange that "dead" messages are routed to
+    "x-dead-letter-exchange": "dlx.orders",
+    // Optional routing key for dead messages
+    "x-dead-letter-routing-key": "order.expired",
+// Declare the dead letter exchange (usually a fanout or direct)
+await channel.assertExchange("dlx.orders", "fanout", { durable: true });
+// Create a queue for dead letters
+await channel.assertQueue("orders.dead", { durable: true });
+// Bind the dead letter queue to the DLX
+await channel.bindQueue("orders.dead", "dlx.orders", "");
+### Publisher Confirms
+// Enable publisher confirms on the channel
+// The broker will ack each message, guaranteeing it was received
+await channel.confirmSelect();
+// Publish and wait for confirm
+channel.publish("orders", "order.created", Buffer.from(JSON.stringify(order)), {
+  persistent: true,  // Message survives broker restart
+  contentType: "application/json",
+// Wait for the broker to confirm receipt
+await channel.waitForConfirms();
+console.log("Message confirmed by broker");
+### Consumer Acknowledgements and Prefetch
+| **auto ack** | Broker marks message as delivered immediately; consumer may miss it if it crashes before processing |
+| **manual ack** | Consumer explicitly sends <code>channel.ack(msg)</code> after processing; broker redelivers if not acked and connection drops |
+| **nack/reject** | <code>channel.nack(msg, false, requeue)</code> — negative acknowledge, optionally requeue |
+| **prefetch count** | Maximum number of unacknowledged messages a consumer can have at once; prevents overwhelming a slow consumer |
+// Consumer with manual acknowledgements and prefetch limit of 5
+// Prefetch 5 means the consumer will have at most 5 unacked messages at any time
+await channel.prefetch(5);
+// Consume messages from the queue
+channel.consume("order.created.queue", async (msg) => {
+  if (!msg) return;  // Consumer was cancelled (e.g., queue deleted)
+    // Parse the message content as JSON
+    const order = JSON.parse(msg.content.toString());
+    // Process the order (business logic)
+    await processOrder(order);
+    // Acknowledge: broker removes msg from queue
+    channel.ack(msg);
+    // Negative acknowledge: reject, do NOT requeue (send to DLX instead)
+    channel.nack(msg, false, false);
+}, { noAck: false });  // false = manual acknowledgement
+## Apache Kafka (Log-based)
+Kafka is a **distributed commit log**. Messages are stored in **topics**, which are split into **partitions** for parallelism. Each partition is an ordered, immutable sequence of records identified by **offset**.
+### Core Concepts
+| Concept | Description |
+| **Topic** | A logical category/feed name to which records are published |
+| **Partition** | A shard of a topic; each partition is a single log file |
+| **Broker** | A Kafka server that stores partitions and serves clients |
+| **Producer** | Publishes records to a topic partition (round-robin or key-based) |
+| **Consumer** | Reads records from partitions; each consumer belongs to a **consumer group** |
+| **Consumer Group** | A set of consumers that divide the partitions among themselves; each partition is consumed by exactly one consumer in the group |
+| **Offset** | A monotonically increasing integer assigned to each record in a partition; consumers track their offset to know where to resume |
+| **Replication Factor** | Number of copies of each partition across brokers (for fault tolerance) |
+| **ISR (In-Sync Replicas)** | The set of replicas that are fully caught up with the leader; only ISR replicas can become the new leader |
+### Topic Configuration
+# Create a topic with 6 partitions, replication factor 3, and 7-day retention
+kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --create \
+  --topic orders \
+  --partitions 6 \
+  --replication-factor 3 \
+  --config retention.ms=604800000 \
+### Producing and Consuming (JavaScript with kafkajs)
+const { Kafka } = require("kafkajs");
+// Configure the Kafka client with broker addresses
+  clientId: "order-service",
+  brokers: ["localhost:9092", "localhost:9093"],
+// --- Producer ---
+async function produceOrders() {
+  // Create a producer instance
+  const producer = kafka.producer({
+    // Wait for ALL in-sync replicas to acknowledge (strongest durability)
+    acks: -1,  // -1 = all, 1 = leader only, 0 = fire-and-forget
+    // Retry up to 5 times with exponential backoff
+    retry: { retries: 5 },
+  // Connect to the Kafka cluster
+  await producer.connect();
+  // Send a batch of records to the "orders" topic
+  // Key determines partition (same key = same partition, preserving order)
+    topic: "orders",
+      { key: "user-42", value: JSON.stringify({ id: 1, amount: 99.99 }) },
+      { key: "user-42", value: JSON.stringify({ id: 2, amount: 49.99 }) },
+  console.log("Messages produced successfully");
+  await producer.disconnect();
+// --- Consumer ---
+async function consumeOrders() {
+  // Create a consumer in group "order-processors"
+  // Partitions are balanced across consumers in the same group
+    groupId: "order-processors",
+    // Start reading from the earliest offset if no committed offset exists
+    fromBeginning: true,
+  await consumer.connect();
+  // Subscribe to the "orders" topic
+  await consumer.subscribe({ topic: "orders" });
+  // Process each message
+    // Process up to 10 messages at a time
+    eachBatchAutoResolve: true,
+    batches: {
+      maxBatchSize: 10,
+    // Callback for each message in the batch
+      // message.offset is the record offset in the partition
+      // message.key is the partitioning key
+      // message.value is the actual payload (Buffer)
+      const order = JSON.parse(message.value.toString());
+      console.log(\`Processing order \${order.id} from partition \${partition}\`);
+      await processOrder(order);
+produceOrders().catch(console.error);
+consumeOrders().catch(console.error);
+### Exactly-Once Semantics
+| Level | Guarantee | How |
+|-------|-----------|-----|
+| **At-most-once** | Message delivered zero or one time | Producer acks=0 (fire-and-forget); consumer auto-commit before processing |
+| **At-least-once** | Message delivered one or more times | Producer acks=1 or -1; consumer commits offset AFTER processing |
+| **Exactly-once** | Message delivered exactly one time | Idempotent producer + transactional producer + consumer transaction |
+#### Idempotent Producer
+// Enable idempotence: prevents duplicate records due to producer retries
+const producer = kafka.producer({
+  // Automatically sets acks=-1 and retries=MAX_INT
+  idempotent: true,
+  // Max in-flight requests per connection; must be <= 5 for idempotence
+  maxInFlightRequests: 5,
+#### Transactional Producer
+// Transactional producer: atomically writes to multiple topics/partitions
+const producer = kafka.producer({
+  idempotent: true,
+  transactionalId: "order-transactor",  // Must be unique per producer instance
+// Start a transaction
+await producer.transaction();
+  // All sends within this transaction are atomic
+  await producer.send({ topic: "orders", messages: [orderMsg] });
+  await producer.send({ topic: "inventory", messages: [invMsg] });
+  // Commit: all messages become visible atomically
+  await producer.commitTransaction();
+  // Abort: none of the messages become visible
+  await producer.abortTransaction();
+### Consumer Group Rebalancing
+// When a consumer joins or leaves a group, the group coordinator triggers a rebalance
+// All consumers stop reading, partitions are reassigned, then consumers resume
+// This ensures each partition has exactly one consumer in the group
+// Strategies: range (per-topic), round-robin (sticky), cooperative-sticky (incremental)
+## Cloud Messaging
+### AWS SQS
+SQS is a fully managed message queue. Two queue types:
+| Feature | Standard Queue | FIFO Queue |
+|---------|---------------|------------|
+| Throughput | Unlimited (best-effort ordering) | 3000 msg/s per queue (with batching) |
+| Ordering | Best-effort | Strict first-in-first-out |
+| Exactly-once | At-least-once; use deduplication ID | Exactly-once (content-based or explicit dedup ID) |
+| Message group ID | Not supported | Required; messages in same group are delivered in order |
+| Suffix | (none) | <code>.fifo</code>
+#### SQS Operations (JavaScript with AWS SDK v3)
+const { SQSClient, SendMessageCommand, ReceiveMessageCommand,
+        DeleteMessageCommand, GetQueueAttributesCommand } = require("@aws-sdk/client-sqs");
+// Create the SQS client for a specific region
+const sqs = new SQSClient({ region: "us-east-1" });
+// --- Send a message ---
+async function sendMessage(queueUrl, body, dedupId, groupId) {
+  const params = {
+    QueueUrl: queueUrl,
+    // Message body must be a string (JSON.stringify your payload)
+    MessageBody: JSON.stringify(body),
+    // Deduplication ID (FIFO only): prevents duplicate messages within 5-min window
+    MessageDeduplicationId: dedupId,
+    // Message group ID (FIFO only): ensures order within the group
+    MessageGroupId: groupId,
+  const cmd = new SendMessageCommand(params);
+  const result = await sqs.send(cmd);
+  // Returns MessageId and MD5OfMessageBody
+  return result.MessageId;
+// --- Receive messages ---
+async function receiveMessages(queueUrl) {
+  const params = {
+    QueueUrl: queueUrl,
+    // Max messages to receive in one poll (1 to 10)
+    MaxNumberOfMessages: 10,
+    // Visibility timeout in seconds: how long the message is hidden from other consumers
+    VisibilityTimeout: 30,
+    // Wait time for long polling (0 to 20); 20 = reduce empty responses
+    WaitTimeSeconds: 20,
+  const cmd = new ReceiveMessageCommand(params);
+  const result = await sqs.send(cmd);
+  return result.Messages || [];
+// --- Process and delete a message ---
+async function processAndDelete(queueUrl, message) {
+  // Process the message body
+  const payload = JSON.parse(message.Body);
+  await processPayload(payload);
+  // Delete the message after successful processing
+  // If you don't delete, the message becomes visible again after VisibilityTimeout
+  const deleteCmd = new DeleteMessageCommand({
+    QueueUrl: queueUrl,
+    // ReceiptHandle changes each time the message is received
+    ReceiptHandle: message.ReceiptHandle,
+  await sqs.send(deleteCmd);
+// --- Configure a Dead Letter Queue (DLQ) ---
+// SQS DLQ is just another queue with a redrive policy
+// 1. Create a DLQ queue
+// 2. Set redrivePolicy on the source queue:
+//   deadLetterTargetArn: "arn:aws:sqs:us-east-1:123456789012:my-queue-dlq",
+//   maxReceiveCount: 5  // Move to DLQ after 5 failed receive attempts
+// }
+### AWS SNS (Pub/Sub)
+SNS is a fully managed pub/sub messaging service. Producers publish to a **topic**; subscribers receive messages via supported protocols (SQS, Lambda, HTTP, email, SMS).
+#### SNS with SQS Subscription
+const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
+const sns = new SNSClient({ region: "us-east-1" });
+// Publish a message to an SNS topic
+async function publishEvent(topicArn, eventType, payload) {
+  const cmd = new PublishCommand({
+    TopicArn: topicArn,
+    // Subject is optional (used for email subscriptions)
+    Subject: eventType,
+    // Message body (string)
+    Message: JSON.stringify(payload),
+    // Message attributes for filtering
+    MessageAttributes: {
+      eventType: {
+        DataType: "String",
+        StringValue: eventType,
+  await sns.send(cmd);
+### Google Cloud Pub/Sub
+const { PubSub } = require("@google-cloud/pubsub");
+// Initialize the PubSub client
+const pubsub = new PubSub({ projectId: "my-project" });
+// --- Publish ---
+async function publishMessage(topicName, data) {
+  // Get a reference to the topic
+  const topic = pubsub.topic(topicName);
+  // Publish the message; data is a Buffer
+  // Custom attributes can be passed as the second argument
+  const messageId = await topic.publish(Buffer.from(JSON.stringify(data)), {
+    eventType: "order.created",
+  console.log(\`Published message \${messageId}\`);
+// --- Subscribe ---
+async function listenForMessages(subscriptionName) {
+  // Get a reference to the subscription
+  const subscription = pubsub.subscription(subscriptionName);
+  // Listen for incoming messages
+  subscription.on("message", (message) => {
+    console.log(\`Received message \${message.id}\`);
+    // Acknowledge: remove from queue
+    message.ack();
+  subscription.on("error", (err) => {
+    console.error("Subscription error:", err);
+### Azure Service Bus
+const { ServiceBusClient } = require("@azure/service-bus");
+// Connection string with Shared Access Signature
+const connectionString = "Endpoint=sb://mynamespace.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=...";
+const sbClient = new ServiceBusClient(connectionString);
+// --- Send a message to a queue ---
+async function sendMessage(queueName, body) {
+  // Create a sender for the queue
+  const sender = sbClient.createSender(queueName);
+  // Create and send the message
+  await sender.sendMessages({
+    body: body,
+    // Optional: session ID for FIFO ordering
+    sessionId: "order-123",
+    // Time-to-live: message expires after 5 minutes
+    timeToLive: { minutes: 5 },
+  console.log("Message sent");
+  await sender.close();
+// --- Receive messages from a queue ---
+async function receiveMessages(queueName) {
+  // Create a receiver with "peek lock" mode (message is hidden while processing)
+  const receiver = sbClient.createReceiver(queueName, {
+    receiveMode: "peekLock",  // peekLock = manual complete; receiveAndDelete = auto-delete
+  // Subscribe to messages
+  receiver.subscribe({
+    // Called for each received message
+    processMessage: async (message) => {
+      console.log(\`Received: \${message.body}\`);
+      // Complete the message (remove from queue)
+      await message.complete();
+    processError: async (args) => {
+      console.error(\`Error: \${args.error}\`);
+## Delivery Guarantees
+| Guarantee | Meaning | How to Achieve |
+|-----------|---------|---------------|
+| **At-most-once** | Message may be lost but never duplicated | Fire-and-forget producer; consumer commits offset before processing |
+| **At-least-once** | Message may be duplicated but never lost | Producer waits for ack; consumer commits offset AFTER processing |
+| **Exactly-once** | Message is never lost and never duplicated | Idempotent producer + transactional outbox + idempotent consumer |
+### Idempotent Consumer Pattern
+// An idempotent consumer can safely process the same message multiple times
+// without causing side effects. Deduplication is key.
+async function processOrderIdempotently(orderId, orderData) {
+  // Use a database constraint to enforce idempotency
+  // Attempt to insert with orderId as the primary key
+    // INSERT will succeed only once; duplicate orderId violates the PK constraint
+    await db.query(
+      "INSERT INTO processed_orders (order_id, order_data, processed_at) VALUES ($1, $2, NOW())",
+      [orderId, JSON.stringify(orderData)]
+    // This runs only on the first successful insert
+    await fulfillOrder(orderData);
+    // If the orderId already exists, the INSERT fails with a unique violation
+    if (err.code === "23505") {  // PostgreSQL unique violation
+      console.log(\`Order \${orderId} already processed — skipping\`);
+    throw err;  // Rethrow unexpected errors
+### Deduplication Strategies
+| Strategy | How It Works | Example |
+|----------|-------------|---------|
+| **Idempotency key in DB** | Use a unique constraint on the message ID | SQS FIFO deduplication ID, Kafka idempotent producer |
+| **Idempotency key in cache** | Check Redis for processed message IDs (with TTL) | Fast, but can miss if TTL expires |
+| **Exactly-once sinks** | Use Kafka Streams or Flink with exactly-once sinks to databases | Stream processing frameworks |
+## Consumer Patterns
+| Pattern | Description | Broker Support |
+|---------|-------------|---------------|
+| **Competing Consumers** | Multiple consumers read from the same queue; each message is processed by exactly one consumer | SQS, RabbitMQ queues, Kafka consumer groups |
+| **Priority Queue** | Higher-priority messages are consumed before lower-priority ones | RabbitMQ (per-queue priority via <code>x-max-priority</code>), Azure Service Bus (session-based) |
+| **Work Queue** | A queue of tasks distributed among workers; each worker processes one task at a time | RabbitMQ, SQS |
+| **Pub/Sub** | One message is broadcast to all subscribers | SNS, Kafka topics, RabbitMQ fanout exchange |
+| **Fanout** | A message is delivered to every bound queue/consumer unconditionally | RabbitMQ fanout exchange, SNS + multiple SQS subscribers |
+| **Routing** | Messages are selectively routed based on routing keys or filters | RabbitMQ direct/topic exchanges, SNS filter policies |
+| **Dead Letter Queue** | Unprocessable messages are moved to a separate queue for inspection | RabbitMQ DLX, SQS redrive policy, Kafka DLQ topics |
+| **Retry Queue** | Failed messages are retried after a delay, often with exponential backoff | RabbitMQ (delayed message plugin), SQS (visibility timeout), custom retry topics |
+| **Backpressure** | Slow consumers signal producers to slow down or buffer less | Kafka (max.poll.records, fetch.max.bytes), RabbitMQ (prefetch count) |
+### Competing Consumer with Retry and DLQ (RabbitMQ)
+// Architecture:
+//   main-queue → (nack, requeue=false) → retry-exchange → retry-queue (TTL) → main-queue
+//   retry-queue → (nack, requeue=false after max retries) → dlq-exchange → dlq-queue
+async function declareRetryArchitecture(channel) {
+  // Main work queue
+  await channel.assertQueue("orders.work", { durable: true,
+    arguments: { "x-dead-letter-exchange": "orders.retry.exchange" }
+  // Retry exchange (direct)
+  await channel.assertExchange("orders.retry.exchange", "direct", { durable: true });
+  // Retry queue with TTL: messages wait 30 seconds before being re-routed
+  await channel.assertQueue("orders.retry", {
+    durable: true,
+    // 30-second delay before retry
+    messageTtl: 30000,
+    // After TTL expires, route back to the original exchange
+    deadLetterExchange: "",
+    deadLetterRoutingKey: "orders.work",
+  await channel.bindQueue("orders.retry", "orders.retry.exchange", "orders.work");
+  // Dead letter queue for messages that exceeded retry count
+  await channel.assertExchange("orders.dlq.exchange", "fanout", { durable: true });
+  await channel.assertQueue("orders.dlq", { durable: true });
+  await channel.bindQueue("orders.dlq", "orders.dlq.exchange", "");
+// Consumer with retry counting via message headers
+async function processWithRetry(channel, msg) {
+  const retryCount = (msg.properties.headers["x-retry-count"] || 0) + 1;
+  const maxRetries = 3;
+    const data = JSON.parse(msg.content.toString());
+    await processOrder(data);
+    channel.ack(msg);
+    if (retryCount <= maxRetries) {
+      // Publish to retry exchange with incremented retry header
+      channel.publish("orders.retry.exchange", "orders.work", msg.content, {
+        headers: { "x-retry-count": retryCount },
+        persistent: true,
+      channel.ack(msg);  // Ack the original; retry copy is now in retry queue
+      // Max retries exceeded: send to DLQ
+      channel.publish("orders.dlq.exchange", "", msg.content, { persistent: true });
+      channel.ack(msg);
+## Event-Driven Patterns
+### Event Notification
+Service A publishes an event (e.g., "order.created") to a broker.
+Service B subscribes and reacts.
+Service A does NOT expect a response.
+This is the simplest event-driven pattern: fire-and-forget.
+### Event-Carried State Transfer
+// Instead of just a notification, the event carries all data the consumer needs
+// This eliminates the need for the consumer to call back to the producer
+// Producer publishes the full order data in the event
+const event = {
+  type: "order.created",
+  // Include all relevant state directly
+  payload: {
+    orderId: "ord-123",
+    customerId: "cust-456",
+    items: [
+      { sku: "SKU-001", qty: 2, price: 29.99 }
+    total: 59.98,
+    shippingAddress: { street: "123 Main St", city: "Portland", zip: "97201" },
+// Consumer can process the event without querying the order service
+// This improves availability: the order service can be down during processing
+### Event Sourcing
+// Event sourcing: store every state change as an event, not just the current state
+// The current state is derived by replaying all events (the event log is the source of truth)
+// Events are stored in an append-only log (e.g., Kafka topic, event store DB)
+const events = [
+  { type: "AccountCreated", data: { accountId: "acc-1", owner: "Alice" }, version: 1 },
+  { type: "MoneyDeposited", data: { accountId: "acc-1", amount: 100 }, version: 2 },
+  { type: "MoneyWithdrawn", data: { accountId: "acc-1", amount: 30 }, version: 3 },
+  { type: "MoneyDeposited", data: { accountId: "acc-1", amount: 50 }, version: 4 },
+// Current state is computed by folding/reducing the events
+function getAccountBalance(accountEvents) {
+  // Start with an initial state of zero balance
+  let balance = 0;
+  for (const event of accountEvents) {
+    // Apply each event to mutate state
+    if (event.type === "MoneyDeposited") {
+      balance += event.data.amount;
+    } else if (event.type === "MoneyWithdrawn") {
+      balance -= event.data.amount;
+  return balance;  // Returns 120
+### CQRS (Command Query Responsibility Segregation)
+// CQRS: separate the write model (commands) from the read model (queries)
+// Often paired with event sourcing
+// Command model: handles mutations, emits events
+class OrderCommandHandler {
+  async createOrder(command) {
+    // Validate business rules
+    // Persist to write database (normalized, optimized for writes)
+    await writeDb.orders.insert(command.payload);
+    // Publish event so the read model can update
+    await eventBus.publish("order.created", command.payload);
+// Read model: materialized view optimized for queries
+class OrderQueryHandler {
+  // Query handler reads from a denormalized read database
+  // This DB is built asynchronously from events
+  async getOrderSummary(orderId) {
+    // Read from a denormalized view table
+    return readDb.orderSummaries.findOne({ orderId });
+// Projection: subscribes to events and updates the read model
+class OrderProjection {
+  async onOrderCreated(event) {
+    // Update the denormalized read table
+    await readDb.orderSummaries.upsert({
+      orderId: event.data.orderId,
+      customerId: event.data.customerId,
+      itemCount: event.data.items.length,
+      total: event.data.total,
+      status: "pending",
+### Saga Pattern
+| Type | Coordination | Pros | Cons |
+|------|-------------|------|------|
+| **Choreography** | Each service publishes events and listens for events from other services; no central coordinator | Simple, decentralized, no single point of failure | Hard to trace the flow, cyclic dependencies possible |
+| **Orchestration** | A central orchestrator (saga manager) tells each service what to do and handles rollbacks | Easy to track and manage, explicit flow | Central point of failure, more coupling to the orchestrator |
+#### Choreography Saga (Event-Driven)
+// Order Service emits "order.created"
+// Payment Service listens, processes payment, emits "payment.processed" or "payment.failed"
+// Inventory Service listens, reserves stock, emits "inventory.reserved" or "inventory.failed"
+// If inventory fails, Inventory Service emits "inventory.failed"
+// Payment Service listens, compensates by issuing a refund
+// This is choreography: each service knows which events to emit and react to
+// No single service coordinates the entire flow
+#### Orchestration Saga (Central Coordinator)
+class OrderSagaOrchestrator {
+  async executeSaga(orderData) {
+    // Step 1: Create order
+    const order = await orderService.createOrder(orderData);
+      // Step 2: Process payment
+      await paymentService.charge(order.id, order.total);
+        // Step 3: Reserve inventory
+        await inventoryService.reserve(order.id, order.items);
+        // All steps succeeded
+        await orderService.confirmOrder(order.id);
+      } catch (invErr) {
+        // Compensate step 2: refund payment
+        await paymentService.refund(order.id, order.total);
+        throw invErr;
+    } catch (payErr) {
+      // Compensate step 1: cancel order
+      await orderService.cancelOrder(order.id);
+      throw payErr;
+## Stream Processing
+### Kafka Streams
+// Kafka Streams: a Java library for building stream processing applications
+// Processes records from Kafka topics, produces results to Kafka topics
+import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.kstream.*;
+public class OrderAggregator {
+  public static void main(String[] args) {
+    // Define the processing topology
+    StreamsBuilder builder = new StreamsBuilder();
+    // Create a KStream from the "orders" topic
+    // KStream: a record stream (each record is an independent event)
+    KStream<String, Order> orders = builder.stream(
+      "orders",
+      Consumed.with(Serdes.String(), new OrderSerde())
+    // Group by customer ID and sum order totals per hour
+    KTable<Windowed<String>, Double> hourlyTotals = orders
+      // Group by key (customerId)
+      .groupByKey()
+      // Windowed aggregation: tumbling window of 1 hour
+      // A tumbling window is fixed-size, non-overlapping, gap-less
+      .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofHours(1)))
+      // Aggregate: running sum per window
+      .aggregate(
+        () -> 0.0,                                      // Initial value
+        (key, order, total) -> total + order.getAmount(), // Adder
+        Materialized.with(Serdes.String(), Serdes.Double())
+    // Write the aggregated results to an output topic
+    hourlyTotals.toStream().to(
+      "hourly-order-totals",
+      Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), Serdes.Double())
+    // Start the Kafka Streams application
+    KafkaStreams streams = new KafkaStreams(builder.build(), config);
+    streams.start();
+### KTable vs KStream
+| Kind | Description | Semantics | Use Case |
+|------|-------------|-----------|----------|
+| **KStream** | A stream of independent records (each record is an event) | Insert-only: each record is processed individually | Event processing, data enrichment |
+| **KTable** | A changelog stream (each record upserts the latest value for a key) | Upsert: only the latest value per key is kept | Lookup tables, joining streams to reference data |
+### Apache Flink
+// Apache Flink: unified stream and batch processing engine
+// Supports event-time processing, exactly-once state, and complex windowing
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+public class FlinkOrderProcessor {
+  public static void main(String[] args) throws Exception {
+    // Set up the streaming execution environment
+    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    // Create a Kafka consumer source
+    // Reads from the "orders" topic with deserialization schema
+    DataStream<Order> orders = env.addSource(
+      new FlinkKafkaConsumer<>("orders", new OrderDeserializer(), kafkaProps)
+    // Assign timestamps and watermarks for event-time processing
+    // Watermarks handle out-of-order events
+    DataStream<Order> withTimestamps = orders
+      .assignTimestampsAndWatermarks(
+        WatermarkStrategy.<Order>forBoundedOutOfOrderness(Duration.ofSeconds(5))
+          .withTimestampAssigner((order, ts) -> order.getEventTime().toEpochMilli())
+    // Tumbling window: 1-hour non-overlapping windows
+    // Hopping window: overlapping windows (e.g., every 15 min, 1 hour wide)
+    // Sliding window: same as hopping (different naming in Flink vs Kafka Streams)
+    withTimestamps
+      .keyBy(Order::getCustomerId)
+      .window(TumblingEventTimeWindows.of(Time.hours(1)))
+      .aggregate(new OrderAggregator())
+      .print();
+    env.execute("Flink Order Processor");
+### Windowing Types
+| Window Type | Description | Example |
+|-------------|-------------|---------|
+| **Tumbling** | Fixed-size, non-overlapping, contiguous intervals | Every hour: [00:00, 01:00), [01:00, 02:00) |
+| **Hopping** | Fixed-size, overlapping intervals; defined by window size and slide interval | Window size = 1 hour, slide = 15 min: [00:00, 01:00), [00:15, 01:15) |
+| **Sliding** | Same as hopping (terminology varies between Kafka Streams and Flink) | See hopping |
+## Schema Management
+### Schema Registry
+A Schema Registry stores and validates schemas for messages. Producers register schemas; consumers fetch schemas to deserialize. This prevents schema drift and incompatible changes.
+| Feature | Confluent Schema Registry | Apicurio Registry | Azure Schema Registry |
+|---------|--------------------------|-------------------|----------------------|
+| Formats | Avro, Protobuf, JSON Schema | Avro, Protobuf, JSON Schema, OpenAPI, AsyncAPI | Avro, JSON Schema |
+| Compatibility checks | Backward, forward, full, none, transitive variants | Backward, forward, full, none, transitive variants | Backward, forward, full, none |
+### Schema Evolution Compatibility
+| Compatibility Type | Producer Change | Consumer Impact |
+|--------------------|----------------|-----------------|
+| **Backward** (default) | New schema can read data written with old schema | Old consumers can read data written with new producer |
+| **Forward** | Old schema can read data written with new schema | New consumers can read data written with old producer |
+| **Full** | Both backward and forward compatible | Both old and new consumers can read both old and new data |
+| **None** | No compatibility checks | Any change is allowed; consumers may fail to deserialize |
+### Avro Schema Example
+\`\`\`avro
+// Avro schema for an order event
+// Schemas are registered in the Schema Registry and referenced by a schema ID
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.example.events",
+  "doc": "Schema for order created events",
+  "fields": [
+    // Each field has a name, type, and optional doc and default
+    {"name": "orderId", "type": "string", "doc": "Unique order identifier"},
+    {"name": "customerId", "type": "string", "doc": "Customer who placed the order"},
+    {"name": "items", "type": {
+      "type": "array",
+      "items": {
+        "type": "record",
+        "name": "OrderItem",
+        "fields": [
+          {"name": "sku", "type": "string"},
+          {"name": "quantity", "type": "int"},
+          {"name": "unitPrice", "type": "double"}
+    }},
+    // Adding a field with a default value maintains backward compatibility
+    {"name": "discountCode", "type": ["null", "string"], "default": null},
+    {"name": "total", "type": "double"}
+## Common Pitfalls and Anti-Patterns
+| # | Pitfall | Why It Hurts | Fix |
+|---|---------|-------------|-----|
+| 1 | **Using auto-ack in RabbitMQ** | Messages are acknowledged before processing; a consumer crash loses the message | Use manual ack and ack only after successful processing |
+| 2 | **Infinite consumer retry** | A poison message is retried forever, blocking the queue and consuming resources | Implement max retries + dead letter queue |
+| 3 | **No idempotency on consumers** | Duplicate delivery (common in at-least-once) causes duplicate side effects (double charge, duplicate email) | Add deduplication logic or idempotency keys |
+| 4 | **Too few Kafka partitions** | Low parallelism; consumers in the same group are starved (max consumers = partitions) | Set partition count to at least the expected max consumer count |
+| 5 | **Overly large messages** | Slow serialization/deserialization, high network usage, broker memory pressure | Store large payloads in object storage; send only references in the message |
+| 6 | **Synchronous blocking in consumers** | Blocking the consumer loop prevents it from polling for new messages or sending heartbeats | Process asynchronously or in separate threads; use reactor/reactor patterns |
+| 7 | **Blindly increasing prefetch** | High prefetch causes uneven load distribution and memory exhaustion on consumers | Tune prefetch based on processing time and memory limits (start with 1-10) |
+| 8 | **Sharing consumer groups across environments** | Dev and prod consumers compete for partitions or messages | Use separate consumer groups per environment (e.g., <code>orders-group-prod</code>, <code>orders-group-dev</code>) |
+| 9 | **Using Kafka for point-to-point RPC** | Kafka is designed for async streaming; request-response patterns add complexity and latency | Use gRPC or HTTP for synchronous request-response; use Kafka for event streaming |
+| 10 | **Neglecting schema evolution** | Schema changes break older consumers; teams get paged at 3am | Use Schema Registry with backward-compatible changes; add fields with defaults |
+| 11 | **SQS visibility timeout too short** | Messages reappear while still being processed, causing duplicate processing | Set VisibilityTimeout longer than the expected max processing time (with buffer) |
+| 12 | **Not testing exactly-once semantics** | Exactly-once is hard to get right; misconfiguration still leads to duplicates | Test with simulated broker failures, consumer crashes, and network partitions |
+## Complete API Reference
+### RabbitMQ Exchange Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| <code>name</code> | string | Exchange name |
+| <code>type</code> | string | One of: <code>direct</code>, <code>topic</code>, <code>fanout</code>, <code>headers</code> |
+| <code>durable</code> | boolean | Survives broker restart |
+| <code>autoDelete</code> | boolean | Deleted when last queue unbinds |
+| <code>internal</code> | boolean | Clients cannot publish directly; only other exchanges can route to it |
+| <code>arguments</code> | object | Extra arguments (e.g., <code>alternate-exchange</code>) |
+### RabbitMQ Queue Properties
+| Property | Type | Description |
+|----------|------|-------------|
+| <code>name</code> | string | Queue name (empty = server generates a name) |
+| <code>durable</code> | boolean | Survives broker restart |
+| <code>exclusive</code> | boolean | Used by only one connection; deleted when that connection closes |
+| <code>autoDelete</code> | boolean | Deleted when last consumer cancels |
+| <code>arguments</code> | object | Extra arguments: |
+| | | <code>x-message-ttl</code> — message TTL in ms |
+| | | <code>x-expires</code> — queue auto-delete after ms of disuse |
+| | | <code>x-max-length</code> — max messages in queue |
+| | | <code>x-max-length-bytes</code> — max queue size in bytes |
+| | | <code>x-dead-letter-exchange</code> — DLX name |
+| | | <code>x-dead-letter-routing-key</code> — routing key for dead messages |
+| | | <code>x-max-priority</code> — enable priority queue (0-255) |
+### Kafka Topic Configs
+| Config | Default | Description |
+|--------|---------|-------------|
+| <code>retention.ms</code> | 604800000 (7 days) | How long to retain log segments |
+| <code>retention.bytes</code> | -1 (unlimited) | Max bytes of log per partition before deletion |
+| <code>cleanup.policy</code> | <code>delete</code> | <code>delete</code> (time/size-based) or <code>compact</code> (key-based) |
+| <code>compression.type</code> | <code>producer</code> | Final compression codec (<code>gzip</code>, <code>snappy</code>, <code>lz4</code>, <code>zstd</code>, <code>producer</code>, <code>uncompressed</code>) |
+| <code>min.insync.replicas</code> | 1 | Minimum ISR count for ack=-1 to succeed |
+| <code>max.message.bytes</code> | 1048588 (1 MB) | Max size of a single message |
+| <code>segment.bytes</code> | 1073741824 (1 GB) | Max size of a single log segment file |
+| <code>segment.ms</code> | 604800000 (7 days) | Max time before a log segment is closed |
+### Kafka Consumer Configs
+| Config | Default | Description |
+|--------|---------|-------------|
+| <code>bootstrap.servers</code> | — | Comma-separated list of broker addresses |
+| <code>group.id</code> | — | Consumer group ID for offset tracking |
+| <code>key.deserializer</code> | — | Deserializer class for the record key |
+| <code>value.deserializer</code> | — | Deserializer class for the record value |
+| <code>enable.auto.commit</code> | true | Periodically commit offsets automatically |
+| <code>auto.commit.interval.ms</code> | 5000 | Frequency of auto-commits |
+| <code>auto.offset.reset</code> | <code>latest</code> | Where to start if no committed offset: <code>latest</code>, <code>earliest</code>, <code>none</code> |
+| <code>fetch.min.bytes</code> | 1 | Min bytes per fetch; higher = less network churn but more latency |
+| <code>fetch.max.wait.ms</code> | 500 | Max time to wait for <code>fetch.min.bytes</code> |
+| <code>max.poll.records</code> | 500 | Max records per poll; lower = less memory but more poll loops |
+| <code>session.timeout.ms</code> | 45000 | Time before broker considers consumer dead |
+| <code>heartbeat.interval.ms</code> | 3000 | Frequency of heartbeats (should be 1/3 of session.timeout) |
+| <code>isolation.level</code> | <code>read_uncommitted</code> | <code>read_committed</code> to only read transactional messages |
+### SQS Queue Attributes
+| Attribute | Description |
+| <code>VisibilityTimeout</code> | Seconds a message is hidden from other consumers after being received (0-43200, default 30) |
+| <code>MaximumMessageSize</code> | Max message size in bytes (1024-262144, default 262144) |
+| <code>MessageRetentionPeriod</code> | Seconds to retain messages (60-1209600, default 345600) |
+| <code>DelaySeconds</code> | Delay before a new message becomes visible (0-900) |
+| <code>ReceiveMessageWaitTimeSeconds</code> | Long poll duration (0-20); 20 enables long polling |
+| <code>RedrivePolicy</code> | DLQ config: <code>deadLetterTargetArn</code> and <code>maxReceiveCount</code> |
+| <code>FifoQueue</code> | Set to <code>true</code> for FIFO queues |
+| <code>ContentBasedDeduplication</code> | FIFO only: auto-generate dedup ID from message body hash |
+1. **What is the difference between a queue and a topic in messaging systems?**
+A queue implements point-to-point delivery: each message is consumed by exactly one consumer. A topic implements pub/sub: each message is broadcast to all subscribers. RabbitMQ queues are point-to-point; Kafka topics support both (consumer groups for point-to-point, multiple groups for pub/sub).
+2. **How does Kafka achieve high throughput compared to RabbitMQ?**
+Kafka uses sequential disk I/O (append-only logs), batching, compression, and zero-copy data transfer. Partitions allow parallel reads/writes. RabbitMQ uses random I/O per message (per-message writes to multiple queues). Kafka's log-based architecture is optimized for throughput over latency.
+3. **What is a dead letter queue and when would you use one?**
+A dead letter queue (DLQ) stores messages that cannot be processed successfully after a configurable number of retries. Use DLQs to isolate poison messages (malformed, unprocessable) so they do not block the main queue. Operators can inspect and replay DLQ messages after fixing the root cause.
+4. **Explain the difference between at-least-once and exactly-once delivery semantics.**
+In at-least-once, a message may be delivered more than once but never lost. This requires the producer to wait for an acknowledgement and the consumer to commit the offset after processing. In exactly-once, the message is delivered exactly once. This requires idempotent producers (Kafka), transactional coordination, and idempotent consumers with deduplication.
+5. **How does the competing consumers pattern work and what problem does it solve?**
+Multiple consumer instances read from the same queue; each message is delivered to exactly one consumer. This solves the problem of scalability: you can add more consumers to increase throughput. In Kafka, competing consumers are implemented via consumer groups where partitions are evenly distributed.
+6. **What happens during a Kafka consumer group rebalance?**
+When a consumer joins or leaves a group, the group coordinator triggers a rebalance. All consumers in the group stop processing, partitions are reassigned to the remaining members, then consumers resume. During rebalancing, no messages are processed (stop-the-world). Cooperative rebalancing (incremental) reduces the disruption.
+7. **Design a reliable order processing system with retry and dead letter handling.**
+Use RabbitMQ with the following: (a) a durable work queue with a DLX configured, (b) a retry queue with TTL (30s) that routes back to the main queue, (c) a DLQ for messages exceeding max retries (3), (d) consumers with manual ack and prefetch limit, (e) idempotent processing using database unique constraints on order ID.
+8. **What is the difference between event sourcing and CQRS? How do they complement each other?**
+Event sourcing stores state changes as an append-only event log; the current state is derived by replaying events. CQRS separates read and write models. They complement each other: event sourcing provides the event log that feeds the write model, while CQRS provides optimized read models (materialized views) built from those events. CQRS does not require event sourcing, but event sourcing naturally pairs with CQRS.
+9. **How do you ensure exactly-once semantics in a distributed messaging system?**
+Use (a) an idempotent producer with unique request IDs to prevent duplicate sends, (b) transactional messaging to atomically write to multiple topics/partitions, (c) idempotent consumers with deduplication (unique key constraints in the sink database or idempotency cache), and (d) transactional outbox pattern where the message is written to a database table in the same transaction as the business operation, then a separate process publishes it.
+10. **Compare tumbling, hopping, and sliding windows in stream processing.**
+Tumbling windows are fixed-size, non-overlapping, contiguous intervals (e.g., hourly). Hopping windows (also called sliding windows) are fixed-size and overlapping; defined by window size and slide interval (e.g., 1-hour window sliding every 15 minutes). The smaller the slide, the more overlapping windows exist. Tumbling is simpler; hopping provides more granular analysis.\`,
+}
+
+// Projection: subscribes to events and updates the read model
+class OrderProjection {
+  async onOrderCreated(event) {
+    // Update the denormalized read table
+    await readDb.orderSummaries.upsert({
+      orderId: event.data.orderId,
+      customerId: event.data.customerId,
+      itemCount: event.data.items.length,
+      total: event.data.total,
+      status: "pending",
+    });
+  }
+}
+\`\`\`
+
+### Saga Pattern
+
+| Type | Coordination | Pros | Cons |
+|------|-------------|------|------|
+| **Choreography** | Each service publishes events and listens for events from other services; no central coordinator | Simple, decentralized, no single point of failure | Hard to trace the flow, cyclic dependencies possible |
+| **Orchestration** | A central orchestrator (saga manager) tells each service what to do and handles rollbacks | Easy to track and manage, explicit flow | Central point of failure, more coupling to the orchestrator |
+
+#### Choreography Saga (Event-Driven)
+
+\`\`\`javascript
+// Order Service emits "order.created"
+// Payment Service listens, processes payment, emits "payment.processed" or "payment.failed"
+// Inventory Service listens, reserves stock, emits "inventory.reserved" or "inventory.failed"
+// If inventory fails, Inventory Service emits "inventory.failed"
+// Payment Service listens, compensates by issuing a refund
+
+// This is choreography: each service knows which events to emit and react to
+// No single service coordinates the entire flow
+\`\`\`
+
+#### Orchestration Saga (Central Coordinator)
+
+\`\`\`javascript
+class OrderSagaOrchestrator {
+  async executeSaga(orderData) {
+    // Step 1: Create order
+    const order = await orderService.createOrder(orderData);
+    try {
+      // Step 2: Process payment
+      await paymentService.charge(order.id, order.total);
+      try {
+        // Step 3: Reserve inventory
+        await inventoryService.reserve(order.id, order.items);
+        // All steps succeeded
+        await orderService.confirmOrder(order.id);
+      } catch (invErr) {
+        // Compensate step 2: refund payment
+        await paymentService.refund(order.id, order.total);
+        throw invErr;
+      }
+    } catch (payErr) {
+      // Compensate step 1: cancel order
+      await orderService.cancelOrder(order.id);
+      throw payErr;
+    }
+  }
+}
+\`\`\`
+
+---
+
+## Stream Processing
+
+### Kafka Streams
+
+\`\`\`java
+// Kafka Streams: a Java library for building stream processing applications
+// Processes records from Kafka topics, produces results to Kafka topics
+
+import org.apache.kafka.streams.*;
+import org.apache.kafka.streams.kstream.*;
+
+public class OrderAggregator {
+  public static void main(String[] args) {
+    // Define the processing topology
+    StreamsBuilder builder = new StreamsBuilder();
+
+    // Create a KStream from the "orders" topic
+    // KStream: a record stream (each record is an independent event)
+    KStream<String, Order> orders = builder.stream(
+      "orders",
+      Consumed.with(Serdes.String(), new OrderSerde())
+    );
+
+    // Group by customer ID and sum order totals per hour
+    KTable<Windowed<String>, Double> hourlyTotals = orders
+      // Group by key (customerId)
+      .groupByKey()
+      // Windowed aggregation: tumbling window of 1 hour
+      // A tumbling window is fixed-size, non-overlapping, gap-less
+      .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofHours(1)))
+      // Aggregate: running sum per window
+      .aggregate(
+        () -> 0.0,                                      // Initial value
+        (key, order, total) -> total + order.getAmount(), // Adder
+        Materialized.with(Serdes.String(), Serdes.Double())
+      );
+
+    // Write the aggregated results to an output topic
+    hourlyTotals.toStream().to(
+      "hourly-order-totals",
+      Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), Serdes.Double())
+    );
+
+    // Start the Kafka Streams application
+    KafkaStreams streams = new KafkaStreams(builder.build(), config);
+    streams.start();
+  }
+}
+\`\`\`
+
+### KTable vs KStream
+
+| Kind | Description | Semantics | Use Case |
+|------|-------------|-----------|----------|
+| **KStream** | A stream of independent records (each record is an event) | Insert-only: each record is processed individually | Event processing, data enrichment |
+| **KTable** | A changelog stream (each record upserts the latest value for a key) | Upsert: only the latest value per key is kept | Lookup tables, joining streams to reference data |
+
+### Apache Flink
+
+\`\`\`java
+// Apache Flink: unified stream and batch processing engine
+// Supports event-time processing, exactly-once state, and complex windowing
+
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+
+public class FlinkOrderProcessor {
+  public static void main(String[] args) throws Exception {
+    // Set up the streaming execution environment
+    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+    // Create a Kafka consumer source
+    // Reads from the "orders" topic with deserialization schema
+    DataStream<Order> orders = env.addSource(
+      new FlinkKafkaConsumer<>("orders", new OrderDeserializer(), kafkaProps)
+    );
+
+    // Assign timestamps and watermarks for event-time processing
+    // Watermarks handle out-of-order events
+    DataStream<Order> withTimestamps = orders
+      .assignTimestampsAndWatermarks(
+        WatermarkStrategy.<Order>forBoundedOutOfOrderness(Duration.ofSeconds(5))
+          .withTimestampAssigner((order, ts) -> order.getEventTime().toEpochMilli())
+      );
+
+    // Tumbling window: 1-hour non-overlapping windows
+    // Hopping window: overlapping windows (e.g., every 15 min, 1 hour wide)
+    // Sliding window: same as hopping (different naming in Flink vs Kafka Streams)
+    withTimestamps
+      .keyBy(Order::getCustomerId)
+      .window(TumblingEventTimeWindows.of(Time.hours(1)))
+      .aggregate(new OrderAggregator())
+      .print();
+
+    env.execute("Flink Order Processor");
+  }
+}
+\`\`\`
+
+### Windowing Types
+
+| Window Type | Description | Example |
+|-------------|-------------|---------|
+| **Tumbling** | Fixed-size, non-overlapping, contiguous intervals | Every hour: [00:00, 01:00), [01:00, 02:00) |
+| **Hopping** | Fixed-size, overlapping intervals; defined by window size and slide interval | Window size = 1 hour, slide = 15 min: [00:00, 01:00), [00:15, 01:15) |
+| **Sliding** | Same as hopping (terminology varies between Kafka Streams and Flink) | See hopping |
+
+---
+
+## Schema Management
+
+### Schema Registry
+
+A Schema Registry stores and validates schemas for messages. Producers register schemas; consumers fetch schemas to deserialize. This prevents schema drift and incompatible changes.
+
+| Feature | Confluent Schema Registry | Apicurio Registry | Azure Schema Registry |
+|---------|--------------------------|-------------------|----------------------|
+| Formats | Avro, Protobuf, JSON Schema | Avro, Protobuf, JSON Schema, OpenAPI, AsyncAPI | Avro, JSON Schema |
+| Compatibility checks | Backward, forward, full, none, transitive variants | Backward, forward, full, none, transitive variants | Backward, forward, full, none |
+
+### Schema Evolution Compatibility
+
+| Compatibility Type | Producer Change | Consumer Impact |
+|--------------------|----------------|-----------------|
+| **Backward** (default) | New schema can read data written with old schema | Old consumers can read data written with new producer |
+| **Forward** | Old schema can read data written with new schema | New consumers can read data written with old producer |
+| **Full** | Both backward and forward compatible | Both old and new consumers can read both old and new data |
+| **None** | No compatibility checks | Any change is allowed; consumers may fail to deserialize |
+
+### Avro Schema Example
+
+\`\`\`avro
+// Avro schema for an order event
+// Schemas are registered in the Schema Registry and referenced by a schema ID
+{
+  "type": "record",
+  "name": "OrderEvent",
+  "namespace": "com.example.events",
+  "doc": "Schema for order created events",
+  "fields": [
+    // Each field has a name, type, and optional doc and default
+    {"name": "orderId", "type": "string", "doc": "Unique order identifier"},
+    {"name": "customerId", "type": "string", "doc": "Customer who placed the order"},
+    {"name": "items", "type": {
+      "type": "array",
+      "items": {
+        "type": "record",
+        "name": "OrderItem",
+        "fields": [
+          {"name": "sku", "type": "string"},
+          {"name": "quantity", "type": "int"},
+          {"name": "unitPrice", "type": "double"}
+        ]
+      }
+    }},
+    // Adding a field with a default value maintains backward compatibility
+    {"name": "discountCode", "type": ["null", "string"], "default": null},
+    {"name": "total", "type": "double"}
+  ]
+}
+\`\`\`
+
+---
+
+## Common Pitfalls and Anti-Patterns
+
+| # | Pitfall | Why It Hurts | Fix |
+|---|---------|-------------|-----|
+| 1 | **Using auto-ack in RabbitMQ** | Messages are acknowledged before processing; a consumer crash loses the message | Use manual ack and ack only after successful processing |
+| 2 | **Infinite consumer retry** | A poison message is retried forever, blocking the queue and consuming resources | Implement max retries + dead letter queue |
+| 3 | **No idempotency on consumers** | Duplicate delivery (common in at-least-once) causes duplicate side effects (double charge, duplicate email) | Add deduplication logic or idempotency keys |
+| 4 | **Too few Kafka partitions** | Low parallelism; consumers in the same group are starved (max consumers = partitions) | Set partition count to at least the expected max consumer count |
+| 5 | **Overly large messages** | Slow serialization/deserialization, high network usage, broker memory pressure | Store large payloads in object storage; send only references in the message |
+| 6 | **Synchronous blocking in consumers** | Blocking the consumer loop prevents it from polling for new messages or sending heartbeats | Process asynchronously or in separate threads; use reactor/reactor patterns |
+| 7 | **Blindly increasing prefetch** | High prefetch causes uneven load distribution and memory exhaustion on consumers | Tune prefetch based on processing time and memory limits (start with 1-10) |
+| 8 | **Sharing consumer groups across environments** | Dev and prod consumers compete for partitions or messages | Use separate consumer groups per environment (e.g., <code>orders-group-prod</code>, <code>orders-group-dev</code>) |
+| 9 | **Using Kafka for point-to-point RPC** | Kafka is designed for async streaming; request-response patterns add complexity and latency | Use gRPC or HTTP for synchronous request-response; use Kafka for event streaming |
+| 10 | **Neglecting schema evolution** | Schema changes break older consumers; teams get paged at 3am | Use Schema Registry with backward-compatible changes; add fields with defaults |
+| 11 | **SQS visibility timeout too short** | Messages reappear while still being processed, causing duplicate processing | Set VisibilityTimeout longer than the expected max processing time (with buffer) |
+| 12 | **Not testing exactly-once semantics** | Exactly-once is hard to get right; misconfiguration still leads to duplicates | Test with simulated broker failures, consumer crashes, and network partitions |
+
+---
+
+## Complete API Reference
+
+### RabbitMQ Exchange Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| <code>name</code> | string | Exchange name |
+| <code>type</code> | string | One of: <code>direct</code>, <code>topic</code>, <code>fanout</code>, <code>headers</code> |
+| <code>durable</code> | boolean | Survives broker restart |
+| <code>autoDelete</code> | boolean | Deleted when last queue unbinds |
+| <code>internal</code> | boolean | Clients cannot publish directly; only other exchanges can route to it |
+| <code>arguments</code> | object | Extra arguments (e.g., <code>alternate-exchange</code>) |
+
+### RabbitMQ Queue Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| <code>name</code> | string | Queue name (empty = server generates a name) |
+| <code>durable</code> | boolean | Survives broker restart |
+| <code>exclusive</code> | boolean | Used by only one connection; deleted when that connection closes |
+| <code>autoDelete</code> | boolean | Deleted when last consumer cancels |
+| <code>arguments</code> | object | Extra arguments: |
+| | | <code>x-message-ttl</code> — message TTL in ms |
+| | | <code>x-expires</code> — queue auto-delete after ms of disuse |
+| | | <code>x-max-length</code> — max messages in queue |
+| | | <code>x-max-length-bytes</code> — max queue size in bytes |
+| | | <code>x-dead-letter-exchange</code> — DLX name |
+| | | <code>x-dead-letter-routing-key</code> — routing key for dead messages |
+| | | <code>x-max-priority</code> — enable priority queue (0-255) |
+
+### Kafka Topic Configs
+
+| Config | Default | Description |
+|--------|---------|-------------|
+| <code>retention.ms</code> | 604800000 (7 days) | How long to retain log segments |
+| <code>retention.bytes</code> | -1 (unlimited) | Max bytes of log per partition before deletion |
+| <code>cleanup.policy</code> | <code>delete</code> | <code>delete</code> (time/size-based) or <code>compact</code> (key-based) |
+| <code>compression.type</code> | <code>producer</code> | Final compression codec (<code>gzip</code>, <code>snappy</code>, <code>lz4</code>, <code>zstd</code>, <code>producer</code>, <code>uncompressed</code>) |
+| <code>min.insync.replicas</code> | 1 | Minimum ISR count for ack=-1 to succeed |
+| <code>max.message.bytes</code> | 1048588 (1 MB) | Max size of a single message |
+| <code>segment.bytes</code> | 1073741824 (1 GB) | Max size of a single log segment file |
+| <code>segment.ms</code> | 604800000 (7 days) | Max time before a log segment is closed |
+
+### Kafka Consumer Configs
+
+| Config | Default | Description |
+|--------|---------|-------------|
+| <code>bootstrap.servers</code> | — | Comma-separated list of broker addresses |
+| <code>group.id</code> | — | Consumer group ID for offset tracking |
+| <code>key.deserializer</code> | — | Deserializer class for the record key |
+| <code>value.deserializer</code> | — | Deserializer class for the record value |
+| <code>enable.auto.commit</code> | true | Periodically commit offsets automatically |
+| <code>auto.commit.interval.ms</code> | 5000 | Frequency of auto-commits |
+| <code>auto.offset.reset</code> | <code>latest</code> | Where to start if no committed offset: <code>latest</code>, <code>earliest</code>, <code>none</code> |
+| <code>fetch.min.bytes</code> | 1 | Min bytes per fetch; higher = less network churn but more latency |
+| <code>fetch.max.wait.ms</code> | 500 | Max time to wait for <code>fetch.min.bytes</code> |
+| <code>max.poll.records</code> | 500 | Max records per poll; lower = less memory but more poll loops |
+| <code>session.timeout.ms</code> | 45000 | Time before broker considers consumer dead |
+| <code>heartbeat.interval.ms</code> | 3000 | Frequency of heartbeats (should be 1/3 of session.timeout) |
+| <code>isolation.level</code> | <code>read_uncommitted</code> | <code>read_committed</code> to only read transactional messages |
+
+### SQS Queue Attributes
+
+| Attribute | Description |
+|-----------|-------------|
+| <code>VisibilityTimeout</code> | Seconds a message is hidden from other consumers after being received (0-43200, default 30) |
+| <code>MaximumMessageSize</code> | Max message size in bytes (1024-262144, default 262144) |
+| <code>MessageRetentionPeriod</code> | Seconds to retain messages (60-1209600, default 345600) |
+| <code>DelaySeconds</code> | Delay before a new message becomes visible (0-900) |
+| <code>ReceiveMessageWaitTimeSeconds</code> | Long poll duration (0-20); 20 enables long polling |
+| <code>RedrivePolicy</code> | DLQ config: <code>deadLetterTargetArn</code> and <code>maxReceiveCount</code> |
+| <code>FifoQueue</code> | Set to <code>true</code> for FIFO queues |
+| <code>ContentBasedDeduplication</code> | FIFO only: auto-generate dedup ID from message body hash |
+
+---
+
+## Practice Questions
+
+1. **What is the difference between a queue and a topic in messaging systems?**
+
+A queue implements point-to-point delivery: each message is consumed by exactly one consumer. A topic implements pub/sub: each message is broadcast to all subscribers. RabbitMQ queues are point-to-point; Kafka topics support both (consumer groups for point-to-point, multiple groups for pub/sub).
+
+2. **How does Kafka achieve high throughput compared to RabbitMQ?**
+
+Kafka uses sequential disk I/O (append-only logs), batching, compression, and zero-copy data transfer. Partitions allow parallel reads/writes. RabbitMQ uses random I/O per message (per-message writes to multiple queues). Kafka's log-based architecture is optimized for throughput over latency.
+
+3. **What is a dead letter queue and when would you use one?**
+
+A dead letter queue (DLQ) stores messages that cannot be processed successfully after a configurable number of retries. Use DLQs to isolate poison messages (malformed, unprocessable) so they do not block the main queue. Operators can inspect and replay DLQ messages after fixing the root cause.
+
+4. **Explain the difference between at-least-once and exactly-once delivery semantics.**
+
+In at-least-once, a message may be delivered more than once but never lost. This requires the producer to wait for an acknowledgement and the consumer to commit the offset after processing. In exactly-once, the message is delivered exactly once. This requires idempotent producers (Kafka), transactional coordination, and idempotent consumers with deduplication.
+
+5. **How does the competing consumers pattern work and what problem does it solve?**
+
+Multiple consumer instances read from the same queue; each message is delivered to exactly one consumer. This solves the problem of scalability: you can add more consumers to increase throughput. In Kafka, competing consumers are implemented via consumer groups where partitions are evenly distributed.
+
+6. **What happens during a Kafka consumer group rebalance?**
+
+When a consumer joins or leaves a group, the group coordinator triggers a rebalance. All consumers in the group stop processing, partitions are reassigned to the remaining members, then consumers resume. During rebalancing, no messages are processed (stop-the-world). Cooperative rebalancing (incremental) reduces the disruption.
+
+7. **Design a reliable order processing system with retry and dead letter handling.**
+
+Use RabbitMQ with the following: (a) a durable work queue with a DLX configured, (b) a retry queue with TTL (30s) that routes back to the main queue, (c) a DLQ for messages exceeding max retries (3), (d) consumers with manual ack and prefetch limit, (e) idempotent processing using database unique constraints on order ID.
+
+8. **What is the difference between event sourcing and CQRS? How do they complement each other?**
+
+Event sourcing stores state changes as an append-only event log; the current state is derived by replaying events. CQRS separates read and write models. They complement each other: event sourcing provides the event log that feeds the write model, while CQRS provides optimized read models (materialized views) built from those events. CQRS does not require event sourcing, but event sourcing naturally pairs with CQRS.
+
+9. **How do you ensure exactly-once semantics in a distributed messaging system?**
+
+Use (a) an idempotent producer with unique request IDs to prevent duplicate sends, (b) transactional messaging to atomically write to multiple topics/partitions, (c) idempotent consumers with deduplication (unique key constraints in the sink database or idempotency cache), and (d) transactional outbox pattern where the message is written to a database table in the same transaction as the business operation, then a separate process publishes it.
+
+10. **Compare tumbling, hopping, and sliding windows in stream processing.**
+
+Tumbling windows are fixed-size, non-overlapping, contiguous intervals (e.g., hourly). Hopping windows (also called sliding windows) are fixed-size and overlapping; defined by window size and slide interval (e.g., 1-hour window sliding every 15 minutes). The smaller the slide, the more overlapping windows exist. Tumbling is simpler; hopping provides more granular analysis.`,
+            tags: ["Message Queues", "Kafka", "Event-Driven", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-testing",
+            title: "Testing Backend Applications",
+            shortDesc: "Complete testing reference — unit, integration, e2e, contract testing, test doubles, CI integration, and coverage strategies.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Test pyramid: unit > integration > e2e — faster feedback at lower levels.",
+              "Test doubles: dummy, fake, stub, spy, mock — when to use each.",
+              "Integration testing: testcontainers, in-memory databases, wiremock.",
+              "Contract testing: Pact (consumer-driven contracts) — provider verification.",
+              "Coverage: line, branch, mutation — what each measures and target thresholds.",
+            ],
+            content: `## Quick Reference
+Testing backend applications validates correctness, performance, and resilience. The **Test Pyramid** guides investment: 70% unit (fast, isolated), 20% integration (boundary crossing), 10% e2e (full system). **Test doubles** (dummy, fake, stub, spy, mock) isolate code under test. **Coverage thresholds** (80% line, 70% branch) prevent regressions. **CI integration** runs fast tests on every commit, slower suites on demand.
+## Test Pyramid
+| Layer | Speed | Isolation | Brittleness | Ideal % | What It Catches |
+|-------|-------|-----------|-------------|---------|-----------------|
+| **Unit** | milliseconds | Full (no I/O) | Low | 70% | Logic errors, edge cases |
+| **Integration** | seconds | Partial (DB, HTTP) | Medium | 20% | Contract mismatches, data issues |
+| **E2E** | minutes | None (real system) | High | 10% | Workflow regressions |
+**Why the 70/20/10 ratio matters:**
+- Unit tests provide rapid feedback during development — run thousands in <1s.
+- Integration tests verify boundaries (DB, network) without full deployment.
+- E2E tests confirm user workflows but are slow and flaky — minimize them.
+- Inverting the pyramid (many E2E, few unit) leads to slow builds, brittle suites, and long debug cycles.
+## Test Doubles
+| Double | Behaviour | Records? | Asserts? | Use When |
+|--------|-----------|----------|----------|----------|
+| **Dummy** | Placeholder passed but never used | No | No | Filling parameter lists (e.g., <code>null</code> or empty object) |
+| **Fake** | Working lightweight implementation | No | No | In-memory DB, fake SMTP server — faster than real thing |
+| **Stub** | Returns canned answers for specific calls | No | No | External API returns fixed JSON; no behaviour verification needed |
+| **Spy** | Wraps real object, records interactions | Yes | Optional | Assert a method was called with specific args; still runs real logic |
+| **Mock** | Pre-programmed expectations | Yes | Yes (built-in) | Verify exact call sequence and parameters; strict expectations |
+**When to use each:**
+- Prefer **Fake** for persistence (in-memory DB) — tests are realistic and fast.
+- Use **Stub** for read-only external services (GET endpoints).
+- Use **Spy** when you need to verify side effects while keeping real behaviour.
+- Use **Mock** sparingly — only for protocols where call order/arguments are critical (message queues, RPC).
+- **Dummy** is rarely needed explicitly — most frameworks auto-fill unused parameters.
+## Unit Testing
+Test individual functions/classes in isolation. Mock all external dependencies (DB, network, filesystem).
+// Jest example: testing a discount calculator
+function calculateDiscount(price, coupon) {
+  // Validate inputs
+  if (price < 0) throw new Error("Price must be non-negative");
+  // Apply coupon if valid
+  if (coupon && coupon.rate > 0) return price * (1 - coupon.rate);
+  // No coupon — return full price
+  return price;
+describe("calculateDiscount", () => {
+  // Unit test: happy path with valid coupon
+  it("applies 20% discount when coupon rate is 0.2", () => {
+    // Arrange
+    const result = calculateDiscount(100, { code: "SAVE20", rate: 0.2 });
+    // Assert
+    expect(result).toBe(80);
+  // Unit test: no coupon returns full price
+  it("returns full price when no coupon provided", () => {
+    expect(calculateDiscount(100, null)).toBe(100);
+  // Unit test: edge case — zero price
+  it("throws error for negative price", () => {
+    expect(() => calculateDiscount(-10, null)).toThrow("Price must be non-negative");
+// JUnit 5 with Mockito: testing a UserService
+import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+class UserServiceTest {
+  // Declare mock dependency
+  @Mock UserRepository userRepo;
+  @InjectMocks UserService userService;
+  @Test
+  void findUser_returnsUser_whenExists() {
+    // Arrange: stub repo to return a user
+    User mockUser = new User(1L, "alice@example.com");
+    when(userRepo.findById(1L)).thenReturn(Optional.of(mockUser));
+    // Act
+    User result = userService.findUser(1L);
+    // Assert: verify result and interaction
+    assertThat(result.getEmail()).isEqualTo("alice@example.com");
+    verify(userRepo).findById(1L);
+# pytest example: testing an order total calculator
+def calculate_order_total(items, tax_rate):
+  # Sum item prices
+  subtotal = sum(item["price"] * item["qty"] for item in items)
+  # Apply tax rate
+  return subtotal * (1 + tax_rate)
+class TestOrderTotal:
+  # Parameterized test for multiple scenarios
+  @pytest.mark.parametrize("items,tax,expected", [
+    ([{"price": 10, "qty": 2}], 0.1, 22.0),  # 2 items at $10 with 10% tax
+    ([{"price": 5, "qty": 0}], 0.0, 0.0),     # zero quantity — zero total
+    ([], 0.05, 0.0),                            # empty cart — zero total
+  def test_calculate_order_total(self, items, tax, expected):
+    # Act and assert in one line
+    assert calculate_order_total(items, tax) == expected
+**Assertion libraries quick reference:**
+| Language | Library | Example |
+|----------|---------|---------|
+| JavaScript | Jest | <code>expect(actual).toEqual(expected)</code> |
+| Java | JUnit + AssertJ | <code>assertThat(actual).isEqualTo(expected)</code> |
+| Python | pytest | <code>assert actual == expected</code> |
+| Go | testing + testify | <code>assert.Equal(t, expected, actual)</code> |
+## Integration Testing
+Verify code that crosses boundaries: databases, HTTP clients, message queues. Use real or containerised dependencies.
+// Testcontainers: PostgreSQL in a Docker container for integration tests
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+@Testcontainers
+class UserRepositoryIntegrationTest {
+  // Start a real PostgreSQL container for each test class
+  @Container
+  static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+  @BeforeAll
+  static void initDb() {
+    // Configure datasource from container's JDBC URL
+    var ds = DataSourceBuilder.create()
+        .url(postgres.getJdbcUrl())
+        .username(postgres.getUsername())
+        .password(postgres.getPassword())
+        .build();
+    // Run schema migration (Flyway/Liquibase)
+    Flyway.configure().dataSource(ds).load().migrate();
+  @Test
+  void saveAndFindUser() {
+    // Arrange: create repository with real DB connection
+    var repo = new UserRepository(ds);
+    // Act: persist and retrieve
+    repo.save(new User("alice@example.com"));
+    var user = repo.findByEmail("alice@example.com");
+    // Assert: data was persisted
+    assertThat(user).isPresent();
+    assertThat(user.get().getEmail()).isEqualTo("alice@example.com");
+# pytest + SQLite in-memory for fast integration tests
+import sqlite3
+def db():
+  # Create in-memory SQLite database
+  conn = sqlite3.connect(":memory:")
+  # Create schema
+  conn.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, email TEXT UNIQUE)")
+  yield conn  # Provide connection to test
+  conn.close()  # Clean up after test
+def test_save_user(db):
+  # Arrange: insert a user
+  db.execute("INSERT INTO users (email) VALUES (?)", ("alice@test.com",))
+  db.commit()
+  # Act: query back
+  cursor = db.execute("SELECT email FROM users WHERE id = ?", (1,))
+  row = cursor.fetchone()
+  # Assert
+  assert row[0] == "alice@test.com"
+**In-memory databases vs. Testcontainers:**
+| Approach | Speed | Realism | Use Case |
+|----------|-------|---------|----------|
+| H2 / SQLite | Very fast | Low (dialect differences) | Repository unit-testing, query logic |
+| Testcontainers | Moderate | High (same DB as prod) | Schema migrations, dialect-specific features |
+| WireMock | Fast | High (HTTP stubs) | External HTTP API integration |
+**Test transactions with rollback:**
+- Spring: <code>@Transactional</code> on test — auto-rollback after each test.
+- pytest: wrap test body in a transaction and call <code>rollback()</code> in teardown.
+- Go: use <code>TRUNCATE</code> in <code>SetupTest</code> or savepoint rollback.
+## API Testing
+Test HTTP endpoints directly — request/response validation, status codes, headers, and body shape.
+// Supertest (Node.js): testing a REST API endpoint
+const request = require("supertest");
+const app = require("../app");  // Express app
+describe("GET /api/users/:id", () => {
+  // Test: returns 200 and user JSON for existing user
+  it("returns 200 with user data when user exists", async () => {
+    const res = await request(app)
+      .get("/api/users/42")
+      .set("Accept", "application/json");  // Set request header
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("id", 42);
+    expect(res.body).toHaveProperty("email");  // Check field existence
+  // Test: returns 404 for missing user
+  it("returns 404 when user does not exist", async () => {
+    const res = await request(app).get("/api/users/99999");
+    expect(res.status).toBe(404);
+// TestRestTemplate (Spring Boot): testing a REST controller
+import org.springframework.boot.test.web.client.TestRestTemplate;
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+class UserControllerTest {
+  @Autowired TestRestTemplate rest;
+  @Test
+  void getUser_returnsUser() {
+    // Act: HTTP GET request
+    var response = rest.getForEntity("/api/users/42", User.class);
+    // Assert: status and body
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getBody().getEmail()).contains("@");
+// httptest (Go): testing an HTTP handler
+import "net/http/httptest"
+func TestGetUserHandler(t *testing.T) {
+  // Arrange: create a request and response recorder
+  req := httptest.NewRequest("GET", "/api/users/42", nil)
+  rec := httptest.NewRecorder()
+  // Act: call the handler directly (no server needed)
+  GetUserHandler(rec, req)
+  // Assert: status and body
+  assert.Equal(t, http.StatusOK, rec.Code)
+  assert.Contains(t, rec.Body.String(), \`"email"\`)
+# pytest-httpx: mocking HTTP requests in API tests
+import httpx
+async def test_get_user():
+  # Arrange: mock external HTTP call
+  async with httpx.AsyncClient() as client:
+    # Act: make request to our API (which calls external API internally)
+    response = await client.get("http://localhost:8000/api/users/42")
+  # Assert: verify status and body
+  assert response.status_code == 200
+  data = response.json()
+  assert data["id"] == 42
+**Contract testing with Pact:**
+- Consumer defines expectations → publishes contract to Pact Broker.
+- Provider verifies against contract in CI.
+- Breaking changes are detected before deployment.
+## Contract Testing
+Consumer-driven contracts (CDC) ensure services evolve compatibly.
+| Concept | Description |
+| **Consumer** | Service that makes HTTP calls to another service |
+| **Provider** | Service that exposes the HTTP API |
+| **Pact** | File containing consumer expectations (request → response) |
+| **Pact Broker** | Shared repository for pacts; enables cross-team visibility |
+| **Provider verification** | Provider replays each pact against its real API |
+| **Can-i-deploy** | Tool that checks whether a given version is safe to deploy |
+// Pact consumer test (Jest)
+const { PactV3 } = require("@pact-foundation/pact");
+describe("UserServiceClient Pact test", () => {
+  // Start Pact mock provider
+  const provider = new PactV3({ consumer: "WebApp", provider: "UserService" });
+  it("returns user data for given user ID", async () => {
+    // Arrange: define expected interaction on mock provider
+      .uponReceiving("a request for user 42")
+      .withRequest({ method: "GET", path: "/users/42" })
+        headers: { "Content-Type": "application/json" },
+        body: { id: 42, email: "alice@example.com" },
+    // Act: execute the Pact mock and test the consumer client
+    await provider.executeTest(async (mockServer) => {
+      const client = new UserServiceClient(mockServer.url);
+      const user = await client.getUser(42);
+      // Assert: client parsed response correctly
+      expect(user.email).toBe("alice@example.com");
+**Provider verification (Ruby Rack):**
+\`\`\`ruby
+# Provider verification with Pact
+require "pact/provider/rspec"
+Pact.service_provider "UserService" do
+  # Point to Pact Broker to fetch consumer pacts
+  honours_pact_with "WebApp" do
+    pact_uri "http://pact-broker:9292/pacts/provider/UserService/consumer/WebApp/latest"
+Pact.verify_all_provider_states
+## Performance Testing
+| Type | Goal | Tool | Duration | Metrics |
+|------|------|------|----------|---------|
+| **Load** | Normal traffic behaviour | k6, Locust, Gatling | 10–30 min | p50/p95/p99 latency, throughput, error rate |
+| **Stress** | Breaking point | k6, wrk2 | 5–10 min | Max concurrent users before errors |
+| **Soak** | Memory leaks over time | Gatling, Locust | 2–24 hrs | Memory, GC behaviour, connection leaks |
+| **Spike** | Sudden traffic bursts | k6 | 1–5 min | Cold-start behaviour, auto-scaling lag |
+// k6 load test script (JavaScript)
+import http from "k6/http";
+import { check, sleep } from "k6";
+// Define test stages: ramp-up, steady, ramp-down
+export const options = {
+  stages: [
+    { duration: "30s", target: 50 },   // Ramp up to 50 virtual users over 30s
+    { duration: "1m", target: 50 },    // Stay at 50 users for 1 minute
+    { duration: "10s", target: 0 },    // Ramp down to 0
+    http_req_duration: ["p(95)<500"],  // 95% of requests must complete under 500ms
+    http_req_failed: ["rate<0.01"],    // Error rate must be below 1%
+export default function () {
+  // Make HTTP request
+  const res = http.get("http://localhost:8080/api/users");
+  // Assert response
+  check(res, {
+    "status is 200": (r) => r.status === 200,
+    "response time < 400ms": (r) => r.timings.duration < 400,
+  // Simulate think time between requests
+  sleep(1);
+**Profiling essentials:**
+- **CPU profiling**: <code>pprof</code> (Go), <code>perf</code> (Linux), <code>YourKit</code> (Java).
+- **Memory profiling**: heap dumps, allocation traces — look for growth in retained objects.
+- **I/O profiling**: <code>iostat</code>, <code>ioping</code> — disk latency kills DB-heavy endpoints.
+## Test Organization
+**Arrange-Act-Assert (AAA) pattern:**
+// AAA structure for clarity
+// Arrange: set up test data and dependencies
+// Act: execute the code under test
+// Assert: verify the result
+**Given-When-Then** (BDD variant of AAA):
+- <code>Given</code> some context — arrange state.
+- <code>When</code> an action occurs — execute.
+- <code>Then</code> verify outcomes — assert.
+**Test naming conventions:**
+| Convention | Example | Pros |
+|------------|---------|------|
+| <code>methodName_expectedBehaviour_stateUnderTest</code> | <code>calculateDiscount_appliesRate_whenValidCoupon</code> | Explicit, auto-complete friendly |
+| <code>should_expected_when_condition</code> | <code>should_returnUser_when_emailExists</code> | Reads like English |
+| <code>UnitOfWork_StateUnderTest_ExpectedBehavior</code> | <code>UserService_findById_existingUser_returnsUser</code> | Roy Osherove standard |
+**File structure:**
+  __tests__/          # Jest convention (collocated)
+  services/
+    userService.ts
+    __tests__/
+      userService.test.ts
+tests/                # JUnit / pytest convention (separate dir)
+  unit/
+    test_user_service.py
+  integration/
+    test_user_repository.py
+**CI integration:**
+| Test Suite | CI Trigger | Parallelism | Failure Action |
+|------------|-----------|-------------|----------------|
+| Unit | Every push | High (unlimited workers) | Block merge |
+| Integration | PR, schedule | Medium (per-module workers) | Block merge |
+| Contract | PR, deploy | Medium | Block merge, notify Pact Broker |
+| E2E | Deploy, nightly | Low (sequential or sharded) | Alert (non-blocking) |
+| Performance | Nightly, main merge | Low | Alert, auto-rollback if regression >5% |
+## Coverage Metrics
+| Metric | What It Measures | Pitfall |
+|--------|-----------------|---------|
+| **Line coverage** | How many lines of code executed | Ignores branches; \`if\` with only one path counts as "covered" |
+| **Branch coverage** | How many boolean branches (if/else, switch) taken | Measures decision points, not data states |
+| **Path coverage** | How many distinct execution paths through code | Exponential explosion — impractical for complex code |
+| **Mutation testing** | Code changes (mutants) that survive tests | Gold standard — surviving mutant = untested logic |
+**Mutation testing with Stryker:**
+# Run Stryker mutation testing against Jest suite
+npx stryker run
+// stryker.conf.json — example configuration
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "mutate": ["src/**/*.ts", "!src/**/*.test.ts"],  // Files to mutate
+  "testRunner": "jest",
+  "jest": { "configFile": "jest.config.ts" },
+  "thresholds": {
+    "high": 80,   // Goal mutation score
+    "low": 60,    // Warnings below this
+    "break": 50   // CI fails below this
+**What NOT to measure:**
+- 100% line coverage is a vanity metric — 80% line + 70% branch is healthier.
+- Generated code (DTOs, mappers, OpenAPI clients) — exclude from coverage.
+- Configuration files, constants, type definitions — no logic to test.
+## Common Pitfalls & Anti-patterns
+| # | Anti-pattern | Why It Hurts | Fix |
+|---|-------------|--------------|-----|
+| 1 | Testing implementation details (private methods) | Refactoring breaks tests; brittle suite | Test public behaviour, not internal state |
+| 2 | Shared mutable test state (static variables, test order coupling) | Tests fail non-deterministically; order-dependent | Fresh state per test (<code>@BeforeEach</code>, <code>setup()</code>) |
+| 3 | Mocking everything (including value objects) | Tests pass but code breaks in prod | Only mock external boundaries (DB, network, FS); use real POJOs |
+| 4 | Overspecified mocks (exact call count, argument matchers too strict) | Tiny code changes break many tests | Use lenient matchers (<code>any()</code>, <code>contains()</code>) |
+| 5 | Flaky E2E tests (timing, race conditions) | Ignored failures; lost confidence | Retry flaky tests, move coverage to lower pyramid levels |
+| 6 | Tests with no assertions | False sense of security | Enforce assertion count in CI; fail if no assertion runs |
+| 7 | Sleeping in tests to wait for async work | Slow, flaky | Use awaitility / <code>waitFor</code> / polling with timeout |
+| 8 | Hardcoded test data (magic numbers, dates) | Unclear intent | Use named variables and builder patterns |
+| 9 | Giant test methods testing multiple behaviours | Debugging failures is hard; test violates single-responsibility | One assertion concept per test method |
+| 10 | Missing negative/error-path tests | Happy-path only; null, invalid input, network failures untested | Add tests for each error scenario (404, 500, timeout, empty result) |
+| 11 | Production-like data in test fixtures | Tests become slow, hard to maintain | Use minimal, focused fixtures per test |
+| 12 | No CI integration for tests | Tests exist but never run | Block merges on test failure; enforce coverage gates |
+## Complete API Reference
+**Jest matchers:**
+| Matcher | Use Case |
+| <code>expect(x).toBe(val)</code> | Primitive equality (<code>===</code>) |
+| <code>expect(x).toEqual(val)</code> | Deep equality (objects, arrays) |
+| <code>expect(x).toStrictEqual(val)</code> | Deep equality + type check + no extra keys |
+| <code>expect(x).toContain(item)</code> | Array or string inclusion |
+| <code>expect(x).toHaveLength(n)</code> | Array/string length |
+| <code>expect(x).toThrow(err)</code> | Function throws |
+| <code>expect(x).toHaveProperty(key, val)</code> | Object property presence and value |
+| <code>expect(x).toBeDefined()</code> | Not <code>undefined</code> |
+**Mockito methods (Java):**
+| <code>mock(Class)</code> | Create mock instance |
+| <code>when(x.method()).thenReturn(v)</code> | Stub method return value |
+| <code>verify(x).method(args)</code> | Assert method was called |
+| <code>verify(x, times(n)).method()</code> | Assert exact call count |
+| <code>verifyNoInteractions(x)</code> | Assert no calls occurred |
+| <code>ArgumentMatchers.any()</code> | Lenient argument matcher |
+**pytest fixtures:**
+| Fixture | Purpose |
+| <code>@pytest.fixture</code> | Define reusable test setup |
+| <code>@pytest.mark.parametrize</code> | Run test with multiple inputs |
+| <code>@pytest.fixture(autouse=True)</code> | Fixture applied to every test automatically |
+| <code>@pytest.fixture(scope="session")</code> | Shared fixture across entire test run (one-time setup) |
+| <code>tmp_path</code> | Built-in fixture for temp directory per test |
+| <code>monkeypatch</code> | Built-in fixture for modifying objects/dicts/env |
+**Testcontainers modules:**
+| Module | Purpose |
+| <code>PostgreSQLContainer</code> | PostgreSQL database in Docker |
+| <code>MySQLContainer</code> | MySQL database in Docker |
+| <code>MongoDBContainer</code> | MongoDB in Docker |
+| <code>KafkaContainer</code> | Apache Kafka with Zookeeper |
+| <code>RedisContainer</code> | Redis in Docker |
+| <code>GenericContainer</code> | Any custom Docker image |
+**Pact configuration:**
+| <code>consumer: "AppName"</code> | Name of the consuming service |
+| <code>provider: "ApiName"</code> | Name of the providing service |
+| <code>port: 1234</code> | Mock provider port |
+| <code>pactfileWriteMode: "merge"</code> | Append interactions to existing pact file |
+| <code>host: "localhost"</code> | Mock provider host |
+| <code>logLevel: "info"</code> | Pact framework logging |
+1. You have a test suite with 500 E2E tests and 200 unit tests. Builds take 45 minutes. What change would you make, and why?
+2. A colleague uses <code>when(repo.findById(id)).thenReturn(user)</code> in every test. What risks does this introduce? How would you refactor?
+3. You are adding a new API endpoint <code>POST /api/orders</code>. Write a Pact consumer test for the expected request/response pair.
+4. An integration test using Testcontainers fails intermittently with a connection timeout. How do you diagnose and fix it?
+5. What is the difference between line coverage and mutation coverage? Give an example where line coverage is 100% but mutation coverage detects a missing test.
+6. Design a test suite for a message queue consumer that processes orders. Which test doubles would you use for the queue, database, and payment service?
+7. A developer writes <code>Thread.sleep(3000)</code> in tests to wait for an async job to complete. What alternative would you propose, and why?
+8. Your CI pipeline runs all tests on every commit, taking 30 minutes. Propose a strategy to reduce feedback time to under 5 minutes without reducing coverage.
+9. You are migrating from an in-memory H2 database to Testcontainers PostgreSQL. What differences might surface? How do you handle them?
+10. Write a parameterized unit test for a function <code>validateEmail(email string): boolean</code> that covers valid emails, invalid formats, empty strings, and null input.
+`,
+            tags: ["Testing", "Backend", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-deployment",
+            title: "Deployment & CI/CD",
+            shortDesc: "Complete deployment reference — Docker, Kubernetes, CI/CD pipelines, blue-green/canary deployments, and infrastructure as code.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Docker: multi-stage builds, .dockerignore, health checks, non-root user, layer caching.",
+              "Kubernetes: Deployments, Services, ConfigMaps, Secrets, Ingress, readiness/liveness probes.",
+              "CI/CD: GitHub Actions, GitLab CI, Jenkins — pipeline stages, caching, matrix builds.",
+              "Deployment strategies: rolling, blue-green, canary, feature flags — rollback procedures.",
+              "Infrastructure as Code: Terraform, Pulumi — state management, modules, remote backends.",
+            ],
+            content: `## Quick Reference
+Deployment and CI/CD pipelines automate the journey from code commit to production. **Docker** containerises applications with multi-stage builds, minimal images, and security best practices. **Continuous Integration** runs lint, test, build, scan, and publish stages on every push. **Continuous Deployment** rolls out changes via rolling, blue-green, or canary strategies. **Kubernetes** orchestrates containers with Deployments, Services, ConfigMaps, and Ingress. **Infrastructure as Code** (Terraform, Pulumi) manages cloud resources declaratively with state tracking and drift detection. CI/CD platforms (GitHub Actions, GitLab CI, Jenkins) tie it all together with pipeline stages, caching, matrix builds, and secrets management.
+## Docker
+### Dockerfile Best Practices
+Use **multi-stage builds** to keep final images small — the first stage compiles, the second stage copies only the runtime artifact. Use a **non-root user** (<code>USER 10001:10001</code>) to avoid privilege escalation. Prefer <code>COPY</code> over <code>ADD</code> (COPY is explicit; ADD has hidden behaviours like auto-extracting tarballs). Order instructions from least to most frequently changing to leverage **layer caching** (install OS packages first, then language deps, then app code). Add **health checks** (<code>HEALTHCHECK</code>) for container orchestration. Attach **labels** for metadata (maintainer, version, date).
+| Practice | Why | Example |
+|----------|-----|---------|
+| Multi-stage build | Separates build from runtime; final image ~10MB instead of 1GB | <code>FROM golang:1.22 AS builder</code> then <code>FROM alpine:3.20</code> |
+| Non-root user | Prevents container breakout; required by security policies | <code>RUN adduser -D app && USER app</code> |
+| COPY vs ADD | COPY copies files; ADD has magic (tar extraction, URL fetch) — use COPY unless you need ADD's behaviour | <code>COPY --from=builder /app/bin /app/</code> |
+| Layer caching | Each instruction creates a cacheable layer; order deps before code | Install apt packages first, copy <code>go.mod</code> then <code>go.sum</code> then source |
+| Health check | Lets orchestrator know container is ready | <code>HEALTHCHECK --interval=30s CMD curl -f http://localhost:8080/health</code> |
+| Labels | Attach metadata for organisation | <code>LABEL org.opencontainers.image.source="https://github.com/org/repo"</code> |
+
+\`\`\`dockerfile
+# Multi-stage Dockerfile for a Go service
+# Stage 1: compile binary (includes full toolchain)
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+# Copy dependency files first — layer caches until they change
+COPY go.mod go.sum ./
+RUN go mod download
+# Copy source and build static binary
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server .
+
+# Stage 2: minimal runtime image (only the binary)
+FROM alpine:3.20
+# Create non-root user (no login shell, no home dir)
+RUN adduser -D -u 10001 appuser
+# Copy only the binary from builder stage
+COPY --from=builder /app/server /server
+# Security: non-root user
+USER appuser
+# Metadata labels
+LABEL org.opencontainers.image.source="https://github.com/org/repo"
+LABEL org.opencontainers.image.version="1.2.3"
+# Document port
+EXPOSE 8080
+# Health check that orchestrator polls
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+# Default command
+ENTRYPOINT ["/server"]
+\`\`\`
+
+### .dockerignore
+Prevent sending unnecessary files to the Docker daemon (speeds builds, reduces context).
+\`\`\`
+# .dockerignore
+node_modules
+.git
+*.md
+.env
+dist
+.DS_Store
+\`\`\`
+
+### Docker Compose
+Define multi-container applications (web app + database + cache) in <code>compose.yaml</code>. Key fields: <code>services</code>, <code>volumes</code>, <code>networks</code>, <code>environment</code>, <code>depends_on</code>, <code>healthcheck</code>.
+
+\`\`\`yaml
+# compose.yaml — web app with Postgres and Redis
+services:
+  app:
+    build: .
+    ports: ["8080:8080"]
+    environment:
+      DATABASE_URL: postgres://user:pass@db:5432/app
+      REDIS_URL: redis://cache:6379
+    depends_on:
+      db: condition: service_healthy  # Wait for DB health
+      cache: condition: service_started
+    volumes:
+      - ./data:/app/data              # Bind mount for dev
+    networks: [app-net]
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Named volume for persistence
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d app"]
+      interval: 5s
+    networks: [app-net]
+
+  cache:
+    image: redis:7-alpine
+    volumes:
+      - cachedata:/data
+    networks: [app-net]
+
+volumes:
+  pgdata:
+  cachedata:
+
+networks:
+  app-net:
+\`\`\`
+
+### Container Networking
+| Network driver | Scope | Use case |
+|----------------|-------|----------|
+| <code>bridge</code> (default) | Single host | Containers communicate via service names in Compose |
+| <code>host</code> | Single host | Container shares host network stack — better performance, less isolation |
+| <code>overlay</code> | Multi-host | Swarm or Docker Multi-host networking |
+| <code>none</code> | Isolated | No network — for offline/security tasks |
+
+### Volumes vs Bind Mounts
+| Feature | Named Volume | Bind Mount |
+|---------|--------------|------------|
+| Managed by Docker | Yes (<code>docker volume ls</code>) | No (host path) |
+| Location | <code>/var/lib/docker/volumes/</code> | Any host path |
+| Backup/restore | <code>docker run --volumes-from</code> | Standard file tools |
+| Performance | Native | Native (Linux) |
+| Use case | Persistent DB data, config secrets | Dev hot-reload, sharing host sockets |
+
+## Container Registry
+| Registry | URL | Auth | Notes |
+|----------|-----|------|-------|
+| Docker Hub | <code>docker.io</code> | <code>docker login</code> | Public/private repos; rate-limited for anonymous pulls |
+| Amazon ECR | <code>*.dkr.ecr.region.amazonaws.com</code> | IAM (<code>aws ecr get-login-password</code>) | Integrated with EKS; lifecycle policies |
+| Google GCR | <code>gcr.io</code> / <code>region-docker.pkg.dev</code> | <code>gcloud auth configure-docker</code> | Integrated with GKE; vulnerability scanning |
+| Azure ACR | <code>*.azurecr.io</code> | <code>az acr login</code> | Integrated with AKS; geo-replication |
+
+### Image Tagging Strategies
+| Strategy | Format | Pros | Cons |
+|----------|--------|------|------|
+| Git SHA | <code>registry.io/app:abc1234</code> | Immutable, traceable to commit | Long, not human-readable |
+| Semantic version | <code>registry.io/app:v1.2.3</code> | Human-readable, follows releases | Requires bumping |
+| Latest | <code>registry.io/app:latest</code> | Simple default | Mutable — can break rollback |
+| Combined | <code>registry.io/app:v1.2.3-abc1234</code> | Best of both | Longer string |
+
+**Best practice**: Use git SHA for CI-built images (immutable + traceable), add semantic tags for releases. Avoid overwriting <code>:latest</code> — use explicit tags for production.
+
+### Image Scanning
+Scan images for known CVEs before pushing to production. Tools: **Trivy**, **Grype**, **Snyk**, **Docker Scout** (formerly Docker Scan), **ECR Enhanced Scanning**.
+\`\`\`bash
+# Trivy scan example
+trivy image registry.io/app:v1.2.3 --severity CRITICAL,HIGH --ignore-unfixed
+\`\`\`
+
+## Continuous Integration
+### Pipeline Stages
+| Stage | What it does | Typical tools |
+|-------|-------------|---------------|
+| **Lint** | Enforce code style, catch syntax errors | ESLint, Prettier, ruff, golangci-lint |
+| **Unit test** | Fast tests with full isolation | Jest, pytest, go test, JUnit |
+| **Build** | Compile source, create artifacts | go build, tsc, gradle build, docker build |
+| **Scan** | SAST, dependency scanning, secret detection | Semgrep, Trivy, Snyk, truffleHog |
+| **Publish** | Push artifacts to registry | docker push, npm publish, gradle publish |
+
+### Caching Strategies
+| What to cache | Key | Tool | Benefit |
+|---------------|-----|------|---------|
+| Language deps | Hash of lockfile (<code>package-lock.json</code>) | GitHub Actions <code>cache</code> action | ~60s saved per run |
+| Docker layers | Image digest + Dockerfile hash | Docker layer caching (BuildKit) | ~2min saved per build |
+| Build output | Source file hashes | Bazel / Nx / Turborepo | Incremental builds |
+| Test databases | Snapshot of seed data | Docker volumes / testcontainers | Faster test setup |
+
+### Matrix Builds
+Run the same job across multiple versions/configurations in parallel. Use a matrix of OS, language version, and environment variables.
+
+\`\`\`yaml
+# GitHub Actions matrix build — test across Go versions and OS
+jobs:
+  test:
+    strategy:
+      matrix:
+        go: ["1.21", "1.22"]
+        os: [ubuntu-latest, macos-latest]
+    runs-on: \${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: \${{ matrix.go }}
+      - run: go test ./...
+\`\`\`
+
+### Parallel Stages & Conditional Execution
+- **Parallel stages** (GitLab): <code>needs</code> keyword — fan-out/fan-in pattern.
+- **Conditional execution**: Run stages only for specific branches, paths, or event types.
+- **Approval gates**: Manual approval before deploying to production.
+
+\`\`\`yaml
+# GitLab CI — parallel stages with conditional deploy
+stages: [lint, test, build, deploy]
+
+lint:
+  script: golangci-lint run
+  rules:
+    - if: \$CI_PIPELINE_SOURCE == "merge_request_event"
+
+test:
+  stage: test
+  parallel: 3                     # Split tests across 3 runners
+  script: go test -v -count=1 ./...
+
+build:
+  stage: build
+  script: docker build -t app:\$CI_COMMIT_SHORT_SHA .
+  rules:
+    - if: \$CI_COMMIT_BRANCH == "main"
+
+deploy:
+  stage: deploy
+  script: helm upgrade --install app ./chart
+  rules:
+    - if: \$CI_COMMIT_BRANCH == "main"
+  when: manual                    # Requires manual approval
+\`\`\`
+
+### Secrets Management
+Never hardcode secrets in pipeline YAML. Use platform-specific secret stores and inject at runtime.
+
+| Platform | Secret store | Access in pipeline |
+|----------|-------------|-------------------|
+| GitHub Actions | <code>Settings > Secrets > Actions</code> | <code>\${{ secrets.DOCKER_PASSWORD }}</code> |
+| GitLab CI | <code>Settings > CI/CD > Variables</code> | <code>\$DOCKER_PASSWORD</code> (masked) |
+| Jenkins | Credentials plugin / HashiCorp Vault | <code>withCredentials([...])</code> |
+| AWS CodeBuild | Parameter Store / Secrets Manager | <code>aws secretsmanager get-secret-value</code> |
+
+## Continuous Deployment
+### Deployment Strategies
+| Strategy | Description | Downtime | Risk | Complexity | Tools |
+|----------|-------------|----------|------|------------|-------|
+| **Rolling** | Replace instances one by one | None | Low | Low | K8s native Deployment update |
+| **Blue-Green** | Two identical environments; switch traffic | None | Low | Medium | AWS ECS, GCP Cloud Run, Istio |
+| **Canary** | Route small % of traffic to new version | None | Medium | High | Argo Rollouts, Flagger, Istio |
+| **Feature flags** | Deploy code behind toggles; enable on demand | None | Low | Medium | LaunchDarkly, Flagsmith, OpenFeature |
+
+\`\`\`yaml
+# Rolling update strategy — Kubernetes manifest
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          # Can spin up 1 extra pod during update
+      maxUnavailable: 0    # Keep all pods available during update
+  template:
+    spec:
+      containers:
+        - name: app
+          image: registry.io/app:abc1234
+\`\`\`
+
+### Rollback Strategies
+| Trigger | Mechanism | Time to rollback | Data safety |
+|---------|-----------|-----------------|-------------|
+| Failed health check | K8s Deployment rollout undo | ~2 min (kubectl rollout undo) | Safe (no state change) |
+| Monitoring alert (p99 latency spike) | Helm rollback | ~1 min (helm rollback) | Safe |
+| Manual gate | Feature flag toggle | Seconds | Safe |
+| DB migration failure | Manual revert migration | Minutes-Hours | Requires compensating migration |
+
+### Progressive Delivery
+- **Argo Rollouts**: K8s controller for blue-green and canary deployments with traffic shaping (Service Mesh / Ingress), automated promotion/rollback based on metrics analysis.
+- **Flagger**: Operator for canary releases with Istio/Linkerd/Contour/Gloo — analyses success rate, latency, and error budget before promoting.
+
+\`\`\`yaml
+# Argo Rollout — canary with traffic weight steps
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: app
+spec:
+  replicas: 10
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10        # Send 10% traffic to new version
+        - pause: {duration: 5m}  # Wait 5 min, observe metrics
+        - setWeight: 50        # Send 50% traffic
+        - pause: {duration: 10m} # Observe longer
+        - setWeight: 100       # Full rollout
+\`\`\`
+
+## Kubernetes
+### Core Resources
+| Resource | Purpose | Key fields |
+|----------|---------|------------|
+| **Pod** | Smallest deployable unit (1+ containers) | <code>spec.containers[].image</code>, <code>spec.containers[].ports</code> |
+| **Deployment** | Desired state for Pods (replicas, rollout strategy) | <code>spec.replicas</code>, <code>spec.strategy</code>, <code>spec.template</code> |
+| **Service** | Stable network endpoint for Pods | <code>spec.type</code>, <code>spec.selector</code>, <code>spec.ports[].port</code> |
+| **ConfigMap** | Non-sensitive configuration (env vars, files) | <code>data</code> (key-value pairs) |
+| **Secret** | Sensitive data (base64 encoded) | <code>data</code> (base64 values), <code>stringData</code> (plaintext) |
+| **Ingress** | HTTP/S routing to Services | <code>spec.rules[].host</code>, <code>spec.tls</code> |
+| **StatefulSet** | Stateful workloads with stable identities | <code>spec.serviceName</code>, <code>spec.volumeClaimTemplates</code> |
+| **PersistentVolume (PV)** | Cluster-wide storage resource | <code>spec.storageCapacity</code>, <code>spec.accessModes</code> |
+| **PersistentVolumeClaim (PVC)** | Request for storage by a Pod | <code>spec.accessModes[]</code>, <code>spec.resources.requests.storage</code> |
+
+### Service Types
+| Type | Scope | Use case | Example |
+|------|-------|----------|---------|
+| <code>ClusterIP</code> | Internal to cluster | Inter-service communication | <code>type: ClusterIP</code> on port 8080 |
+| <code>NodePort</code> | External (node IP + port) | Dev/debug, direct node access | <code>type: NodePort, nodePort: 30080</code> |
+| <code>LoadBalancer</code> | External via cloud LB | Production HTTP/S services | AWS NLB, GCP TCP LB |
+
+### Probes
+| Probe | What it checks | Failing behaviour | Use when |
+|-------|---------------|-------------------|----------|
+| **livenessProbe** | Is the container alive? | Restart container | App can deadlock or become unresponsive |
+| **readinessProbe** | Is the container ready to serve traffic? | Remove from Service endpoints | App needs warmup / initialisation |
+| **startupProbe** | Has the app started? | Disables liveness/readiness during startup | Slow-starting containers (JVM, legacy apps) |
+
+\`\`\`yaml
+# Kubernetes Deployment with probes, resources, and labels
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels:
+    app: my-service
+    env: production
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: my-service
+  template:
+    metadata:
+      labels:
+        app: my-service
+    spec:
+      containers:
+        - name: app
+          image: registry.io/app:v1.2.3
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          # Resource limits — prevent noisy neighbours
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # Startup probe — gives app time to initialise
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30   # Up to 5 min startup
+          # Liveness probe — restart if unresponsive
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          # Readiness probe — remove from Service if not ready
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 2
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+---
+# Service — expose pods internally
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  type: ClusterIP
+  selector:
+    app: my-service
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+---
+# ConfigMap — non-sensitive config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  LOG_LEVEL: info
+  APP_ENV: production
+---
+# Secret — sensitive data (base64 values shown; use kubectl create secret)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+stringData:    # stringData accepts plaintext; K8s encodes automatically
+  DB_PASSWORD: supersecret123
+  API_KEY: sk-abc123
+---
+# Ingress — external HTTP/S routing
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port:
+                  number: 80
+  tls:
+    - hosts: [api.example.com]
+      secretName: app-tls
+\`\`\`
+
+### Horizontal Pod Autoscaler (HPA)
+Automatically scales replicas based on CPU/memory utilisation or custom metrics.
+\`\`\`yaml
+# HPA — scale between 3 and 20 pods at 70% CPU target
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+\`\`\`
+
+## Infrastructure as Code
+| Tool | Language | State | Primary use | Cloud agnostic |
+|------|----------|-------|-------------|----------------|
+| **Terraform** | HCL | Remote backends (S3, GCS, Azure Storage) | Provision all cloud resources | Yes |
+| **Pulumi** | TypeScript, Python, Go, C#, Java | Same backend options as Terraform | Full programming language power | Yes |
+| **CloudFormation** | YAML/JSON | AWS-managed (StackSets) | AWS-only | No |
+| **Ansible** | YAML | Push-based (no state file) | Configuration management, app deployment | Yes |
+
+### Terraform Key Concepts
+| Concept | Description | Example |
+|---------|-------------|---------|
+| **HCL** | HashiCorp Configuration Language — declarative DSL | <code>resource "aws_instance" "web" { ... }</code> |
+| **State** | Snapshot of managed resources stored in a backend | <code>terraform { backend "s3" { bucket = "tf-state" } }</code> |
+| **Module** | Reusable collection of resources | <code>module "vpc" { source = "terraform-aws-modules/vpc/aws" }</code> |
+| **Provider** | Plugin that interacts with a cloud API | <code>provider "aws" { region = "us-east-1" }</code> |
+| **Workspace** | Isolated state for different environments | <code>terraform workspace new staging</code> |
+| **Data source** | Read existing resources not managed by Terraform | <code>data "aws_vpc" "default" { default = true }</code> |
+
+\`\`\`hcl
+# Terraform — VPC with subnets and security group
+terraform {
+  required_version = ">= 1.6"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+  # Remote state in S3 with DynamoDB locking
+  backend "s3" {
+    bucket         = "my-org-tf-state"
+    key            = "production/network/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "tf-state-lock"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+  default_tags {
+    tags = {
+      Environment = "production"
+      ManagedBy   = "terraform"
+    }
+  }
+}
+
+# Data source: fetch existing default VPC
+data "aws_vpc" "default" {
+  default = true
+}
+
+# Module: standard VPC from Terraform Registry
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.5.0"
+
+  name = "my-app-vpc"
+  cidr = "10.0.0.0/16"
+
+  azs             = ["us-east-1a", "us-east-1b"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24"]
+  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24"]
+
+  enable_nat_gateway = true
+  enable_vpn_gateway = false
+
+  tags = {
+    Terraform   = "true"
+    Environment = "production"
+  }
+}
+
+# Security group — allow HTTP and health check traffic
+resource "aws_security_group" "app" {
+  name        = "app-sg"
+  description = "Security group for app instances"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    description = "HTTP from ALB"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  ingress {
+    description = "Health check from ALB"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "app-sg"
+  }
+}
+\`\`\`
+
+### Drift Detection & Security Scanning
+| Tool | What it detects | How to fix |
+|------|-----------------|------------|
+| <code>terraform plan</code> | Drift from state (manual changes) | <code>terraform apply</code> to reconcile |
+| <code>checkov</code> | Misconfigurations (open ports, no encryption) | Fix in HCL / add <code># checkov:skip=...</code> |
+| <code>tfsec</code> | Security issues in Terraform code | Follow suggested remediation |
+| <code>infracost</code> | Cost estimates for planned changes | Add budget alerts, refactor resources |
+
+## CI/CD Platforms
+### GitHub Actions
+| Concept | Description | Example |
+|---------|-------------|---------|
+| **Workflow** | YAML file under <code>.github/workflows/</code> | <code>.github/workflows/ci.yml</code> |
+| **Job** | Group of steps on the same runner | <code>jobs: { test: { ... } }</code> |
+| **Step** | Single unit of work (run or action) | <code>- run: npm test</code> |
+| **Action** | Reusable packaged step | <code>uses: actions/setup-node@v4</code> |
+| **Runner** | Machine that executes jobs | GitHub-hosted (ubuntu, macos, windows) or self-hosted |
+
+\`\`\`yaml
+# .github/workflows/ci-deploy.yml — full CI/CD pipeline
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: \${{ github.repository }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: golangci-lint run --timeout=5m
+
+  test:
+    needs: lint                         # Wait for lint to pass
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ["1.21", "1.22"]   # Test both versions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: \${{ matrix.go-version }}
+      # Cache Go modules
+      - uses: actions/cache@v4
+        with:
+          path: ~/go/pkg/mod
+          key: \${{ runner.os }}-go-\${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            \${{ runner.os }}-go-
+      - run: go test -v -count=1 -race ./...
+
+  build-and-publish:
+    needs: [test]                       # Run after tests pass
+    if: github.ref == 'refs/heads/main' # Only on main branch
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: \${{ env.REGISTRY }}
+          username: \${{ github.actor }}
+          password: \${{ secrets.GITHUB_TOKEN }}  # Built-in token
+      # Docker BuildKit — enables layer caching
+      - uses: docker/setup-buildx-action@v3
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:\${{ github.sha }}
+            \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Scan image
+        run: |
+          docker pull \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:\${{ github.sha }}
+          trivy image --severity CRITICAL,HIGH \${{ env.REGISTRY }}/\${{ env.IMAGE_NAME }}:\${{ github.sha }}
+\`\`\`
+
+### GitLab CI
+| Concept | Description | Example YAML |
+|---------|-------------|--------------|
+| **Pipeline** | Collection of stages and jobs | <code>stages: [build, test, deploy]</code> |
+| **Stage** | Execution phase (jobs in same stage run in parallel) | <code>test: { stage: test }</code> |
+| **Artifact** | Output passed between stages | <code>artifacts: { paths: [dist/] }</code> |
+| **Environment** | Target environment for deploy | <code>environment: { name: production }</code> |
+
+### Jenkins
+| Concept | Description |
+|---------|-------------|
+| **Pipeline** | Defined in <code>Jenkinsfile</code> (Declarative or Scripted) |
+| **Agent** | Machine that executes the pipeline (<code>agent any</code>, <code>agent { docker true }</code>) |
+| **Stage** | Logical phase of the pipeline (<code>stage('Build')</code>) |
+| **Shared library** | Reusable pipeline code stored in separate Git repo |
+
+\`\`\`groovy
+// Jenkinsfile — Declarative pipeline with shared library
+@Library('my-shared-lib') _  // Import shared library
+
+pipeline {
+    agent any
+
+    tools {
+        go 'Go-1.22'
+    }
+
+    environment {
+        REGISTRY = 'ghcr.io/my-org'
+    }
+
+    stages {
+        stage('Lint') {
+            steps {
+                sh 'golangci-lint run --timeout=5m'
+            }
+        }
+        stage('Test') {
+            parallel {
+                stage('Unit') {
+                    steps {
+                        sh 'go test -v -short ./...'
+                    }
+                }
+                stage('Integration') {
+                    steps {
+                        sh 'go test -v -run Integration ./...'
+                    }
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                sh """
+                    docker build -t \$REGISTRY/app:\$BUILD_NUMBER .
+                """
+            }
+        }
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    // Call shared library method for helm deploy
+                    deployHelm(
+                        releaseName: 'app',
+                        chartPath: './chart',
+                        namespace: 'production'
+                    )
+                }
+            }
+        }
+    }
+    post {
+        failure {
+            // Notify team on failure
+            slackSend(
+                channel: '#deployments',
+                message: "Pipeline failed: \$env.BUILD_URL"
+            )
+        }
+    }
+}
+\`\`\`
+
+## Environment Management
+| Concept | Description |
+|---------|-------------|
+| **Dev/staging/prod parity** | Keep environments as similar as possible (same OS, same DB version, same config structure) to avoid "works on my machine" issues |
+| **Ephemeral environments** | Short-lived environments created per PR/branch — destroyed after merge. Tools: <code>review Apps</code> (Heroku), <code>Preview Environments</code> (GitLab), <code>Telepresence</code>, <code>Actions + k3s</code> |
+| **Preview environments** | Deploy a full stack from every PR for manual QA and automated E2E tests before merging |
+| **Environment variables** | Inject config at runtime via <code>env:</code> in pipeline, <code>envFrom</code> in K8s, <code>.env</code> files (never committed) |
+| **Feature flags** | Toggle features on/off without redeploying — enable gradual rollouts, A/B tests, kill switches |
+
+### Environment Parity Checklist
+| Aspect | Dev | Staging | Production |
+|--------|-----|---------|------------|
+| OS | Docker container (Alpine) | Docker container (Alpine) | Docker container (Alpine) |
+| Database | Postgres 16 (Docker) | Postgres 16 (RDS) | Postgres 16 (RDS, multi-AZ) |
+| Cache | Redis 7 (Docker) | Redis 7 (ElastiCache) | Redis 7 (ElastiCache, cluster) |
+| Secrets | <.env> (dev only) | Parameter Store | Secrets Manager |
+| TLS | Self-signed | Let's Encrypt | ACM / cert-manager |
+
+## Common Pitfalls & Anti-patterns
+1. **Running containers as root** — default <code>USER root</code> in Docker creates privilege escalation risk. Always create a non-root user.
+2. **Using <code>:latest</code> tag in production** — mutable tag makes rollback impossible and breaks reproducibility. Pin to git SHA or semantic version.
+3. **No health checks** — orchestrator cannot distinguish between "starting up" and "crashed" without probes. Always add <code>HEALTHCHECK</code> in Dockerfile and probes in K8s manifest.
+4. **Putting all code in one Dockerfile stage** — produces multi-GB images with build tools at runtime. Use multi-stage builds to copy only the binary/artifact.
+5. **Ignoring .dockerignore** — sends entire repo (node_modules, .git, etc.) to Docker daemon, causing slow builds and large context.
+6. **Hardcoding secrets in pipeline YAML** — anyone with repo read access can see secrets. Use platform secret stores and reference by variable name.
+7. **Skipping CI on "trivial" changes** — even README changes should trigger lint/tests (or at least mark <code>[skip ci]</code> explicitly). CI is your safety net.
+8. **Monolithic pipeline with no parallelism** — sequential stages waste runner time. Parallelise independent jobs (lint, test matrix, scan).
+9. **Deploying directly to production without staging** — bypasses validation. Always promote through environments with gate checks.
+10. **No rollback plan** — assuming every deploy is perfect. Test rollback procedure regularly, keep old manifests/images, and use <code>kubectl rollout undo</code> or <code>helm rollback</code>.
+11. **Blasting the entire cluster with canary** — starting at 100% weight defeats the purpose. Start at 1-5% traffic and increase gradually with metric analysis.
+12. **Storing Terraform state locally** — lost state means lost resource tracking. Always use a remote backend (S3 + DynamoDB, GCS, Azure Storage) with locking.
+13. **Forgetting resource requests/limits in K8s** — pods can overcommit cluster resources, causing OOM kills and unstable neighbours. Always set <code>resources.requests</code> and <code>.limits</code>.
+14. **Using default ServiceAccount** — pods inherit full API access. Create least-privilege ServiceAccounts per application.
+15. **Rebuilding images from scratch on every CI run** — ignores Docker layer caching. Use BuildKit cache mounts (<code>type=gha</code>, <code>type=registry</code>) or --cache-from.
+
+## Complete API Reference
+### Dockerfile Instructions
+| Instruction | Purpose | Example |
+|-------------|---------|---------|
+| <code>FROM</code> | Base image | <code>FROM node:20-alpine AS base</code> |
+| <code>WORKDIR</code> | Set working directory | <code>WORKDIR /app</code> |
+| <code>COPY</code> | Copy files from build context or previous stage | <code>COPY --from=builder /out /app</code> |
+| <code>RUN</code> | Execute command in container | <code>RUN apt-get update && apt-get install -y curl</code> |
+| <code>ENV</code> | Set environment variable | <code>ENV NODE_ENV=production</code> |
+| <code>EXPOSE</code> | Document listening port | <code>EXPOSE 3000</code> |
+| <code>CMD</code> | Default command (can be overridden) | <code>CMD ["node", "server.js"]</code> |
+| <code>ENTRYPOINT</code> | Executable wrapper (harder to override) | <code>ENTRYPOINT ["docker-entrypoint.sh"]</code> |
+| <code>USER</code> | Switch user (security) | <code>USER 10001:10001</code> |
+| <code>HEALTHCHECK</code> | Define health check command | <code>HEALTHCHECK CMD curl -f http://localhost/health</code> |
+| <code>LABEL</code> | Add metadata | <code>LABEL version="1.0"</code> |
+| <code>ARG</code> | Build-time variable | <code>ARG VERSION=latest</code> |
+| <code>VOLUME</code> | Create mount point | <code>VOLUME /data</code> |
+| <code>ONBUILD</code> | Trigger on downstream build | <code>ONBUILD COPY . /app</code> |
+| <code>STOPSIGNAL</code> | Signal to stop container | <code>STOPSIGNAL SIGTERM</code> |
+
+### Kubernetes Resource Fields Reference
+| Resource | Field | Description |
+|----------|-------|-------------|
+| **Deployment** | <code>spec.replicas</code> | Desired number of pods |
+| | <code>spec.strategy.rollingUpdate.maxSurge</code> | Max extra pods during rolling update |
+| | <code>spec.strategy.rollingUpdate.maxUnavailable</code> | Max unavailable pods during update |
+| | <code>spec.selector.matchLabels</code> | Label query for managed pods |
+| | <code>spec.template.spec.containers[].image</code> | Container image (tagged) |
+| | <code>spec.template.spec.containers[].resources</code> | CPU/memory requests and limits |
+| **Service** | <code>spec.type</code> | ClusterIP, NodePort, LoadBalancer, ExternalName |
+| | <code>spec.selector</code> | Labels to target pods |
+| | <code>spec.ports[].port</code> | Service port |
+| | <code>spec.ports[].targetPort</code> | Container port |
+| **Ingress** | <code>spec.rules[].host</code> | Virtual hostname |
+| | <code>spec.rules[].http.paths[].path</code> | URL path |
+| | <code>spec.rules[].http.paths[].backend.service.name</code> | Target Service name |
+| | <code>spec.tls[].secretName</code> | TLS certificate secret |
+| **ConfigMap** | <code>data</code> | Key-value pairs (plaintext) |
+| | <code>binaryData</code> | Key-value pairs (base64) |
+| **Secret** | <code>type</code> | Opaque, kubernetes.io/dockerconfigjson, etc. |
+| | <code>stringData</code> | Plaintext values (encoded on write) |
+| **HPA** | <code>spec.minReplicas</code> | Minimum pod count |
+| | <code>spec.maxReplicas</code> | Maximum pod count |
+| | <code>spec.metrics[].resource.target.averageUtilization</code> | Target CPU/memory utilisation % |
+| **Pod** | <code>spec.containers[].ports[].containerPort</code> | Port to expose |
+| | <code>spec.containers[].env</code> | Environment variables |
+| | <code>spec.containers[].envFrom</code> | Bulk inject from ConfigMap/Secret |
+| | <code>spec.containers[].volumeMounts</code> | Mount volumes into container |
+| | <code>spec.volumes</code> | Define volumes (configMap, secret, persistentVolumeClaim) |
+
+### Terraform Meta-Arguments
+| Meta-argument | Purpose | Example |
+|---------------|---------|---------|
+| <code>depends_on</code> | Explicit dependency (implicit via references preferred) | <code>depends_on = [aws_instance.bastion]</code> |
+| <code>count</code> | Create N instances of a resource | <code>count = length(var.subnets)</code> |
+| <code>for_each</code> | Create instances from a map/set | <code>for_each = var.subnet_configs</code> |
+| <code>provider</code> | Specify non-default provider | <code>provider = aws.west</code> |
+| <code>lifecycle</code> | Custom lifecycle rules | <code>lifecycle { create_before_destroy = true }</code> |
+| <code>provisioner</code> | Run scripts after resource creation | <code>provisioner "remote-exec" { inline = ["sudo apt update"] }</code> |
+
+### GitHub Actions Syntax Reference
+| Field | Description | Example |
+|-------|-------------|---------|
+| <code>name</code> | Workflow name (displayed in UI) | <code>name: CI Pipeline</code> |
+| <code>on</code> | Trigger events | <code>on: [push, pull_request]</code> |
+| <code>on.schedule</code> | Cron-based trigger | <code>on: { schedule: [{ cron: "0 6 * * 1" }] }</code> |
+| <code>env</code> | Environment variables (workflow-wide) | <code>env: { NODE_ENV: test }</code> |
+| <code>jobs.&lt;id&gt;.runs-on</code> | Runner type | <code>runs-on: ubuntu-latest</code> |
+| <code>jobs.&lt;id&gt;.needs</code> | Job dependencies | <code>needs: [lint, test]</code> |
+| <code>jobs.&lt;id&gt;.if</code> | Conditional execution | <code>if: github.ref == 'refs/heads/main'</code> |
+| <code>jobs.&lt;id&gt;.strategy.matrix</code> | Matrix build configuration | <code>matrix: { version: [18, 20] }</code> |
+| <code>steps[*].uses</code> | Action reference | <code>uses: actions/checkout@v4</code> |
+| <code>steps[*].run</code> | Run shell command | <code>run: npm test</code> |
+| <code>steps[*].with</code> | Action input parameters | <code>with: { node-version: 20 }</code> |
+| <code>steps[*].env</code> | Step-level environment variables | <code>env: { DEBUG: true }</code> |
+
+## Practice Questions
+1. **Multi-stage build**: What is the benefit of a two-stage Dockerfile (builder + runtime)? Explain how <code>COPY --from=builder</code> reduces final image size.
+2. **Health checks**: Compare liveness, readiness, and startup probes in Kubernetes. When would you configure a startup probe with a high <code>failureThreshold</code>?
+3. **Blue-Green vs Canary**: Describe the tradeoffs between blue-green and canary deployments. When would you choose one over the other?
+4. **GitHub Actions caching**: How would you implement caching for npm dependencies in GitHub Actions? Write the relevant YAML steps and explain how the cache key is computed.
+5. **Terraform state**: Why must Terraform state never be stored locally in a team environment? Describe a remote backend setup (S3 + DynamoDB) and how state locking prevents corruption.
+6. **Rollback strategies**: You deploy a new version of your service and p99 latency spikes from 50ms to 5s. Walk through your rollback procedure for a rolling update, a blue-green deployment, and a feature flag.
+7. **Secrets in CI/CD**: You need to pass a database password and an API key to your CI pipeline. How do you store them securely in GitHub Actions and reference them in your workflow YAML without exposing them in logs?
+8. **Horizontal Pod Autoscaler**: Write an HPA manifest that scales a Deployment between 3 and 15 replicas based on CPU utilisation at 70% target. Explain how the HPA algorithm works when multiple metrics are configured.
+9. **Docker layer caching**: Explain why ordering Dockerfile instructions from least to most frequently changing improves build times. Provide an example ordering for a Node.js application.
+10. **Ephemeral environments**: Your team wants per-PR preview environments that spin up a full stack (frontend + API + DB) and are destroyed on merge. What tooling and approach would you use?`,
+            tags: ["Deployment", "CI/CD", "Docker", "Kubernetes", "Cheat Sheet"],
+          },
+          {
+            id: "cheat-observability",
+            title: "Monitoring & Observability",
+            shortDesc: "Complete observability reference — metrics (Prometheus), logging (structured), tracing (OpenTelemetry), dashboards (Grafana), and alerting.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Three pillars: metrics (Prometheus), logs (structured), traces (OpenTelemetry).",
+              "RED method: Rate, Errors, Duration — the three golden signals for services.",
+              "Prometheus: pull model, metric types (counter, gauge, histogram, summary), alerting rules.",
+              "OpenTelemetry: distributed tracing, context propagation, sampling strategies.",
+              "Grafana: dashboard design, alerting, Loki for logs, Tempo for traces.",
+            ],
+            content: `## Quick Reference
+<code>Monitoring</code> and <code>Observability</code> are the practices of understanding system behavior through data. Monitoring tells you what is broken; observability lets you ask why. The three pillars are <code>Metrics</code> (numeric time-series data), <code>Logs</code> (structured event records), and <code>Traces</code> (request lifecycle across services). Prometheus collects metrics via a pull model, Grafana visualizes them, and OpenTelemetry provides a unified standard for telemetry data. The RED method (Rate, Errors, Duration) and USE method (Utilization, Saturation, Errors) are the most common frameworks for choosing what to measure.
+## Three Pillars of Observability
+| Pillar | Description | Example Tools | Data Format | Primary Use Case |
+|--------|-------------|---------------|-------------|------------------|
+| **Metrics** | Numeric measurements collected over time | Prometheus, Graphite, CloudWatch | Time-series (timestamp + value + labels) | Dashboards, alerting, trend analysis |
+| **Logs** | Discrete, timestamped events | ELK Stack, Loki, Splunk | Structured text (JSON) | Debugging, audit, post-mortem analysis |
+| **Traces** | End-to-end request lifecycle across services | Jaeger, Zipkin, Tempo | Tree of spans with timing and metadata | Latency analysis, dependency mapping |
+### Correlation Between Pillars
+The true power of observability comes from correlating the three pillars. For example:
+- A <code>metric</code> alert fires for high error rate
+- You <code>correlate</code> the metric spike with a <code>log</code> query for the same time window
+- The logs contain a <code>trace ID</code>
+- You follow the trace to find the exact span that is slow
+This correlation workflow is why many platforms (Grafana, Datadog, New Relic) are converging on a unified observability experience.
+## Metrics Fundamentals
+### Metric Types
+| Type | Description | Behavior | Example |
+|------|-------------|----------|---------|
+| **Counter** | Cumulative value that only increases | Reset on restart, always goes up | Request count, errors cumulative |
+| **Gauge** | Point-in-time value that goes up and down | Can increase or decrease | Memory usage, CPU temperature, queue depth |
+| **Histogram** | Distribution of values across configurable buckets | Samples are counted in buckets; provides <code>sum</code> and <code>count</code> | Request latency, response sizes |
+| **Summary** | Pre-computed configurable quantiles over a sliding window | Calculates quantiles (p50, p90, p99) client-side | Request latency when quantile accuracy is critical |
+### The RED Method
+The RED method focuses on **user-facing services** and tracks three metrics:
+| Metric | What It Measures | Prometheus Examples |
+|--------|------------------|-------------------|
+| **Rate** | Number of requests per second | <code>rate(http_requests_total[5m])</code> |
+| **Errors** | Number of failed requests per second | <code>rate(http_requests_total{status=~"5.."}[5m])</code> |
+| **Duration** | Distribution of request latency | <code>histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))</code> |
+### The USE Method
+The USE method focuses on **infrastructure resources** (CPU, memory, disk, network):
+| Metric | What It Measures | Example |
+|--------|------------------|---------|
+| **Utilization** | Percentage of time the resource is busy | <code>node_cpu_seconds_total{mode="user"}</code> |
+| **Saturation** | Amount of work the resource has queued | <code>node_disk_io_time_weighted_seconds_total</code> |
+| **Errors** | Count of error events | <code>node_network_receive_errors_total</code> |
+## Prometheus
+### Architecture
+<code>Prometheus</code> uses a <code>pull model</code> where it scrapes metrics from HTTP endpoints (<code>/metrics</code>). The scraped data is stored in a local <code>Time Series Database (TSDB)</code>.
+prometheus pull model:
+  Application /metrics --> Prometheus Server (pull, TSDB)
+              +---------------+---------------+
+              |               |               |
+          Grafana        Alertmanager     Remote Write
+         (dashboards)    (alerts)        (Thanos, Cortex)
+Key components:
+| Component | Purpose |
+| **Prometheus Server** | Scrapes metrics, stores in TSDB, evaluates rules |
+| **TSDB** | Time Series Database — optimized for timestamped numeric data |
+| **Alertmanager** | Deduplicates, groups, and routes alerts to notification channels |
+| **Service Discovery** | Automatically finds targets to scrape (Kubernetes, Consul, DNS, file-based) |
+| **Recording Rules** | Pre-compute expensive queries — store result as a new time series |
+| **Alerting Rules** | Define alert conditions based on PromQL expressions |
+| **Federation** | A Prometheus server can scrape metrics from other Prometheus servers |
+| **Remote Write** | Forward metrics to long-term storage (Thanos, Cortex, Mimir) |
+### Metric Exposition Format
+Prometheus expects metrics in a plain-text format:
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",handler="/api/users"} 1027 1689876543210
+http_requests_total{method="POST",handler="/api/users"} 342 1689876543210
+Line-by-line explanation:
+- Line 1 (<code># HELP</code>): Documentation string describing the metric — this is optional but recommended for discoverability
+- Line 2 (<code># TYPE</code>): Declares the metric type (<code>counter</code>, <code>gauge</code>, <code>histogram</code>, <code>summary</code>) — required for Prometheus to interpret the data correctly
+- Lines 3-4 (data): Each data line has the metric name, labels in curly braces, the numeric value, and an optional Unix timestamp in milliseconds
+### Metric Naming Conventions
+| Rule | Correct | Incorrect |
+|------|---------|-----------|
+| Use <code>snake_case</code> | <code>http_requests_total</code> | <code>httpRequestsTotal</code> |
+| Include base unit suffix | <code>request_duration_seconds</code> | <code>request_duration</code> |
+| Use <code>_total</code> suffix for counters | <code>errors_total</code> | <code>errors</code> |
+| Use <code>_count</code> / <code>_sum</code> for histogram/summary helpers | <code>http_request_duration_seconds_count</code> | <code>http_request_count</code> |
+| Use <code>_bucket</code> for histogram buckets | <code>http_request_duration_seconds_bucket</code> | <code>http_request_bucket</code> |
+| Use <code>_info</code> for constant metadata | <code>build_info</code> | <code>build</code> |
+### Labels
+<code>Labels</code> are key-value pairs that add dimensions to metrics. Every unique combination of labels creates a new time series.
+// GOOD: Minimal cardinality — labels with bounded values
+http_requests_total{method="GET", endpoint="/health"}
+// method: GET/POST/PUT/DELETE (4 values), endpoint: bounded set of routes
+// BAD: High cardinality — labels with unbounded values
+http_requests_total{user_id="abc123", session_id="xyz789"}
+// user_id: millions of values, session_id: even more!
+Line-by-line explanation:
+- Lines 2-3: This example uses labels with a small, bounded set of possible values — Prometheus handles this efficiently
+- Lines 6-7: This example uses labels with unbounded (high cardinality) values — each unique user creates a new time series, which can overwhelm Prometheus's TSDB
+Important label rules:
+- Label values should have a bounded cardinality (think less than 1000 unique values per metric)
+- Never put user IDs, email addresses, session IDs, or random UUIDs in labels
+- Use <code>namespace</code>, <code>job</code>, <code>instance</code>, <code>method</code>, <code>endpoint</code>, <code>status</code> as typical labels
+### Recording Rules
+<code>Recording rules</code> pre-compute frequently used or expensive PromQL expressions and store the result as a new time series. This speeds up dashboard queries significantly.
+# rules/recording.yml
+  - name: http_rules
+    interval: 30s  # Evaluate every 30 seconds
+      - record: job:http_requests_total:rate5m
+        expr: sum(rate(http_requests_total[5m])) by (job)
+Line-by-line explanation:
+- Line 1: Path to the recording rules file loaded by Prometheus via <code>rule_files</code> config
+- Line 3: Group name — rules within a group are evaluated sequentially
+- Line 4: Evaluation interval — how often Prometheus re-evaluates this rule (default is 1m)
+- Line 6: The name of the new time series to create — convention is <code>level:metricname:operation</code>
+- Line 7: The PromQL expression to evaluate — result is stored as the new metric
+### Alerting Rules
+<code>Alerting rules</code> define conditions that trigger alerts. The alert is sent to <code>Alertmanager</code>, which handles deduplication, grouping, and routing.
+# rules/alerts.yml
+  - name: service_alerts
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m])
+          rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate on {{ $labels.instance }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for instance {{ $labels.instance }}"
+Line-by-line explanation:
+- Line 1: Path to the alerting rules file
+- Line 5: Alert name — must be unique within the Prometheus server
+- Lines 6-8: The alert condition — fires when the ratio of 5xx responses exceeds 5%
+- Line 9: <code>for</code> duration — the condition must be true for 5 minutes before the alert fires (pending state)
+- Lines 11-12: Labels attached to the alert — used for routing in Alertmanager
+- Lines 14-15: Annotations — informational fields; <code>{{ $labels.instance }}</code> and <code>{{ $value }}</code> are template variables
+### Alertmanager
+<code>Alertmanager</code> receives alerts from Prometheus and manages them:
+# alertmanager.yml
+  receiver: "team-pager"
+  group_by: ["alertname", "severity"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  - name: "team-pager"
+    pagerduty_configs:
+      - routing_key: "<PAGERDUTY_KEY>"
+    slack_configs:
+      - api_url: "<SLACK_WEBHOOK>"
+        channel: "#alerts"
+Line-by-line explanation:
+- Line 2: Default receiver for alerts that don't match more specific routes
+- Line 3: Group alerts by <code>alertname</code> and <code>severity</code> — same-group alerts are sent as one notification
+- Line 4: How long to wait before sending the initial notification (allows grouping of simultaneous alerts)
+- Line 5: How long to wait before sending updates about still-firing alerts in the same group
+- Line 6: Minimum time between notifications for the same alert (reduces noise)
+- Lines 9-15: Notification channel configuration — can use PagerDuty, Slack, email, OpsGenie, webhook, etc.
+### Service Discovery
+Prometheus can automatically discover targets instead of listing them statically:
+# prometheus.yml
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        target_label: app
+Line-by-line explanation:
+- Line 3: Job name for grouping discovered targets
+- Line 4: Use Kubernetes service discovery — Prometheus queries the Kubernetes API to find pods
+- Line 5: Role type (<code>pod</code>, <code>service</code>, <code>endpoint</code>, <code>node</code>) determines what gets discovered
+- Lines 7-8: Relabeling maps metadata labels (with <code>__meta_</code> prefix) to user-facing labels
+### Instant Vectors vs. Range Vectors
+| Type | Description | Syntax Example | Use Case |
+|------|-------------|---------------|----------|
+| **Instant Vector** | A single data point per time series at a given timestamp | <code>http_requests_total</code> | Current state, alert conditions |
+| **Range Vector** | Multiple data points over a time window | <code>http_requests_total[5m]</code> | Rate calculations, trend analysis |
+### Aggregation Operators
+| Operator | Description | Example |
+|----------|-------------|---------|
+| <code>sum</code> | Add values across dimensions | <code>sum(rate(http_requests_total[5m]))</code> |
+| <code>avg</code> | Average across dimensions | <code>avg(node_cpu_seconds_total) by (mode)</code> |
+| <code>max</code> | Maximum across dimensions | <code>max(http_request_duration_seconds_count)</code> |
+| <code>min</code> | Minimum across dimensions | <code>min(node_memory_MemAvailable_bytes)</code> |
+| <code>count</code> | Count of time series | <code>count(up == 1)</code> |
+| <code>quantile</code> | Calculate quantile across dimensions | <code>quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))</code> |
+| <code>stddev</code> | Standard deviation | <code>stddev(rate(http_requests_total[5m]))</code> |
+| <code>topk</code> | Largest K values | <code>topk(5, rate(http_requests_total[5m]))</code> |
+| <code>bottomk</code> | Smallest K values | <code>bottomk(5, rate(http_requests_total[5m]))</code> |
+Use <code>by</code> or <code>without</code> clauses to control which labels are preserved:
+// Preserve only the 'job' label
+sum(rate(http_requests_total[5m])) by (job)
+// Remove the 'instance' label (keep everything else)
+sum(rate(http_requests_total[5m])) without (instance)
+Line-by-line explanation:
+- Line 2: <code>by (job)</code> groups the result by the <code>job</code> label — all other labels are dropped
+- Line 5: <code>without (instance)</code> removes the <code>instance</code> label but keeps all others — useful when you want to aggregate across instances within a job
+### Binary Operators
+| Category | Operators | Description |
+|----------|-----------|-------------|
+| Arithmetic | <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>, <code>^</code> | Standard math operations between two vectors |
+| Comparison | <code>==</code>, <code>!=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code> | Filter or produce boolean results |
+| Logical/Set | <code>and</code>, <code>or</code>, <code>unless</code> | Set operations between vectors |
+### Functions
+| Function | Description | Example |
+|----------|-------------|---------|
+| <code>rate()</code> | Per-second average rate of increase over a range (for counters) | <code>rate(http_requests_total[5m])</code> |
+| <code>irate()</code> | Instant rate based on last two data points (more sensitive to spikes) | <code>irate(http_requests_total[5m])</code> |
+| <code>increase()</code> | Absolute increase over a range (for counters) | <code>increase(http_requests_total[1h])</code> |
+| <code>histogram_quantile()</code> | Calculate quantile from a Histogram metric | <code>histogram_quantile(0.99, rate(.._bucket[5m]))</code> |
+| <code>delta()</code> | Difference between first and last value (for gauges) | <code>delta(node_memory_MemAvailable_bytes[5m])</code> |
+| <code>deriv()</code> | Per-second derivative of a gauge | <code>deriv(node_disk_reads_completed_total[5m])</code> |
+| <code>predict_linear()</code> | Predict value in <code>t</code> seconds using linear regression | <code>predict_linear(node_filesystem_free_bytes[1h], 3600)</code> |
+| <code>changes()</code> | Count of value changes over a range | <code>changes(up[1h])</code> |
+| <code>absent()</code> | Returns 1 if the metric is absent (no data), else empty | <code>absent(up{job="api"})</code> |
+### Offset Modifier
+<code>offset</code> shifts a query back in time. Useful for year-over-year or week-over-week comparisons:
+// Current request rate
+// Request rate from 1 week ago
+rate(http_requests_total[5m] offset 1w)
+// Compare current vs last week — ratio > 1 means traffic increased
+rate(http_requests_total[5m]) / rate(http_requests_total[5m] offset 1w)
+Line-by-line explanation:
+- Line 2: Current request rate over the last 5 minutes — the baseline
+- Line 5: Same query but shifted 1 week into the past — shows what traffic looked like last week
+- Line 8: Ratio of current to last week — values above 1 indicate traffic growth, below 1 indicate decline
+### Subqueries
+<code>Subqueries</code> allow aggregating a range of data at a different resolution than the main query:
+// Max of average CPU usage over 30 minutes, evaluated at 5-minute intervals
+max_over_time(
+  avg(rate(node_cpu_seconds_total{mode="user"}[5m])) by (instance)[30m:5m]
+Line-by-line explanation:
+- The inner query (<code>avg(rate(...)[5m]) by (instance)</code>) computes the average CPU usage per instance over 5-minute windows
+- The <code>[30m:5m]</code> syntax means: evaluate the inner query every 5 minutes over a 30-minute lookback window
+- <code>max_over_time(...)</code> returns the maximum of those evaluations
+## Logging
+### Structured Logging (JSON Format)
+Structured logging outputs logs in <code>JSON</code> format instead of plain text, making them parseable and queryable by log aggregation systems.
+// GOOD: Structured JSON logging (Winston/Bunyan/Pino style)
+const logger = {
+  info: (msg, data) => {
+    const logEntry = {
+      level: "info",                    // Log severity level
+      msg: msg,                         // Human-readable message
+      timestamp: new Date().toISOString(), // RFC 3339 timestamp
+      service: "user-service",          // Service name — used for filtering
+      ...data,                          // Additional structured context
+    process.stdout.write(JSON.stringify(logEntry) + "\\n");
+// Usage — always pass structured context as separate fields
+logger.info("User created", { userId: "abc123", email: "user@example.com", duration_ms: 42 });
+Line-by-line explanation:
+- Line 3: Log level — always include a level field for filtering
+- Line 5: ISO 8601 / RFC 3339 timestamp — required for time-based queries in log aggregation systems
+- Line 7: Service name — critical for multi-service environments to identify the source
+- Lines 8-9: The spread operator includes additional structured context as separate fields (not embedded in the message string)
+- Line 16: Example showing structured fields passed as a separate object — never string-interpolate them into the message
+What NOT to do:
+// BAD: Unstructured logging — impossible to query effectively
+console.log("User " + userId + " created with email " + email);
+// Problem: Cannot filter by userId or email without regex parsing
+Line-by-line explanation:
+- String concatenation in log messages makes it impossible to search by field value without expensive regex
+- Log aggregation systems (Loki, Elasticsearch) index JSON fields automatically but have no way to parse inline text
+### Log Levels
+| Level | Numeric Value | When to Use |
+|-------|---------------|-------------|
+| <code>debug</code> | 0 | Detailed diagnostic information during development; usually disabled in production |
+| <code>info</code> | 1 | Normal operational messages — user actions, state transitions, request completions |
+| <code>warn</code> | 2 | Unexpected but handled situations — degraded performance, deprecated API usage, rate limiting |
+| <code>error</code> | 3 | Failures that require investigation — unhandled exceptions, database connection failures, upstream service errors |
+| <code>fatal</code> | 4 | Unrecoverable errors — process will exit immediately, used only in critical failure scenarios |
+### Correlation IDs
+<code>Correlation IDs</code> (also called trace IDs) link logs from different services for a single request:
+// Middleware that injects a correlation ID into every log
+function loggingMiddleware(req, res, next) {
+  const correlationId = req.headers["x-correlation-id"] || crypto.randomUUID();
+  req.correlationId = correlationId;  // Attach to request object
+  res.setHeader("x-correlation-id", correlationId);  // Return to caller
+  // Override logger for this request to include correlationId in every log
+  req.logger = {
+    info: (msg, data) => logger.info(msg, { correlationId, ...data }),
+    error: (msg, data) => logger.error(msg, { correlationId, ...data }),
+Line-by-line explanation:
+- Line 3: Accept an existing correlation ID from upstream services, or generate a new one via <code>crypto.randomUUID()</code>
+- Line 5: Include the correlation ID in HTTP response headers — enables downstream services to forward it
+- Lines 8-10: Create a request-scoped logger that automatically includes <code>correlationId</code> in every log call
+- This pattern allows searching all logs from a single request across all services using the correlation ID as the filter
+### Log Aggregation (ELK / Loki)
+| System | Storage | Query Language | Strengths |
+|--------|---------|----------------|-----------|
+| **ELK** (Elasticsearch, Logstash, Kibana) | Elasticsearch (inverted index) | Lucene / KQL | Full-text search, powerful aggregations, mature ecosystem |
+| **Loki** | Object store (S3, GCS) with index | LogQL | Native Grafana integration, cheaper storage, designed for logs |
+| **Splunk** | Proprietary index store | SPL | Enterprise features, RBAC, anomaly detection |
+### Log Retention
+| Environment | Retention Period | Storage Strategy |
+|-------------|-----------------|------------------|
+| Development | 1-3 days | Delete after retention, no archival needed |
+| Staging | 7-14 days | Compress older logs, keep indexed |
+| Production (hot) | 7-30 days | Fast storage (SSD) for query performance |
+| Production (cold) | 90-365 days | Cheap object storage (S3, GCS), slower queries |
+| Compliance | 1-7 years | Archival storage, rarely queried, must support audit retrieval |
+### Sampling Strategies
+When log volume is too high, use <code>sampling</code> to reduce storage:
+| Strategy | Description | When to Use |
+|----------|-------------|-------------|
+| **Head-based** | Sample a percentage of requests at entry | High-traffic services where every request looks similar |
+| **Tail-based** | Sample complete traces including all spans | Distributed tracing where you need complete request paths |
+| **Error-based** | Always sample errors, sample a fraction of successes | Most common — ensures errors are never missed |
+| **Rate-limited** | Cap log volume per second per service | Preventing runaway logging from overwhelming the system |
+## Distributed Tracing
+### Spans
+A <code>span</code> represents a single unit of work in a distributed system. Spans form the building blocks of traces.
+| Span Property | Description | Example |
+|---------------|-------------|---------|
+| <code>operationName</code> | What the span represents | <code>POST /api/users</code> |
+| <code>startTime</code> | When the operation began | <code>1689876543210</code> (Unix microseconds) |
+| <code>endTime</code> | When the operation ended | <code>1689876543310</code> |
+| <code>duration</code> | End time minus start time | <code>100ms</code> |
+| <code>tags</code> | Key-value metadata | <code>http.status_code: 200</code> |
+| <code>logs</code> | Timestamped events within the span | <code>cache.miss at 1689876543250</code> |
+| <code>status</code> | Success or error | <code>StatusCode.ERROR</code> with description |
+| <code>spanId</code> | Unique identifier for this span | <code>abc123def456</code> |
+| <code>traceId</code> | Identifier for the entire trace | <code>trace789xyz</code> |
+| <code>parentSpanId</code> | Parent span in the trace tree | <code>parentSpan001</code> |
+### Traces
+A <code>trace</code> is a tree of spans that represents the end-to-end lifecycle of a request.
+Trace: "POST /api/users"
+├── Span A: "HTTP POST /api/users" (gateway) [200ms]
+│   ├── Span B: "authenticate" [50ms]
+│   │   ├── Span C: "verify token" [20ms]
+│   │   └── Span D: "query user db" [30ms]
+│   ├── Span E: "validate input" [10ms]
+│   └── Span F: "create user" [100ms]
+│       ├── Span G: "INSERT db" [60ms]
+│       └── Span H: "publish event" [40ms]
+│           └── Span I: "send email" [35ms]
+The root span (A) represents the entire request. Child spans represent sub-operations. The trace ID links all spans together.
+### Context Propagation
+<code>Context propagation</code> carries trace context across service boundaries. Without it, distributed tracing cannot work.
+| Standard | Header Format | Example |
+|----------|--------------|---------|
+| **W3C TraceContext** | <code>traceparent</code> and <code>tracestate</code> | <code>traceparent: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01</code> |
+| **B3 (Zipkin)** | <code>x-b3-traceid</code>, <code>x-b3-spanid</code>, <code>x-b3-parentspanid</code>, <code>x-b3-sampled</code> | <code>x-b3-traceid: 0af7651916cd43dd</code> |
+W3C TraceContext format breakdown: <code>00-{traceId}-{spanId}-{traceFlags}</code>
+- <code>00</code>: Version number
+- <code>traceId</code>: 32 hex characters (128-bit unique trace identifier)
+- <code>spanId</code>: 16 hex characters (64-bit span identifier for the current span)
+- <code>traceFlags</code>: 2 hex characters — <code>01</code> means sampled (recorded), <code>00</code> means not sampled
+### Sampling
+<code>Sampling</code> controls how many traces are recorded. Recording every trace is expensive for high-traffic services.
+| Strategy | Description | Pros | Cons |
+|----------|-------------|------|------|
+| **Head-based** | Decision made at the root span before any child spans | Simple, low overhead | May discard important traces (errors) |
+| **Tail-based** | Decision made after all spans are collected | Can ensure errors are always sampled | Higher overhead, requires buffer |
+Common sampling rates:
+- High-volume services: 1-5% (99-95% of traces are dropped)
+- Low-volume services: 100% (record every trace)
+- Error-based override: Always sample traces with errors, regardless of rate
+### Architecture
+<code>OpenTelemetry (OTel)</code> provides a unified standard for collecting telemetry data (metrics, logs, traces).
+Application (with OTel SDK) --OTLP--> OTel Collector --OTLP--> Backend (Prom, Jaeger, Loki)
+                                    Other Exporters
+                                 (Prometheus, Zipkin, etc.)
+Key components:
+| Component | Purpose |
+| **API** | Defines the interfaces for creating spans, metrics, and log records |
+| **SDK** | Implements the API — handles batching, sampling, export logic |
+| **Collector** | Vendor-agnostic agent that receives, processes, and exports telemetry — can run as a sidecar or central service |
+| **Exporters** | Send telemetry to backends — OTLP, Prometheus, Jaeger, Zipkin, Datadog, New Relic |
+### Auto-Instrumentation vs. Manual Instrumentation
+| Approach | Effort | Precision | Example |
+|----------|--------|-----------|---------|
+| **Auto-instrumentation** | Zero code changes — uses bytecode manipulation or monkey-patching | Limited to framework-level spans | <code>require("@opentelemetry/auto-instrumentations-node")</code> |
+| **Manual instrumentation** | Add explicit spans in your application code | Full control over span boundaries and attributes | <code>const span = tracer.startSpan("processPayment")</code> |
+// Manual instrumentation example
+const { trace } = require("@opentelemetry/api");
+const tracer = trace.getTracer("payment-service");
+async function processPayment(orderId, amount) {
+  // Start a new span for this operation
+  const span = tracer.startSpan("processPayment", {
+    attributes: {
+      "order.id": orderId,         // Use semantic conventions for attribute naming
+      "payment.amount": amount,    // Numeric attributes are supported natively
+    const result = await chargeCustomer(amount);
+    span.setStatus({ code: SpanStatusCode.OK });  // Mark the span as successful
+    span.setAttribute("payment.result", result.id);
+    span.setStatus({                          // Mark the span as failed
+    span.recordException(error);              // Record exception details as a span event
+    span.end();  // Always end the span — sets the end timestamp
+Line-by-line explanation:
+- Line 2: Get a tracer instance — the tracer is the entry point for creating spans
+- Lines 5-8: <code>startSpan</code> creates a new span with a descriptive name and initial attributes
+- Line 17: <code>setStatus</code> marks the outcome — <code>OK</code> for success, <code>ERROR</code> for failures
+- Line 23: <code>recordException</code> captures stack traces and exception details as span log events
+- Line 28: <code>span.end()</code> must always be called in a <code>finally</code> block to avoid orphan spans
+### Sampler Configuration
+// OTel SDK sampler configuration
+const { NodeSDK } = require("@opentelemetry/sdk-node");
+const { ParentBasedSampler } = require("@opentelemetry/sdk-trace-base");
+const { TraceIdRatioBasedSampler } = require("@opentelemetry/sdk-trace-base");
+  sampler: new ParentBasedSampler({
+    root: new TraceIdRatioBasedSampler(0.1),  // Sample 10% of root spans
+  spanProcessors: [new BatchSpanProcessor(exporter)],
+Line-by-line explanation:
+- Line 8: <code>ParentBasedSampler</code> respects the parent sampling decision — if a parent span was sampled, child spans are also sampled
+- Line 9: <code>TraceIdRatioBasedSampler(0.1)</code> samples 10% of root spans (head-based sampling)
+- Line 11: <code>BatchSpanProcessor</code> batches spans before exporting — improves performance by reducing network calls
+### Resource Attributes
+<code>Resource attributes</code> describe the entity producing the telemetry (service, host, container):
+const { Resource } = require("@opentelemetry/resources");
+const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
+const resource = new Resource({
+  [SemanticResourceAttributes.SERVICE_NAME]: "payment-service",
+  [SemanticResourceAttributes.SERVICE_VERSION]: "1.2.3",
+Standard resource attributes:
+| Attribute | Description | Example Value |
+|-----------|-------------|---------------|
+| <code>service.name</code> | User-visible service name | <code>payment-service</code> |
+| <code>service.version</code> | Version of the service | <code>1.2.3</code> |
+| <code>deployment.environment</code> | Deployment environment | <code>production</code> |
+| <code>host.name</code> | Hostname of the machine | <code>ip-10-0-1-42</code> |
+| <code>telemetry.sdk.name</code> | SDK name (set automatically) | <code>opentelemetry</code> |
+## Dashboards & Alerting
+### Grafana Dashboard Design Principles
+| Principle | Description | Example |
+| **One pane per query** | Each panel should answer exactly one question | CPU usage panel = one query, not mixed with memory |
+| **Consistent time range** | All panels on a dashboard should use the same time range | Use dashboard-level time picker, not panel-level overrides |
+| **Left-aligned axes** | Critical metrics on the left, supporting context on the right | Error rate left, total requests right |
+| **Use variables** | Template dashboards with variables for environment, service, instance | <code>$service</code>, <code>$env</code>, <code>$instance</code> |
+| **Minimal decorations** | Avoid 3D effects, excessive colors, unnecessary grid lines, too many decimal places | Show <code>42.5%</code> not <code>42.537%</code> |
+| **Red-yellow-green** | Use red for error/alert, yellow for warning, green for healthy | Consistent color encoding reduces cognitive load |
+### Grafana Variables
+<code>Variables</code> make dashboards reusable across services and environments:
+  "templating": {
+    "list": [
+        "name": "service",           // Variable name — use in queries as $service
+        "type": "query",             // Populated from a Prometheus query
+        "query": "label_values(up, job)",  // Query returns all unique job label values
+        "refresh": 1,                // Refresh on dashboard load (1 = on load)
+        "includeAll": true,          // Add "All" option to select every service
+        "name": "instance",          // Second variable, depends on $service
+        "type": "query",
+        "query": "label_values(up{job=\"$service\"}, instance)",  // Filtered by service
+        "refresh": 1,
+Line-by-line explanation:
+- Line 6: Variable name — referenced in panel queries as <code>$service</code>
+- Line 7: Query type — the variable value is populated from a Prometheus label values query
+- Line 8: The query <code>label_values(up, job)</code> returns all unique values of the <code>job</code> label
+- Line 9: <code>refresh: 1</code> means the variable values are fetched every time the dashboard loads
+- Lines 16-19: Second variable that depends on the first — <code>$instance</code> is dynamically filtered by <code>$service</code>
+### Annotations
+<code>Annotations</code> overlay events on Grafana graphs — deployments, incidents, config changes:
+  "annotations": {
+    "list": [
+        "datasource": "Prometheus",
+        "expr": "changes(deploy_timestamp[1m]) > 0",  // Detect deployments
+        "step": "60s",
+        "title": "Deployment detected on {{ $labels.instance }}",
+        "tag": "deployment",                          // Color and group annotations
+### Alerting Rules (Grafana)
+Grafana alerting replaces Prometheus Alertmanager for unified alert management:
+# Grafana alert rule
+apiVersion: 1
+  - name: service_health
+      - uid: high_error_rate
+        title: "High Error Rate"
+        condition: "A"
+        data:
+          - refId: "A"
+            relativeTimeRange:
+              from: 300  # Last 5 minutes
+              to: 0
+            datasourceUid: "prometheus"
+            model:
+              expr: |
+                rate(http_requests_total{job="api"}[5m])
+                rate(http_requests_total{job="api"}[5m]) > 0.05
+        noDataState: "NoData"
+        execErrState: "Error"
+        for: "5m"  # Must breach threshold for 5 minutes before firing
+### Notification Channels
+| Channel | Best For | Configuration |
+|---------|----------|---------------|
+| **PagerDuty** | On-call notifications, critical alerts | Integration key |
+| **Slack** | Team notifications, non-critical alerts | Webhook URL |
+| **Email** | Scheduled reports, compliance notifications | SMTP configuration |
+| **Webhook** | Custom integrations (PagerTree, OpsGenie) | HTTP endpoint |
+| **Discord** | Community/gaming infrastructure | Webhook URL |
+### SLO / SLI / SLA
+| Term | Meaning | Example |
+|------|---------|---------|
+| **SLI** (Service Level Indicator) | A specific metric that measures a service attribute | Request latency at p99 |
+| **SLO** (Service Level Objective) | Target value for the SLI over a time window | 99.9% of requests in less than 200ms over 30 days |
+| **SLA** (Service Level Agreement) | Contractual commitment based on SLO, with consequences | 99.9% uptime — 10% credit if below |
+### Burn Rate Alerts
+<code>Burn rate</code> is how fast you are exhausting your error budget for an SLO. If your SLO is 99.9% over 30 days, you have 0.1% error budget (about 43 minutes of downtime).
+| Burn Rate | Meaning | Alert Severity | Response Time |
+|-----------|---------|----------------|---------------|
+| 1x | Consuming budget at expected rate | Informational | No action needed |
+| 2x | Consuming budget twice as fast as expected | Warning | Investigate within hours |
+| 10x | Consuming budget 10x faster | Critical | Respond immediately |
+| 100x | Complete outage | Page | Respond immediately |
+### Multi-Window Multi-Burn-Rate Alerts
+This Google SRE pattern uses two time windows to detect both fast and slow burn rates, reducing false positives:
+// Alert if burn rate > 10x over 1 hour (fast burn) AND > 2x over 6 hours (slow burn)
+// This prevents alerting on brief spikes while catching sustained problems
+// Short window: 1 hour, threshold equivalent to 10x burn rate
+rate(http_requests_total{job="api", status=~"5.."}[5m])
+rate(http_requests_total{job="api"}[5m]) > 0.005
+// Long window: 6 hours, threshold equivalent to 2x burn rate
+rate(http_requests_total{job="api", status=~"5.."}[30m])
+rate(http_requests_total{job="api"}[30m]) > 0.001
+## Common Pitfalls & Anti-patterns
+1. **Putting unbounded values in Prometheus labels** — Using user IDs, email addresses, session tokens, or other high-cardinality values as label values creates millions of time series, causing Prometheus to run out of memory. Always keep label cardinality under 1,000 unique values per metric. Solution: aggregate high-cardinality data into logs instead of metrics.
+2. **Not using recording rules for expensive queries** — Executing complex PromQL queries (especially <code>histogram_quantile</code> with large ranges) on every dashboard refresh creates excessive load on the Prometheus server. Solution: Pre-compute expensive queries as recording rules with a 30-second to 5-minute evaluation interval.
+3. **Logging without structure** — Using string interpolation (<code>"User " + userId + " logged in"</code>) instead of structured JSON logging makes logs unsearchable and unparseable. Log aggregation systems cannot extract fields from concatenated strings. Solution: Always log structured JSON with explicit field names.
+4. **Not implementing context propagation** — Starting distributed tracing without propagating trace context via HTTP headers (W3C TraceContext or B3) results in disconnected spans that cannot be correlated. Each service creates its own trace tree instead of joining the parent's. Solution: Ensure every HTTP client and server library propagates trace headers.
+5. **Sampling too aggressively without error-based override** — Sampling 1% of traces means you will miss 99% of errors. If an error occurs once every 1000 requests, you will catch it only once every 100,000 requests on average. Solution: Always use tail-based sampling or configure a separate 100% sampling rule for error spans.
+6. **Alert fatigue from poorly tuned thresholds** — Setting alert thresholds too sensitively (e.g., alerting on any 5xx response) generates hundreds of meaningless alerts, leading to ignored notifications and missed real incidents. Solution: Use the <code>for</code> duration to require sustained breaches, and adopt the multi-window multi-burn-rate approach for SLO-based alerting.
+7. **Mixing metric types on the same Grafana panel** — Plotting counters and gauges on the same axis without rate conversion leads to misleading visualizations. Counters always increase, so lines just go up over time. Solution: Always apply <code>rate()</code> or <code>increase()</code> to counter metrics before displaying them.
+8. **Not setting retention policies for logs** — Keeping all logs indefinitely causes storage costs to grow unboundedly and degrades query performance in log aggregation systems. Solution: Define tiered retention policies — hot (fast) storage for 7-30 days, cold (cheap) storage for 90-365 days, archive for compliance.
+9. **Using <code>irate()</code> for alerting rules** — <code>irate()</code> uses only the last two data points and is highly sensitive to scrap timing jitter, producing noisy alerts. Solution: Use <code>rate()</code> for alerting rules — it averages over the entire range window and produces stable, repeatable values.
+10. **Dashboard per user instead of dashboard per service** — Creating custom dashboards for individual developers instead of standardizing on service-level dashboards leads to duplicated effort, inconsistent metrics, and knowledge silos when someone leaves. Solution: Maintain a canonical dashboard template per service type (API, worker, batch) with variables for environment and instance.
+11. **Not adding <code>_total</code> suffix to counter metrics** — Prometheus convention requires counter metrics to end with <code>_total</code>. Omitting this suffix breaks compatibility with client libraries, recording rules, and community dashboards that expect the standard naming. Solution: Always append <code>_total</code> to counter metric names.
+12. **Forgetting to set <code>for</code> duration in alerting rules** — Alerts without a <code>for</code> duration fire on the first evaluation cycle where the condition is true, causing flapping alerts from brief transient spikes. Solution: Always set a <code>for</code> duration (typically 1-10 minutes depending on severity) to confirm the condition is sustained.
+## Complete API Reference
+### PromQL Functions Quick Reference
+| Function | Applies To | Description | Example |
+|----------|-----------|-------------|---------|
+| <code>rate()</code> | Counter (range) | Per-second average rate of increase | <code>rate(http_requests_total[5m])</code> |
+| <code>irate()</code> | Counter (range) | Instant rate from last 2 samples | <code>irate(http_requests_total[5m])</code> |
+| <code>increase()</code> | Counter (range) | Total increase over range | <code>increase(http_requests_total[1h])</code> |
+| <code>delta()</code> | Gauge (range) | Difference between first and last | <code>delta(temperature_celsius[5m])</code> |
+| <code>deriv()</code> | Gauge (range) | Per-second derivative | <code>deriv(queue_depth[10m])</code> |
+| <code>predict_linear()</code> | Gauge (range) | Linear regression prediction | <code>predict_linear(disk_free[1h], 3600)</code> |
+| <code>histogram_quantile()</code> | Histogram bucket | Quantile from histogram | <code>histogram_quantile(0.99, rate(..._bucket[5m]))</code> |
+| <code>label_replace()</code> | Instant/range | Regex label manipulation | <code>label_replace(up, "dc", "$1", "instance", "(.*):.*")</code> |
+| <code>label_join()</code> | Instant/range | Concatenate label values | <code>label_join(up, "full_id", ":", "job", "instance")</code> |
+| <code>absent()</code> | Instant | 1 if metric absent, else empty | <code>absent(up{job="api"})</code> |
+| <code>absent_over_time()</code> | Range | 1 if metric absent over range | <code>absent_over_time(up[5m])</code> |
+| <code>changes()</code> | Range | Count of value changes | <code>changes(up[1h])</code> |
+| <code>clamp_min()</code> / <code>clamp_max()</code> | Instant | Clamp values to range | <code>clamp_min(memory_usage, 0)</code> |
+| <code>time()</code> | — | Current Unix timestamp | <code>time()</code> |
+| <code>timestamp()</code> | Instant | Timestamp of a sample | <code>timestamp(up)</code> |
+| <code>day_of_week()</code> | — | Day of week (0=Sunday) | <code>day_of_week()</code> |
+### Metric Type Properties
+| Property | Counter | Gauge | Histogram | Summary |
+|----------|---------|-------|-----------|---------|
+| Can increase? | Yes (only) | Yes | Yes (via <code>_count</code> + <code>_sum</code>) | Yes (via <code>_count</code> + <code>_sum</code>) |
+| Can decrease? | No | Yes | No | No |
+| Default value | 0 | 0 | 0 for all buckets | 0 |
+| Reset behavior | Resets to 0 on restart | Resets to 0 on restart | Resets on restart | Resets on restart |
+| Aggregation across instances | Sum | Average | Sum of buckets | Average of quantiles |
+| Quantiles | Not supported | Not supported | Server-side via <code>histogram_quantile()</code> | Pre-computed client-side |
+| Memory usage | Low | Low | Medium (proportional to buckets) | Medium (proportional to quantiles) |
+### OpenTelemetry Span Kinds
+| Span Kind | Direction | Description | Example |
+|-----------|-----------|-------------|---------|
+| <code>Internal</code> | Internal | Operation within the same process, no network call | Function call, database query |
+| <code>Server</code> | Incoming | Service receives a request from another service | HTTP handler, gRPC server |
+| <code>Client</code> | Outgoing | Service sends a request to another service | HTTP client, database driver |
+| <code>Producer</code> | Outgoing | Service sends a message to a queue (fire-and-forget) | Publishing to Kafka, SQS |
+| <code>Consumer</code> | Incoming | Service receives a message from a queue | Consuming from Kafka, SQS |
+### Log Levels (Standard Severity)
+| Syslog Severity | OpenTelemetry Severity Number | Level | Description |
+|-----------------|------------------------------|-------|-------------|
+| 7 | 1-4 | <code>TRACE</code> | Finest-grained diagnostic information |
+| 6 | 5-8 | <code>DEBUG</code> | Detailed information for debugging |
+| 5 | 9-12 | <code>INFO</code> | Normal operational messages |
+| 4 | 13-16 | <code>WARN</code> | Warning conditions (handled but noteworthy) |
+| 3 | 17-20 | <code>ERROR</code> | Error conditions requiring attention |
+| 2 | 21-24 | <code>FATAL</code> | Critical errors causing process termination |
+### Grafana Alerting States
+| State | Description | Transition |
+|-------|-------------|------------|
+| <code>Normal</code> | Alert condition is not met | Goes to Pending when condition breached |
+| <code>Pending</code> | Condition breached, waiting for <code>for</code> duration | Goes to Alerting if sustained; back to Normal if resolved |
+| <code>Alerting</code> | Condition has been sustained and alert fires | Goes to Normal when resolved |
+| <code>NoData</code> | Query returned no data | Goes to Alerting if configured; maintains state |
+| <code>Error</code> | Query execution failed | Goes to Alerting if configured; maintains state |
+1. **Q:** What are the three pillars of observability and how do they differ?
+   **A:** Metrics (numeric time-series data for dashboards and alerting), Logs (discrete structured events for debugging and audit), Traces (end-to-end request lifecycle across services for latency analysis). They differ in data format, storage requirements, and primary use cases, but are most powerful when correlated together.
+2. **Q:** What is the difference between a Counter and a Gauge in Prometheus?
+   **A:** A Counter is cumulative and can only increase (or reset to 0 on restart). A Gauge represents a point-in-time value that can both increase and decrease. Use counters for things that accumulate (request count, errors total) and gauges for things that fluctuate (memory usage, queue depth, temperature).
+3. **Q:** Why should you never put user IDs in Prometheus labels?
+   **A:** User IDs are high-cardinality values that create a unique time series for every user. Prometheus's TSDB performance degrades significantly when a metric has thousands of time series. Label cardinality should be kept under 1,000. High-cardinality data belongs in logs or external databases, not in metric labels.
+4. **Q:** What is the RED method and what does each letter stand for?
+   **A:** RED stands for Rate (requests per second), Errors (failed requests per second), Duration (latency distribution). It is used for user-facing services to measure the three golden signals. In PromQL: <code>rate(http_requests_total[5m])</code>, <code>rate(http_requests_total{status=~"5.."}[5m])</code>, and <code>histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))</code>.
+5. **Q:** How does context propagation work in distributed tracing?
+   **A:** Context propagation carries trace identifiers (traceId, spanId) across service boundaries via HTTP headers. The W3C TraceContext standard uses the <code>traceparent</code> header containing version, traceId, spanId, and trace flags. When Service A calls Service B, it injects the trace context into the HTTP request. Service B extracts it and creates a child span linked to the parent trace, forming a unified trace tree.
+6. **Q:** What is the difference between <code>rate()</code> and <code>irate()</code> in PromQL?
+   **A:** <code>rate()</code> calculates the per-second average rate of increase over an entire range window (e.g., <code>[5m]</code>), smoothing out spikes. <code>irate()</code> uses only the last two data points, making it more sensitive to spikes but also noisier. Use <code>rate()</code> for alerting rules and dashboards; use <code>irate()</code> for spotting short-lived bursts in ad-hoc debugging.
+7. **Q:** What is a burn rate alert and how does the multi-window pattern reduce false positives?
+   **A:** Burn rate measures how fast you are consuming your SLO error budget. A 10x burn rate means you exhaust the budget 10x faster than expected. The multi-window pattern uses a short window (e.g., 1 hour at 10x burn rate) AND a long window (e.g., 6 hours at 2x burn rate). The short window catches fast problems, the long window confirms they are sustained — preventing alerts from brief spikes while catching real degradation.
+8. **Q:** What is the difference between head-based and tail-based sampling?
+   **A:** Head-based sampling decides whether to record a trace at the root span (before any child spans execute). It is simple and low-overhead but may discard error traces. Tail-based sampling collects all spans temporarily and decides after seeing all data — it can ensure error traces are always sampled, but requires a buffer and adds latency. Error-based sampling (always sample errors, sample a percentage of successes) is the most practical approach.
+9. **Q:** What is the OTel Collector and why is it useful?
+   **A:** The OpenTelemetry Collector is a vendor-agnostic agent that receives telemetry data from applications, processes it (batching, filtering, adding attributes), and exports it to one or more backends (Prometheus, Jaeger, Loki, Datadog, etc.). It is useful because it decouples application instrumentation from backend choice — you can change backends without modifying application code, and it provides features like retry, backpressure, and data transformation.
+10. **Q:** What is the difference between a Histogram and a Summary in Prometheus?
+    **A:** A Histogram calculates quantiles server-side using <code>histogram_quantile()</code> based on configurable buckets. A Summary pre-computes quantiles client-side over a sliding window. Histograms allow aggregation across instances (summing buckets) but require choosing bucket boundaries. Summaries cannot be aggregated across instances but provide exact quantiles without bucket configuration. Use Histograms when you need aggregation; use Summaries when you need exact pre-computed quantiles.
+            tags: ["Monitoring", "Observability", "Prometheus", "Grafana", "Cheat Sheet"],
+
+### Sampler Configuration
+
+\`\`\`javascript
+// OTel SDK sampler configuration
+const { NodeSDK } = require("@opentelemetry/sdk-node");
+const { ParentBasedSampler } = require("@opentelemetry/sdk-trace-base");
+const { TraceIdRatioBasedSampler } = require("@opentelemetry/sdk-trace-base");
+
+const sdk = new NodeSDK({
+  sampler: new ParentBasedSampler({
+    root: new TraceIdRatioBasedSampler(0.1),  // Sample 10% of root spans
+  }),
+  spanProcessors: [new BatchSpanProcessor(exporter)],
+});
+
+sdk.start();
+\`\`\`
+
+Line-by-line explanation:
+- Line 8: <code>ParentBasedSampler</code> respects the parent sampling decision — if a parent span was sampled, child spans are also sampled
+- Line 9: <code>TraceIdRatioBasedSampler(0.1)</code> samples 10% of root spans (head-based sampling)
+- Line 11: <code>BatchSpanProcessor</code> batches spans before exporting — improves performance by reducing network calls
+
+### Resource Attributes
+
+<code>Resource attributes</code> describe the entity producing the telemetry (service, host, container):
+
+\`\`\`javascript
+const { Resource } = require("@opentelemetry/resources");
+const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
+
+const resource = new Resource({
+  [SemanticResourceAttributes.SERVICE_NAME]: "payment-service",
+  [SemanticResourceAttributes.SERVICE_VERSION]: "1.2.3",
+  [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: "production",
+});
+\`\`\`
+
+Standard resource attributes:
+| Attribute | Description | Example Value |
+|-----------|-------------|---------------|
+| <code>service.name</code> | User-visible service name | <code>payment-service</code> |
+| <code>service.version</code> | Version of the service | <code>1.2.3</code> |
+| <code>deployment.environment</code> | Deployment environment | <code>production</code> |
+| <code>host.name</code> | Hostname of the machine | <code>ip-10-0-1-42</code> |
+| <code>telemetry.sdk.name</code> | SDK name (set automatically) | <code>opentelemetry</code> |
+
+---
+
+## Dashboards & Alerting
+
+### Grafana Dashboard Design Principles
+
+| Principle | Description | Example |
+|-----------|-------------|---------|
+| **One pane per query** | Each panel should answer exactly one question | CPU usage panel = one query, not mixed with memory |
+| **Consistent time range** | All panels on a dashboard should use the same time range | Use dashboard-level time picker, not panel-level overrides |
+| **Left-aligned axes** | Critical metrics on the left, supporting context on the right | Error rate left, total requests right |
+| **Use variables** | Template dashboards with variables for environment, service, instance | <code>$service</code>, <code>$env</code>, <code>$instance</code> |
+| **Minimal decorations** | Avoid 3D effects, excessive colors, unnecessary grid lines, too many decimal places | Show <code>42.5%</code> not <code>42.537%</code> |
+| **Red-yellow-green** | Use red for error/alert, yellow for warning, green for healthy | Consistent color encoding reduces cognitive load |
+
+### Grafana Variables
+
+<code>Variables</code> make dashboards reusable across services and environments:
+
+\`\`\`javascript
+{
+  "templating": {
+    "list": [
+      {
+        "name": "service",           // Variable name — use in queries as $service
+        "type": "query",             // Populated from a Prometheus query
+        "query": "label_values(up, job)",  // Query returns all unique job label values
+        "refresh": 1,                // Refresh on dashboard load (1 = on load)
+        "includeAll": true,          // Add "All" option to select every service
+      },
+      {
+        "name": "instance",          // Second variable, depends on $service
+        "type": "query",
+        "query": "label_values(up{job=\"$service\"}, instance)",  // Filtered by service
+        "refresh": 1,
+      },
+    ]
+  }
+}
+\`\`\`
+
+Line-by-line explanation:
+- Line 6: Variable name — referenced in panel queries as <code>$service</code>
+- Line 7: Query type — the variable value is populated from a Prometheus label values query
+- Line 8: The query <code>label_values(up, job)</code> returns all unique values of the <code>job</code> label
+- Line 9: <code>refresh: 1</code> means the variable values are fetched every time the dashboard loads
+- Lines 16-19: Second variable that depends on the first — <code>$instance</code> is dynamically filtered by <code>$service</code>
+
+### Annotations
+
+<code>Annotations</code> overlay events on Grafana graphs — deployments, incidents, config changes:
+
+\`\`\`javascript
+{
+  "annotations": {
+    "list": [
+      {
+        "datasource": "Prometheus",
+        "expr": "changes(deploy_timestamp[1m]) > 0",  // Detect deployments
+        "step": "60s",
+        "title": "Deployment detected on {{ $labels.instance }}",
+        "tag": "deployment",                          // Color and group annotations
+      }
+    ]
+  }
+}
+\`\`\`
+
+### Alerting Rules (Grafana)
+
+Grafana alerting replaces Prometheus Alertmanager for unified alert management:
+
+\`\`\`yaml
+# Grafana alert rule
+apiVersion: 1
+groups:
+  - name: service_health
+    rules:
+      - uid: high_error_rate
+        title: "High Error Rate"
+        condition: "A"
+        data:
+          - refId: "A"
+            relativeTimeRange:
+              from: 300  # Last 5 minutes
+              to: 0
+            datasourceUid: "prometheus"
+            model:
+              expr: |
+                rate(http_requests_total{job="api"}[5m])
+                /
+                rate(http_requests_total{job="api"}[5m]) > 0.05
+        noDataState: "NoData"
+        execErrState: "Error"
+        for: "5m"  # Must breach threshold for 5 minutes before firing
+\`\`\`
+
+### Notification Channels
+
+| Channel | Best For | Configuration |
+|---------|----------|---------------|
+| **PagerDuty** | On-call notifications, critical alerts | Integration key |
+| **Slack** | Team notifications, non-critical alerts | Webhook URL |
+| **Email** | Scheduled reports, compliance notifications | SMTP configuration |
+| **Webhook** | Custom integrations (PagerTree, OpsGenie) | HTTP endpoint |
+| **Discord** | Community/gaming infrastructure | Webhook URL |
+
+### SLO / SLI / SLA
+
+| Term | Meaning | Example |
+|------|---------|---------|
+| **SLI** (Service Level Indicator) | A specific metric that measures a service attribute | Request latency at p99 |
+| **SLO** (Service Level Objective) | Target value for the SLI over a time window | 99.9% of requests in less than 200ms over 30 days |
+| **SLA** (Service Level Agreement) | Contractual commitment based on SLO, with consequences | 99.9% uptime — 10% credit if below |
+
+### Burn Rate Alerts
+
+<code>Burn rate</code> is how fast you are exhausting your error budget for an SLO. If your SLO is 99.9% over 30 days, you have 0.1% error budget (about 43 minutes of downtime).
+
+| Burn Rate | Meaning | Alert Severity | Response Time |
+|-----------|---------|----------------|---------------|
+| 1x | Consuming budget at expected rate | Informational | No action needed |
+| 2x | Consuming budget twice as fast as expected | Warning | Investigate within hours |
+| 10x | Consuming budget 10x faster | Critical | Respond immediately |
+| 100x | Complete outage | Page | Respond immediately |
+
+### Multi-Window Multi-Burn-Rate Alerts
+
+This Google SRE pattern uses two time windows to detect both fast and slow burn rates, reducing false positives:
+
+\`\`\`promql
+// Alert if burn rate > 10x over 1 hour (fast burn) AND > 2x over 6 hours (slow burn)
+// This prevents alerting on brief spikes while catching sustained problems
+
+// Short window: 1 hour, threshold equivalent to 10x burn rate
+rate(http_requests_total{job="api", status=~"5.."}[5m])
+/
+rate(http_requests_total{job="api"}[5m]) > 0.005
+
+// Long window: 6 hours, threshold equivalent to 2x burn rate
+rate(http_requests_total{job="api", status=~"5.."}[30m])
+/
+rate(http_requests_total{job="api"}[30m]) > 0.001
+\`\`\`
+
+---
+
+## Common Pitfalls & Anti-patterns
+
+1. **Putting unbounded values in Prometheus labels** — Using user IDs, email addresses, session tokens, or other high-cardinality values as label values creates millions of time series, causing Prometheus to run out of memory. Always keep label cardinality under 1,000 unique values per metric. Solution: aggregate high-cardinality data into logs instead of metrics.
+
+2. **Not using recording rules for expensive queries** — Executing complex PromQL queries (especially <code>histogram_quantile</code> with large ranges) on every dashboard refresh creates excessive load on the Prometheus server. Solution: Pre-compute expensive queries as recording rules with a 30-second to 5-minute evaluation interval.
+
+3. **Logging without structure** — Using string interpolation (<code>"User " + userId + " logged in"</code>) instead of structured JSON logging makes logs unsearchable and unparseable. Log aggregation systems cannot extract fields from concatenated strings. Solution: Always log structured JSON with explicit field names.
+
+4. **Not implementing context propagation** — Starting distributed tracing without propagating trace context via HTTP headers (W3C TraceContext or B3) results in disconnected spans that cannot be correlated. Each service creates its own trace tree instead of joining the parent's. Solution: Ensure every HTTP client and server library propagates trace headers.
+
+5. **Sampling too aggressively without error-based override** — Sampling 1% of traces means you will miss 99% of errors. If an error occurs once every 1000 requests, you will catch it only once every 100,000 requests on average. Solution: Always use tail-based sampling or configure a separate 100% sampling rule for error spans.
+
+6. **Alert fatigue from poorly tuned thresholds** — Setting alert thresholds too sensitively (e.g., alerting on any 5xx response) generates hundreds of meaningless alerts, leading to ignored notifications and missed real incidents. Solution: Use the <code>for</code> duration to require sustained breaches, and adopt the multi-window multi-burn-rate approach for SLO-based alerting.
+
+7. **Mixing metric types on the same Grafana panel** — Plotting counters and gauges on the same axis without rate conversion leads to misleading visualizations. Counters always increase, so lines just go up over time. Solution: Always apply <code>rate()</code> or <code>increase()</code> to counter metrics before displaying them.
+
+8. **Not setting retention policies for logs** — Keeping all logs indefinitely causes storage costs to grow unboundedly and degrades query performance in log aggregation systems. Solution: Define tiered retention policies — hot (fast) storage for 7-30 days, cold (cheap) storage for 90-365 days, archive for compliance.
+
+9. **Using <code>irate()</code> for alerting rules** — <code>irate()</code> uses only the last two data points and is highly sensitive to scrap timing jitter, producing noisy alerts. Solution: Use <code>rate()</code> for alerting rules — it averages over the entire range window and produces stable, repeatable values.
+
+10. **Dashboard per user instead of dashboard per service** — Creating custom dashboards for individual developers instead of standardizing on service-level dashboards leads to duplicated effort, inconsistent metrics, and knowledge silos when someone leaves. Solution: Maintain a canonical dashboard template per service type (API, worker, batch) with variables for environment and instance.
+
+11. **Not adding <code>_total</code> suffix to counter metrics** — Prometheus convention requires counter metrics to end with <code>_total</code>. Omitting this suffix breaks compatibility with client libraries, recording rules, and community dashboards that expect the standard naming. Solution: Always append <code>_total</code> to counter metric names.
+
+12. **Forgetting to set <code>for</code> duration in alerting rules** — Alerts without a <code>for</code> duration fire on the first evaluation cycle where the condition is true, causing flapping alerts from brief transient spikes. Solution: Always set a <code>for</code> duration (typically 1-10 minutes depending on severity) to confirm the condition is sustained.
+
+---
+
+## Complete API Reference
+
+### PromQL Functions Quick Reference
+
+| Function | Applies To | Description | Example |
+|----------|-----------|-------------|---------|
+| <code>rate()</code> | Counter (range) | Per-second average rate of increase | <code>rate(http_requests_total[5m])</code> |
+| <code>irate()</code> | Counter (range) | Instant rate from last 2 samples | <code>irate(http_requests_total[5m])</code> |
+| <code>increase()</code> | Counter (range) | Total increase over range | <code>increase(http_requests_total[1h])</code> |
+| <code>delta()</code> | Gauge (range) | Difference between first and last | <code>delta(temperature_celsius[5m])</code> |
+| <code>deriv()</code> | Gauge (range) | Per-second derivative | <code>deriv(queue_depth[10m])</code> |
+| <code>predict_linear()</code> | Gauge (range) | Linear regression prediction | <code>predict_linear(disk_free[1h], 3600)</code> |
+| <code>histogram_quantile()</code> | Histogram bucket | Quantile from histogram | <code>histogram_quantile(0.99, rate(..._bucket[5m]))</code> |
+| <code>label_replace()</code> | Instant/range | Regex label manipulation | <code>label_replace(up, "dc", "$1", "instance", "(.*):.*")</code> |
+| <code>label_join()</code> | Instant/range | Concatenate label values | <code>label_join(up, "full_id", ":", "job", "instance")</code> |
+| <code>absent()</code> | Instant | 1 if metric absent, else empty | <code>absent(up{job="api"})</code> |
+| <code>absent_over_time()</code> | Range | 1 if metric absent over range | <code>absent_over_time(up[5m])</code> |
+| <code>changes()</code> | Range | Count of value changes | <code>changes(up[1h])</code> |
+| <code>clamp_min()</code> / <code>clamp_max()</code> | Instant | Clamp values to range | <code>clamp_min(memory_usage, 0)</code> |
+| <code>time()</code> | — | Current Unix timestamp | <code>time()</code> |
+| <code>timestamp()</code> | Instant | Timestamp of a sample | <code>timestamp(up)</code> |
+| <code>day_of_week()</code> | — | Day of week (0=Sunday) | <code>day_of_week()</code> |
+
+### Metric Type Properties
+
+| Property | Counter | Gauge | Histogram | Summary |
+|----------|---------|-------|-----------|---------|
+| Can increase? | Yes (only) | Yes | Yes (via <code>_count</code> + <code>_sum</code>) | Yes (via <code>_count</code> + <code>_sum</code>) |
+| Can decrease? | No | Yes | No | No |
+| Default value | 0 | 0 | 0 for all buckets | 0 |
+| Reset behavior | Resets to 0 on restart | Resets to 0 on restart | Resets on restart | Resets on restart |
+| Aggregation across instances | Sum | Average | Sum of buckets | Average of quantiles |
+| Quantiles | Not supported | Not supported | Server-side via <code>histogram_quantile()</code> | Pre-computed client-side |
+| Memory usage | Low | Low | Medium (proportional to buckets) | Medium (proportional to quantiles) |
+
+### OpenTelemetry Span Kinds
+
+| Span Kind | Direction | Description | Example |
+|-----------|-----------|-------------|---------|
+| <code>Internal</code> | Internal | Operation within the same process, no network call | Function call, database query |
+| <code>Server</code> | Incoming | Service receives a request from another service | HTTP handler, gRPC server |
+| <code>Client</code> | Outgoing | Service sends a request to another service | HTTP client, database driver |
+| <code>Producer</code> | Outgoing | Service sends a message to a queue (fire-and-forget) | Publishing to Kafka, SQS |
+| <code>Consumer</code> | Incoming | Service receives a message from a queue | Consuming from Kafka, SQS |
+
+### Log Levels (Standard Severity)
+
+| Syslog Severity | OpenTelemetry Severity Number | Level | Description |
+|-----------------|------------------------------|-------|-------------|
+| 7 | 1-4 | <code>TRACE</code> | Finest-grained diagnostic information |
+| 6 | 5-8 | <code>DEBUG</code> | Detailed information for debugging |
+| 5 | 9-12 | <code>INFO</code> | Normal operational messages |
+| 4 | 13-16 | <code>WARN</code> | Warning conditions (handled but noteworthy) |
+| 3 | 17-20 | <code>ERROR</code> | Error conditions requiring attention |
+| 2 | 21-24 | <code>FATAL</code> | Critical errors causing process termination |
+
+### Grafana Alerting States
+
+| State | Description | Transition |
+|-------|-------------|------------|
+| <code>Normal</code> | Alert condition is not met | Goes to Pending when condition breached |
+| <code>Pending</code> | Condition breached, waiting for <code>for</code> duration | Goes to Alerting if sustained; back to Normal if resolved |
+| <code>Alerting</code> | Condition has been sustained and alert fires | Goes to Normal when resolved |
+| <code>NoData</code> | Query returned no data | Goes to Alerting if configured; maintains state |
+| <code>Error</code> | Query execution failed | Goes to Alerting if configured; maintains state |
+
+---
+
+## Practice Questions
+
+1. **Q:** What are the three pillars of observability and how do they differ?
+   **A:** Metrics (numeric time-series data for dashboards and alerting), Logs (discrete structured events for debugging and audit), Traces (end-to-end request lifecycle across services for latency analysis). They differ in data format, storage requirements, and primary use cases, but are most powerful when correlated together.
+
+2. **Q:** What is the difference between a Counter and a Gauge in Prometheus?
+   **A:** A Counter is cumulative and can only increase (or reset to 0 on restart). A Gauge represents a point-in-time value that can both increase and decrease. Use counters for things that accumulate (request count, errors total) and gauges for things that fluctuate (memory usage, queue depth, temperature).
+
+3. **Q:** Why should you never put user IDs in Prometheus labels?
+   **A:** User IDs are high-cardinality values that create a unique time series for every user. Prometheus's TSDB performance degrades significantly when a metric has thousands of time series. Label cardinality should be kept under 1,000. High-cardinality data belongs in logs or external databases, not in metric labels.
+
+4. **Q:** What is the RED method and what does each letter stand for?
+   **A:** RED stands for Rate (requests per second), Errors (failed requests per second), Duration (latency distribution). It is used for user-facing services to measure the three golden signals. In PromQL: <code>rate(http_requests_total[5m])</code>, <code>rate(http_requests_total{status=~"5.."}[5m])</code>, and <code>histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))</code>.
+
+5. **Q:** How does context propagation work in distributed tracing?
+   **A:** Context propagation carries trace identifiers (traceId, spanId) across service boundaries via HTTP headers. The W3C TraceContext standard uses the <code>traceparent</code> header containing version, traceId, spanId, and trace flags. When Service A calls Service B, it injects the trace context into the HTTP request. Service B extracts it and creates a child span linked to the parent trace, forming a unified trace tree.
+
+6. **Q:** What is the difference between <code>rate()</code> and <code>irate()</code> in PromQL?
+   **A:** <code>rate()</code> calculates the per-second average rate of increase over an entire range window (e.g., <code>[5m]</code>), smoothing out spikes. <code>irate()</code> uses only the last two data points, making it more sensitive to spikes but also noisier. Use <code>rate()</code> for alerting rules and dashboards; use <code>irate()</code> for spotting short-lived bursts in ad-hoc debugging.
+
+7. **Q:** What is a burn rate alert and how does the multi-window pattern reduce false positives?
+   **A:** Burn rate measures how fast you are consuming your SLO error budget. A 10x burn rate means you exhaust the budget 10x faster than expected. The multi-window pattern uses a short window (e.g., 1 hour at 10x burn rate) AND a long window (e.g., 6 hours at 2x burn rate). The short window catches fast problems, the long window confirms they are sustained — preventing alerts from brief spikes while catching real degradation.
+
+8. **Q:** What is the difference between head-based and tail-based sampling?
+   **A:** Head-based sampling decides whether to record a trace at the root span (before any child spans execute). It is simple and low-overhead but may discard error traces. Tail-based sampling collects all spans temporarily and decides after seeing all data — it can ensure error traces are always sampled, but requires a buffer and adds latency. Error-based sampling (always sample errors, sample a percentage of successes) is the most practical approach.
+
+9. **Q:** What is the OTel Collector and why is it useful?
+   **A:** The OpenTelemetry Collector is a vendor-agnostic agent that receives telemetry data from applications, processes it (batching, filtering, adding attributes), and exports it to one or more backends (Prometheus, Jaeger, Loki, Datadog, etc.). It is useful because it decouples application instrumentation from backend choice — you can change backends without modifying application code, and it provides features like retry, backpressure, and data transformation.
+
+10. **Q:** What is the difference between a Histogram and a Summary in Prometheus?
+    **A:** A Histogram calculates quantiles server-side using <code>histogram_quantile()</code> based on configurable buckets. A Summary pre-computes quantiles client-side over a sliding window. Histograms allow aggregation across instances (summing buckets) but require choosing bucket boundaries. Summaries cannot be aggregated across instances but provide exact quantiles without bucket configuration. Use Histograms when you need aggregation; use Summaries when you need exact pre-computed quantiles.
+`,
+            tags: ["Monitoring", "Observability", "Prometheus", "Grafana", "Cheat Sheet"],
           },
         ],
       },
