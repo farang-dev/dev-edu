@@ -76063,19 +76063,2215 @@ Line 29: \`pip install -e ".[dev]"\` installs the project in editable mode (chan
         title: "JavaScript",
         description: "JavaScript from the ground up — syntax, DOM, ES6+, async patterns, bundlers, frameworks (React, Vue, Angular), and Node.js.",
         topics: [
-          { id: "ns-js-syntax", title: "Syntax & Basics", shortDesc: "Variables (var/let/const), data types, operators, type coercion, and strict mode.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-control-flow", title: "Control Flow & Functions", shortDesc: "Conditionals, loops, function declarations vs expressions, arrow functions, and default parameters.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-dom", title: "DOM Manipulation & Events", shortDesc: "Selecting elements, modifying the DOM, event propagation (capture/bubble), and event delegation.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-es6", title: "ES6+ Features", shortDesc: "Destructuring, spread/rest, template literals, optional chaining, nullish coalescing, and modules.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-async", title: "Asynchronous JavaScript", shortDesc: "Callbacks, Promises, async/await, event loop, microtasks vs macrotasks, and error handling.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-oop", title: "Prototypes & Classes", shortDesc: "Prototypal inheritance, class syntax, getters/setters, static methods, and private fields.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-modules", title: "Modules & Bundlers", shortDesc: "ESM vs CommonJS, dynamic imports, tree-shaking, and bundlers (Vite, Webpack, esbuild).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-browser-apis", title: "Browser APIs", shortDesc: "Fetch, localStorage, WebSocket, Service Workers, Canvas, and Web Animations API.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-frameworks", title: "Frontend Frameworks (React, Vue, Angular)", shortDesc: "Component model, reactivity, state management, routing, and when to choose which.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-node", title: "Node.js & Runtimes", shortDesc: "CommonJS vs ESM, fs/http modules, npm/yarn/pnpm, Express, and an overview of Deno/Bun.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-meta-frameworks", title: "Meta-Frameworks (Next.js, Nuxt)", shortDesc: "SSR, SSG, ISR, file-based routing, server actions, and when to use a meta-framework over vanilla SPA.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-desktop", title: "Desktop Frameworks (Electron, Tauri)", shortDesc: "Cross-platform desktop apps with web tech — IPC, native APIs, bundling, and Tauri's Rust-based architecture.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-js-testing", title: "Testing JavaScript", shortDesc: "Jest, Vitest, Playwright, testing strategies (unit/integration/e2e), and TDD basics.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-js-syntax",
+            title: "Syntax & Basics",
+            shortDesc: "Variables (var/let/const), data types, operators, type coercion, and strict mode.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+            "var is function-scoped and hoisted; let and const are block-scoped and not hoisted in the same way",
+            "JavaScript has seven primitive types: string, number, boolean, null, undefined, bigint, symbol",
+            "Dynamic typing means variables can hold any type without declaration; typeof operator inspects the type at runtime",
+            "Type coercion happens automatically with == (loose equality); use === (strict equality) to avoid surprises",
+            "The + operator concatenates strings but also adds numbers; other arithmetic operators coerce strings to numbers",
+            "'use strict' at the top of a file or function enables stricter parsing and error-checking"
+          ],
+            content: `## What's This?
+
+JavaScript syntax is the set of rules that govern how JavaScript code is written and interpreted by the engine. It is the grammar of the language — you must arrange words, symbols, and punctuation correctly for the computer to understand your instructions. JavaScript is a dynamic, weakly-typed scripting language that runs in browsers, on servers (Node.js), and increasingly everywhere. It exists because the web needed a programming language that could run in the browser to make pages interactive, and it has grown into one of the most widely-used languages in the world.
+
+## The Big Picture
+
+JavaScript syntax builds on familiar C-family conventions (curly braces, semicolons, operators) but adds dynamic typing, first-class functions, and prototypal inheritance. Variables use \`var\`, \`let\`, or \`const\` with different scoping rules. Seven primitive types form the foundation, and type coercion means values are automatically converted between types in certain contexts. Strict mode catches common mistakes. Mastering syntax fundamentals is essential before moving to DOM manipulation, async patterns, frameworks, or Node.js.
+
+## Core Ideas
+
+### Variables: var, let, const
+
+\`var\` is function-scoped and hoisted to the top of its function. \`let\` and \`const\` are block-scoped (confined to {}) and are not accessible before their declaration (temporal dead zone). \`const\` cannot be reassigned, but objects declared with \`const\` can still have their properties modified.
+
+\`\`\`javascript
+var name = "Alice";        // Function-scoped, hoisted
+let age = 30;              // Block-scoped, not hoisted
+const PI = 3.14159;        // Block-scoped, cannot be reassigned
+
+if (true) {
+    var x = 1;             // x escapes the block
+    let y = 2;             // y is confined to this block
+}
+console.log(x);            // 1
+console.log(y);            // ReferenceError
+\`\`\`
+
+### Seven Primitive Types
+
+JavaScript has seven primitive types (immutable, not objects) and one complex type (object). The \`typeof\` operator returns a string naming the type.
+
+\`\`\`javascript
+typeof "hello";             // "string"
+typeof 42;                  // "number"
+typeof true;                // "boolean"
+typeof null;                // "object" (historical quirk)
+typeof undefined;           // "undefined"
+typeof 100n;                // "bigint"
+typeof Symbol("id");        // "symbol"
+typeof {};                  // "object"
+\`\`\`
+
+### Type Coercion and Equality
+
+\`==\` performs type coercion before comparing; \`===\` compares both value and type without coercion. Prefer \`===\` to avoid unexpected conversions.
+
+\`\`\`javascript
+5 == "5";                   // true (string "5" coerced to number 5)
+5 === "5";                  // false (number vs string)
+0 == false;                 // true (false coerces to 0)
+0 === false;                // false
+null == undefined;          // true (special rule)
+null === undefined;         // false
+\`\`\`
+
+### Operators
+
+Arithmetic (\`+\`, \`-\`, \`*\`, \`/\`, \`%\`), comparison (\`===\`, \`!==\`, \`>\`, \`<\`, \`>=\`, \`<=\`), logical (\`&&\`, \`||\`, \`!\`), and assignment (\`=\`, \`+=\`, \`-=\`). The \`+\` operator is overloaded: it adds numbers and concatenates strings.
+
+\`\`\`javascript
+let sum = 10 + 5;           // 15
+let msg = "Hello, " + "World"; // "Hello, World"
+let truth = (10 > 5) && (3 < 8); // true
+let result = 2 ** 8;        // 256 (exponentiation, ES2016)
+\`\`\`
+
+### Strict Mode
+
+\`"use strict"\` enables a stricter variant of JavaScript that catches silent errors, prohibits certain syntax, and improves security. Place it at the top of a file or function.
+
+\`\`\`javascript
+"use strict";
+
+x = 3.14;                   // ReferenceError (x not declared)
+// Without strict mode, this would silently create a global variable
+\`\`\`
+
+## Wiring It Together
+
+A program that reads a user's name, applies a greeting based on the time of day, and logs the result — demonstrating variables, types, operators, and strict equality.
+
+\`\`\`javascript
+"use strict";
+
+function getGreeting(name) {
+    const hour = new Date().getHours();
+
+    if (hour < 12) {
+        return "Good morning, " + name;
+    } else if (hour < 18) {
+        return "Good afternoon, " + name;
+    } else {
+        return "Good evening, " + name;
+    }
+}
+
+const userName = "Alice";
+const message = getGreeting(userName);
+console.log(message);
+
+// Verify the types
+console.log(typeof message);       // "string"
+console.log(typeof getGreeting);   // "function"
+\`\`\`
+
+This ties variables (\`const\`), types (\`string\`, \`number\`), operators (comparison, concatenation), control flow (\`if\`), and strict mode into a complete, working script.
+`,
+            tags: ["javascript", "syntax", "variables", "data-types"],
+          },
+          {
+            id: "ns-js-control-flow",
+            title: "Control Flow & Functions",
+            shortDesc: "Conditionals, loops, function declarations vs expressions, arrow functions, and default parameters.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+            "if/else if/else evaluates conditions in order and executes the first true block; switch compares with strict equality",
+            "for loops use a counter; while loops check before each iteration; do/while checks after running once",
+            "forEach, map, filter, and reduce iterate over arrays with callback functions",
+            "Function declarations are hoisted; function expressions and arrow functions are not",
+            "Arrow functions inherit this from the enclosing scope and cannot be used as constructors",
+            "Default parameters (param = value) handle missing arguments without explicit undefined checks"
+          ],
+            content: `## What's This?
+
+Control flow and functions are the mechanisms that let your JavaScript code make decisions, repeat tasks, and organize logic into reusable units. Control flow statements like \`if\`, \`for\`, and \`switch\` determine which code blocks execute based on conditions. Functions package a sequence of statements under a name so you can call them from anywhere without duplicating code. They exist because programs would be unmanageable without conditional logic, loops, and modular organization — every nontrivial application needs these building blocks.
+
+## The Big Picture
+
+Control flow and functions form the backbone of every JavaScript application. Conditionals handle routing logic, input validation, and permissions. Loops process arrays, DOM node lists, and API response data. Functions encapsulate everything from event handlers to data transformations. The distinction between function declarations, function expressions, and arrow functions affects hoisting behavior and how \`this\` is bound. Mastering these fundamentals is essential before moving to DOM manipulation, async patterns, or any framework.
+
+## Core Ideas
+
+### Conditionals: if, else, switch
+
+\`if\` evaluates a boolean expression and executes the corresponding block. \`switch\` compares an expression to multiple cases using strict equality (\`===\`).
+
+\`\`\`javascript
+const score = 85;
+let grade;
+
+if (score >= 90) {
+    grade = "A";
+} else if (score >= 80) {
+    grade = "B";
+} else if (score >= 70) {
+    grade = "C";
+} else {
+    grade = "F";
+}
+
+// switch with strict comparison
+const day = 3;
+let dayName;
+switch (day) {
+    case 1: dayName = "Monday"; break;
+    case 2: dayName = "Tuesday"; break;
+    case 3: dayName = "Wednesday"; break;
+    default: dayName = "Unknown";
+}
+\`\`\`
+
+### Loops: for, while, do/while, forEach
+
+\`for\` uses a counter pattern. \`while\` checks a condition before each iteration. \`do/while\` runs at least once. Array methods like \`forEach\`, \`map\`, and \`filter\` provide functional iteration.
+
+\`\`\`javascript
+// Classic for loop
+for (let i = 0; i < 5; i++) {
+    console.log(i);          // 0, 1, 2, 3, 4
+}
+
+// While loop
+let count = 0;
+while (count < 5) {
+    console.log(count);      // 0, 1, 2, 3, 4
+    count++;
+}
+
+// forEach on an array
+const fruits = ["apple", "banana", "cherry"];
+fruits.forEach((fruit, index) => {
+    console.log(index + ": " + fruit);
+});
+
+// map creates a new transformed array
+const numbers = [1, 2, 3];
+const doubled = numbers.map(n => n * 2); // [2, 4, 6]
+\`\`\`
+
+### Function Declarations vs Expressions
+
+Function declarations are hoisted (callable before definition). Function expressions and arrow functions are not.
+
+\`\`\`javascript
+// Function declaration — hoisted
+console.log(add(2, 3));      // 5 (works!)
+function add(a, b) {
+    return a + b;
+}
+
+// Function expression — not hoisted
+// console.log(subtract(5, 2));  // ReferenceError
+const subtract = function(a, b) {
+    return a - b;
+};
+
+// Arrow function — not hoisted, inherits this
+const multiply = (a, b) => a * b;
+\`\`\`
+
+### Arrow Functions
+
+Arrow functions provide a concise syntax and lexically bind \`this\` (they inherit \`this\` from the enclosing scope rather than creating their own).
+
+\`\`\`javascript
+// Single parameter, single expression: no parens, no braces, implicit return
+const square = x => x * x;
+
+// Multiple parameters require parens
+const sum = (a, b) => a + b;
+
+// Multiple statements require braces and explicit return
+const greet = (name) => {
+    const prefix = "Hello";
+    return prefix + ", " + name;
+};
+\`\`\`
+
+### Default Parameters
+
+Default parameter values are used when the argument is \`undefined\` (or omitted). They are evaluated at call time, not definition time.
+
+\`\`\`javascript
+function greet(name = "Guest", greeting = "Hello") {
+    return greeting + ", " + name;
+}
+
+console.log(greet("Alice"));          // "Hello, Alice"
+console.log(greet());                 // "Hello, Guest"
+console.log(greet("Bob", "Hi"));      // "Hi, Bob"
+\`\`\`
+
+## Wiring It Together
+
+A function that processes an array of user objects, filters by age, maps to formatted strings, and joins them — demonstrating loops, conditionals, arrow functions, and default parameters.
+
+\`\`\`javascript
+const users = [
+    { name: "Alice", age: 25 },
+    { name: "Bob", age: 17 },
+    { name: "Charlie", age: 30 },
+    { name: "Diana", age: 16 },
+];
+
+function formatAdultUsers(userList, minAge = 18) {
+    const adults = userList.filter(user => user.age >= minAge);
+    const formatted = adults.map(user => user.name + " (" + user.age + ")");
+    return formatted.join(", ");
+}
+
+console.log(formatAdultUsers(users));
+// "Alice (25), Charlie (30)"
+
+console.log(formatAdultUsers(users, 21));
+// "Alice (25), Charlie (30)"
+\`\`\`
+
+This ties conditionals (\`filter\` callback), loops (\`map\` iterates), arrow functions, and default parameters into a realistic data-processing pipeline.
+`,
+            tags: ["javascript", "control-flow", "functions", "loops"],
+          },
+          {
+            id: "ns-js-dom",
+            title: "DOM Manipulation & Events",
+            shortDesc: "Selecting elements, modifying the DOM, event propagation (capture/bubble), and event delegation.",
+            difficulty: "foundational",
+            readTimeMin: 13,
+            keyPoints: [
+            "querySelector and querySelectorAll use CSS selectors to find elements in the DOM tree",
+            "innerHTML, textContent, setAttribute, and classList modify element content and appearance",
+            "createElement, appendChild, and removeChild dynamically add and remove DOM nodes",
+            "The event flow has three phases: capture (root to target), target, and bubble (target to root)",
+            "Event delegation attaches a single listener to a parent to handle events from many children using event.target",
+            "addEventListener attaches handlers; removeEventListener detaches them; event.preventDefault stops default behavior"
+          ],
+            content: `## What's This?
+
+The Document Object Model (DOM) is a programming interface that represents an HTML document as a tree of objects that JavaScript can manipulate. Think of it as a live map of the webpage: every HTML element is a node you can find, read, change, or delete. The DOM exists because static HTML is not enough for modern web applications — you need to dynamically update content, respond to user interactions, and create rich interfaces. JavaScript's DOM API is the bridge between your code and what the user sees and interacts with.
+
+## The Big Picture
+
+DOM manipulation is the foundation of client-side JavaScript. Every framework (React, Vue, Angular) ultimately manipulates the DOM — they just do it more efficiently than raw DOM calls. Understanding how to select elements, modify their content and attributes, create and remove nodes, and handle events is essential before using any library or framework. Event propagation (capture and bubble phases) explains why events behave the way they do, and event delegation enables performant handling of dynamic content.
+
+## Core Ideas
+
+### Selecting Elements
+
+\`querySelector\` returns the first matching element; \`querySelectorAll\` returns a static NodeList. Older methods like \`getElementById\` and \`getElementsByClassName\` still work but are less flexible.
+
+\`\`\`javascript
+const header = document.querySelector("h1");
+const buttons = document.querySelectorAll(".btn");
+const container = document.getElementById("app");
+const items = document.getElementsByClassName("item");
+\`\`\`
+
+### Modifying Content and Attributes
+
+\`textContent\` sets plain text (safe against XSS). \`innerHTML\` parses HTML (use carefully). \`setAttribute\` and \`classList\` modify attributes and classes.
+
+\`\`\`javascript
+const el = document.querySelector("#greeting");
+
+el.textContent = "Hello, World!";          // Safe text replacement
+el.innerHTML = "<strong>Hello</strong>";   // Parses HTML (XSS risk)
+el.setAttribute("data-id", "123");
+el.classList.add("active");                // Add a CSS class
+el.classList.remove("hidden");             // Remove a CSS class
+el.classList.toggle("visible");            // Toggle on/off
+\`\`\`
+
+### Creating and Removing Elements
+
+\`createElement\` makes a new element, \`appendChild\` and \`append\` add it to the tree, \`removeChild\` and \`remove\` delete it.
+
+\`\`\`javascript
+const list = document.querySelector("ul");
+
+const item = document.createElement("li");
+item.textContent = "New item";
+list.appendChild(item);                    // Add to end
+
+const first = document.createElement("li");
+first.textContent = "First item";
+list.prepend(first);                       // Add to beginning
+
+list.removeChild(item);                    // Remove specific child
+// Or: item.remove();                      // Modern direct removal
+\`\`\`
+
+### Event Propagation: Capture, Target, Bubble
+
+When an event fires on an element, it goes through three phases: capture (from document root down to the target), target (the element itself), and bubble (from the target back up to the root).
+
+\`\`\`javascript
+document.querySelector("div").addEventListener("click", () => {
+    console.log("div — bubble phase");
+});
+
+document.querySelector("div").addEventListener("click", () => {
+    console.log("div — capture phase");
+}, { capture: true });
+\`\`\`
+
+### Event Delegation
+
+Instead of attaching a listener to each child, attach one to the parent and use \`event.target\` to identify which child was clicked. This works for dynamically added elements.
+
+\`\`\`javascript
+document.querySelector("ul").addEventListener("click", (event) => {
+    if (event.target.tagName === "LI") {
+        console.log("Clicked:", event.target.textContent);
+    }
+});
+
+// Works even for LI elements added after this code runs
+\`\`\`
+
+## Wiring It Together
+
+A todo list that lets users add and remove items — demonstrating selecting, creating, modifying elements, and event delegation.
+
+\`\`\`javascript
+const list = document.querySelector("#todo-list");
+const input = document.querySelector("#new-todo");
+const addBtn = document.querySelector("#add-btn");
+
+function addTodo() {
+    const text = input.value.trim();
+    if (text === "") return;
+
+    const item = document.createElement("li");
+    item.textContent = text;
+    list.appendChild(item);
+    input.value = "";
+}
+
+// Event delegation: remove items on click
+list.addEventListener("click", (event) => {
+    if (event.target.tagName === "LI") {
+        event.target.remove();
+    }
+});
+
+addBtn.addEventListener("click", addTodo);
+input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") addTodo();
+});
+\`\`\`
+
+This ties selection (\`querySelector\`), creation (\`createElement\`), modification (\`textContent\`, \`appendChild\`), and event delegation into a complete interactive widget.
+`,
+            tags: ["javascript", "DOM", "events", "browser"],
+          },
+          {
+            id: "ns-js-es6",
+            title: "ES6+ Features",
+            shortDesc: "Destructuring, spread/rest, template literals, optional chaining, nullish coalescing, and modules.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+            "Destructuring unpacks arrays and objects into individual variables with a concise syntax",
+            "Spread (...) expands an iterable into individual elements; rest collects remaining elements into an array",
+            "Template literals use backticks and ${} interpolation for multi-line strings with embedded expressions",
+            "Optional chaining (?.) short-circuits to undefined if a reference is nullish instead of throwing",
+            "Nullish coalescing (??) returns the right operand only when the left is null or undefined (not falsy)",
+            "ES modules use export and import with static analysis for tree-shaking and better dependency management"
+          ],
+            content: `## What's This?
+
+ES6 (ECMAScript 2015) and subsequent yearly releases brought transformative changes to JavaScript — new syntax, new APIs, and new paradigms that make code more readable, concise, and less error-prone. These features are not just syntactic sugar; they change how you structure and think about code. Destructuring, spread/rest, template literals, optional chaining, and nullish coalescing eliminate entire categories of boilerplate and bugs. Modules bring proper encapsulation and dependency management to the language.
+
+## The Big Picture
+
+ES6+ features are the foundation of modern JavaScript. Every codebase — from vanilla JS to React, Vue, Node.js, and TypeScript — uses these features extensively. They replace older patterns: destructuring replaces manual property extraction, template literals replace string concatenation, arrow functions replace function expressions, and modules replace script tags with global variables. Mastering ES6+ is essential for reading and writing contemporary JavaScript code.
+
+## Core Ideas
+
+### Destructuring
+
+Destructuring extracts values from arrays or properties from objects into individual variables using a pattern that mirrors the structure.
+
+\`\`\`javascript
+// Array destructuring
+const [first, second, third] = [10, 20, 30];
+console.log(first);                      // 10
+
+// Object destructuring
+const user = { name: "Alice", age: 30 };
+const { name, age } = user;
+console.log(name);                       // "Alice"
+
+// Renaming and defaults
+const { name: userName, role = "user" } = user;
+console.log(userName);                   // "Alice"
+console.log(role);                       // "user"
+\`\`\`
+
+### Spread and Rest
+
+\`...\` serves two roles: spread (expands an iterable) and rest (collects remaining elements).
+
+\`\`\`javascript
+// Spread: expand array into elements
+const nums = [1, 2, 3];
+const combined = [...nums, 4, 5];        // [1, 2, 3, 4, 5]
+
+// Spread: merge objects (shallow)
+const base = { x: 1, y: 2 };
+const extended = { ...base, z: 3 };      // { x: 1, y: 2, z: 3 }
+
+// Rest: collect remaining parameters
+function sum(first, ...rest) {
+    return rest.reduce((acc, n) => acc + n, first);
+}
+console.log(sum(1, 2, 3, 4));            // 10
+
+// Rest: collect remaining properties
+const { name, ...details } = { name: "Alice", age: 30, role: "admin" };
+console.log(details);                    // { age: 30, role: "admin" }
+\`\`\`
+
+### Template Literals
+
+Template literals use backticks instead of quotes, support multi-line strings, and embed expressions with \`\${}\`.
+
+\`\`\`javascript
+const name = "Alice";
+const age = 30;
+
+// Expression interpolation
+const msg = \`Hello, \${name}! You are \${age} years old.\`;
+
+// Multi-line without concatenation
+const html = \`
+<div>
+    <h1>\${name}</h1>
+    <p>Age: \${age}</p>
+</div>
+\`;
+
+// Tagged templates (advanced)
+function highlight(strings, ...values) {
+    return strings.reduce((result, str, i) =>
+        result + str + (values[i] ? \`<mark>\${values[i]}</mark>\` : ""), "");
+}
+const highlighted = highlight\`User: \${name}, Age: \${age}\`;
+\`\`\`
+
+### Optional Chaining
+
+\`?.\` safely accesses nested properties without throwing if an intermediate value is \`null\` or \`undefined\`.
+
+\`\`\`javascript
+const user = { profile: { name: "Alice" } };
+
+// Without optional chaining
+const city = user && user.address && user.address.city;
+
+// With optional chaining
+const city2 = user?.address?.city;       // undefined (no error)
+
+// Also works for method calls and dynamic access
+const result = someObj?.someMethod?.();
+const value = obj?.[propName];
+\`\`\`
+
+### Nullish Coalescing
+
+\`??\` returns the right operand only when the left operand is \`null\` or \`undefined\` (unlike \`||\` which treats all falsy values the same).
+
+\`\`\`javascript
+const count = 0;
+const orResult = count || 10;            // 10 (0 is falsy)
+const nullishResult = count ?? 10;       // 0 (0 is not null/undefined)
+
+const name = "";
+const orName = name || "default";        // "default"
+const nullishName = name ?? "default";   // ""
+\`\`\`
+
+### ES Modules
+
+\`export\` and \`import\` provide native module syntax with static analysis.
+
+\`\`\`javascript
+// math.js
+export const PI = 3.14159;
+export function add(a, b) { return a + b; }
+export default class Calculator { ... }
+
+// app.js
+import Calculator, { PI, add } from "./math.js";
+import * as MathUtils from "./math.js";
+\`\`\`
+
+## Wiring It Together
+
+A function that takes a user object, extracts profile data, formats it with template literals, and safely handles missing fields.
+
+\`\`\`javascript
+function formatUserProfile(user) {
+    const { name = "Guest", age, preferences = {} } = user ?? {};
+    const theme = preferences.theme ?? "light";
+
+    return \`
+User Profile
+Name: \${name}
+Age: \${age ?? "Not specified"}
+Theme: \${theme}
+\`.trim();
+}
+
+console.log(formatUserProfile({
+    name: "Alice",
+    age: 30,
+    preferences: { theme: "dark" }
+}));
+// User Profile
+// Name: Alice
+// Age: 30
+// Theme: dark
+
+console.log(formatUserProfile({}));
+// User Profile
+// Name: Guest
+// Age: Not specified
+// Theme: light
+\`\`\`
+
+This ties destructuring, template literals, optional chaining, nullish coalescing, and default parameters into a single realistic pattern.
+`,
+            tags: ["javascript", "es6", "es2015", "modern-javascript"],
+          },
+          {
+            id: "ns-js-async",
+            title: "Asynchronous JavaScript",
+            shortDesc: "Callbacks, Promises, async/await, event loop, microtasks vs macrotasks, and error handling.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+            "JavaScript is single-threaded but non-blocking: the event loop handles asynchronous operations by queuing callbacks",
+            "Callbacks pass a function to execute when an async operation completes; callback hell arises from deeply nested callbacks",
+            "A Promise represents a future value with .then() for resolution and .catch() for rejection, enabling chaining",
+            "async/await is syntactic sugar over Promises that makes asynchronous code read like synchronous code",
+            "Microtasks (Promise.then, queueMicrotask) execute before macrotasks (setTimeout, setInterval, I/O) in each event loop tick",
+            "Always handle Promise rejections with try/catch in async functions or .catch() to prevent unhandled rejections"
+          ],
+            content: `## What's This?
+
+Asynchronous JavaScript is the set of patterns and language features that handle operations that take time — network requests, file I/O, timers, user interactions — without blocking the main thread. JavaScript is single-threaded (one thing at a time), but the event loop enables concurrency by queuing work and processing it in turns. Callbacks were the original pattern, Promises improved composability, and async/await made asynchronous code read like synchronous code. These tools exist because waiting for operations to complete would freeze the UI and create a terrible user experience.
+
+## The Big Picture
+
+Asynchronous programming is central to JavaScript. The browser environment (fetch, setTimeout, DOM events) and Node.js (file system, database queries, network) are fundamentally async. The event loop is the engine that orchestrates async execution. Understanding the difference between microtasks (Promise callbacks) and macrotasks (setTimeout, I/O) explains execution order. Error handling in async code requires deliberate patterns — unhandled Promise rejections are a common bug source.
+
+## Core Ideas
+
+### Callbacks
+
+A callback is a function passed as an argument to be invoked when an async operation completes. Nesting callbacks leads to "callback hell" — deeply indented, hard-to-read code.
+
+\`\`\`javascript
+function fetchData(callback) {
+    setTimeout(() => {
+        callback(null, { id: 1, name: "Alice" });
+    }, 1000);
+}
+
+fetchData((error, data) => {
+    if (error) {
+        console.error(error);
+        return;
+    }
+    console.log(data);
+});
+\`\`\`
+
+### Promises
+
+A Promise is an object representing the eventual completion (or failure) of an async operation. It has three states: pending, fulfilled, or rejected.
+
+\`\`\`javascript
+function fetchData() {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            const success = true;
+            if (success) {
+                resolve({ id: 1, name: "Alice" });
+            } else {
+                reject(new Error("Failed to fetch"));
+            }
+        }, 1000);
+    });
+}
+
+fetchData()
+    .then(data => console.log(data))
+    .catch(error => console.error(error))
+    .finally(() => console.log("Done"));
+
+// Promise chaining
+fetchData()
+    .then(data => data.name)
+    .then(name => name.toUpperCase())
+    .then(result => console.log(result))
+    .catch(error => console.error(error));
+\`\`\`
+
+### async/await
+
+\`async\` marks a function as asynchronous; \`await\` pauses execution until a Promise settles. Errors are caught with try/catch.
+
+\`\`\`javascript
+async function displayUser() {
+    try {
+        const data = await fetchData();
+        const upperName = data.name.toUpperCase();
+        console.log(upperName);
+    } catch (error) {
+        console.error("Error:", error.message);
+    } finally {
+        console.log("Operation complete");
+    }
+}
+
+displayUser();
+
+// Parallel execution with Promise.all
+async function fetchAll() {
+    const [user, posts, comments] = await Promise.all([
+        fetch("/api/user"),
+        fetch("/api/posts"),
+        fetch("/api/comments"),
+    ]);
+    return { user, posts, comments };
+}
+\`\`\`
+
+### The Event Loop
+
+The event loop continuously checks the call stack and task queues. Microtask queue (Promise callbacks, queueMicrotask) is processed before macrotask queue (setTimeout, setInterval, I/O callbacks) on each tick.
+
+\`\`\`javascript
+console.log("1: sync");
+
+setTimeout(() => console.log("2: macrotask"), 0);
+
+Promise.resolve().then(() => console.log("3: microtask"));
+
+console.log("4: sync");
+
+// Output: 1, 4, 3, 2
+\`\`\`
+
+### Error Handling Patterns
+
+Always handle Promise rejections. Unhandled rejections crash Node.js processes and create silent failures in browsers.
+
+\`\`\`javascript
+// Pattern 1: try/catch in async functions
+async function safeFetch(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error("Fetch failed:", error);
+        return null;
+    }
+}
+
+// Pattern 2: .catch() on Promise chain
+fetch("/api/data")
+    .then(res => res.json())
+    .catch(err => {
+        console.error(err);
+        return { fallback: true };
+    })
+    .then(data => console.log(data));
+\`\`\`
+
+## Wiring It Together
+
+A function that fetches user data and their posts in parallel, then formats the result.
+
+\`\`\`javascript
+async function getUserProfile(userId) {
+    try {
+        const [user, posts] = await Promise.all([
+            fetch(\`/api/users/\${userId}\`).then(r => r.json()),
+            fetch(\`/api/users/\${userId}/posts\`).then(r => r.json()),
+        ]);
+
+        return {
+            name: user.name,
+            email: user.email,
+            postCount: posts.length,
+            latestPost: posts[0]?.title ?? "No posts",
+        };
+    } catch (error) {
+        console.error("Failed to load profile:", error);
+        return null;
+    }
+}
+
+getUserProfile(1).then(profile => {
+    if (profile) {
+        console.log(\`\${profile.name} has \${profile.postCount} posts\`);
+    }
+});
+\`\`\`
+
+This ties Promises, async/await, parallel execution (\`Promise.all\`), optional chaining, and error handling into a realistic data-fetching pattern.
+`,
+            tags: ["javascript", "async", "promises", "event-loop"],
+          },
+          {
+            id: "ns-js-oop",
+            title: "Prototypes & Classes",
+            shortDesc: "Prototypal inheritance, class syntax, getters/setters, static methods, and private fields.",
+            difficulty: "intermediate",
+            readTimeMin: 13,
+            keyPoints: [
+            "JavaScript uses prototypal inheritance: every object has a hidden [[Prototype]] link to another object",
+            "The prototype chain resolves property access by walking up the chain until the property is found or null is reached",
+            "Class syntax is syntactic sugar over the prototype system — classes are still functions with a prototype property",
+            "Constructor methods initialize instances; super() calls the parent constructor in subclass constructors",
+            "Static methods belong to the class itself, not instances; they are called as ClassName.method()",
+            "Private fields (#) are truly private to the class and enforced by the JavaScript engine at runtime"
+          ],
+            content: `## What's This?
+
+Object-Oriented Programming (OOP) in JavaScript organizes code around objects that contain both data and behavior. Unlike class-based languages (Java, C++), JavaScript uses prototypal inheritance — objects inherit directly from other objects. The \`class\` syntax introduced in ES6 provides a familiar declarative form but still works through prototypes under the hood. OOP exists because organizing code into objects with inheritance, encapsulation, and polymorphism helps manage complexity as applications grow.
+
+## The Big Picture
+
+JavaScript's OOP model is unique: it combines prototypal inheritance with class syntax. Understanding prototypes is essential because every object, array, function, and DOM element uses prototypes. The class syntax makes OOP accessible to developers from other languages while integrating JavaScript-specific features like getters, setters, static methods, and private fields. Modern JavaScript uses a mix of OOP (classes for models, services, components) and functional programming.
+
+## Core Ideas
+
+### Prototypal Inheritance
+
+Every JavaScript object has an internal \`[[Prototype]]\` (accessible via \`Object.getPrototypeOf\`) that points to another object. When you access a property, JavaScript walks the chain.
+
+\`\`\`javascript
+const animal = { eats: true };
+const rabbit = { jumps: true };
+
+rabbit.__proto__ = animal;               // Set prototype (legacy)
+
+console.log(rabbit.jumps);               // true (own property)
+console.log(rabbit.eats);                // true (inherited from animal)
+console.log(rabbit.toString);            // inherited from Object.prototype
+\`\`\`
+
+### Class Syntax
+
+The \`class\` keyword creates a constructor function with a prototype. The \`constructor\` method runs when you call \`new\`.
+
+\`\`\`javascript
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+
+    speak() {
+        return \`\${this.name} makes a sound\`;
+    }
+}
+
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name);                     // Call parent constructor
+        this.breed = breed;
+    }
+
+    speak() {
+        return \`\${this.name} barks\`;     // Override parent method
+    }
+}
+
+const dog = new Dog("Rex", "Labrador");
+console.log(dog.speak());                // "Rex barks"
+console.log(dog instanceof Animal);      // true
+\`\`\`
+
+### Getters and Setters
+
+Getters (\`get\`) and setters (\`set\`) define computed properties that execute code on access and assignment.
+
+\`\`\`javascript
+class User {
+    constructor(first, last) {
+        this.firstName = first;
+        this.lastName = last;
+    }
+
+    get fullName() {
+        return \`\${this.firstName} \${this.lastName}\`;
+    }
+
+    set fullName(value) {
+        [this.firstName, this.lastName] = value.split(" ");
+    }
+}
+
+const user = new User("Alice", "Smith");
+console.log(user.fullName);              // "Alice Smith"
+user.fullName = "Bob Jones";
+console.log(user.firstName);             // "Bob"
+\`\`\`
+
+### Static Methods
+
+\`static\` methods are called on the class, not instances. They are typically used for utility functions, factory methods, or singleton access.
+
+\`\`\`javascript
+class MathUtils {
+    static add(a, b) {
+        return a + b;
+    }
+
+    static createDefault() {
+        return new MathUtils(0, 0);
+    }
+}
+
+console.log(MathUtils.add(5, 3));        // 8
+// const mu = new MathUtils();
+// mu.add(5, 3);                         // TypeError (not a function)
+\`\`\`
+
+### Private Fields
+
+Private fields (prefixed with \`#\`) are truly private to the class — they cannot be accessed from outside the class, even by subclasses.
+
+\`\`\`javascript
+class BankAccount {
+    #balance = 0;                        // Private field
+
+    deposit(amount) {
+        if (amount > 0) this.#balance += amount;
+    }
+
+    withdraw(amount) {
+        if (amount <= this.#balance) {
+            this.#balance -= amount;
+            return amount;
+        }
+        return 0;
+    }
+
+    getBalance() {
+        return this.#balance;
+    }
+}
+
+const account = new BankAccount();
+account.deposit(100);
+console.log(account.getBalance());       // 100
+// console.log(account.#balance);        // SyntaxError
+\`\`\`
+
+## Wiring It Together
+
+A class hierarchy modeling a library system with private fields, inheritance, and static methods.
+
+\`\`\`javascript
+class Item {
+    #id;
+    static #nextId = 1;
+
+    constructor(title) {
+        this.title = title;
+        this.#id = Item.#nextId++;
+    }
+
+    getId() { return this.#id; }
+    getType() { return "Item"; }
+}
+
+class Book extends Item {
+    constructor(title, author, pages) {
+        super(title);
+        this.author = author;
+        this.pages = pages;
+    }
+
+    getType() { return "Book"; }
+    getSummary() {
+        return \`"\${this.title}" by \${this.author}, \${this.pages} pages\`;
+    }
+}
+
+class DVD extends Item {
+    constructor(title, director, duration) {
+        super(title);
+        this.director = director;
+        this.duration = duration;
+    }
+
+    getType() { return "DVD"; }
+}
+
+const items = [
+    new Book("1984", "George Orwell", 328),
+    new DVD("Inception", "Christopher Nolan", 148),
+];
+
+items.forEach(item => {
+    console.log(\`[\${item.getType()}] \${item.title}\`);
+});
+\`\`\`
+
+This ties class syntax, inheritance (\`extends\`, \`super\`), private fields (\`#\`), static members, and method overriding into a realistic OOP design.
+`,
+            tags: ["javascript", "oop", "prototypes", "classes"],
+          },
+          {
+            id: "ns-js-modules",
+            title: "Modules & Bundlers",
+            shortDesc: "ESM vs CommonJS, dynamic imports, tree-shaking, and bundlers (Vite, Webpack, esbuild).",
+            difficulty: "intermediate",
+            readTimeMin: 13,
+            keyPoints: [
+            "ES Modules (ESM) use import/export with static analysis; CommonJS uses require()/module.exports and is synchronous",
+            "ESM supports tree-shaking: bundlers statically analyze imports to eliminate unused exports from the final bundle",
+            "Dynamic import() returns a Promise and enables code-splitting — loading modules on demand instead of eagerly",
+            "Webpack is the most mature bundler with extensive plugin ecosystem; Vite offers near-instant HMR via native ESM in dev",
+            "esbuild is an extremely fast bundler written in Go, used internally by Vite and many other tools",
+            "Bundlers convert the module graph into optimized bundles by resolving imports, transpiling, minifying, and code-splitting"
+          ],
+            content: `## What's This?
+
+Modules are a way to split JavaScript code into separate files, each with its own scope, that can explicitly declare what they export and import. Before modules, JavaScript relied on global variables and script tag ordering — fragile and hard to maintain. CommonJS (Node.js) and ES Modules (ESM, the standard) provide proper encapsulation. Bundlers like Webpack, Vite, and esbuild take modules and combine them into optimized files for production. They exist because shipping hundreds of separate module files is inefficient — bundlers merge, minify, and transform code for the browser.
+
+## The Big Picture
+
+The JavaScript module ecosystem has two dominant systems: CommonJS (Node.js, \`require()\`) and ESM (browsers and modern Node.js, \`import\`/ \`export\`). ESM is the official standard and supports static analysis, enabling tree-shaking. Bundlers are essential for production: they resolve the module graph, apply transformations (TypeScript, JSX), optimize output (minification, code-splitting), and produce browser-ready bundles. Vite has emerged as the preferred dev tool with instant hot module replacement (HMR), while Webpack remains widely used in enterprise.
+
+## Core Ideas
+
+### ES Modules (ESM)
+
+\`export\` declares what a module exposes; \`import\` consumes exports. Static analysis means imports are resolved at parse time, enabling optimizations.
+
+\`\`\`javascript
+// utils.js
+export const PI = 3.14159;
+export function add(a, b) { return a + b; }
+export default function greet(name) {
+    return "Hello, " + name;
+}
+
+// app.js
+import greet, { PI, add } from "./utils.js";
+import * as Utils from "./utils.js";
+\`\`\`
+
+### CommonJS
+
+CommonJS uses \`module.exports\` and \`require()\`. It is synchronous and resolves at runtime, which means it cannot support tree-shaking statically.
+
+\`\`\`javascript
+// utils.js
+const PI = 3.14159;
+function add(a, b) { return a + b; }
+module.exports = { PI, add };
+
+// app.js
+const { PI, add } = require("./utils");
+\`\`\`
+
+### Dynamic Imports
+
+\`import()\` (called "dynamic import") loads a module on demand, returning a Promise. This enables code-splitting — loading code only when needed.
+
+\`\`\`javascript
+// Lazy load a heavy module only when the user clicks
+button.addEventListener("click", async () => {
+    try {
+        const module = await import("./heavy-module.js");
+        module.run();
+    } catch (error) {
+        console.error("Failed to load module:", error);
+    }
+});
+\`\`\`
+
+### Bundlers
+
+Bundlers process the module graph and produce optimized output.
+
+\`\`\`javascript
+// webpack.config.js
+module.exports = {
+    entry: "./src/index.js",
+    output: {
+        filename: "bundle.[contenthash].js",
+        path: "./dist",
+    },
+    module: {
+        rules: [
+            { test: /\.js$/, use: "babel-loader" },
+        ],
+    },
+    optimization: {
+        splitChunks: { chunks: "all" },  // Code splitting
+    },
+};
+\`\`\`
+
+### Tree-Shaking
+
+Tree-shaking removes unused exports from the final bundle. It works because ESM has static structure — the bundler can determine which exports are used at build time.
+
+\`\`\`javascript
+// math.js
+export const add = (a, b) => a + b;
+export const subtract = (a, b) => a - b;
+export const multiply = (a, b) => a * b;  // Never imported → removed
+
+// app.js — only add is imported
+import { add } from "./math.js";
+// subtract and multiply are tree-shaken away
+\`\`\`
+
+### Tool Comparison
+
+Webpack: most mature, massive ecosystem, complex configuration. Vite: fast dev server with native ESM, simple config, uses Rollup for production builds. esbuild: written in Go, 10-100x faster than JS-based bundlers, used internally by Vite.
+
+\`\`\`bash
+# Vite project (recommended for new projects)
+npm create vite@latest my-app -- --template react
+cd my-app && npm run dev
+
+# esbuild (for targeted bundling)
+npx esbuild src/index.js --bundle --outfile=dist/bundle.js --minify
+\`\`\`
+
+## Wiring It Together
+
+A module structure for a small app with lazy-loaded admin functionality.
+
+\`\`\`javascript
+// src/api.js
+export async function fetchUsers() {
+    const res = await fetch("/api/users");
+    return res.json();
+}
+
+// src/main.js
+import { fetchUsers } from "./api.js";
+
+document.getElementById("admin-btn").addEventListener("click", async () => {
+    const { showAdminPanel } = await import("./admin.js");
+    showAdminPanel();
+});
+
+// src/admin.js — loaded on demand
+export function showAdminPanel() {
+    console.log("Admin panel loaded");
+}
+\`\`\`
+
+This ties ESM exports/imports, dynamic imports (code-splitting), and async module loading into a realistic application architecture.
+`,
+            tags: ["javascript", "modules", "bundlers", "build-tools"],
+          },
+          {
+            id: "ns-js-browser-apis",
+            title: "Browser APIs",
+            shortDesc: "Fetch, localStorage, WebSocket, Service Workers, Canvas, and Web Animations API.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+            "The Fetch API provides a modern Promise-based interface for HTTP requests, replacing XMLHttpRequest",
+            "localStorage persists key-value data across sessions with up to 5-10 MB of storage per origin",
+            "WebSocket enables full-duplex real-time communication over a single TCP connection for live features",
+            "Service Workers act as programmable network proxies that enable offline support, caching, and push notifications",
+            "The Canvas API provides pixel-level 2D drawing via a rendering context with paths, shapes, and images",
+            "The Web Animations API offers performant, composable animations directly in JavaScript without CSS or libraries"
+          ],
+            content: `## What's This?
+
+Browser APIs are built-in interfaces that web browsers provide to JavaScript, enabling code to interact with the browser and the user's environment. They cover everything from network requests (Fetch), data storage (localStorage), real-time communication (WebSocket), offline capabilities (Service Workers), graphics (Canvas), and animations (Web Animations API). These APIs exist because web applications need to do more than display static content — they need to communicate with servers, store data locally, respond in real time, and create rich visual experiences without plugins.
+
+## The Big Picture
+
+Browser APIs form the capability layer of web development. Every modern web application uses multiple browser APIs. Fetch replaces XMLHttpRequest for networking. localStorage provides simple key-value persistence. WebSocket powers real-time features (chat, live updates, collaborative editing). Service Workers enable Progressive Web Apps (PWAs) with offline support and push notifications. Canvas powers games, data visualization, and image processing. Together, these APIs make the browser a full-fledged application platform.
+
+## Core Ideas
+
+### Fetch API
+
+The Fetch API makes HTTP requests and returns Promises. It supports all HTTP methods, custom headers, and request/response streaming.
+
+\`\`\`javascript
+// GET request
+async function getUser(id) {
+    const response = await fetch(\`/api/users/\${id}\`);
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    return response.json();
+}
+
+// POST request with JSON body
+async function createUser(data) {
+    const response = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+    });
+    return response.json();
+}
+\`\`\`
+
+### localStorage and sessionStorage
+
+\`localStorage\` persists until explicitly cleared; \`sessionStorage\` clears when the tab closes. Both store strings only — use \`JSON.stringify\` and \`JSON.parse\` for structured data.
+
+\`\`\`javascript
+// Save structured data
+const user = { id: 1, name: "Alice", theme: "dark" };
+localStorage.setItem("user", JSON.stringify(user));
+
+// Read it back
+const saved = JSON.parse(localStorage.getItem("user") || "null");
+console.log(saved?.name);                // "Alice"
+
+// Remove
+localStorage.removeItem("user");
+localStorage.clear();                    // Remove all keys
+\`\`\`
+
+### WebSocket
+
+WebSocket establishes a persistent bidirectional connection. Messages are sent and received as events.
+
+\`\`\`javascript
+const socket = new WebSocket("wss://example.com/chat");
+
+socket.addEventListener("open", () => {
+    socket.send(JSON.stringify({ type: "join", room: "general" }));
+});
+
+socket.addEventListener("message", (event) => {
+    const data = JSON.parse(event.data);
+    console.log("Received:", data);
+});
+
+socket.addEventListener("close", () => {
+    console.log("Disconnected");
+});
+\`\`\`
+
+### Service Workers
+
+A Service Worker is a script that runs in the background, separate from the webpage. It intercepts network requests and enables offline functionality.
+
+\`\`\`javascript
+// sw.js (registered from the page)
+self.addEventListener("install", (event) => {
+    event.waitUntil(
+        caches.open("v1").then((cache) => {
+            return cache.addAll(["/", "/index.html", "/app.js"]);
+        })
+    );
+});
+
+self.addEventListener("fetch", (event) => {
+    event.respondWith(
+        caches.match(event.request).then((cached) => {
+            return cached || fetch(event.request);
+        })
+    );
+});
+
+// Registration from the page
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js");
+}
+\`\`\`
+
+### Canvas API
+
+The Canvas API provides a 2D drawing context on an HTML \`<canvas>\` element.
+
+\`\`\`javascript
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+
+// Draw a filled rectangle
+ctx.fillStyle = "blue";
+ctx.fillRect(10, 10, 100, 50);
+
+// Draw a circle
+ctx.beginPath();
+ctx.arc(200, 100, 40, 0, Math.PI * 2);
+ctx.fillStyle = "red";
+ctx.fill();
+
+// Draw text
+ctx.font = "20px Arial";
+ctx.fillStyle = "black";
+ctx.fillText("Hello Canvas", 10, 200);
+\`\`\`
+
+### Web Animations API
+
+The Web Animations API provides performant animations directly in JavaScript, composited by the browser on a separate thread.
+
+\`\`\`javascript
+const element = document.querySelector(".box");
+
+const animation = element.animate([
+    { transform: "translateX(0)", opacity: 1 },
+    { transform: "translateX(200px)", opacity: 0.5 },
+    { transform: "translateX(0)", opacity: 1 },
+], {
+    duration: 1000,
+    iterations: Infinity,
+    easing: "ease-in-out",
+});
+
+// Control: pause, play, reverse, cancel
+// animation.pause();
+// animation.play();
+\`\`\`
+
+## Wiring It Together
+
+A component that fetches user data, caches it in localStorage, displays it, and handles offline gracefully.
+
+\`\`\`javascript
+async function loadUserProfile(userId) {
+    const cacheKey = \`user_\${userId}\`;
+
+    // Try fetching fresh data
+    try {
+        const response = await fetch(\`/api/users/\${userId}\`);
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem(cacheKey, JSON.stringify({
+                data,
+                timestamp: Date.now(),
+            }));
+            return data;
+        }
+    } catch (error) {
+        console.log("Network unavailable, using cache");
+    }
+
+    // Fallback to cached data
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+        const { data } = JSON.parse(cached);
+        return data;
+    }
+
+    return null;
+}
+
+loadUserProfile(1).then(user => {
+    if (user) {
+        document.getElementById("profile").textContent =
+            \`Name: \${user.name}, Email: \${user.email}\`;
+    } else {
+        document.getElementById("profile").textContent =
+            "User not available offline";
+    }
+});
+\`\`\`
+
+This ties Fetch API, localStorage, error handling (offline fallback), and DOM manipulation into a realistic Progressive Web App pattern.
+`,
+            tags: ["javascript", "browser-apis", "web-apis", "client-side"],
+          },
+          {
+            id: "ns-js-frameworks",
+            title: "Frontend Frameworks (React, Vue, Angular)",
+            shortDesc: "Component model, reactivity, state management, routing, and when to choose which.",
+            difficulty: "advanced",
+            readTimeMin: 15,
+            keyPoints: [
+            "All three frameworks use a component model: reusable, self-contained units of UI with their own state and lifecycle",
+            "React uses a virtual DOM with one-way data flow and explicit state updates via useState/useReducer hooks",
+            "Vue provides a reactive data system with mutable state in a setup() function or Options API, plus a template compiler",
+            "Angular is a full-featured framework with TypeScript, dependency injection, RxJS, and a strong opinion on architecture",
+            "State management solutions (Redux, Pinia, NgRx) centralize shared state outside individual components",
+            "Choose React for ecosystem size and flexibility, Vue for simplicity and gentle learning curve, Angular for enterprise-scale teams"
+          ],
+            content: `## What's This?
+
+Frontend frameworks are libraries that provide a structured way to build user interfaces for web applications. Instead of manually manipulating the DOM with vanilla JavaScript, frameworks offer a component model — reusable pieces of UI with their own state, lifecycle, and rendering logic. React, Vue, and Angular are the three dominant frameworks. They exist because building complex UIs with direct DOM manipulation is error-prone, hard to maintain, and doesn't scale beyond simple pages. Frameworks enforce patterns that make code predictable, testable, and maintainable.
+
+## The Big Picture
+
+Choosing a framework is a major architectural decision. All three share core concepts: components, reactivity, state management, and routing. React is the most popular with the largest ecosystem — it is a library (not a full framework) focused on the view layer. Vue offers a gentler learning curve with a balance of flexibility and convention. Angular is a complete platform with strong opinions, TypeScript-first design, and enterprise features built in. Understanding the component model, reactivity paradigm, and state management approach of each helps you choose the right tool.
+
+## Core Ideas
+
+### Component Model
+
+Components are the building blocks of every framework. Each component encapsulates HTML (template), JavaScript (logic), and CSS (styling).
+
+\`\`\`javascript
+// React component (JSX)
+function Greeting({ name }) {
+    const [count, setCount] = React.useState(0);
+    return (
+        <div>
+            <h1>Hello, {name}</h1>
+            <p>Count: {count}</p>
+            <button onClick={() => setCount(c => c + 1)}>+</button>
+        </div>
+    );
+}
+
+// Vue component (Single-File Component)
+// <template>
+//   <div>
+//     <h1>Hello, {{ name }}</h1>
+//     <p>Count: {{ count }}</p>
+//     <button @click="count++">+</button>
+//   </div>
+// </template>
+// <script setup>
+// defineProps(['name'])
+// const count = ref(0)
+// </script>
+
+// Angular component (TypeScript + Decorator)
+// @Component({
+//   selector: 'app-greeting',
+//   template: \`
+//     <h1>Hello, {{ name }}</h1>
+//     <p>Count: {{ count }}</p>
+//     <button (click)="increment()">+</button>
+//   \`
+// })
+// export class GreetingComponent {
+//   @Input() name!: string;
+//   count = 0;
+//   increment() { this.count++; }
+// }
+\`\`\`
+
+### Reactivity
+
+How the framework detects changes and updates the DOM.
+
+\`\`\`javascript
+// React: explicit state updates trigger re-render
+const [state, setState] = React.useState({ count: 0 });
+setState(prev => ({ count: prev.count + 1 }));
+
+// Vue: reactive proxy — mutations are automatically tracked
+const state = reactive({ count: 0 });
+state.count++; // Automatically triggers re-render
+
+// Angular: zone.js patches async APIs and triggers change detection
+// OnPush strategy: manual change detection for performance
+\`\`\`
+
+### State Management
+
+For complex state shared across many components, dedicated state management libraries provide structure.
+
+\`\`\`javascript
+// React: Zustand (lightweight alternative to Redux)
+import { create } from "zustand";
+const useStore = create(set => ({
+    count: 0,
+    increment: () => set(s => ({ count: s.count + 1 })),
+}));
+
+// Vue: Pinia (official Vue state management)
+// export const useCounterStore = defineStore('counter', {
+//   state: () => ({ count: 0 }),
+//   actions: { increment() { this.count++ } },
+// });
+
+// Angular: NgRx (Redux-inspired with RxJS)
+// Actions, Reducers, Effects, Selectors pattern
+\`\`\`
+
+### When to Choose
+
+React: largest ecosystem, most job opportunities, great for SPAs and cross-platform (React Native). Best when you need maximum flexibility and community support. Vue: easiest to learn, excellent documentation, great for teams transitioning from jQuery or server-rendered apps. Angular: best for large enterprise applications with many developers, strong typing, and opinionated architecture.
+
+## Wiring It Together
+
+The same counter component in all three frameworks, demonstrating the component model and reactivity.
+
+\`\`\`javascript
+// React
+function Counter() {
+    const [count, setCount] = React.useState(0);
+    return (
+        <div>
+            <p>{count}</p>
+            <button onClick={() => setCount(c => c + 1)}>+</button>
+        </div>
+    );
+}
+
+// Vue (setup script)
+// <script setup>
+// const count = ref(0)
+// </script>
+// <template>
+//   <div>
+//     <p>{{ count }}</p>
+//     <button @click="count++">+</button>
+//   </div>
+// </template>
+
+// Angular
+// @Component({ template: \`
+//   <div>
+//     <p>{{ count }}</p>
+//     <button (click)="increment()">+</button>
+//   </div>
+// \`})
+// export class CounterComponent {
+//   count = 0;
+//   increment() { this.count++; }
+// }
+\`\`\`
+
+Each framework achieves the same result with different philosophies: React uses explicit JavaScript state and JSX; Vue uses reactive proxies and templates; Angular uses class-based components with decorators.
+`,
+            tags: ["javascript", "react", "vue", "angular", "frameworks"],
+          },
+          {
+            id: "ns-js-node",
+            title: "Node.js & Runtimes",
+            shortDesc: "CommonJS vs ESM, fs/http modules, npm/yarn/pnpm, Express, and an overview of Deno/Bun.",
+            difficulty: "advanced",
+            readTimeMin: 14,
+            keyPoints: [
+            "Node.js is a JavaScript runtime built on Chrome's V8 engine, enabling server-side JavaScript with file system and network access",
+            "Node.js uses an event-driven, non-blocking I/O model — most operations accept callbacks or return Promises",
+            "The fs module provides file system operations (read, write, delete, watch) with sync, callback, and Promise variants",
+            "The http module creates servers and makes HTTP requests without external dependencies",
+            "Express is the most popular web framework for Node.js, providing routing, middleware, and request/response handling",
+            "Deno and Bun are modern alternatives: Deno has built-in TypeScript and security, Bun focuses on raw speed with integrated bundler"
+          ],
+            content: `## What's This?
+
+Node.js is a JavaScript runtime that executes JavaScript outside the browser, primarily on servers. Built on Chrome's V8 engine, it provides APIs for file system access, networking, process management, and more — things that browsers restrict for security reasons. Node.js exists because JavaScript was trapped in the browser; developers wanted to use the same language on the server, enabling full-stack development with a single language. Its event-driven, non-blocking architecture makes it efficient for I/O-heavy applications like web servers, APIs, and real-time services.
+
+## The Big Picture
+
+Node.js revolutionized server-side development by bringing JavaScript to the backend. Its package ecosystem (npm) is the largest software registry in the world. The runtime has two module systems: CommonJS (legacy, \`require\`) and ESM (modern, \`import\`). Key built-in modules include \`fs\` (file system), \`http\` (HTTP server/client), \`path\` (path manipulation), and \`process\` (environment and process control). Express remains the most popular framework, while Deno and Bun are modern competitors offering TypeScript support and improved performance.
+
+## Core Ideas
+
+### CommonJS vs ESM in Node.js
+
+Node.js supports both module systems. \`require()\` is synchronous and CommonJS. \`import\` is asynchronous and ESM. Use \`"type": "module"\` in \`package.json\` to default to ESM.
+
+\`\`\`javascript
+// CommonJS (default in Node.js without "type": "module")
+const fs = require("fs");
+const path = require("path");
+
+// ES Modules (with "type": "module" in package.json)
+import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
+\`\`\`
+
+### File System (fs module)
+
+The \`fs\` module provides file operations with three API styles: synchronous, callback, and Promise.
+
+\`\`\`javascript
+import fs from "fs/promises";
+
+// Read a file
+const data = await fs.readFile("./data.json", "utf-8");
+const parsed = JSON.parse(data);
+
+// Write a file
+await fs.writeFile("./output.txt", "Hello, World!", "utf-8");
+
+// List directory contents
+const files = await fs.readdir("./src");
+console.log(files);
+
+// Watch for changes
+const watcher = fs.watch("./src", (event, filename) => {
+    console.log(\`\${filename}: \${event}\`);
+});
+\`\`\`
+
+### HTTP Module
+
+The \`http\` module creates servers and makes requests without external dependencies.
+
+\`\`\`javascript
+import http from "http";
+
+// Create a simple server
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ message: "Hello, World!" }));
+});
+
+server.listen(3000, () => {
+    console.log("Server running on http://localhost:3000");
+});
+
+// Make an HTTP request
+const data = await fetch("http://localhost:3000").then(r => r.json());
+\`\`\`
+
+### Express Framework
+
+Express provides a clean API for routing, middleware, and request handling. It is the most widely used Node.js web framework.
+
+\`\`\`javascript
+import express from "express";
+
+const app = express();
+app.use(express.json());                 // Parse JSON bodies
+
+// Route definitions
+app.get("/api/users", async (req, res) => {
+    const users = await db.findMany();
+    res.json(users);
+});
+
+app.post("/api/users", async (req, res) => {
+    const user = await db.create(req.body);
+    res.status(201).json(user);
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+});
+
+app.listen(3000);
+\`\`\`
+
+### Package Managers
+
+npm (Node Package Manager) comes with Node.js. Yarn and pnpm are alternatives that offer faster installs and stricter dependency management.
+
+\`\`\`bash
+# npm (default)
+npm init -y
+npm install express
+npm run dev
+
+# pnpm (faster, disk-efficient)
+pnpm init
+pnpm add express
+pnpm run dev
+\`\`\`
+
+### Deno and Bun
+
+Deno (created by Node.js's original author) has built-in TypeScript, URL-based imports, and a security-first permission system. Bun is a new runtime focused on speed — it bundles, transpiles, runs, and packages JavaScript, and is designed as a drop-in Node.js replacement.
+
+\`\`\`bash
+# Deno — run TypeScript directly, no config needed
+deno run --allow-net server.ts
+
+# Bun — fast runtime with integrated bundler
+bun run server.ts
+bun run build
+\`\`\`
+
+## Wiring It Together
+
+A REST API server with Express that reads and writes data to a JSON file — demonstrating the fs module, Express routing, and async/await.
+
+\`\`\`javascript
+import express from "express";
+import fs from "fs/promises";
+import path from "path";
+
+const app = express();
+const DATA_FILE = path.join(process.cwd(), "data.json");
+app.use(express.json());
+
+async function readData() {
+    try {
+        const raw = await fs.readFile(DATA_FILE, "utf-8");
+        return JSON.parse(raw);
+    } catch {
+        return [];
+    }
+}
+
+app.get("/api/items", async (req, res) => {
+    const items = await readData();
+    res.json(items);
+});
+
+app.post("/api/items", async (req, res) => {
+    const items = await readData();
+    const item = { id: Date.now(), ...req.body };
+    items.push(item);
+    await fs.writeFile(DATA_FILE, JSON.stringify(items, null, 2));
+    res.status(201).json(item);
+});
+
+app.listen(3000, () => console.log("API running on :3000"));
+\`\`\`
+
+This ties Node.js module system, fs/promises, Express routing, JSON handling, and async error handling into a complete working API.
+`,
+            tags: ["javascript", "nodejs", "server-side", "runtimes"],
+          },
+          {
+            id: "ns-js-meta-frameworks",
+            title: "Meta-Frameworks (Next.js, Nuxt)",
+            shortDesc: "SSR, SSG, ISR, file-based routing, server actions, and when to use a meta-framework over vanilla SPA.",
+            difficulty: "advanced",
+            readTimeMin: 14,
+            keyPoints: [
+            "Meta-frameworks build on top of frontend frameworks (Next.js on React, Nuxt on Vue) adding server-side rendering, routing, and build optimizations",
+            "SSR (Server-Side Rendering) generates HTML on each request for dynamic content and SEO; SSG (Static Site Generation) pre-builds HTML at build time",
+            "ISR (Incremental Static Regeneration) re-builds specific pages in the background after deployment without a full rebuild",
+            "File-based routing maps the filesystem directly to URL paths — app/page.tsx becomes /page, app/blog/[id]/page.tsx becomes /blog/:id",
+            "Server Actions (Next.js 13+) let you call server-side functions directly from client components without creating API endpoints",
+            "Choose a meta-framework when you need SEO, fast initial page loads (SSR/SSG), or a full-featured framework with routing and data fetching built in"
+          ],
+            content: `## What's This?
+
+Meta-frameworks are opinionated frameworks built on top of frontend frameworks (React, Vue) that add server-side rendering, file-based routing, data fetching strategies, and build optimizations. Next.js (for React) and Nuxt (for Vue) are the primary examples. They exist because single-page applications (SPAs) have limitations: poor SEO (content is rendered in JavaScript), slow initial load (you download and execute the entire app before seeing anything), and complex setup (you need to configure routing, bundling, code-splitting manually). Meta-frameworks solve these problems out of the box.
+
+## The Big Picture
+
+Next.js has become the de facto standard for React applications. It provides multiple rendering strategies: SSR (dynamic content, good SEO), SSG (static content, fastest performance), and ISR (hybrid — static with periodic updates). File-based routing in the \`app\` directory replaces React Router. Server Actions eliminate the need for separate API routes for form submissions and data mutations. Nuxt brings equivalent capabilities to Vue with a similar developer experience. Understanding when to use SSG vs SSR vs ISR is key to building performant web applications.
+
+## Core Ideas
+
+### Rendering Strategies
+
+SSR: Server generates HTML on each request — use for personalized, dynamic content (dashboards, user profiles). SSG: HTML is generated at build time — use for blogs, docs, marketing pages (fastest, can be served from CDN). ISR: SSG with periodic revalidation — best of both worlds for content that changes occasionally.
+
+\`\`\`javascript
+// Next.js App Router examples
+
+// SSR — dynamic, rendered per request (default without generateStaticParams)
+export default async function Profile({ params }) {
+    const user = await fetch(\`/api/users/\${params.id}\`).then(r => r.json());
+    return <h1>{user.name}</h1>;
+}
+
+// SSG — generated at build time
+export async function generateStaticParams() {
+    const posts = await fetch("/api/posts").then(r => r.json());
+    return posts.map(post => ({ id: post.id.toString() }));
+}
+
+export default async function Post({ params }) {
+    const post = await fetch(\`/api/posts/\${params.id}\`).then(r => r.json());
+    return <article>{post.title}</article>;
+}
+
+// ISR — static but revalidates
+export default async function Page() {
+    const data = await fetch("https://api.example.com/data", {
+        next: { revalidate: 60 }, // Revalidate every 60 seconds
+    }).then(r => r.json());
+    return <div>{data.content}</div>;
+}
+\`\`\`
+
+### File-Based Routing
+
+The filesystem defines the URL structure. Folders are route segments; files are route handlers.
+
+\`\`\`
+app/
+  page.js              →  / (homepage)
+  about/page.js        →  /about
+  blog/[id]/page.js    →  /blog/123
+  api/users/route.js   →  /api/users (API endpoint)
+\`\`\`
+
+### Server Actions
+
+Server Actions allow calling server-side code directly from client components, handling form submissions and data mutations without building API routes.
+
+\`\`\`javascript
+// app/actions.js  ("use server")
+export async function createUser(formData) {
+    const name = formData.get("name");
+    const email = formData.get("email");
+
+    // This code runs on the server
+    const db = await connectDB();
+    const user = await db.users.create({ name, email });
+
+    return { success: true, id: user.id };
+}
+
+// app/page.js (client component importing server action)
+import { createUser } from "./actions";
+
+export default function Page() {
+    return (
+        <form action={createUser}>
+            <input name="name" required />
+            <input name="email" type="email" required />
+            <button type="submit">Create User</button>
+        </form>
+    );
+}
+\`\`\`
+
+### When to Use a Meta-Framework
+
+Use a meta-framework when you need SEO (content must be indexed by search engines), fast initial page loads (first contentful paint under 1 second), complex routing (nested layouts, parallel routes), or data fetching at the server level (database access, API aggregation). For a simple admin dashboard behind authentication that does not need SEO, a vanilla SPA (Create React App, Vite) is simpler and sufficient.
+
+## Wiring It Together
+
+A Next.js blog with SSG for the post list, SSR for individual posts, and a server action for comments.
+
+\`\`\`javascript
+// app/posts/page.js — SSG (static list)
+export default async function PostList() {
+    const posts = await fetch("https://api.example.com/posts", {
+        next: { revalidate: 300 } // ISR: refresh every 5 min
+    }).then(r => r.json());
+
+    return (
+        <ul>
+            {posts.map(post => (
+                <li key={post.id}>
+                    <a href={\`/posts/\${post.id}\`}>{post.title}</a>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+// app/posts/[id]/page.js — SSR (dynamic per post)
+export default async function PostPage({ params }) {
+    const post = await fetch(\`https://api.example.com/posts/\${params.id}\`)
+        .then(r => r.json());
+    return <article>{post.content}</article>;
+}
+
+// app/posts/[id]/actions.js — Server Action for comments
+"use server";
+export async function addComment(postId, formData) {
+    const text = formData.get("text");
+    await saveComment({ postId, text });
+}
+\`\`\`
+
+This ties SSG, SSR, file-based routing, and server actions into a complete blog architecture.
+`,
+            tags: ["javascript", "nextjs", "nuxt", "meta-frameworks", "ssr"],
+          },
+          {
+            id: "ns-js-desktop",
+            title: "Desktop Frameworks (Electron, Tauri)",
+            shortDesc: "Cross-platform desktop apps with web tech — IPC, native APIs, bundling, and Tauri's Rust-based architecture.",
+            difficulty: "advanced",
+            readTimeMin: 13,
+            keyPoints: [
+            "Electron bundles Chromium and Node.js to run web code as a desktop app — it provides full browser APIs plus native OS access",
+            "Tauri is a lighter alternative that uses the OS webview instead of bundling Chromium, producing much smaller binaries (MB vs GB)",
+            "IPC (Inter-Process Communication) enables the renderer process (UI) to communicate with the main process (Node.js/native backend)",
+            "Electron's main process manages windows, menus, and native APIs; renderer processes run the web UI in Chromium",
+            "Tauri uses Rust for the backend — commands are Rust functions callable from JavaScript with strong typing and near-native performance",
+            "Both frameworks package apps for Windows, macOS, and Linux from a single codebase with platform-specific installers"
+          ],
+            content: `## What's This?
+
+Desktop frameworks for web developers let you build native desktop applications using web technologies (HTML, CSS, JavaScript). Electron and Tauri are the two dominant options. Electron packages your web app inside Chromium with Node.js access — it is powerful but produces large binaries (100+ MB). Tauri uses the operating system's built-in webview and a Rust backend — it produces much smaller binaries (under 10 MB) and offers better performance. These frameworks exist because building separate native apps for Windows, macOS, and Linux requires different languages and toolchains; web-based desktop frameworks let you share code across platforms.
+
+## The Big Picture
+
+Electron powers major applications: VS Code, Slack, Discord, Figma, and Spotify. Its model is simple: a main process (Node.js) creates browser windows that load your web app. The trade-off is binary size and memory usage (each window is a full Chromium instance). Tauri is the modern alternative: it uses the system webview (WebKit on macOS/Linux, WebView2 on Windows) and a Rust backend. This means smaller binaries, lower memory usage, and native performance, at the cost of a smaller ecosystem and a Rust learning curve for backend logic.
+
+## Core Ideas
+
+### Electron Architecture
+
+Electron has two process types: main (Node.js, manages windows and native APIs) and renderer (Chromium, runs the UI). IPC bridges them.
+
+\`\`\`javascript
+// main.js (main process)
+const { app, BrowserWindow, ipcMain } = require("electron");
+
+app.whenReady().then(() => {
+    const win = new BrowserWindow({
+        width: 800,
+        height: 600,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+        },
+    });
+    win.loadFile("index.html");
+});
+
+// Handle IPC from renderer
+ipcMain.handle("read-file", async (event, filePath) => {
+    return fs.readFileSync(filePath, "utf-8");
+});
+
+// preload.js (bridge between main and renderer)
+const { contextBridge, ipcRenderer } = require("electron");
+contextBridge.exposeInMainWorld("electronAPI", {
+    readFile: (path) => ipcRenderer.invoke("read-file", path),
+});
+
+// renderer.js (in the web page)
+const content = await window.electronAPI.readFile("/path/to/file");
+console.log(content);
+\`\`\`
+
+### Tauri Architecture
+
+Tauri uses Rust for the backend. Commands are Rust functions called from JavaScript with \`invoke\`.
+
+\`\`\`rust
+// src-tauri/src/main.rs
+#[tauri::command]
+fn greet(name: &str) -> String {
+    format!("Hello, {}! You've been greeted from Rust!", name)
+}
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![greet])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+\`\`\`
+
+\`\`\`javascript
+// src/App.jsx (frontend)
+import { invoke } from "@tauri-apps/api/tauri";
+
+const greeting = await invoke("greet", { name: "Alice" });
+console.log(greeting);  // "Hello, Alice! You've been greeted from Rust!"
+\`\`\`
+
+### IPC (Inter-Process Communication)
+
+IPC is the mechanism for sending messages between the UI process and the backend. Both Electron and Tauri provide structured IPC.
+
+\`\`\`javascript
+// Electron IPC pattern
+// Main process
+ipcMain.handle("save-file", async (event, { path, content }) => {
+    await fs.promises.writeFile(path, content);
+    return { success: true };
+});
+
+// Renderer process
+const result = await window.electronAPI.saveFile({
+    path: "/tmp/data.json",
+    content: JSON.stringify({ key: "value" }),
+});
+
+// Tauri IPC is simpler — just call invoke()
+const result = await invoke("save_file", { path: "/tmp/data.json", content: "..." });
+\`\`\`
+
+### Packaging and Distribution
+
+Electron uses electron-builder or electron-forge to package apps. Tauri bundles with its own CLI. Both produce native installers.
+
+\`\`\`bash
+# Electron
+npx electron-builder --mac --win --linux
+
+# Tauri
+npm run tauri build    # Produces .dmg (macOS), .msi (Windows), .AppImage (Linux)
+\`\`\`
+
+### When to Choose
+
+Choose Electron when you need full Chromium features (DevTools, extensive web APIs), mature ecosystem, or are porting an existing web app with minimal changes. Choose Tauri when binary size matters, you want better performance, or you are starting a new project and can leverage Rust for backend logic.
+
+## Wiring It Together
+
+A simple file viewer app in Tauri that reads and displays a file selected by the user.
+
+\`\`\`rust
+// src-tauri/src/main.rs
+#[tauri::command]
+fn read_text_file(path: String) -> Result<String, String> {
+    std::fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
+fn main() {
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![read_text_file])
+        .run(tauri::generate_context!())
+        .expect("error");
+}
+\`\`\`
+
+\`\`\`javascript
+// src/App.jsx
+import { invoke } from "@tauri-apps/api/tauri";
+import { open } from "@tauri-apps/api/dialog";
+import { useState } from "react";
+
+function App() {
+    const [content, setContent] = useState("");
+
+    async function handleOpen() {
+        const selected = await open({ multiple: false });
+        if (selected) {
+            const text = await invoke("read_text_file", { path: selected });
+            setContent(text);
+        }
+    }
+
+    return (
+        <div>
+            <button onClick={handleOpen}>Open File</button>
+            <pre>{content}</pre>
+        </div>
+    );
+}
+\`\`\`
+
+This ties Tauri's Rust commands, IPC invocation, native dialogs, and React frontend into a complete cross-platform desktop application.
+`,
+            tags: ["javascript", "electron", "tauri", "desktop", "cross-platform"],
+          },
+          {
+            id: "ns-js-testing",
+            title: "Testing JavaScript",
+            shortDesc: "Jest, Vitest, Playwright, testing strategies (unit/integration/e2e), and TDD basics.",
+            difficulty: "intermediate",
+            readTimeMin: 13,
+            keyPoints: [
+            "Unit tests verify individual functions or components in isolation; integration tests verify interactions between units",
+            "Jest is the most popular test framework with built-in assertions, mocking, and coverage — configure once and run with jest",
+            "Vitest is a Vite-native alternative that is faster for Vite projects and supports the same Jest-compatible API",
+            "Playwright is an end-to-end testing framework that automates real browsers (Chromium, Firefox, WebKit) with auto-waiting",
+            "Test-Driven Development (TDD) writes the test before the implementation: Red (failing test) -> Green (passing code) -> Refactor",
+            "Mock functions replace real dependencies to isolate the unit under test and verify behavior without side effects"
+          ],
+            content: `## What's This?
+
+Testing in JavaScript means writing code that verifies your application behaves correctly. Jest and Vitest are test runners for unit and integration tests — they provide assertions, mocking, coverage reports, and watch mode. Playwright is an end-to-end testing framework that automates real browsers to test complete user flows. Testing exists because manual testing is slow, error-prone, and does not scale — automated tests catch regressions, document behavior, and give you confidence to refactor. The testing pyramid recommends many fast unit tests, fewer integration tests, and even fewer end-to-end tests.
+
+## The Big Picture
+
+A solid test suite is non-negotiable for production JavaScript applications. Jest has been the dominant test framework for years; Vitest is its modern successor built for Vite projects with the same API. Unit tests use \`describe\`/\`it\`/ \`expect\` patterns. Mocks replace real dependencies (databases, API calls) so tests run fast and reliably. End-to-end tests with Playwright simulate real user interactions in the browser. Test-Driven Development (TDD) is a discipline where you write the test first, then implement just enough code to pass it, then refactor — leading to better-designed, testable code.
+
+## Core Ideas
+
+### Unit Tests with Jest/Vitest
+
+Tests are organized with \`describe\` (group) and \`it\`/ \`test\` (individual test). Assertions use \`expect\` with matchers.
+
+\`\`\`javascript
+// math.js
+export function add(a, b) { return a + b; }
+export function isEven(n) { return n % 2 === 0; }
+
+// math.test.js
+import { describe, it, expect } from "vitest";
+import { add, isEven } from "./math";
+
+describe("add", () => {
+    it("adds two numbers", () => {
+        expect(add(2, 3)).toBe(5);
+    });
+
+    it("handles negative numbers", () => {
+        expect(add(-1, 1)).toBe(0);
+    });
+});
+
+describe("isEven", () => {
+    it("returns true for even numbers", () => {
+        expect(isEven(4)).toBe(true);
+    });
+
+    it("returns false for odd numbers", () => {
+        expect(isEven(5)).toBe(false);
+    });
+});
+\`\`\`
+
+### Mocking
+
+Mocks replace real dependencies to isolate the code under test.
+
+\`\`\`javascript
+// userService.js
+import { db } from "./database";
+
+export async function getUser(id) {
+    const user = await db.findUser(id);
+    return user ?? null;
+}
+
+// userService.test.js
+import { describe, it, expect, vi } from "vitest";
+import { getUser } from "./userService";
+
+vi.mock("./database", () => ({
+    db: {
+        findUser: vi.fn(),
+    },
+}));
+
+describe("getUser", () => {
+    it("returns user when found", async () => {
+        const mockUser = { id: 1, name: "Alice" };
+        db.findUser.mockResolvedValue(mockUser);
+
+        const result = await getUser(1);
+        expect(result).toEqual(mockUser);
+        expect(db.findUser).toHaveBeenCalledWith(1);
+    });
+
+    it("returns null when not found", async () => {
+        db.findUser.mockResolvedValue(null);
+
+        const result = await getUser(999);
+        expect(result).toBeNull();
+    });
+});
+\`\`\`
+
+### End-to-End Tests with Playwright
+
+Playwright tests run in real browsers and interact with the page like a user would.
+
+\`\`\`javascript
+// app.spec.js
+import { test, expect } from "@playwright/test";
+
+test("user can log in", async ({ page }) => {
+    await page.goto("http://localhost:3000/login");
+
+    await page.fill("[name=email]", "alice@example.com");
+    await page.fill("[name=password]", "correctpassword");
+    await page.click("button[type=submit]");
+
+    await expect(page).toHaveURL(/dashboard/);
+    await expect(page.locator("h1")).toHaveText("Welcome, Alice!");
+});
+
+test("shows error on invalid login", async ({ page }) => {
+    await page.goto("http://localhost:3000/login");
+    await page.fill("[name=email]", "wrong@example.com");
+    await page.fill("[name=password]", "wrong");
+    await page.click("button[type=submit]");
+
+    await expect(page.locator(".error")).toBeVisible();
+    await expect(page.locator(".error")).toHaveText("Invalid credentials");
+});
+\`\`\`
+
+### TDD (Test-Driven Development)
+
+TDD follows the Red-Green-Refactor cycle. Write a failing test first, implement the minimal code to pass, then clean up.
+
+\`\`\`javascript
+// Step 1: RED — write a failing test
+describe("calculateTotal", () => {
+    it("applies discount for orders over $100", () => {
+        const result = calculateTotal(150, { discount: 0.1 });
+        expect(result).toBe(135); // 150 - 15
+    });
+});
+
+// Step 2: GREEN — implement the minimal code
+function calculateTotal(amount, { discount = 0 } = {}) {
+    return amount - (amount * discount);
+}
+
+// Step 3: REFACTOR — clean up, add edge cases
+\`\`\`
+
+## Wiring It Together
+
+A test suite for a simple shopping cart with unit tests, a mocked data layer, and an e2e checkout flow.
+
+\`\`\`javascript
+// cart.js
+export class Cart {
+    constructor() {
+        this.items = [];
+    }
+
+    addItem(product, quantity = 1) {
+        const existing = this.items.find(i => i.id === product.id);
+        if (existing) {
+            existing.quantity += quantity;
+        } else {
+            this.items.push({ ...product, quantity });
+        }
+    }
+
+    getTotal() {
+        return this.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    }
+}
+
+// cart.test.js
+import { describe, it, expect } from "vitest";
+import { Cart } from "./cart";
+
+describe("Cart", () => {
+    it("adds items and calculates total", () => {
+        const cart = new Cart();
+        cart.addItem({ id: 1, name: "Widget", price: 10 }, 2);
+        cart.addItem({ id: 2, name: "Gadget", price: 25 });
+
+        expect(cart.getTotal()).toBe(45);
+    });
+
+    it("increments quantity for existing items", () => {
+        const cart = new Cart();
+        cart.addItem({ id: 1, name: "Widget", price: 10 });
+        cart.addItem({ id: 1, name: "Widget", price: 10 }, 2);
+
+        expect(cart.items).toHaveLength(1);
+        expect(cart.items[0].quantity).toBe(3);
+    });
+});
+\`\`\`
+
+This ties unit tests with Vitest, mocking (built into test structure), and testing patterns (describe/it/expect) into a practical testing workflow.
+`,
+            tags: ["javascript", "testing", "jest", "vitest", "playwright"],
+          },
         ],
       },
       // ── TypeScript ──────────────────────────────────────────────────────
@@ -85397,10 +87593,10 @@ class TodoController {
 
         Specificity is a four-part value: (inline, ID, class, type). When two rules conflict, the browser compares these columns left to right. The higher value wins.
 
-        - Inline styles (`style` attribute): 1, 0, 0, 0
-        - ID selector (`#foo`): 0, 1, 0, 0
-        - Class, attribute, pseudo-class (`.bar`, `[type]`, `:hover`): 0, 0, 1, 0
-        - Type, pseudo-element (`div`, `::before`): 0, 0, 0, 1
+        - Inline styles (\`style\` attribute): 1, 0, 0, 0
+        - ID selector (\`#foo\`): 0, 1, 0, 0
+        - Class, attribute, pseudo-class (\`.bar\`, \`[type]\`, \`:hover\`): 0, 0, 1, 0
+        - Type, pseudo-element (\`div\`, \`::before\`): 0, 0, 0, 1
 
         \`\`\`css
         /* specificity: 0, 1, 0, 1 */
@@ -85412,13 +87608,13 @@ class TodoController {
         /* The #sidebar a rule wins because its ID column (1) beats 0 */
         \`\`\`
 
-        The universal selector `*` and combinators (`>`, `+`, `~`) contribute nothing to specificity.
+        The universal selector \`*\` and combinators (\`>\`, \`+\`, \`~\`) contribute nothing to specificity.
 
         ### The Cascade
 
         When specificity is equal, source order decides: the last declaration in the stylesheet wins. The full cascade order is:
 
-        1. Origin and importance (browser styles < user styles < author styles; `!important` reverses this)
+        1. Origin and importance (browser styles < user styles < author styles; \`!important\` reverses this)
         2. Specificity (higher wins)
         3. Source order (later wins)
 
@@ -85428,7 +87624,7 @@ class TodoController {
         .btn { background: red; }   /* this value is actually applied */
         \`\`\`
 
-        `!important` overrides all regular declarations within the same origin. It should be avoided — it breaks the cascade, makes overrides impossible without more `!important`, and hides specificity bugs.
+        \`!important\` overrides all regular declarations within the same origin. It should be avoided — it breaks the cascade, makes overrides impossible without more \`!important\`, and hides specificity bugs.
 
         ## Wiring It Together
 
@@ -93464,16 +95660,16 @@ int main(int argc, char *argv[]) {
         title: "PHP / Laravel",
         description: "PHP from the ground up — syntax, OOP, Composer, Laravel MVC, Eloquent, testing, and the WordPress ecosystem.",
         topics: [
-          { id: "ns-php-syntax", title: "PHP Syntax & Basics", shortDesc: "Tags, variables, data types, echo/print, strings, arrays, and superglobals ($_GET, $_POST, $_SESSION).", difficulty: "foundational", readTimeMin: 10, keyPoints: ["PHP is a server-side scripting language embedded in HTML via <?php ?> tags", "Variables start with $ and are loosely typed by default", "Eight primitive types: boolean, integer, float, string, array, object, resource, null", "Double-quoted strings interpolate variables; single-quoted strings do not", "Arrays are ordered maps supporting both integer and string keys", "Use === for strict comparison to avoid type-juggling surprises"], tags: ["PHP", "Syntax", "Basics"], content: "## What's This?\nPHP syntax is the set of rules that govern how PHP code is written and interpreted by the engine. It is the grammar of the language -- you must arrange words, symbols, and punctuation in the correct order for the computer to understand your instructions. PHP is a server-side scripting language designed for web development, meaning it runs on the server before sending HTML to the browser. It exists because building dynamic websites requires generating content programmatically rather than editing static HTML files by hand. PHP's syntax borrows from C, Perl, and Java, making it familiar to developers from those backgrounds.\n\n## The Big Picture\nPHP powers roughly three-quarters of websites using a server-side language, including platforms like WordPress and Wikipedia. Its syntax integrates with HTML through <code><?php ?></code> tags, making it natural for templating. Understanding variables, data types, operators, strings, and arrays is the foundation for everything from vanilla scripts to frameworks like Laravel and Symfony. PHP is forgiving via loose typing but offers strict typing when you opt in.\n\n## Core Ideas\n\n### Variables and Data Types\nVariables start with <code>$</code> and need no explicit type declaration -- PHP infers the type from the assigned value. The eight primitive types are boolean, integer, float, string, array, object, resource, and null.\n```php\n$name = \"Alice\";              // string - a sequence of characters\n$age = 30;                    // integer - a whole number without decimals\n$height = 5.8;                // float - a decimal number\n$isAdmin = true;              // boolean - true or false value\n$colors = [\"red\", \"blue\"];   // array - ordered collection of items\n```\n\n### Strings and Concatenation\nPHP has single and double-quoted strings. Double quotes interpret variables and escape sequences; single quotes treat everything literally. The dot operator <code>.</code> concatenates strings.\n```php\n$greeting = \"Hello, $name!\";  // double quotes interpolate $name to \"Alice\"\n$literal = 'Hello, $name!';   // single quotes output $name literally\n$combined = \"Hello \" . \"World\"; // dot operator joins two strings together\n$now = \"Time: \" . date('H:i'); // dot chains a function result with a string\n```\n\n### Arrays\nArrays are ordered maps supporting integer and string keys. They hold mixed types and grow dynamically.\n```php\n$fruits = [\"apple\", \"banana\"];  // indexed array uses default integer keys\n$user = [\"name\" => \"Alice\", \"age\" => 30]; // associative array uses named keys\necho $fruits[0];                // outputs \"apple\" via integer index access\necho $user[\"name\"];             // outputs \"Alice\" via string key access\n$fruits[] = \"cherry\";           // appends \"cherry\" at the next integer index\n```\n\n### Operators\nArithmetic, comparison, logical, and assignment operators manipulate values. The difference between <code>==</code> (loose) and <code>===</code> (strict) is critical because PHP type-jugs automatically.\n```php\n$sum = 10 + 5;                  // addition operator returns 15\n$isEqual = (5 == \"5\");          // loose equality: true because values match\n$isIdentical = (5 === \"5\");     // strict equality: false because types differ\n$isAdult = ($age >= 18 && $age <= 120); // logical AND combines two comparisons\n```\n\n## Wiring It Together\nThis script processes a registration form, validates input, and returns a response:\n```php\n<?php\n$errors = [];                          // initialize empty error message array\n$name = trim($_POST[\"name\"] ?? \"\");    // read name from POST, trim whitespace\n$email = filter_var($_POST[\"email\"] ?? \"\", FILTER_SANITIZE_EMAIL); // sanitize email\n\nif (strlen($name) < 2) {               // reject names shorter than 2 characters\n    $errors[] = \"Name must be 2+ characters\"; // push error onto array\n}\nif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // check email format validity\n    $errors[] = \"Invalid email address\"; // add validation error message\n}\n\nif (count($errors) > 0) {              // if any errors were collected\n    echo \"<h3>Errors:</h3>\";           // render error section heading\n    foreach ($errors as $error) {       // iterate every error in the array\n        echo \"<p>$error</p>\";          // display each error in a paragraph tag\n    }\n} else {\n    $welcome = \"Welcome, $name!\";     // interpolate name into greeting string\n    $domain = substr(strstr($email, \"@\"), 1); // extract domain substring after @\n    echo \"<h1>$welcome</h1>\";          // output welcome as heading\n    echo \"<p>Your email domain: $domain</p>\"; // show extracted domain\n}\n?>\n```\nThis ties variables, arrays, string functions, conditionals, loops, and superglobals into a realistic form-processing flow." },
-          { id: "ns-php-control-flow", title: "Control Flow & Functions", shortDesc: "if/else/elseif, switch, for/foreach/while, user-defined functions, variable scope, and type declarations.", difficulty: "foundational", readTimeMin: 11, keyPoints: ["if/elseif/else evaluates conditions top-down and executes the first true block", "match (PHP 8+) is a strict, expression-based switch alternative", "foreach loops over arrays; for uses a counter; while checks a condition", "Functions declare typed parameters and return types for predictability", "Variables are function-scoped by default; use global to import outer scope", "Arrow functions (fn) capture outer variables automatically without use keyword"], tags: ["PHP", "Control Flow", "Functions"], content: "## What's This?\nControl flow and functions are the mechanisms that let your PHP code make decisions, repeat tasks, and organize logic into reusable units. Control flow statements like <code>if</code>, <code>for</code>, and <code>switch</code> determine which code blocks execute based on conditions. Functions package a sequence of statements under a name so you can call them from anywhere without duplicating code. They exist because programs would be unmanageable without conditional logic, loops, and modular organization -- every nontrivial application needs these building blocks.\n\n## The Big Picture\nControl flow and functions form the backbone of every PHP application. Conditionals handle routing logic, input validation, and authorization. Loops process database result sets, arrays, and paginated data. Functions encapsulate everything from validation helpers to database queries. The <code>match</code> expression (PHP 8) and arrow functions provide modern alternatives to older constructs. Mastering these tools is necessary before moving to OOP, frameworks, or any advanced PHP topic.\n\n## Core Ideas\n\n### Conditionals: if, elseif, else\nPHP evaluates a boolean expression and executes the corresponding block. You can chain multiple conditions without limit.\n```php\nif ($score >= 90) {                  // first condition checked\n    $grade = \"A\";                    // executes only when score >= 90\n} elseif ($score >= 80) {            // checked only when first is false\n    $grade = \"B\";\n} else {\n    $grade = \"F\";                    // fallback when all conditions fail\n}\n```\n\n### The match Expression (PHP 8)\n<code>match</code> is a strict, expression-based alternative to <code>switch</code>. It returns a value and does not require break statements.\n```php\n$statusCode = 404;\n$message = match ($statusCode) {     // match evaluates $statusCode strictly\n    200 => \"OK\",                     // returns \"OK\" if statusCode === 200\n    404 => \"Not Found\",             // returns \"Not Found\" if statusCode === 404\n    default => \"Unknown\"            // fallback when no arm matches\n};                                    // match always returns a value\n```\n\n### Loops: foreach, for, while\n<code>foreach</code> iterates arrays and objects. <code>for</code> runs a known number of times. <code>while</code> runs until a condition becomes false.\n```php\nforeach ($users as $user) {          // loop over each element in $users array\n    echo $user[\"name\"];              // access name key of current user\n}\nfor ($i = 0; $i < 5; $i++) {        // init counter; check condition; increment\n    echo $i;                         // outputs 0 1 2 3 4\n}\nwhile ($row = $result->fetch()) {    // fetch returns false when no more rows\n    echo $row[\"title\"];              // display title from current row\n}\n```\n\n### Defining Functions\nFunctions are declared with <code>function</code>, accept typed parameters, and can declare a return type. Default parameter values make arguments optional.\n```php\nfunction greet(string $name): string { // parameter typed as string, returns string\n    return \"Hello, $name!\";           // returns the greeting to the caller\n}\nfunction add(int $a, int $b = 0): int { // $b defaults to 0 when not provided\n    return $a + $b;\n}\n$result = greet(\"Alice\");             // calls function, $result = \"Hello, Alice!\"\n```\n\n### Variable Scope\nVariables declared outside functions are global; variables inside functions are local. The <code>global</code> keyword accesses global scope from within a function.\n```php\n$taxRate = 0.08;                      // global scope variable\nfunction calculateTax(float $price): float {\n    global $taxRate;                  // imports global $taxRate into function scope\n    return $price * $taxRate;         // uses the imported global value\n}\n```\n\n### Arrow Functions (PHP 7.4+)\nArrow functions provide a concise syntax for closures that automatically capture variables from the parent scope by value.\n```php\n$multiplier = 2;\n$doubled = array_map(                 // applies callback to each array element\n    fn($n) => $n * $multiplier,       // arrow fn automatically captures $multiplier\n    [1, 2, 3]                         // input array\n);                                    // result: [2, 4, 6]\n```\n\n## Wiring It Together\nThis script calculates order totals with tax and tiered discounts:\n```php\n<?php\n$taxRate = 0.08;                      // global tax rate for all calculations\n\nfunction applyDiscount(float $total): float { // apply tiered discount logic\n    if ($total > 100) {               // orders over $100 get 10 percent off\n        return $total * 0.9;          // multiply by 0.9 to apply discount\n    } elseif ($total > 50) {          // orders over $50 get 5 percent off\n        return $total * 0.95;         // multiply by 0.95 for discount\n    }\n    return $total;                    // no discount for orders $50 or less\n}\n\nfunction calculateTax(float $subtotal): float {\n    global $taxRate;                  // pull in global $taxRate variable\n    return $subtotal * $taxRate;      // compute tax amount\n}\n\n$items = [29.99, 49.99, 15.00];      // array of item prices\n$subtotal = 0;                        // initialize running total\n\nforeach ($items as $price) {          // iterate every item price\n    $subtotal += $price;              // accumulate into subtotal\n}\n\n$afterDiscount = applyDiscount($subtotal); // compute discounted amount\n$tax = calculateTax($afterDiscount);  // compute tax on discounted total\n$grandTotal = $afterDiscount + $tax;  // final amount the customer pays\n\necho \"Subtotal: \\$$subtotal\\n\";       // display subtotal before discount\necho \"After discount: \\$$afterDiscount\\n\"; // show discounted amount\necho \"Tax: \\$$tax\\n\";                 // show computed tax\necho \"Total: \\$$grandTotal\\n\";        // show final total\n?>\n```\nThis example combines conditionals (tiered discount), loops (price iteration), functions with scope (tax/discount), and string interpolation in a practical order-processing scenario." },
-          { id: "ns-php-oop", title: "OOP in PHP", shortDesc: "Classes, inheritance, interfaces, traits, abstract classes, namespaces, and autoloading (PSR-4).", difficulty: "foundational", readTimeMin: 12, keyPoints: ["A class is a blueprint; an object is an instance created with new", "Visibility controls: public (anywhere), protected (class + subclasses), private (class only)", "Inheritance with extends allows child classes to reuse and override parent behavior", "Interfaces define contracts; a class can implement multiple interfaces", "Traits provide horizontal code reuse to work around single inheritance", "Static members belong to the class itself, accessed with ::"], tags: ["PHP", "OOP", "Classes"], content: "## What's This?\nObject-Oriented Programming (OOP) in PHP organizes code around objects -- instances of classes that bundle data (properties) and behavior (methods). Think of a class as a blueprint and an object as the actual thing built from that blueprint. OOP exists because procedural code becomes hard to maintain as applications grow; encapsulation, inheritance, and polymorphism help manage complexity by grouping related logic and hiding internal details. PHP's OOP model is class-based and borrows from Java and C++, supporting modern features like traits, interfaces, and anonymous classes.\n\n## The Big Picture\nModern PHP relies heavily on OOP. Laravel, Symfony, and nearly every major framework are object-oriented. Composer packages are distributed as classes following PSR-4 autoloading. Understanding OOP is essential for working with frameworks, writing testable code, and contributing to the PHP ecosystem. Concepts like dependency injection, repositories, and service containers all build on OOP fundamentals.\n\n## Core Ideas\n\n### Classes and Objects\nA <code>class</code> defines properties (variables) and methods (functions). An <code>object</code> is an instance created with <code>new</code>.\n```php\nclass User {                          // class declaration defines a blueprint\n    public string $name;              // property with public visibility\n    public function greet(): string { // method that returns a string\n        return \"Hi, {$this->name}\";  // $this refers to the current instance\n    }\n}\n$user = new User();                   // instantiate a User object from the class\n$user->name = \"Alice\";               // set property on the object\n$message = $user->greet();            // call method, returns \"Hi, Alice\"\n```\n\n### Constructors and Property Promotion (PHP 8+)\n<code>__construct</code> runs when an object is created. Constructor property promotion combines declaration and assignment in one place.\n```php\nclass Product {\n    public function __construct(      // constructor method runs at instantiation\n        public string $name,          // PHP 8 promotes $name to a property automatically\n        public float $price           // $price is also promoted automatically\n    ) {}\n}\n$product = new Product(\"Widget\", 9.99); // pass constructor arguments\n```\n\n### Visibility: public, protected, private\nVisibility controls access to properties and methods. <code>public</code> is accessible everywhere. <code>protected</code> is accessible in the class and subclasses. <code>private</code> is accessible only within the defining class.\n```php\nclass BankAccount {\n    private float $balance = 0;       // only this class can modify $balance\n    public function deposit(float $amount): void { // public method accessible anywhere\n        if ($amount > 0) {            // guard against negative deposits\n            $this->balance += $amount; // modify private property internally\n        }\n    }\n    public function getBalance(): float { // public getter exposes balance safely\n        return $this->balance;\n    }\n}\n```\n\n### Inheritance\nA class can extend another class using <code>extends</code>, inheriting its public and protected methods and properties. Override parent methods by redefining them in the child.\n```php\nclass Animal {\n    public function speak(): string {  // base method to be overridden\n        return \"Some sound\";\n    }\n}\nclass Dog extends Animal {            // Dog inherits from Animal\n    public function speak(): string {  // overrides the parent speak method\n        return \"Woof\";\n    }\n}\n$dog = new Dog();\necho $dog->speak();                   // outputs \"Woof\" using the overridden method\n```\n\n### Abstract Classes and Interfaces\nAbstract classes cannot be instantiated and may contain abstract methods that subclasses must implement. Interfaces declare method signatures without implementation; a class can implement multiple interfaces.\n```php\ninterface Loggable {                   // contract defining required methods\n    public function log(string $message): void; // signature only, no body\n}\nclass FileLogger implements Loggable { // must implement all interface methods\n    public function log(string $message): void {\n        file_put_contents(\"log.txt\", $message); // actual implementation\n    }\n}\n```\n\n### Traits\nTraits are reusable code snippets that classes can import with <code>use</code>, solving PHP's single-inheritance limitation.\n```php\ntrait Timestampable {                 // trait groups reusable behavior\n    public function getCreatedAt(): string {\n        return date(\"Y-m-d H:i:s\");   // returns current timestamp as string\n    }\n}\nclass Post {\n    use Timestampable;                 // imports all methods from the trait\n}\n$post = new Post();\necho $post->getCreatedAt();           // outputs current date and time\n```\n\n### Static Methods and Properties\nStatic members belong to the class itself, not to instances. Access them with <code>::</code> (Scope Resolution Operator).\n```php\nclass MathHelper {\n    public static function square(int $n): int { // static method on class level\n        return $n * $n;\n    }\n}\necho MathHelper::square(5);           // calls static method without instantiation\n```\n\n## Wiring It Together\nA polymorphic notification system using interfaces and inheritance:\n```php\n<?php\ninterface Notifiable {                 // contract for all notification types\n    public function send(string $message): bool; // every notifier must implement send\n}\n\nclass EmailNotifier implements Notifiable {\n    public function send(string $message): bool {\n        // mail($this->address, \"Subject\", $message); actual send logic\n        return true;                   // pretend email was sent successfully\n    }\n}\n\nclass SmsNotifier implements Notifiable {\n    public function send(string $message): bool {\n        // sms_api::send($this->phone, $message); actual SMS logic\n        return true;                   // pretend SMS was sent successfully\n    }\n}\n\nclass NotificationService {\n    public function sendAll(array $notifiers, string $message): void {\n        foreach ($notifiers as $notifier) { // iterate each notifier object\n            if ($notifier instanceof Notifiable) { // type safety check via interface\n                $notifier->send($message); // polymorphic call -- each class behaves differently\n            }\n        }\n    }\n}\n\n$service = new NotificationService();\n$service->sendAll(\n    [new EmailNotifier(), new SmsNotifier()], // heterogeneous array of notifiers\n    \"System maintenance at midnight\"    // message sent via each channel\n);\n?>\n```\nThis demonstrates interfaces (contract), polymorphism (different send behaviors), type safety (instanceof check), and the foreach loop unifying heterogeneous notifiers." },
-          { id: "ns-php-composer", title: "Composer & Packages", shortDesc: "composer.json, autoload, Packagist, version constraints, and creating custom packages.", difficulty: "intermediate", readTimeMin: 12, keyPoints: ["Composer is PHP's dependency manager; packages come from Packagist", "composer.json defines dependencies; composer.lock pins exact versions", "^ prefix means compatible with major version; ~ means patch-level only", "PSR-4 autoloading maps namespaces to directories; run dump-autoload after changes", "require-dev adds packages only for development/testing", "require 'vendor/autoload.php' is the single entry point for all classes"], tags: ["PHP", "Composer", "Packages"], content: "## What's This?\nComposer is the dependency manager for PHP. It handles installing, updating, and autoloading third-party packages so you don't have to manually download libraries or write complex require statements. Think of it as npm for JavaScript or pip for Python -- it reads a <code>composer.json</code> file describing your project's dependencies, resolves compatible versions, and downloads them into a <code>vendor/</code> directory. Composer exists because manually managing libraries and their versions across projects is error-prone and time-consuming; a standardized tool eliminates dependency hell.\n\n## The Big Picture\nComposer is the backbone of the modern PHP ecosystem. Every major framework (Laravel, Symfony, CakePHP) and thousands of libraries are distributed through Packagist, the default Composer repository. Composer's autoloader (PSR-4 and PSR-0) eliminates manual require/include calls. The lock file (<code>composer.lock</code>) ensures every developer and deployment uses identical versions. CI/CD pipelines run <code>composer install --no-dev</code> to exclude development tools from production.\n\n## Core Ideas\n\n### composer.json Structure\nThe <code>composer.json</code> file defines the project name, dependencies, autoloading rules, and scripts. The <code>require</code> section lists runtime packages; <code>require-dev</code> lists development-only packages.\n```json\n{\n    \"require\": {\n        \"laravel/framework\": \"^10.0\"  // any 10.x version compatible with semver\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^10.0\"    // only needed during development/testing\n    }\n}\n```\n\n### Installing Packages\n<code>composer install</code> reads <code>composer.lock</code> (or <code>composer.json</code> if no lock exists) and downloads exact versions. <code>composer require</code> adds a package and updates both files.\n```bash\ncomposer require guzzlehttp/guzzle    # adds Guzzle HTTP client to require section\ncomposer require --dev phpstan/phpstan # adds PHPStan as a dev-only dependency\ncomposer install                      # downloads all packages from lock file\n```\n\n### Version Constraints\nComposer uses semantic versioning with constraints: <code>^</code> (compatible with major), <code>~</code> (patch-level changes only), <code>>=</code> (minimum version).\n```json\n{\n    \"require\": {\n        \"monolog/monolog\": \"^2.0\",     // >=2.0.0, <3.0.0 (allows minor/patch bumps)\n        \"php\": \">=8.1\",               // requires PHP 8.1 or higher\n        \"package/foo\": \"~2.3.0\"       // >=2.3.0, <2.4.0 (only patch changes)\n    }\n}\n```\n\n### Autoloading (PSR-4)\nThe <code>autoload</code> section maps namespaces to directories. PSR-4 maps a namespace prefix to a directory, so <code>App\\User</code> loads from <code>src/User.php</code>.\n```json\n{\n    \"autoload\": {\n        \"psr-4\": {\n            \"App\\\\\": \"src/\"            // namespace App\\ points to src/ directory\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Tests\\\\\": \"tests/\"         // namespace Tests\\ points to tests/ directory\n        }\n    }\n}\n```\nAfter defining, run <code>composer dump-autoload</code> to regenerate the autoloader files.\n\n### Composer Scripts\nScripts run automatically at lifecycle events like <code>post-install-cmd</code> or <code>post-update-cmd</code>. Useful for clearing caches or running migrations after install.\n```json\n{\n    \"scripts\": {\n        \"post-install-cmd\": [          // runs after composer install completes\n            \"php artisan cache:clear\"   // clears Laravel cache automatically\n        ],\n        \"test\": \"phpunit\"             // custom script: composer test runs phpunit\n    }\n}\n```\n\n### The Vendor Directory and Autoloader\nAfter installation, packages live in <code>vendor/</code>. A single <code>require 'vendor/autoload.php'</code> in your entry point makes every class available without manual requires.\n```php\nrequire __DIR__ . '/vendor/autoload.php'; // loads Composer's autoloader\n\nuse GuzzleHttp\\Client;                   // import class from installed package\n$client = new Client();                   // instantiate without manual require\n$response = $client->get('https://api.github.com'); // use package functionality\n```\n\n## Wiring It Together\nA complete project setup with autoloading and a logging dependency:\n```json\n// composer.json\n{\n    \"name\": \"acme/blog\",\n    \"require\": {\n        \"monolog/monolog\": \"^3.0\"       // logging library constraint\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Acme\\\\\": \"src/\"            // all Acme classes under src/\n        }\n    },\n    \"scripts\": {\n        \"post-install-cmd\": [\n            \"@php -r 'echo \\\"Ready\\\";'\" // placeholder post-install script\n        ]\n    }\n}\n```\n```php\n// src/Logger.php\nnamespace Acme;                          // namespace matches PSR-4 mapping\n\nuse Monolog\\Level;                       // import Monolog severity levels\nuse Monolog\\Handler\\StreamHandler;       // import handler for file output\n\nclass Logger {\n    private \\Monolog\\Logger $logger;    // property for Monolog instance\n\n    public function __construct() {\n        $this->logger = new \\Monolog\\Logger('app'); // create named logger\n        $this->logger->pushHandler(      // attach handler to write logs\n            new StreamHandler('app.log', Level::Debug) // write debug+ to file\n        );\n    }\n\n    public function info(string $msg): void { // convenience wrapper method\n        $this->logger->info($msg);        // delegate to Monolog's info method\n    }\n}\n```\n```php\n// public/index.php\nrequire __DIR__ . '/../vendor/autoload.php'; // single autoload include\n\nuse Acme\\Logger;                        // our class autoloaded via PSR-4\n\n$logger = new Logger();\n$logger->info(\"Application started\");   // writes to app.log via Monolog dependency\n\necho \"Hello, world!\";\n```\nThis shows the full Composer workflow: defining dependencies and autoloading in composer.json, installing via CLI, and using both third-party and custom classes through the autoloader." },
-          { id: "ns-php-laravel-mvc", title: "Laravel MVC", shortDesc: "Artisan CLI, routing, controllers, Blade templates, and the service container.", difficulty: "intermediate", readTimeMin: 13, keyPoints: ["Laravel MVC separates concerns: Model (data), View (presentation), Controller (logic)", "Routes defined in web.php or api.php map URLs to controller methods", "Blade uses @ directives for control structures and layout inheritance", "The service container resolves class dependencies automatically", "Resource routes generate all CRUD routes with a single declaration", "The request flows: index.php -> kernel -> middleware -> router -> controller -> response"], tags: ["PHP", "Laravel", "MVC"], content: "## What's This?\nLaravel MVC is an architectural pattern that separates an application into three interconnected components: Models (data logic), Views (presentation), and Controllers (request handling). Laravel implements this pattern with a clean routing layer, Blade templating engine, and Eloquent ORM. MVC exists because mixing database queries, business logic, and HTML templates in a single file leads to unmaintainable spaghetti code -- separating concerns lets you change one part without breaking others. Laravel adds a service container, middleware, and Artisan CLI on top of the classic MVC pattern.\n\n## The Big Picture\nLaravel is the most popular PHP framework, and MVC is its architectural foundation. Every HTTP request follows a lifecycle: route -> middleware -> controller -> (model interaction) -> view response. Understanding this flow is essential for building Laravel applications. The framework extends MVC with features like dependency injection (service container), Eloquent for the model layer, and Blade for the view layer. Once you understand Laravel's MVC, you can navigate any Laravel project structure.\n\n## Core Ideas\n\n### Routing\nRoutes map HTTP methods and URLs to controller methods. They are defined in <code>routes/web.php</code> (browser routes with session state) or <code>routes/api.php</code> (stateless API routes).\n```php\n// routes/web.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::get('/', function () {          // GET / returns a closure response\n    return view('welcome');             // renders resources/views/welcome.blade.php\n});\n\nRoute::get('/posts', [PostController::class, 'index']); // GET /posts calls PostController@index\nRoute::post('/posts', [PostController::class, 'store']); // POST /posts calls PostController@store\n```\n\n### Controllers\nControllers group related request-handling logic into classes. They receive request data, interact with models, and return responses. Artisan generates controllers with <code>php artisan make:controller</code>.\n```php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass PostController extends Controller {\n    public function index() {          // handle GET /posts\n        $posts = Post::all();           // fetch all posts from database via Eloquent\n        return view('posts.index', compact('posts')); // render view with posts data\n    }\n\n    public function store(Request $request) { // handle POST /posts\n        $post = Post::create(           // create a new Post record in database\n            $request->validate([        // validate incoming request data\n                'title' => 'required|max:255', // title must be present, max 255 chars\n                'body' => 'required',    // body field is mandatory\n            ])\n        );\n        return redirect('/posts/' . $post->id); // redirect to the new post's page\n    }\n}\n```\n\n### Blade Templates\nBlade is Laravel's templating engine. It compiles to plain PHP and provides control structures, layout inheritance, and component syntax with <code>@</code> directives.\n```php\n<!-- resources/views/layouts/app.blade.php -->\n<!DOCTYPE html>\n<html>\n<head>\n    <title>@yield('title', 'Default')</title> <!-- section yield with default -->\n</head>\n<body>\n    @yield('content')                    <!-- child templates fill this section -->\n</body>\n</html>\n```\n```php\n<!-- resources/views/posts/index.blade.php -->\n@extends('layouts.app')                  <!-- inherit from the app layout -->\n\n@section('title', 'All Posts')           <!-- set the title section -->\n\n@section('content')                      <!-- define content for the layout -->\n    @foreach ($posts as $post)           <!-- Blade loop directive -->\n        <h2>{{ $post->title }}</h2>      <!-- escaped output using double curly braces -->\n        <p>{{ $post->excerpt }}</p>      <!-- display truncated post body -->\n    @endforeach\n@endsection                                  <!-- end the content section -->\n```\n\n### The Request Lifecycle\nEvery request flows through: <code>public/index.php</code> -> HTTP kernel -> middleware stack -> router -> controller -> response. The service container resolves dependencies automatically.\n```php\n// The entry point all requests hit\n// public/index.php\n$app = require __DIR__ . '/../bootstrap/app.php'; // bootstrap Laravel application\n$kernel = $app->make(Kernel::class);    // resolve HTTP kernel from container\n$response = $kernel->handle(            // process the incoming request\n    Illuminate\\Http\\Request::capture()  // capture the HTTP request\n)->send();                               // send response back to browser\n$kernel->terminate($request, $response); // run any termination middleware\n```\n\n### Service Container\nThe service container manages class dependencies and performs dependency injection. You bind interfaces to implementations and the container resolves them automatically.\n```php\n// AppServiceProvider.php\nuse App\\Contracts\\PaymentGateway;\nuse App\\Services\\StripeGateway;\n\npublic function register(): void {\n    $this->app->bind(PaymentGateway::class, StripeGateway::class); // bind interface to concrete\n}\n\n// Controller -- container injects the bound implementation automatically\npublic function __construct(\n    private PaymentGateway $gateway    // container resolves StripeGateway here\n) {}\n```\n\n## Wiring It Together\nA blog feature with route, controller, model, and view:\n```php\n// routes/web.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::resource('/posts', PostController::class); // generates all RESTful routes automatically\n```\n```php\n// app/Models/Post.php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\n\nclass Post extends Model {               // Eloquent model for posts table\n    protected $fillable = ['title', 'body']; // allow mass assignment for these fields\n}\n```\n```php\n// app/Http/Controllers/PostController.php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass PostController extends Controller {\n    public function index() {\n        $posts = Post::latest()->get();  // fetch posts ordered by newest first\n        return view('posts.index', compact('posts')); // pass posts to view\n    }\n\n    public function show(string $id) {\n        $post = Post::findOrFail($id);   // find by ID or throw 404\n        return view('posts.show', compact('post')); // render single post view\n    }\n}\n```\n```php\n<!-- resources/views/posts/index.blade.php -->\n@extends('layouts.app')\n\n@section('content')\n    <h1>Blog Posts</h1>\n    @forelse ($posts as $post)           <!-- Blade: loop or run empty handler -->\n        <article>\n            <h2>{{ $post->title }}</h2>  <!-- escaped output of post title -->\n            <p>{{ Str::limit($post->body, 150) }}</p> <!-- truncated body with 150 chars -->\n            <a href=\"/posts/{{ $post->id }}\">Read more</a>\n        </article>\n    @empty\n        <p>No posts yet.</p>             <!-- shown when posts collection is empty -->\n    @endforelse\n@endsection\n```\nThis demonstrates the full MVC cycle: a request hits a route, the controller fetches data from the model, passes it to a Blade view, and the view extends a layout to render the HTML response." },
-          { id: "ns-php-eloquent", title: "Eloquent ORM & Migrations", shortDesc: "Models, relationships, query scopes, mutators/accessors, migrations, and seeders.", difficulty: "intermediate", readTimeMin: 13, keyPoints: ["Eloquent is Laravel's Active Record ORM; each model maps to a database table", "Migrations version-control your database schema; run php artisan migrate", "CRUD: create, save/update, delete, and query with where/get/find", "Relationships (hasMany, belongsTo, belongsToMany) handle JOINs automatically", "Eager loading with with() prevents the N+1 query problem", "Collections provide map, filter, pluck, and other functional methods on result sets"], tags: ["PHP", "Laravel", "Eloquent", "ORM"], content: "## What's This?\nEloquent is Laravel's built-in ORM (Object-Relational Mapper) that lets you interact with your database using PHP objects instead of writing raw SQL. Each database table has a corresponding Model class that wraps the table rows into objects with methods for querying, inserting, updating, and deleting. Migrations are version-controlled PHP files that define and modify your database schema programmatically. Eloquent exists because raw SQL scattered across code is hard to maintain, test, and refactor -- an ORM provides a clean, expressive API and prevents SQL injection through parameter binding.\n\n## The Big Picture\nEloquent is the default ORM in Laravel and follows the Active Record pattern -- each model instance corresponds to a database row. Migrations allow teams to evolve the database schema collaboratively through version control. Eloquent relationships (one-to-one, one-to-many, many-to-many) handle complex JOIN queries automatically. Combined with factories and seeders, Eloquent makes testing and prototyping fast. Understanding Eloquent is essential for any Laravel developer, as nearly every application involves database persistence.\n\n## Core Ideas\n\n### Migrations\nMigrations are PHP classes in <code>database/migrations/</code> that define table schemas. The <code>up</code> method applies changes; <code>down</code> reverses them. Run <code>php artisan make:migration</code> to generate one.\n```php\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nreturn new class extends Migration {\n    public function up(): void {\n        Schema::create('posts', function (Blueprint $table) { // create posts table\n            $table->id();                // auto-incrementing primary key\n            $table->string('title');     // VARCHAR column for title\n            $table->text('body');        // TEXT column for body content\n            $table->foreignId('user_id')->constrained(); // foreign key to users table\n            $table->timestamps();        // created_at and updated_at columns\n        });\n    }\n\n    public function down(): void {\n        Schema::dropIfExists('posts');   // reverse: drop the posts table\n    }\n};\n```\n\n### Models\nA model represents a database table. By convention, the <code>Post</code> model maps to the <code>posts</code> table. Models provide query methods, relationships, and accessors/mutators.\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Illuminate\\Database\\Eloquent\\Relations\\BelongsTo;\n\nclass Post extends Model {\n    protected $fillable = ['title', 'body', 'user_id']; // mass-assignable fields\n\n    public function user(): BelongsTo {  // define inverse one-to-many relationship\n        return $this->belongsTo(User::class); // each post belongs to one user\n    }\n}\n```\n\n### CRUD Operations\nEloquent provides methods for create, read, update, and delete without writing SQL. The query builder returns collections or model instances.\n```php\n$post = new Post();                      // create a new model instance\n$post->title = \"My First Post\";          // set the title attribute\n$post->body = \"Hello world\";            // set the body attribute\n$post->save();                           // INSERT the record into the database\n\n$posts = Post::where('user_id', 1)       // query builder: filter by user_id\n              ->orderBy('created_at', 'desc') // order by newest first\n              ->get();                   // execute query, return Collection of models\n\n$post = Post::findOrFail(1);             // find by primary key or throw 404\n$post->update(['title' => 'Updated']);   // UPDATE the title column\n\n$post->delete();                         // DELETE the record from the database\n```\n\n### Relationships\nEloquent relationships define how models connect. <code>hasMany</code> / <code>belongsTo</code> handle one-to-many; <code>belongsToMany</code> handles many-to-many with pivot tables.\n```php\nclass User extends Model {\n    public function posts(): HasMany {   // a user has many posts\n        return $this->hasMany(Post::class); // defines one-to-many relationship\n    }\n\n    public function roles(): BelongsToMany { // a user has many roles (many-to-many)\n        return $this->belongsToMany(Role::class); // uses role_user pivot table\n    }\n}\n\n// Usage: eager loading prevents N+1 query problem\n$users = User::with('posts', 'roles')->get(); // eager loads both relationships\nforeach ($users as $user) {              // iterate all users\n    foreach ($user->posts as $post) {    // access related posts without extra queries\n        echo $post->title;\n    }\n}\n```\n\n### Collections\nEloquent returns results as <code>Collection</code> objects, which provide map, filter, pluck, and other functional methods beyond plain arrays.\n```php\n$posts = Post::all();                    // fetch all posts as a Collection\n$titles = $posts->pluck('title');        // extract all titles into a new Collection\n$filtered = $posts->filter(fn($p) => strlen($p->title) > 10); // keep posts with long titles\n$first = $posts->firstWhere('user_id', 1); // first post matching condition\n```\n\n### Accessors and Mutators\nAccessors format attribute values when reading; mutators transform them when setting. Defined using <code>Attribute</code> return type in PHP 8+ style.\n```php\nuse Illuminate\\Database\\Eloquent\\Casts\\Attribute;\n\nclass Post extends Model {\n    protected function excerpt(): Attribute { // define an accessor called \"excerpt\"\n        return Attribute::make(\n            get: fn() => substr($this->body, 0, 100) . '...', // truncate body to 100 chars\n        );\n    }\n}\n\necho $post->excerpt;                     // accesses the computed attribute, not a column\n```\n\n## Wiring It Together\nA complete blog query with filtering, relationship eager loading, and collection manipulation:\n```php\n<?php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass BlogController extends Controller {\n    public function authorPosts(Request $request, string $userId) {\n        $user = User::with('posts')       // eager load posts to avoid N+1 queries\n                    ->findOrFail($userId); // find user or return 404\n\n        $posts = $user->posts()           // query builder for user's posts\n                    ->where('published', true) // only published posts\n                    ->orderBy('created_at', 'desc') // newest first\n                    ->get();              // execute and return Collection\n\n        $summary = [                       // build structured response\n            'author' => $user->name,       // user's display name\n            'total' => $posts->count(),    // count of published posts\n            'recent_titles' => $posts->take(5)->pluck('title'), // titles of 5 most recent\n            'has_long_posts' => $posts->contains(fn($p) => strlen($p->body) > 1000), // any long posts?\n        ];\n\n        return response()->json($summary); // return JSON response\n    }\n}\n\n// Example migration for the posts table\n// database/migrations/xxxx_create_posts_table.php\nuse Illuminate\\Database\\Migrations\\Migration;\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nreturn new class extends Migration {\n    public function up(): void {\n        Schema::create('posts', function (Blueprint $table) {\n            $table->id();\n            $table->string('title', 255);\n            $table->longText('body');\n            $table->boolean('published')->default(false);\n            $table->foreignId('user_id')->constrained()->cascadeOnDelete();\n            $table->timestamps();\n        });\n    }\n\n    public function down(): void {\n        Schema::dropIfExists('posts');\n    }\n};\n```\nThis ties migrations (schema definition), models (Post, User), relationships (belongsTo, hasMany), query builder (where, orderBy, get), eager loading (with), and collection methods (count, take, pluck, contains) into a single feature." },
-          { id: "ns-php-middleware", title: "Middleware & Auth", shortDesc: "Custom middleware, authentication guards, policies, gates, and Laravel Sanctum for APIs.", difficulty: "intermediate", readTimeMin: 14, keyPoints: ["Middleware sits between request and controller; handles cross-cutting concerns", "Global middleware runs on all requests; alias middleware applies to specific routes", "Authentication guards (session, token, Sanctum) determine how users are verified", "Gates are Closure-based authorization; Policies are class-based per model", "Throttle middleware limits request rates to prevent abuse", "Middleware receives a request, passes it down the pipeline, and gets a response back"], tags: ["PHP", "Laravel", "Middleware", "Auth"], content: "## What's This?\nMiddleware is a layer of code that sits between an incoming HTTP request and your application's response, running before the controller handles the request or after the response is generated. Think of it as an onion skin around your application -- each middleware can inspect, modify, or reject requests before they reach the core logic. Middleware exists because cross-cutting concerns like authentication, logging, CORS, and rate limiting should not be duplicated in every controller; middleware centralizes these concerns in reusable, composable layers.\n\n## The Big Picture\nLaravel's middleware system is a pipeline that processes requests through a stack of middleware classes before reaching the route handler. Global middleware runs on every request; route middleware applies to specific routes or groups. Authentication, CSRF protection, and request logging are all implemented as middleware. Laravel ships with built-in middleware for auth, guest, throttle, and more. Custom middleware can handle anything from request transformation to IP whitelisting. Authentication builds on middleware with guards (session, token, Sanctum) and authorization via Gates and Policies.\n\n## Core Ideas\n\n### Creating Middleware\nGenerate middleware with <code>php artisan make:middleware</code>. The <code>handle</code> method receives the request and a closure to pass control to the next middleware.\n```php\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\nuse Symfony\\Component\\HttpFoundation\\Response;\n\nclass LogRequests {\n    public function handle(Request $request, Closure $next): Response {\n        \\Log::info('Request: ' . $request->method() . ' ' . $request->path()); // log method and path\n        $response = $next($request);     // pass request deeper into the pipeline\n        \\Log::info('Response status: ' . $response->status()); // log response status code\n        return $response;               // return response back up the chain\n    }\n}\n```\n\n### Registering Middleware\nRegister middleware in <code>bootstrap/app.php</code> (Laravel 11+). Global middleware runs on every request; alias middleware is assigned to specific routes.\n```php\n// bootstrap/app.php (Laravel 11+)\nuse App\\Http\\Middleware\\LogRequests;\nuse App\\Http\\Middleware\\EnsureTokenIsValid;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withMiddleware(function (Middleware $middleware) {\n        $middleware->append(LogRequests::class); // add to global middleware stack\n        $middleware->alias([\n            'token.valid' => EnsureTokenIsValid::class, // register alias for route use\n        ]);\n    })->create();\n\n// Route file using alias middleware\nRoute::get('/admin', function () {      // protected route\n    return view('admin.dashboard');\n})->middleware('token.valid');           // only runs with valid token\n```\n\n### Authentication Guards\nGuards define how users are authenticated per request. Laravel supports session-based, token-based, and Sanctum guards. The <code>auth</code> middleware protects routes.\n```php\n// config/auth.php (partial)\n'guards' => [\n    'web' => [                         // session-based guard for browser apps\n        'driver' => 'session',\n        'provider' => 'users',\n    ],\n    'api' => [                         // token-based guard for APIs\n        'driver' => 'sanctum',          // uses Laravel Sanctum for API tokens\n        'provider' => 'users',\n    ],\n],\n\n// Route protection with auth middleware\nRoute::get('/dashboard', function () {  // protected route for logged-in users\n    return view('dashboard');\n})->middleware('auth');                  // redirects guests to login page\n\nRoute::get('/api/user', function (Request $request) {\n    return $request->user();            // returns authenticated user via Sanctum\n})->middleware('auth:sanctum');          // uses sanctum guard for API auth\n```\n\n### Gates and Policies\nGates are Closure-based authorization checks; Policies are classes organizing authorization logic around a model.\n```php\n// Define a gate in AppServiceProvider\nuse Illuminate\\Support\\Facades\\Gate;\n\nGate::define('edit-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id; // only the author can edit\n});\n\n// Using the gate in a controller\npublic function update(Request $request, Post $post) {\n    Gate::authorize('edit-post', $post); // throws AuthorizationException if denied\n    $post->update($request->only('title', 'body')); // safe to update after auth\n}\n\n// Policy alternative (auto-discovered for Post model)\nclass PostPolicy {\n    public function update(User $user, Post $post): bool {\n        return $user->id === $post->user_id; // same logic in policy form\n    }\n}\n```\n\n### Rate Limiting\nLaravel's throttle middleware limits request frequency per IP or user, preventing abuse.\n```php\n// In route definition\nRoute::middleware('throttle:60,1')->group(function () { // 60 requests per minute max\n    Route::get('/api/posts', [PostController::class, 'index']);\n    Route::post('/api/posts', [PostController::class, 'store']);\n});\n\n// Named rate limiter in AppServiceProvider or bootstrap/app.php\nRateLimiter::for('api', function (Request $request) {\n    return Limit::perMinute(100)->by($request->user()?->id ?: $request->ip()); // 100/min per user or IP\n});\n```\n\n## Wiring It Together\nAn API with logging, authentication, authorization, and rate limiting working together:\n```php\n// bootstrap/app.php (Laravel 11+)\nuse App\\Http\\Middleware\\LogRequests;\nuse Illuminate\\Cache\\RateLimiting\\Limit;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\RateLimiter;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withMiddleware(function (Middleware $middleware) {\n        $middleware->append(LogRequests::class); // global: log every request/response\n        $middleware->alias([\n            'check.role' => \\App\\Http\\Middleware\\CheckRole::class, // custom role check\n        ]);\n        $middleware->api(prepend: [     // prepend to 'api' middleware group\n            \\App\\Http\\Middleware\\EnsureTokenIsValid::class,\n        ]);\n    })\n    ->withRouting(\n        api: __DIR__.'/../routes/api.php',\n    );\n```\n```php\n// routes/api.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::middleware('auth:sanctum')->group(function () {   // all routes require auth token\n    Route::get('/posts', [PostController::class, 'index']);\n    \n    Route::post('/posts', [PostController::class, 'store'])\n        ->middleware('throttle:30,1');                   // extra rate limit on writes\n    \n    Route::put('/posts/{post}', [PostController::class, 'update'])\n        ->middleware('can:update,post');                 // authorize via PostPolicy\n});\n```\n```php\n// app/Http/Middleware/CheckRole.php\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\n\nclass CheckRole {\n    public function handle(Request $request, Closure $next, string $role): mixed {\n        if (!$request->user() || !$request->user()->hasRole($role)) {\n            abort(403, 'Unauthorized');  // reject with 403 if wrong role\n        }\n        return $next($request);          // pass through if authorized\n    }\n}\n```\n```php\n// app/Policies/PostPolicy.php\nnamespace App\\Policies;\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\n\nclass PostPolicy {\n    public function update(User $user, Post $post): bool {\n        return $user->id === $post->user_id; // only post author can update\n    }\n\n    public function delete(User $user, Post $post): bool {\n        return $user->id === $post->user_id || $user->isAdmin(); // author or admin\n    }\n}\n```\nThis demonstrates middleware pipeline composition: logging (global), token validation (api group), auth:sanctum (route group), throttle (specific routes), and policy-based authorization (can middleware)." },
-          { id: "ns-php-testing", title: "Testing (PHPUnit, Pest)", shortDesc: "Unit/feature tests, HTTP tests, database tests, mocking, and TDD workflows.", difficulty: "advanced", readTimeMin: 14, keyPoints: ["PHPUnit is the standard PHP testing framework; Pest offers a more expressive syntax on top", "Test methods use assertions like assertEquals, assertTrue, and assertDatabaseHas", "Data providers run the same test with multiple input sets", "Mocks replace real dependencies to verify interactions without side effects", "Laravel HTTP tests simulate requests in-memory with helpers like actingAs and postJson", "RefreshDatabase trait resets the database between tests for isolation"], tags: ["PHP", "Testing", "PHPUnit", "Pest"], content: "## What's This?\nTesting in PHP means writing code that verifies your application behaves correctly. PHPUnit is the de facto standard testing framework, and Pest is a modern, expressive wrapper built on top of PHPUnit. Tests execute your application code with known inputs and assert that outputs match expectations. Testing exists because manual testing is slow, error-prone, and doesn't scale -- automated tests catch regressions, document behavior, and give you confidence to refactor. The testing pyramid recommends many fast unit tests, fewer integration tests, and even fewer end-to-end tests.\n\n## The Big Picture\nPHPUnit has been the backbone of PHP testing for decades. Pest offers a more readable syntax with functions like <code>it()</code>, <code>expect()</code>, and <code>toBe()</code>, while still running on PHPUnit under the hood. Laravel uses PHPUnit by default and provides helper methods for HTTP testing, database testing, and mocking. Factories generate test data, and seeders populate databases for integration tests. A solid test suite is non-negotiable for production applications -- it enables continuous delivery, documents edge cases, and prevents regressions during refactoring.\n\n## Core Ideas\n\n### PHPUnit Test Structure\nTests are classes extending <code>PHPUnit\\Framework\\TestCase</code>. Methods prefixed with <code>test</code> or annotated with <code>#[Test]</code> are test cases. Assertions compare actual vs. expected values.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass UserTest extends TestCase {\n    public function test_full_name_is_constructed_from_first_and_last(): void {\n        $user = new \\App\\User('John', 'Doe'); // create a user instance\n        $this->assertEquals('John Doe', $user->fullName()); // assert fullName matches\n    }\n\n    #[Test]\n    public function email_validation_rejects_invalid_formats(): void {\n        $validator = new \\App\\Validator();\n        $this->assertFalse($validator->isEmail('not-an-email')); // assert returns false\n    }\n}\n```\n\n### Pest Syntax\nPest uses functions instead of classes. The <code>test()</code> and <code>it()</code> functions define cases; <code>expect()</code> enables a fluent assertion API.\n```php\n// tests/Unit/UserTest.php\ntest('full name combines first and last', function () {\n    $user = new \\App\\User('Jane', 'Doe');\n    expect($user->fullName())->toBe('Jane Doe'); // fluent assertion\n});\n\nit('validates email format correctly', function () {\n    $validator = new \\App\\Validator();\n    expect($validator->isEmail('jane@example.com'))->toBeTrue(); // passes\n    expect($validator->isEmail('bad'))->toBeFalse(); // fails for bad input\n});\n```\n\n### Data Providers\nData providers supply multiple input sets to a single test, avoiding duplication.\n```php\nuse PHPUnit\\Framework\\Attributes\\DataProvider;\n\nclass MathTest extends TestCase {\n    #[DataProvider('additionProvider')]\n    public function test_add(int $a, int $b, int $expected): void {\n        $this->assertEquals($expected, \\App\\Math::add($a, $b));\n    }\n\n    public static function additionProvider(): array {\n        return [\n            [1, 2, 3],                 // test case: 1 + 2 = 3\n            [0, 0, 0],                 // test case: 0 + 0 = 0\n            [-1, 1, 0],               // test case: -1 + 1 = 0\n        ];\n    }\n}\n\n// Pest equivalent\nit('adds numbers correctly', function (int $a, int $b, int $expected) {\n    expect(\\App\\Math::add($a, $b))->toBe($expected);\n})->with([\n    [1, 2, 3],\n    [0, 0, 0],\n    [-1, 1, 0],\n]);\n```\n\n### Mocking\nMocks replace real objects with test doubles that simulate behavior and verify interactions.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass OrderServiceTest extends TestCase {\n    public function test_order_sends_notification(): void {\n        $mailer = $this->createMock(\\App\\Mailer::class); // create test double\n        $mailer->expects($this->once())  // assert method is called exactly once\n               ->method('send')          // specify the method to mock\n               ->with('Thank you!')      // assert argument passed to send\n               ->willReturn(true);       // define return value\n\n        $service = new \\App\\OrderService($mailer); // inject mock\n        $service->processOrder(100);     // execute with mocked dependency\n    }\n}\n```\n\n### Laravel HTTP Tests\nLaravel provides methods like <code>get()</code>, <code>post()</code>, and <code>assertStatus()</code> to test HTTP endpoints without a real server.\n```php\nnamespace Tests\\Feature;\n\nuse Tests\\TestCase;\nuse App\\Models\\Post;\nuse App\\Models\\User;\n\nclass PostTest extends TestCase {\n    public function test_authenticated_user_can_create_post(): void {\n        $user = User::factory()->create(); // create a test user via factory\n\n        $response = $this->actingAs($user) // authenticate as this user\n                         ->post('/posts', [ // send POST request to /posts\n                             'title' => 'Test Title',\n                             'body' => 'Test body content',\n                         ]);\n\n        $response->assertStatus(302);      // assert redirect after creation\n        $this->assertDatabaseHas('posts', [ // verify database has the record\n            'title' => 'Test Title',\n        ]);\n    }\n}\n```\n\n### SetUp and TearDown\nRun common setup before each test and cleanup after. Prevents duplication of test scaffolding.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass UserRepositoryTest extends TestCase {\n    private \\App\\UserRepository $repository;\n\n    protected function setUp(): void {    // runs before every test method\n        $this->repository = new \\App\\UserRepository(); // fresh instance per test\n    }\n\n    protected function tearDown(): void {  // runs after every test method\n        \\Mockery::close();                 // clean up Mockery expectations\n    }\n\n    public function test_find_returns_null_for_missing_user(): void {\n        $result = $this->repository->find(999); // non-existent ID\n        $this->assertNull($result);         // expect null result\n    }\n}\n```\n\n## Wiring It Together\nA full Laravel feature test for a blog API endpoint:\n```php\n<?php\nnamespace Tests\\Feature;\n\nuse Tests\\TestCase;\nuse App\\Models\\User;\nuse App\\Models\\Post;\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n\nclass PostApiTest extends TestCase {\n    use RefreshDatabase;                  // reset database after each test\n\n    public function test_unauthenticated_user_cannot_create_post(): void {\n        $response = $this->postJson('/api/posts', [ // POST as JSON without auth\n            'title' => 'Hacked Post',\n            'body' => 'Should not appear',\n        ]);\n\n        $response->assertStatus(401);      // assert unauthorized response\n    }\n\n    public function test_authenticated_user_can_list_own_posts(): void {\n        $user = User::factory()            // use factory to create a test user\n            ->has(Post::factory()->count(3)) // create 3 posts for this user\n            ->create();\n\n        $response = $this->actingAs($user) // authenticate\n                         ->getJson('/api/posts'); // GET request expecting JSON\n\n        $response->assertStatus(200)       // assert successful response\n                 ->assertJsonCount(3);     // assert response has 3 posts\n    }\n\n    #[\\PHPUnit\\Framework\\Attributes\\DataProvider('validationProvider')]\n    public function test_post_validation_rules(string $field, mixed $value, string $errorKey): void {\n        $user = User::factory()->create();\n\n        $response = $this->actingAs($user)\n                         ->postJson('/api/posts', [\n                             $field => $value,\n                         ]);\n\n        $response->assertStatus(422)       // assert validation error status\n                 ->assertJsonValidationErrors([$errorKey]); // check specific field error\n    }\n\n    public static function validationProvider(): array {\n        return [\n            'title required' => ['title', '', 'title'],\n            'title too long' => ['title', str_repeat('a', 256), 'title'],\n            'body required' => ['body', null, 'body'],\n        ];\n    }\n}\n```\nThis combines PHPUnit structure, RefreshDatabase trait, Laravel HTTP test helpers (actingAs, postJson, getJson), factories with relationships, JSON assertions, and a data provider for comprehensive validation coverage." },
-          { id: "ns-php-wordpress", title: "WordPress Plugin & Theme Dev", shortDesc: "Hooks (actions/filters), CPT, meta boxes, shortcodes, the REST API, and block editor (Gutenberg).", difficulty: "advanced", readTimeMin: 13, keyPoints: ["Plugins extend functionality; themes control presentation; never edit core files", "Actions run code at specific points; filters modify data before output", "Shortcodes are macros that expand to dynamic content in post editor", "The Loop iterates through posts using have_posts() and the_post()", "WP_Query creates custom database queries outside the main Loop", "Always enqueue scripts and styles with wp_enqueue_script/wp_enqueue_style"], tags: ["PHP", "WordPress", "Plugins", "Themes"], content: "## What's This?\nWordPress plugin and theme development is the practice of extending WordPress's functionality without modifying core files. A plugin adds custom features, while a theme controls the visual presentation. The WordPress plugin system is built on hooks -- actions (trigger points) and filters (data modifiers) -- that let your code run at specific moments during request execution. Plugin and theme development exists because directly editing WordPress core would lose changes on every update; hooks provide stable, upgrade-safe extension points that survive core upgrades.\n\n## The Big Picture\nWordPress powers roughly 40% of all websites. Its plugin architecture has created a massive ecosystem with over 60,000 free plugins. Themes use a template hierarchy that falls back from page-specific templates to <code>index.php</code>. Custom post types extend WordPress beyond blog posts into any content type (products, events, portfolios). The Loop is the central pattern for displaying content. Understanding hooks (actions and filters), the template hierarchy, the Loop, and enqueuing assets is essential for any WordPress developer building custom websites or contributing to the ecosystem.\n\n## Core Ideas\n\n### Plugin Structure\nA plugin is a PHP file with a specific header comment placed in <code>wp-content/plugins/</code>. The header identifies the plugin in the admin dashboard.\n```php\n<?php\n/**\n * Plugin Name: Custom Quotes      // displayed name in plugins list\n * Description: Adds a custom quote post type and shortcode\n * Version: 1.0.0\n * Author: Your Name\n */\n\n// Prevent direct access\nif (!defined('ABSPATH')) {           // ABSPATH is WordPress root directory constant\n    exit;                            // stop execution if accessed directly\n}\n```\n\n### Actions and Filters\nActions run at specific points (e.g., <code>init</code>, <code>wp_head</code>); filters modify data (e.g., <code>the_content</code>, <code>excerpt_length</code>). Both use <code>add_action</code> and <code>add_filter</code>.\n```php\n// Action: runs code at a specific execution point\nadd_action('init', 'register_my_post_type'); // hook function into WordPress init event\n\nfunction register_my_post_type(): void {\n    register_post_type('quote', [       // register a custom post type\n        'public' => true,\n        'label' => 'Quotes',\n        'supports' => ['title', 'editor', 'thumbnail'],\n    ]);\n}\n\n// Filter: modifies content before output\nadd_filter('the_content', 'add_quote_prefix'); // filter post content before display\n\nfunction add_quote_prefix(string $content): string {\n    if (get_post_type() === 'quote') {  // only modify quote post type\n        return '<blockquote>' . $content . '</blockquote>'; // wrap in blockquote tags\n    }\n    return $content;                    // pass through unmodified\n}\n```\n\n### Shortcodes\nShortcodes are macros that expand to dynamic content. Register them with <code>add_shortcode</code>. The function returns a string that replaces the shortcode in post content.\n```php\nadd_shortcode('random_quote', 'render_random_quote'); // register [random_quote] shortcode\n\nfunction render_random_quote(): string {\n    $args = [\n        'post_type' => 'quote',        // query the quote post type\n        'posts_per_page' => 1,          // only fetch one post\n        'orderby' => 'rand',            // randomize the order\n    ];\n    $query = new WP_Query($args);       // create custom database query\n\n    if ($query->have_posts()) {         // check if any posts were found\n        $query->the_post();             // set up post data for template tags\n        return '<p class=\"quote\">' . get_the_content() . '</p>'; // return post content\n    }\n    return '<p>No quotes found.</p>';   // fallback when no posts exist\n}\n\n// Usage in post editor: [random_quote]\n```\n\n### The Loop\nThe Loop is WordPress's standard way of displaying posts. It iterates through posts from a query, setting up global post data for each iteration.\n```php\n// Typically in index.php or archive.php\nif (have_posts()) {                     // check if query returned any posts\n    while (have_posts()) {              // loop while there are posts to process\n        the_post();                     // set up $post global with current post data\n        ?>\n        <article>\n            <h2><a href=\"<?php the_permalink(); ?>\"><?php the_title(); ?></a></h2>\n            <div><?php the_excerpt(); ?></div>\n        </article>\n        <?php\n    }\n} else {\n    echo '<p>No posts found.</p>';      // shown when no posts match query\n}\n```\n\n### Enqueuing Assets\nUse <code>wp_enqueue_script</code> and <code>wp_enqueue_style</code> to load JavaScript and CSS. Always enqueue rather than hardcode tags to avoid duplication and manage dependencies.\n```php\nadd_action('wp_enqueue_scripts', 'load_plugin_assets'); // hook into frontend asset loading\n\nfunction load_plugin_assets(): void {\n    wp_enqueue_style(                  // register and enqueue a stylesheet\n        'my-plugin-styles',            // unique handle for this stylesheet\n        plugin_dir_url(__FILE__) . 'assets/style.css', // full URL to CSS file\n        [],                            // no dependencies\n        '1.0.0'                        // version string for cache busting\n    );\n\n    wp_enqueue_script(                 // register and enqueue a JavaScript file\n        'my-plugin-script',            // unique handle\n        plugin_dir_url(__FILE__) . 'assets/script.js', // full URL to JS file\n        ['jquery'],                    // depends on jQuery being loaded first\n        '1.0.0',                       // version\n        true                           // load in footer (not header)\n    );\n}\n```\n\n### Theme Template Hierarchy\nWordPress selects the appropriate template file based on the query. The hierarchy falls back from most specific to most generic (<code>index.php</code>).\n```php\n// templates in increasing specificity:\n// index.php          -> ultimate fallback for all requests\n// archive.php         -> archive pages (category, tag, date, author)\n// single.php          -> single post of any post type\n// single-quote.php    -> single post of \"quote\" post type only\n// page.php            -> static pages\n// page-about.php      -> static page with slug \"about\"\n// front-page.php      -> site front page (overrides index.php)\n\n// Example single-quote.php\n<?php\nget_header();                           // load header.php\nif (have_posts()) {\n    while (have_posts()) {\n        the_post();\n        ?>\n        <article>\n            <blockquote><?php the_content(); ?></blockquote>\n            <cite>&mdash; <?php the_title(); ?></cite>\n        </article>\n        <?php\n    }\n}\nget_footer();                           // load footer.php\n```\n\n## Wiring It Together\nA complete plugin that creates a \"Testimonial\" custom post type with a shortcode and proper asset enqueuing:\n```php\n<?php\n/**\n * Plugin Name: Testimonials Manager\n * Description: Custom testimonials post type with shortcode display\n * Version: 1.0.0\n */\n\nif (!defined('ABSPATH')) exit;         // block direct file access\n\n// 1. Register custom post type on WordPress init\nadd_action('init', 'tm_register_post_type');\n\nfunction tm_register_post_type(): void {\n    register_post_type('testimonial', [  // register testimonial CPT\n        'public' => true,\n        'label' => 'Testimonials',\n        'supports' => ['title', 'editor', 'thumbnail'],\n        'menu_icon' => 'dashicons-format-quote',\n    ]);\n}\n\n// 2. Add a shortcode to display testimonials\nadd_shortcode('testimonials', 'tm_render_testimonials');\n\nfunction tm_render_testimonials(): string {\n    $query = new WP_Query([\n        'post_type' => 'testimonial',\n        'posts_per_page' => 5,\n        'orderby' => 'date',\n        'order' => 'DESC',\n    ]);\n\n    if (!$query->have_posts()) {\n        return '<p>No testimonials yet.</p>';\n    }\n\n    $output = '<div class=\"testimonials-list\">';\n    while ($query->have_posts()) {\n        $query->the_post();\n        $output .= '<blockquote>';\n        $output .= get_the_content();\n        $output .= '<cite>&mdash; ' . get_the_title() . '</cite>';\n        $output .= '</blockquote>';\n    }\n    $output .= '</div>';\n    wp_reset_postdata();                 // restore global post data\n    return $output;\n}\n\n// 3. Enqueue stylesheet\nadd_action('wp_enqueue_scripts', 'tm_enqueue_assets');\n\nfunction tm_enqueue_assets(): void {\n    wp_enqueue_style(\n        'tm-styles',\n        plugin_dir_url(__FILE__) . 'testimonials.css',\n        [],\n        '1.0.0'\n    );\n}\n```\nThis plugin demonstrates the full cycle: registering a custom post type via an action hook, creating a shortcode with WP_Query and The Loop, and enqueuing frontend assets safely." },
-          { id: "ns-php-deploy", title: "Deployment & Tooling", shortDesc: "Laravel Forge, Envoyer, Docker/Sail, PHPStan, Laravel Horizon, and Octane.", difficulty: "advanced", readTimeMin: 14, keyPoints: [".env files store environment-specific configuration; never commit secrets to Git", "CI/CD pipelines automatically test and deploy code on push to main branch", "Laravel optimization: cache config, routes, views, and events for faster response times", "OPcache stores compiled PHP in memory; disable timestamp validation in production", "Queue workers process background jobs asynchronously; Supervisor keeps them running", "Laravel Forge automates server provisioning, Nginx setup, SSL, and deployment scripting"], tags: ["PHP", "Deployment", "DevOps", "Laravel"], content: "## What's This?\nDeployment and tooling in PHP covers the process of taking your application from a development environment to a production server where real users can access it. This includes environment configuration, CI/CD pipelines, server provisioning, caching, queue management, and monitoring. Deployment exists because running code on your local machine is fundamentally different from running it on a production server -- differences in PHP versions, extensions, database credentials, and performance requirements must be handled systematically to prevent downtime and security issues.\n\n## The Big Picture\nPHP deployment has evolved from FTP-uploading files to sophisticated CI/CD pipelines using GitHub Actions, GitLab CI, or Laravel Forge. Modern tooling includes Docker for consistent environments, Envoyer for zero-downtime deployments, and services like Laravel Vapor for serverless PHP. Performance optimization involves OPcache, config caching, queue workers, and CDN integration. A proper deployment workflow includes automated testing, environment separation (development/staging/production), secret management, and monitoring with tools like Flare or Sentry.\n\n## Core Ideas\n\n### Environment Configuration\nEnvironment variables separate configuration from code. Laravel uses a <code>.env</code> file for local development and sets real environment variables on the server. Never commit secrets to version control.\n```php\n// .env file (never committed to Git)\nAPP_ENV=production                 // current environment name\nAPP_DEBUG=false                    // disable debug mode in production\nDB_HOST=127.0.0.1                  // database host address\nDB_DATABASE=blog                   // database name\nDB_USERNAME=deploy_user            // database user\nDB_PASSWORD=secret                 // database password (keep secret)\n\n// Access in code\n$dbHost = env('DB_HOST', 'localhost'); // get env var with fallback default\n$isProduction = env('APP_ENV') === 'production'; // boolean check for environment\n```\n\n### Deployment Pipeline (CI/CD)\nA CI/CD pipeline automatically runs tests, builds assets, and deploys your application. GitHub Actions is a common choice for PHP projects.\n```yaml\n# .github/workflows/deploy.yml\nname: Deploy\non:\n  push:\n    branches: [main]               // trigger on pushes to main branch\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4   // checkout repository code\n      - uses: shivammathur/setup-php@v2 // install PHP with extensions\n        with:\n          php-version: '8.2'\n      - run: composer install --no-dev --optimize-autoloader // install prod deps\n      - run: php artisan config:cache   // cache config for performance\n      - run: php artisan route:cache    // cache routes for performance\n      - run: php artisan migrate --force // run database migrations (forced)\n```\n\n### Laravel Optimization Commands\nLaravel provides Artisan commands to cache configurations, routes, and views. These dramatically improve performance by reducing file parsing on each request.\n```bash\n# Run these on each deployment before putting the site live\nphp artisan config:cache            # merge all config files into one cached file\nphp artisan route:cache             # serialize route registrations for fast loading\nphp artisan view:cache              # pre-compile all Blade templates to plain PHP\nphp artisan event:cache             # cache event/listener registrations\nphp artisan optimize                # run all of the above at once\nphp artisan queue:restart           # restart queue workers to pick up code changes\n```\n\n### OPcache\nOPcache stores compiled PHP scripts in shared memory, eliminating the need to parse and compile on every request. Enable and configure it in <code>php.ini</code>.\n```ini\n; php.ini OPcache configuration for production\nopcache.enable=1                    ; enable OPcache globally\nopcache.memory_consumption=128      ; allocate 128MB for cached compiled scripts\nopcache.max_accelerated_files=10000 ; maximum number of cached PHP files\nopcache.validate_timestamps=0       ; disable timestamp checks in production (faster)\n```\n\n### Queues and Workers\nPHP queues handle time-consuming tasks (email, image processing) asynchronously. Laravel's queue system supports Redis, database, and SQS drivers. Workers process jobs in the background.\n```php\n// Dispatching a job to the queue\nuse App\\Jobs\\SendWelcomeEmail;\n\nSendWelcomeEmail::dispatch($user);   // push job onto the default queue\nSendWelcomeEmail::dispatch($user)->onQueue('emails'); // push to specific queue\n\n// Start queue worker (supervisor keeps it running)\n// php artisan queue:work --queue=emails,default --sleep=3 --tries=3\n\n// Supervisor configuration (/etc/supervisor/conf.d/laravel-worker.conf)\n[program:laravel-worker]\nprocess_name=%(program_name)s_%(process_num)02d\ncommand=php /var/www/artisan queue:work --sleep=3 --tries=3 --max-time=3600\nautostart=true                      ; start worker when supervisor starts\nautorestart=true                    ; restart worker if it crashes\nnumprocs=4                          ; run 4 worker processes in parallel\n```\n\n### Server Provisioning (Laravel Forge)\nLaravel Forge automates server provisioning on DigitalOcean, AWS, Linode, and others. It installs Nginx, PHP, MySQL, Redis, and configures queue workers, cron jobs, and SSL certificates.\n```bash\n# Forge handles these tasks automatically:\n# - Creates a server with Nginx, PHP 8.x, MySQL/PostgreSQL, Redis\n# - Configures Nginx sites with SSL via Let's Encrypt\n# - Sets up queue workers with Supervisor\n# - Configures cron jobs for scheduled tasks (php artisan schedule:run)\n# - Manages deployment scripts (git pull, composer install, migrations)\n# - Monitors server health and sends alerts\n#\n# Example deployment script configured in Forge:\n# cd /home/forge/example.com\n# git pull origin main\n# composer install --no-dev --no-interaction --optimize-autoloader\n# if [ -f artisan ]; then\n#   php artisan migrate --force\n#   php artisan config:cache\n#   php artisan route:cache\n#   php artisan view:cache\n#   php artisan queue:restart\n# fi\n```\n\n## Wiring It Together\nA complete GitHub Actions deployment workflow for a Laravel application:\n```yaml\n# .github/workflows/deploy.yml\nname: Deploy Laravel Application\non:\n  push:\n    branches: [main]\n\njobs:\n  test-and-deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v4\n\n      - name: Setup PHP\n        uses: shivammathur/setup-php@v2\n        with:\n          php-version: '8.2'\n          extensions: mbstring, pdo_mysql, redis, imagick\n\n      - name: Install dependencies\n        run: composer install --no-progress --prefer-dist --optimize-autoloader\n\n      - name: Run tests\n        run: php artisan test          // run PHPUnit test suite\n        env:\n          DB_CONNECTION: sqlite        // use SQLite for CI testing\n          DB_DATABASE: :memory:\n\n      - name: Deploy to production\n        if: success()                  // only deploy if tests pass\n        run: |\n          # Using Forge CLI or SSH deploy\n          # forge deploy your-site-id\n          # Or manually via SSH:\n          ssh deploy@example.com \"\n            cd /var/www/app &&\n            git pull origin main &&\n            composer install --no-dev --optimize-autoloader &&\n            php artisan migrate --force &&\n            php artisan config:cache &&\n            php artisan route:cache &&\n            php artisan view:cache &&\n            php artisan queue:restart\n          \"\n```\n```php\n// config/deploy.php -- deploy configuration checklist\nreturn [\n    'environments' => [\n        'local' => [\n            'debug' => true,\n            'opcache' => false,\n        ],\n        'staging' => [\n            'debug' => true,\n            'opcache' => true,\n        ],\n        'production' => [\n            'debug' => false,          // never show errors in production\n            'opcache' => true,          // always enable OPcache\n            'config_cache' => true,     // cache config on deploy\n            'queue_driver' => 'redis', // use Redis for production queues\n        ],\n    ],\n];\n```\nThis ties together environment configuration (env vars), CI/CD pipeline (GitHub Actions), Laravel optimization (config/route/view cache), database migrations, and queue management into a production-ready deployment workflow." },
+          { id: "ns-php-syntax", title: "PHP Syntax & Basics", shortDesc: "Tags, variables, data types, echo/print, strings, arrays, and superglobals ($_GET, $_POST, $_SESSION).", difficulty: "foundational", readTimeMin: 10, keyPoints: ["PHP is a server-side scripting language embedded in HTML via <?php ?> tags", "Variables start with $ and are loosely typed by default", "Eight primitive types: boolean, integer, float, string, array, object, resource, null", "Double-quoted strings interpolate variables; single-quoted strings do not", "Arrays are ordered maps supporting both integer and string keys", "Use === for strict comparison to avoid type-juggling surprises"], tags: ["PHP", "Syntax", "Basics"], content: "## What's This?\nPHP syntax is the set of rules that govern how PHP code is written and interpreted by the engine. It is the grammar of the language -- you must arrange words, symbols, and punctuation in the correct order for the computer to understand your instructions. PHP is a server-side scripting language designed for web development, meaning it runs on the server before sending HTML to the browser. It exists because building dynamic websites requires generating content programmatically rather than editing static HTML files by hand. PHP's syntax borrows from C, Perl, and Java, making it familiar to developers from those backgrounds.\n\n## The Big Picture\nPHP powers roughly three-quarters of websites using a server-side language, including platforms like WordPress and Wikipedia. Its syntax integrates with HTML through `<?php ?>` tags, making it natural for templating. Understanding variables, data types, operators, strings, and arrays is the foundation for everything from vanilla scripts to frameworks like Laravel and Symfony. PHP is forgiving via loose typing but offers strict typing when you opt in.\n\n## Core Ideas\n\n### Variables and Data Types\nVariables start with `$` and need no explicit type declaration -- PHP infers the type from the assigned value. The eight primitive types are boolean, integer, float, string, array, object, resource, and null.\n```php\n$name = \"Alice\";              // string - a sequence of characters\n$age = 30;                    // integer - a whole number without decimals\n$height = 5.8;                // float - a decimal number\n$isAdmin = true;              // boolean - true or false value\n$colors = [\"red\", \"blue\"];   // array - ordered collection of items\n```\n\n### Strings and Concatenation\nPHP has single and double-quoted strings. Double quotes interpret variables and escape sequences; single quotes treat everything literally. The dot operator `.` concatenates strings.\n```php\n$greeting = \"Hello, $name!\";  // double quotes interpolate $name to \"Alice\"\n$literal = 'Hello, $name!';   // single quotes output $name literally\n$combined = \"Hello \" . \"World\"; // dot operator joins two strings together\n$now = \"Time: \" . date('H:i'); // dot chains a function result with a string\n```\n\n### Arrays\nArrays are ordered maps supporting integer and string keys. They hold mixed types and grow dynamically.\n```php\n$fruits = [\"apple\", \"banana\"];  // indexed array uses default integer keys\n$user = [\"name\" => \"Alice\", \"age\" => 30]; // associative array uses named keys\necho $fruits[0];                // outputs \"apple\" via integer index access\necho $user[\"name\"];             // outputs \"Alice\" via string key access\n$fruits[] = \"cherry\";           // appends \"cherry\" at the next integer index\n```\n\n### Operators\nArithmetic, comparison, logical, and assignment operators manipulate values. The difference between `==` (loose) and `===` (strict) is critical because PHP type-jugs automatically.\n```php\n$sum = 10 + 5;                  // addition operator returns 15\n$isEqual = (5 == \"5\");          // loose equality: true because values match\n$isIdentical = (5 === \"5\");     // strict equality: false because types differ\n$isAdult = ($age >= 18 && $age <= 120); // logical AND combines two comparisons\n```\n\n## Wiring It Together\nThis script processes a registration form, validates input, and returns a response:\n```php\n<?php\n$errors = [];                          // initialize empty error message array\n$name = trim($_POST[\"name\"] ?? \"\");    // read name from POST, trim whitespace\n$email = filter_var($_POST[\"email\"] ?? \"\", FILTER_SANITIZE_EMAIL); // sanitize email\n\nif (strlen($name) < 2) {               // reject names shorter than 2 characters\n    $errors[] = \"Name must be 2+ characters\"; // push error onto array\n}\nif (!filter_var($email, FILTER_VALIDATE_EMAIL)) { // check email format validity\n    $errors[] = \"Invalid email address\"; // add validation error message\n}\n\nif (count($errors) > 0) {              // if any errors were collected\n    echo \"<h3>Errors:</h3>\";           // render error section heading\n    foreach ($errors as $error) {       // iterate every error in the array\n        echo \"<p>$error</p>\";          // display each error in a paragraph tag\n    }\n} else {\n    $welcome = \"Welcome, $name!\";     // interpolate name into greeting string\n    $domain = substr(strstr($email, \"@\"), 1); // extract domain substring after @\n    echo \"<h1>$welcome</h1>\";          // output welcome as heading\n    echo \"<p>Your email domain: $domain</p>\"; // show extracted domain\n}\n?>\n```\nThis ties variables, arrays, string functions, conditionals, loops, and superglobals into a realistic form-processing flow." },
+          { id: "ns-php-control-flow", title: "Control Flow & Functions", shortDesc: "if/else/elseif, switch, for/foreach/while, user-defined functions, variable scope, and type declarations.", difficulty: "foundational", readTimeMin: 11, keyPoints: ["if/elseif/else evaluates conditions top-down and executes the first true block", "match (PHP 8+) is a strict, expression-based switch alternative", "foreach loops over arrays; for uses a counter; while checks a condition", "Functions declare typed parameters and return types for predictability", "Variables are function-scoped by default; use global to import outer scope", "Arrow functions (fn) capture outer variables automatically without use keyword"], tags: ["PHP", "Control Flow", "Functions"], content: "## What's This?\nControl flow and functions are the mechanisms that let your PHP code make decisions, repeat tasks, and organize logic into reusable units. Control flow statements like `if`, `for`, and `switch` determine which code blocks execute based on conditions. Functions package a sequence of statements under a name so you can call them from anywhere without duplicating code. They exist because programs would be unmanageable without conditional logic, loops, and modular organization -- every nontrivial application needs these building blocks.\n\n## The Big Picture\nControl flow and functions form the backbone of every PHP application. Conditionals handle routing logic, input validation, and authorization. Loops process database result sets, arrays, and paginated data. Functions encapsulate everything from validation helpers to database queries. The `match` expression (PHP 8) and arrow functions provide modern alternatives to older constructs. Mastering these tools is necessary before moving to OOP, frameworks, or any advanced PHP topic.\n\n## Core Ideas\n\n### Conditionals: if, elseif, else\nPHP evaluates a boolean expression and executes the corresponding block. You can chain multiple conditions without limit.\n```php\nif ($score >= 90) {                  // first condition checked\n    $grade = \"A\";                    // executes only when score >= 90\n} elseif ($score >= 80) {            // checked only when first is false\n    $grade = \"B\";\n} else {\n    $grade = \"F\";                    // fallback when all conditions fail\n}\n```\n\n### The match Expression (PHP 8)\n`match` is a strict, expression-based alternative to `switch`. It returns a value and does not require break statements.\n```php\n$statusCode = 404;\n$message = match ($statusCode) {     // match evaluates $statusCode strictly\n    200 => \"OK\",                     // returns \"OK\" if statusCode === 200\n    404 => \"Not Found\",             // returns \"Not Found\" if statusCode === 404\n    default => \"Unknown\"            // fallback when no arm matches\n};                                    // match always returns a value\n```\n\n### Loops: foreach, for, while\n`foreach` iterates arrays and objects. `for` runs a known number of times. `while` runs until a condition becomes false.\n```php\nforeach ($users as $user) {          // loop over each element in $users array\n    echo $user[\"name\"];              // access name key of current user\n}\nfor ($i = 0; $i < 5; $i++) {        // init counter; check condition; increment\n    echo $i;                         // outputs 0 1 2 3 4\n}\nwhile ($row = $result->fetch()) {    // fetch returns false when no more rows\n    echo $row[\"title\"];              // display title from current row\n}\n```\n\n### Defining Functions\nFunctions are declared with `function`, accept typed parameters, and can declare a return type. Default parameter values make arguments optional.\n```php\nfunction greet(string $name): string { // parameter typed as string, returns string\n    return \"Hello, $name!\";           // returns the greeting to the caller\n}\nfunction add(int $a, int $b = 0): int { // $b defaults to 0 when not provided\n    return $a + $b;\n}\n$result = greet(\"Alice\");             // calls function, $result = \"Hello, Alice!\"\n```\n\n### Variable Scope\nVariables declared outside functions are global; variables inside functions are local. The `global` keyword accesses global scope from within a function.\n```php\n$taxRate = 0.08;                      // global scope variable\nfunction calculateTax(float $price): float {\n    global $taxRate;                  // imports global $taxRate into function scope\n    return $price * $taxRate;         // uses the imported global value\n}\n```\n\n### Arrow Functions (PHP 7.4+)\nArrow functions provide a concise syntax for closures that automatically capture variables from the parent scope by value.\n```php\n$multiplier = 2;\n$doubled = array_map(                 // applies callback to each array element\n    fn($n) => $n * $multiplier,       // arrow fn automatically captures $multiplier\n    [1, 2, 3]                         // input array\n);                                    // result: [2, 4, 6]\n```\n\n## Wiring It Together\nThis script calculates order totals with tax and tiered discounts:\n```php\n<?php\n$taxRate = 0.08;                      // global tax rate for all calculations\n\nfunction applyDiscount(float $total): float { // apply tiered discount logic\n    if ($total > 100) {               // orders over $100 get 10 percent off\n        return $total * 0.9;          // multiply by 0.9 to apply discount\n    } elseif ($total > 50) {          // orders over $50 get 5 percent off\n        return $total * 0.95;         // multiply by 0.95 for discount\n    }\n    return $total;                    // no discount for orders $50 or less\n}\n\nfunction calculateTax(float $subtotal): float {\n    global $taxRate;                  // pull in global $taxRate variable\n    return $subtotal * $taxRate;      // compute tax amount\n}\n\n$items = [29.99, 49.99, 15.00];      // array of item prices\n$subtotal = 0;                        // initialize running total\n\nforeach ($items as $price) {          // iterate every item price\n    $subtotal += $price;              // accumulate into subtotal\n}\n\n$afterDiscount = applyDiscount($subtotal); // compute discounted amount\n$tax = calculateTax($afterDiscount);  // compute tax on discounted total\n$grandTotal = $afterDiscount + $tax;  // final amount the customer pays\n\necho \"Subtotal: \\$$subtotal\\n\";       // display subtotal before discount\necho \"After discount: \\$$afterDiscount\\n\"; // show discounted amount\necho \"Tax: \\$$tax\\n\";                 // show computed tax\necho \"Total: \\$$grandTotal\\n\";        // show final total\n?>\n```\nThis example combines conditionals (tiered discount), loops (price iteration), functions with scope (tax/discount), and string interpolation in a practical order-processing scenario." },
+          { id: "ns-php-oop", title: "OOP in PHP", shortDesc: "Classes, inheritance, interfaces, traits, abstract classes, namespaces, and autoloading (PSR-4).", difficulty: "foundational", readTimeMin: 12, keyPoints: ["A class is a blueprint; an object is an instance created with new", "Visibility controls: public (anywhere), protected (class + subclasses), private (class only)", "Inheritance with extends allows child classes to reuse and override parent behavior", "Interfaces define contracts; a class can implement multiple interfaces", "Traits provide horizontal code reuse to work around single inheritance", "Static members belong to the class itself, accessed with ::"], tags: ["PHP", "OOP", "Classes"], content: "## What's This?\nObject-Oriented Programming (OOP) in PHP organizes code around objects -- instances of classes that bundle data (properties) and behavior (methods). Think of a class as a blueprint and an object as the actual thing built from that blueprint. OOP exists because procedural code becomes hard to maintain as applications grow; encapsulation, inheritance, and polymorphism help manage complexity by grouping related logic and hiding internal details. PHP's OOP model is class-based and borrows from Java and C++, supporting modern features like traits, interfaces, and anonymous classes.\n\n## The Big Picture\nModern PHP relies heavily on OOP. Laravel, Symfony, and nearly every major framework are object-oriented. Composer packages are distributed as classes following PSR-4 autoloading. Understanding OOP is essential for working with frameworks, writing testable code, and contributing to the PHP ecosystem. Concepts like dependency injection, repositories, and service containers all build on OOP fundamentals.\n\n## Core Ideas\n\n### Classes and Objects\nA `class` defines properties (variables) and methods (functions). An `object` is an instance created with `new`.\n```php\nclass User {                          // class declaration defines a blueprint\n    public string $name;              // property with public visibility\n    public function greet(): string { // method that returns a string\n        return \"Hi, {$this->name}\";  // $this refers to the current instance\n    }\n}\n$user = new User();                   // instantiate a User object from the class\n$user->name = \"Alice\";               // set property on the object\n$message = $user->greet();            // call method, returns \"Hi, Alice\"\n```\n\n### Constructors and Property Promotion (PHP 8+)\n`__construct` runs when an object is created. Constructor property promotion combines declaration and assignment in one place.\n```php\nclass Product {\n    public function __construct(      // constructor method runs at instantiation\n        public string $name,          // PHP 8 promotes $name to a property automatically\n        public float $price           // $price is also promoted automatically\n    ) {}\n}\n$product = new Product(\"Widget\", 9.99); // pass constructor arguments\n```\n\n### Visibility: public, protected, private\nVisibility controls access to properties and methods. `public` is accessible everywhere. `protected` is accessible in the class and subclasses. `private` is accessible only within the defining class.\n```php\nclass BankAccount {\n    private float $balance = 0;       // only this class can modify $balance\n    public function deposit(float $amount): void { // public method accessible anywhere\n        if ($amount > 0) {            // guard against negative deposits\n            $this->balance += $amount; // modify private property internally\n        }\n    }\n    public function getBalance(): float { // public getter exposes balance safely\n        return $this->balance;\n    }\n}\n```\n\n### Inheritance\nA class can extend another class using `extends`, inheriting its public and protected methods and properties. Override parent methods by redefining them in the child.\n```php\nclass Animal {\n    public function speak(): string {  // base method to be overridden\n        return \"Some sound\";\n    }\n}\nclass Dog extends Animal {            // Dog inherits from Animal\n    public function speak(): string {  // overrides the parent speak method\n        return \"Woof\";\n    }\n}\n$dog = new Dog();\necho $dog->speak();                   // outputs \"Woof\" using the overridden method\n```\n\n### Abstract Classes and Interfaces\nAbstract classes cannot be instantiated and may contain abstract methods that subclasses must implement. Interfaces declare method signatures without implementation; a class can implement multiple interfaces.\n```php\ninterface Loggable {                   // contract defining required methods\n    public function log(string $message): void; // signature only, no body\n}\nclass FileLogger implements Loggable { // must implement all interface methods\n    public function log(string $message): void {\n        file_put_contents(\"log.txt\", $message); // actual implementation\n    }\n}\n```\n\n### Traits\nTraits are reusable code snippets that classes can import with `use`, solving PHP's single-inheritance limitation.\n```php\ntrait Timestampable {                 // trait groups reusable behavior\n    public function getCreatedAt(): string {\n        return date(\"Y-m-d H:i:s\");   // returns current timestamp as string\n    }\n}\nclass Post {\n    use Timestampable;                 // imports all methods from the trait\n}\n$post = new Post();\necho $post->getCreatedAt();           // outputs current date and time\n```\n\n### Static Methods and Properties\nStatic members belong to the class itself, not to instances. Access them with `::` (Scope Resolution Operator).\n```php\nclass MathHelper {\n    public static function square(int $n): int { // static method on class level\n        return $n * $n;\n    }\n}\necho MathHelper::square(5);           // calls static method without instantiation\n```\n\n## Wiring It Together\nA polymorphic notification system using interfaces and inheritance:\n```php\n<?php\ninterface Notifiable {                 // contract for all notification types\n    public function send(string $message): bool; // every notifier must implement send\n}\n\nclass EmailNotifier implements Notifiable {\n    public function send(string $message): bool {\n        // mail($this->address, \"Subject\", $message); actual send logic\n        return true;                   // pretend email was sent successfully\n    }\n}\n\nclass SmsNotifier implements Notifiable {\n    public function send(string $message): bool {\n        // sms_api::send($this->phone, $message); actual SMS logic\n        return true;                   // pretend SMS was sent successfully\n    }\n}\n\nclass NotificationService {\n    public function sendAll(array $notifiers, string $message): void {\n        foreach ($notifiers as $notifier) { // iterate each notifier object\n            if ($notifier instanceof Notifiable) { // type safety check via interface\n                $notifier->send($message); // polymorphic call -- each class behaves differently\n            }\n        }\n    }\n}\n\n$service = new NotificationService();\n$service->sendAll(\n    [new EmailNotifier(), new SmsNotifier()], // heterogeneous array of notifiers\n    \"System maintenance at midnight\"    // message sent via each channel\n);\n?>\n```\nThis demonstrates interfaces (contract), polymorphism (different send behaviors), type safety (instanceof check), and the foreach loop unifying heterogeneous notifiers." },
+          { id: "ns-php-composer", title: "Composer & Packages", shortDesc: "composer.json, autoload, Packagist, version constraints, and creating custom packages.", difficulty: "intermediate", readTimeMin: 12, keyPoints: ["Composer is PHP's dependency manager; packages come from Packagist", "composer.json defines dependencies; composer.lock pins exact versions", "^ prefix means compatible with major version; ~ means patch-level only", "PSR-4 autoloading maps namespaces to directories; run dump-autoload after changes", "require-dev adds packages only for development/testing", "require 'vendor/autoload.php' is the single entry point for all classes"], tags: ["PHP", "Composer", "Packages"], content: "## What's This?\nComposer is the dependency manager for PHP. It handles installing, updating, and autoloading third-party packages so you don't have to manually download libraries or write complex require statements. Think of it as npm for JavaScript or pip for Python -- it reads a `composer.json` file describing your project's dependencies, resolves compatible versions, and downloads them into a `vendor/` directory. Composer exists because manually managing libraries and their versions across projects is error-prone and time-consuming; a standardized tool eliminates dependency hell.\n\n## The Big Picture\nComposer is the backbone of the modern PHP ecosystem. Every major framework (Laravel, Symfony, CakePHP) and thousands of libraries are distributed through Packagist, the default Composer repository. Composer's autoloader (PSR-4 and PSR-0) eliminates manual require/include calls. The lock file (`composer.lock`) ensures every developer and deployment uses identical versions. CI/CD pipelines run `composer install --no-dev` to exclude development tools from production.\n\n## Core Ideas\n\n### composer.json Structure\nThe `composer.json` file defines the project name, dependencies, autoloading rules, and scripts. The `require` section lists runtime packages; `require-dev` lists development-only packages.\n```json\n{\n    \"require\": {\n        \"laravel/framework\": \"^10.0\"  // any 10.x version compatible with semver\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^10.0\"    // only needed during development/testing\n    }\n}\n```\n\n### Installing Packages\n`composer install` reads `composer.lock` (or `composer.json` if no lock exists) and downloads exact versions. `composer require` adds a package and updates both files.\n```bash\ncomposer require guzzlehttp/guzzle    # adds Guzzle HTTP client to require section\ncomposer require --dev phpstan/phpstan # adds PHPStan as a dev-only dependency\ncomposer install                      # downloads all packages from lock file\n```\n\n### Version Constraints\nComposer uses semantic versioning with constraints: `^` (compatible with major), `~` (patch-level changes only), `>=` (minimum version).\n```json\n{\n    \"require\": {\n        \"monolog/monolog\": \"^2.0\",     // >=2.0.0, <3.0.0 (allows minor/patch bumps)\n        \"php\": \">=8.1\",               // requires PHP 8.1 or higher\n        \"package/foo\": \"~2.3.0\"       // >=2.3.0, <2.4.0 (only patch changes)\n    }\n}\n```\n\n### Autoloading (PSR-4)\nThe `autoload` section maps namespaces to directories. PSR-4 maps a namespace prefix to a directory, so `App\\User` loads from `src/User.php`.\n```json\n{\n    \"autoload\": {\n        \"psr-4\": {\n            \"App\\\\\": \"src/\"            // namespace App\\ points to src/ directory\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Tests\\\\\": \"tests/\"         // namespace Tests\\ points to tests/ directory\n        }\n    }\n}\n```\nAfter defining, run `composer dump-autoload` to regenerate the autoloader files.\n\n### Composer Scripts\nScripts run automatically at lifecycle events like `post-install-cmd` or `post-update-cmd`. Useful for clearing caches or running migrations after install.\n```json\n{\n    \"scripts\": {\n        \"post-install-cmd\": [          // runs after composer install completes\n            \"php artisan cache:clear\"   // clears Laravel cache automatically\n        ],\n        \"test\": \"phpunit\"             // custom script: composer test runs phpunit\n    }\n}\n```\n\n### The Vendor Directory and Autoloader\nAfter installation, packages live in `vendor/`. A single `require 'vendor/autoload.php'` in your entry point makes every class available without manual requires.\n```php\nrequire __DIR__ . '/vendor/autoload.php'; // loads Composer's autoloader\n\nuse GuzzleHttp\\Client;                   // import class from installed package\n$client = new Client();                   // instantiate without manual require\n$response = $client->get('https://api.github.com'); // use package functionality\n```\n\n## Wiring It Together\nA complete project setup with autoloading and a logging dependency:\n```json\n// composer.json\n{\n    \"name\": \"acme/blog\",\n    \"require\": {\n        \"monolog/monolog\": \"^3.0\"       // logging library constraint\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Acme\\\\\": \"src/\"            // all Acme classes under src/\n        }\n    },\n    \"scripts\": {\n        \"post-install-cmd\": [\n            \"@php -r 'echo \\\"Ready\\\";'\" // placeholder post-install script\n        ]\n    }\n}\n```\n```php\n// src/Logger.php\nnamespace Acme;                          // namespace matches PSR-4 mapping\n\nuse Monolog\\Level;                       // import Monolog severity levels\nuse Monolog\\Handler\\StreamHandler;       // import handler for file output\n\nclass Logger {\n    private \\Monolog\\Logger $logger;    // property for Monolog instance\n\n    public function __construct() {\n        $this->logger = new \\Monolog\\Logger('app'); // create named logger\n        $this->logger->pushHandler(      // attach handler to write logs\n            new StreamHandler('app.log', Level::Debug) // write debug+ to file\n        );\n    }\n\n    public function info(string $msg): void { // convenience wrapper method\n        $this->logger->info($msg);        // delegate to Monolog's info method\n    }\n}\n```\n```php\n// public/index.php\nrequire __DIR__ . '/../vendor/autoload.php'; // single autoload include\n\nuse Acme\\Logger;                        // our class autoloaded via PSR-4\n\n$logger = new Logger();\n$logger->info(\"Application started\");   // writes to app.log via Monolog dependency\n\necho \"Hello, world!\";\n```\nThis shows the full Composer workflow: defining dependencies and autoloading in composer.json, installing via CLI, and using both third-party and custom classes through the autoloader." },
+          { id: "ns-php-laravel-mvc", title: "Laravel MVC", shortDesc: "Artisan CLI, routing, controllers, Blade templates, and the service container.", difficulty: "intermediate", readTimeMin: 13, keyPoints: ["Laravel MVC separates concerns: Model (data), View (presentation), Controller (logic)", "Routes defined in web.php or api.php map URLs to controller methods", "Blade uses @ directives for control structures and layout inheritance", "The service container resolves class dependencies automatically", "Resource routes generate all CRUD routes with a single declaration", "The request flows: index.php -> kernel -> middleware -> router -> controller -> response"], tags: ["PHP", "Laravel", "MVC"], content: "## What's This?\nLaravel MVC is an architectural pattern that separates an application into three interconnected components: Models (data logic), Views (presentation), and Controllers (request handling). Laravel implements this pattern with a clean routing layer, Blade templating engine, and Eloquent ORM. MVC exists because mixing database queries, business logic, and HTML templates in a single file leads to unmaintainable spaghetti code -- separating concerns lets you change one part without breaking others. Laravel adds a service container, middleware, and Artisan CLI on top of the classic MVC pattern.\n\n## The Big Picture\nLaravel is the most popular PHP framework, and MVC is its architectural foundation. Every HTTP request follows a lifecycle: route -> middleware -> controller -> (model interaction) -> view response. Understanding this flow is essential for building Laravel applications. The framework extends MVC with features like dependency injection (service container), Eloquent for the model layer, and Blade for the view layer. Once you understand Laravel's MVC, you can navigate any Laravel project structure.\n\n## Core Ideas\n\n### Routing\nRoutes map HTTP methods and URLs to controller methods. They are defined in `routes/web.php` (browser routes with session state) or `routes/api.php` (stateless API routes).\n```php\n// routes/web.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::get('/', function () {          // GET / returns a closure response\n    return view('welcome');             // renders resources/views/welcome.blade.php\n});\n\nRoute::get('/posts', [PostController::class, 'index']); // GET /posts calls PostController@index\nRoute::post('/posts', [PostController::class, 'store']); // POST /posts calls PostController@store\n```\n\n### Controllers\nControllers group related request-handling logic into classes. They receive request data, interact with models, and return responses. Artisan generates controllers with `php artisan make:controller`.\n```php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass PostController extends Controller {\n    public function index() {          // handle GET /posts\n        $posts = Post::all();           // fetch all posts from database via Eloquent\n        return view('posts.index', compact('posts')); // render view with posts data\n    }\n\n    public function store(Request $request) { // handle POST /posts\n        $post = Post::create(           // create a new Post record in database\n            $request->validate([        // validate incoming request data\n                'title' => 'required|max:255', // title must be present, max 255 chars\n                'body' => 'required',    // body field is mandatory\n            ])\n        );\n        return redirect('/posts/' . $post->id); // redirect to the new post's page\n    }\n}\n```\n\n### Blade Templates\nBlade is Laravel's templating engine. It compiles to plain PHP and provides control structures, layout inheritance, and component syntax with `@` directives.\n```php\n<!-- resources/views/layouts/app.blade.php -->\n<!DOCTYPE html>\n<html>\n<head>\n    <title>@yield('title', 'Default')</title> <!-- section yield with default -->\n</head>\n<body>\n    @yield('content')                    <!-- child templates fill this section -->\n</body>\n</html>\n```\n```php\n<!-- resources/views/posts/index.blade.php -->\n@extends('layouts.app')                  <!-- inherit from the app layout -->\n\n@section('title', 'All Posts')           <!-- set the title section -->\n\n@section('content')                      <!-- define content for the layout -->\n    @foreach ($posts as $post)           <!-- Blade loop directive -->\n        <h2>{{ $post->title }}</h2>      <!-- escaped output using double curly braces -->\n        <p>{{ $post->excerpt }}</p>      <!-- display truncated post body -->\n    @endforeach\n@endsection                                  <!-- end the content section -->\n```\n\n### The Request Lifecycle\nEvery request flows through: `public/index.php` -> HTTP kernel -> middleware stack -> router -> controller -> response. The service container resolves dependencies automatically.\n```php\n// The entry point all requests hit\n// public/index.php\n$app = require __DIR__ . '/../bootstrap/app.php'; // bootstrap Laravel application\n$kernel = $app->make(Kernel::class);    // resolve HTTP kernel from container\n$response = $kernel->handle(            // process the incoming request\n    Illuminate\\Http\\Request::capture()  // capture the HTTP request\n)->send();                               // send response back to browser\n$kernel->terminate($request, $response); // run any termination middleware\n```\n\n### Service Container\nThe service container manages class dependencies and performs dependency injection. You bind interfaces to implementations and the container resolves them automatically.\n```php\n// AppServiceProvider.php\nuse App\\Contracts\\PaymentGateway;\nuse App\\Services\\StripeGateway;\n\npublic function register(): void {\n    $this->app->bind(PaymentGateway::class, StripeGateway::class); // bind interface to concrete\n}\n\n// Controller -- container injects the bound implementation automatically\npublic function __construct(\n    private PaymentGateway $gateway    // container resolves StripeGateway here\n) {}\n```\n\n## Wiring It Together\nA blog feature with route, controller, model, and view:\n```php\n// routes/web.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::resource('/posts', PostController::class); // generates all RESTful routes automatically\n```\n```php\n// app/Models/Post.php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\n\nclass Post extends Model {               // Eloquent model for posts table\n    protected $fillable = ['title', 'body']; // allow mass assignment for these fields\n}\n```\n```php\n// app/Http/Controllers/PostController.php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass PostController extends Controller {\n    public function index() {\n        $posts = Post::latest()->get();  // fetch posts ordered by newest first\n        return view('posts.index', compact('posts')); // pass posts to view\n    }\n\n    public function show(string $id) {\n        $post = Post::findOrFail($id);   // find by ID or throw 404\n        return view('posts.show', compact('post')); // render single post view\n    }\n}\n```\n```php\n<!-- resources/views/posts/index.blade.php -->\n@extends('layouts.app')\n\n@section('content')\n    <h1>Blog Posts</h1>\n    @forelse ($posts as $post)           <!-- Blade: loop or run empty handler -->\n        <article>\n            <h2>{{ $post->title }}</h2>  <!-- escaped output of post title -->\n            <p>{{ Str::limit($post->body, 150) }}</p> <!-- truncated body with 150 chars -->\n            <a href=\"/posts/{{ $post->id }}\">Read more</a>\n        </article>\n    @empty\n        <p>No posts yet.</p>             <!-- shown when posts collection is empty -->\n    @endforelse\n@endsection\n```\nThis demonstrates the full MVC cycle: a request hits a route, the controller fetches data from the model, passes it to a Blade view, and the view extends a layout to render the HTML response." },
+          { id: "ns-php-eloquent", title: "Eloquent ORM & Migrations", shortDesc: "Models, relationships, query scopes, mutators/accessors, migrations, and seeders.", difficulty: "intermediate", readTimeMin: 13, keyPoints: ["Eloquent is Laravel's Active Record ORM; each model maps to a database table", "Migrations version-control your database schema; run php artisan migrate", "CRUD: create, save/update, delete, and query with where/get/find", "Relationships (hasMany, belongsTo, belongsToMany) handle JOINs automatically", "Eager loading with with() prevents the N+1 query problem", "Collections provide map, filter, pluck, and other functional methods on result sets"], tags: ["PHP", "Laravel", "Eloquent", "ORM"], content: "## What's This?\nEloquent is Laravel's built-in ORM (Object-Relational Mapper) that lets you interact with your database using PHP objects instead of writing raw SQL. Each database table has a corresponding Model class that wraps the table rows into objects with methods for querying, inserting, updating, and deleting. Migrations are version-controlled PHP files that define and modify your database schema programmatically. Eloquent exists because raw SQL scattered across code is hard to maintain, test, and refactor -- an ORM provides a clean, expressive API and prevents SQL injection through parameter binding.\n\n## The Big Picture\nEloquent is the default ORM in Laravel and follows the Active Record pattern -- each model instance corresponds to a database row. Migrations allow teams to evolve the database schema collaboratively through version control. Eloquent relationships (one-to-one, one-to-many, many-to-many) handle complex JOIN queries automatically. Combined with factories and seeders, Eloquent makes testing and prototyping fast. Understanding Eloquent is essential for any Laravel developer, as nearly every application involves database persistence.\n\n## Core Ideas\n\n### Migrations\nMigrations are PHP classes in `database/migrations/` that define table schemas. The `up` method applies changes; `down` reverses them. Run `php artisan make:migration` to generate one.\n```php\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nreturn new class extends Migration {\n    public function up(): void {\n        Schema::create('posts', function (Blueprint $table) { // create posts table\n            $table->id();                // auto-incrementing primary key\n            $table->string('title');     // VARCHAR column for title\n            $table->text('body');        // TEXT column for body content\n            $table->foreignId('user_id')->constrained(); // foreign key to users table\n            $table->timestamps();        // created_at and updated_at columns\n        });\n    }\n\n    public function down(): void {\n        Schema::dropIfExists('posts');   // reverse: drop the posts table\n    }\n};\n```\n\n### Models\nA model represents a database table. By convention, the `Post` model maps to the `posts` table. Models provide query methods, relationships, and accessors/mutators.\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Illuminate\\Database\\Eloquent\\Relations\\BelongsTo;\n\nclass Post extends Model {\n    protected $fillable = ['title', 'body', 'user_id']; // mass-assignable fields\n\n    public function user(): BelongsTo {  // define inverse one-to-many relationship\n        return $this->belongsTo(User::class); // each post belongs to one user\n    }\n}\n```\n\n### CRUD Operations\nEloquent provides methods for create, read, update, and delete without writing SQL. The query builder returns collections or model instances.\n```php\n$post = new Post();                      // create a new model instance\n$post->title = \"My First Post\";          // set the title attribute\n$post->body = \"Hello world\";            // set the body attribute\n$post->save();                           // INSERT the record into the database\n\n$posts = Post::where('user_id', 1)       // query builder: filter by user_id\n              ->orderBy('created_at', 'desc') // order by newest first\n              ->get();                   // execute query, return Collection of models\n\n$post = Post::findOrFail(1);             // find by primary key or throw 404\n$post->update(['title' => 'Updated']);   // UPDATE the title column\n\n$post->delete();                         // DELETE the record from the database\n```\n\n### Relationships\nEloquent relationships define how models connect. `hasMany` / `belongsTo` handle one-to-many; `belongsToMany` handles many-to-many with pivot tables.\n```php\nclass User extends Model {\n    public function posts(): HasMany {   // a user has many posts\n        return $this->hasMany(Post::class); // defines one-to-many relationship\n    }\n\n    public function roles(): BelongsToMany { // a user has many roles (many-to-many)\n        return $this->belongsToMany(Role::class); // uses role_user pivot table\n    }\n}\n\n// Usage: eager loading prevents N+1 query problem\n$users = User::with('posts', 'roles')->get(); // eager loads both relationships\nforeach ($users as $user) {              // iterate all users\n    foreach ($user->posts as $post) {    // access related posts without extra queries\n        echo $post->title;\n    }\n}\n```\n\n### Collections\nEloquent returns results as `Collection` objects, which provide map, filter, pluck, and other functional methods beyond plain arrays.\n```php\n$posts = Post::all();                    // fetch all posts as a Collection\n$titles = $posts->pluck('title');        // extract all titles into a new Collection\n$filtered = $posts->filter(fn($p) => strlen($p->title) > 10); // keep posts with long titles\n$first = $posts->firstWhere('user_id', 1); // first post matching condition\n```\n\n### Accessors and Mutators\nAccessors format attribute values when reading; mutators transform them when setting. Defined using `Attribute` return type in PHP 8+ style.\n```php\nuse Illuminate\\Database\\Eloquent\\Casts\\Attribute;\n\nclass Post extends Model {\n    protected function excerpt(): Attribute { // define an accessor called \"excerpt\"\n        return Attribute::make(\n            get: fn() => substr($this->body, 0, 100) . '...', // truncate body to 100 chars\n        );\n    }\n}\n\necho $post->excerpt;                     // accesses the computed attribute, not a column\n```\n\n## Wiring It Together\nA complete blog query with filtering, relationship eager loading, and collection manipulation:\n```php\n<?php\nnamespace App\\Http\\Controllers;\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\nuse Illuminate\\Http\\Request;\n\nclass BlogController extends Controller {\n    public function authorPosts(Request $request, string $userId) {\n        $user = User::with('posts')       // eager load posts to avoid N+1 queries\n                    ->findOrFail($userId); // find user or return 404\n\n        $posts = $user->posts()           // query builder for user's posts\n                    ->where('published', true) // only published posts\n                    ->orderBy('created_at', 'desc') // newest first\n                    ->get();              // execute and return Collection\n\n        $summary = [                       // build structured response\n            'author' => $user->name,       // user's display name\n            'total' => $posts->count(),    // count of published posts\n            'recent_titles' => $posts->take(5)->pluck('title'), // titles of 5 most recent\n            'has_long_posts' => $posts->contains(fn($p) => strlen($p->body) > 1000), // any long posts?\n        ];\n\n        return response()->json($summary); // return JSON response\n    }\n}\n\n// Example migration for the posts table\n// database/migrations/xxxx_create_posts_table.php\nuse Illuminate\\Database\\Migrations\\Migration;\nuse Illuminate\\Database\\Schema\\Blueprint;\nuse Illuminate\\Support\\Facades\\Schema;\n\nreturn new class extends Migration {\n    public function up(): void {\n        Schema::create('posts', function (Blueprint $table) {\n            $table->id();\n            $table->string('title', 255);\n            $table->longText('body');\n            $table->boolean('published')->default(false);\n            $table->foreignId('user_id')->constrained()->cascadeOnDelete();\n            $table->timestamps();\n        });\n    }\n\n    public function down(): void {\n        Schema::dropIfExists('posts');\n    }\n};\n```\nThis ties migrations (schema definition), models (Post, User), relationships (belongsTo, hasMany), query builder (where, orderBy, get), eager loading (with), and collection methods (count, take, pluck, contains) into a single feature." },
+          { id: "ns-php-middleware", title: "Middleware & Auth", shortDesc: "Custom middleware, authentication guards, policies, gates, and Laravel Sanctum for APIs.", difficulty: "intermediate", readTimeMin: 14, keyPoints: ["Middleware sits between request and controller; handles cross-cutting concerns", "Global middleware runs on all requests; alias middleware applies to specific routes", "Authentication guards (session, token, Sanctum) determine how users are verified", "Gates are Closure-based authorization; Policies are class-based per model", "Throttle middleware limits request rates to prevent abuse", "Middleware receives a request, passes it down the pipeline, and gets a response back"], tags: ["PHP", "Laravel", "Middleware", "Auth"], content: "## What's This?\nMiddleware is a layer of code that sits between an incoming HTTP request and your application's response, running before the controller handles the request or after the response is generated. Think of it as an onion skin around your application -- each middleware can inspect, modify, or reject requests before they reach the core logic. Middleware exists because cross-cutting concerns like authentication, logging, CORS, and rate limiting should not be duplicated in every controller; middleware centralizes these concerns in reusable, composable layers.\n\n## The Big Picture\nLaravel's middleware system is a pipeline that processes requests through a stack of middleware classes before reaching the route handler. Global middleware runs on every request; route middleware applies to specific routes or groups. Authentication, CSRF protection, and request logging are all implemented as middleware. Laravel ships with built-in middleware for auth, guest, throttle, and more. Custom middleware can handle anything from request transformation to IP whitelisting. Authentication builds on middleware with guards (session, token, Sanctum) and authorization via Gates and Policies.\n\n## Core Ideas\n\n### Creating Middleware\nGenerate middleware with `php artisan make:middleware`. The `handle` method receives the request and a closure to pass control to the next middleware.\n```php\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\nuse Symfony\\Component\\HttpFoundation\\Response;\n\nclass LogRequests {\n    public function handle(Request $request, Closure $next): Response {\n        \\Log::info('Request: ' . $request->method() . ' ' . $request->path()); // log method and path\n        $response = $next($request);     // pass request deeper into the pipeline\n        \\Log::info('Response status: ' . $response->status()); // log response status code\n        return $response;               // return response back up the chain\n    }\n}\n```\n\n### Registering Middleware\nRegister middleware in `bootstrap/app.php` (Laravel 11+). Global middleware runs on every request; alias middleware is assigned to specific routes.\n```php\n// bootstrap/app.php (Laravel 11+)\nuse App\\Http\\Middleware\\LogRequests;\nuse App\\Http\\Middleware\\EnsureTokenIsValid;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withMiddleware(function (Middleware $middleware) {\n        $middleware->append(LogRequests::class); // add to global middleware stack\n        $middleware->alias([\n            'token.valid' => EnsureTokenIsValid::class, // register alias for route use\n        ]);\n    })->create();\n\n// Route file using alias middleware\nRoute::get('/admin', function () {      // protected route\n    return view('admin.dashboard');\n})->middleware('token.valid');           // only runs with valid token\n```\n\n### Authentication Guards\nGuards define how users are authenticated per request. Laravel supports session-based, token-based, and Sanctum guards. The `auth` middleware protects routes.\n```php\n// config/auth.php (partial)\n'guards' => [\n    'web' => [                         // session-based guard for browser apps\n        'driver' => 'session',\n        'provider' => 'users',\n    ],\n    'api' => [                         // token-based guard for APIs\n        'driver' => 'sanctum',          // uses Laravel Sanctum for API tokens\n        'provider' => 'users',\n    ],\n],\n\n// Route protection with auth middleware\nRoute::get('/dashboard', function () {  // protected route for logged-in users\n    return view('dashboard');\n})->middleware('auth');                  // redirects guests to login page\n\nRoute::get('/api/user', function (Request $request) {\n    return $request->user();            // returns authenticated user via Sanctum\n})->middleware('auth:sanctum');          // uses sanctum guard for API auth\n```\n\n### Gates and Policies\nGates are Closure-based authorization checks; Policies are classes organizing authorization logic around a model.\n```php\n// Define a gate in AppServiceProvider\nuse Illuminate\\Support\\Facades\\Gate;\n\nGate::define('edit-post', function (User $user, Post $post) {\n    return $user->id === $post->user_id; // only the author can edit\n});\n\n// Using the gate in a controller\npublic function update(Request $request, Post $post) {\n    Gate::authorize('edit-post', $post); // throws AuthorizationException if denied\n    $post->update($request->only('title', 'body')); // safe to update after auth\n}\n\n// Policy alternative (auto-discovered for Post model)\nclass PostPolicy {\n    public function update(User $user, Post $post): bool {\n        return $user->id === $post->user_id; // same logic in policy form\n    }\n}\n```\n\n### Rate Limiting\nLaravel's throttle middleware limits request frequency per IP or user, preventing abuse.\n```php\n// In route definition\nRoute::middleware('throttle:60,1')->group(function () { // 60 requests per minute max\n    Route::get('/api/posts', [PostController::class, 'index']);\n    Route::post('/api/posts', [PostController::class, 'store']);\n});\n\n// Named rate limiter in AppServiceProvider or bootstrap/app.php\nRateLimiter::for('api', function (Request $request) {\n    return Limit::perMinute(100)->by($request->user()?->id ?: $request->ip()); // 100/min per user or IP\n});\n```\n\n## Wiring It Together\nAn API with logging, authentication, authorization, and rate limiting working together:\n```php\n// bootstrap/app.php (Laravel 11+)\nuse App\\Http\\Middleware\\LogRequests;\nuse Illuminate\\Cache\\RateLimiting\\Limit;\nuse Illuminate\\Http\\Request;\nuse Illuminate\\Support\\Facades\\RateLimiter;\n\nreturn Application::configure(basePath: dirname(__DIR__))\n    ->withMiddleware(function (Middleware $middleware) {\n        $middleware->append(LogRequests::class); // global: log every request/response\n        $middleware->alias([\n            'check.role' => \\App\\Http\\Middleware\\CheckRole::class, // custom role check\n        ]);\n        $middleware->api(prepend: [     // prepend to 'api' middleware group\n            \\App\\Http\\Middleware\\EnsureTokenIsValid::class,\n        ]);\n    })\n    ->withRouting(\n        api: __DIR__.'/../routes/api.php',\n    );\n```\n```php\n// routes/api.php\nuse App\\Http\\Controllers\\PostController;\n\nRoute::middleware('auth:sanctum')->group(function () {   // all routes require auth token\n    Route::get('/posts', [PostController::class, 'index']);\n    \n    Route::post('/posts', [PostController::class, 'store'])\n        ->middleware('throttle:30,1');                   // extra rate limit on writes\n    \n    Route::put('/posts/{post}', [PostController::class, 'update'])\n        ->middleware('can:update,post');                 // authorize via PostPolicy\n});\n```\n```php\n// app/Http/Middleware/CheckRole.php\nnamespace App\\Http\\Middleware;\n\nuse Closure;\nuse Illuminate\\Http\\Request;\n\nclass CheckRole {\n    public function handle(Request $request, Closure $next, string $role): mixed {\n        if (!$request->user() || !$request->user()->hasRole($role)) {\n            abort(403, 'Unauthorized');  // reject with 403 if wrong role\n        }\n        return $next($request);          // pass through if authorized\n    }\n}\n```\n```php\n// app/Policies/PostPolicy.php\nnamespace App\\Policies;\n\nuse App\\Models\\User;\nuse App\\Models\\Post;\n\nclass PostPolicy {\n    public function update(User $user, Post $post): bool {\n        return $user->id === $post->user_id; // only post author can update\n    }\n\n    public function delete(User $user, Post $post): bool {\n        return $user->id === $post->user_id || $user->isAdmin(); // author or admin\n    }\n}\n```\nThis demonstrates middleware pipeline composition: logging (global), token validation (api group), auth:sanctum (route group), throttle (specific routes), and policy-based authorization (can middleware)." },
+          { id: "ns-php-testing", title: "Testing (PHPUnit, Pest)", shortDesc: "Unit/feature tests, HTTP tests, database tests, mocking, and TDD workflows.", difficulty: "advanced", readTimeMin: 14, keyPoints: ["PHPUnit is the standard PHP testing framework; Pest offers a more expressive syntax on top", "Test methods use assertions like assertEquals, assertTrue, and assertDatabaseHas", "Data providers run the same test with multiple input sets", "Mocks replace real dependencies to verify interactions without side effects", "Laravel HTTP tests simulate requests in-memory with helpers like actingAs and postJson", "RefreshDatabase trait resets the database between tests for isolation"], tags: ["PHP", "Testing", "PHPUnit", "Pest"], content: "## What's This?\nTesting in PHP means writing code that verifies your application behaves correctly. PHPUnit is the de facto standard testing framework, and Pest is a modern, expressive wrapper built on top of PHPUnit. Tests execute your application code with known inputs and assert that outputs match expectations. Testing exists because manual testing is slow, error-prone, and doesn't scale -- automated tests catch regressions, document behavior, and give you confidence to refactor. The testing pyramid recommends many fast unit tests, fewer integration tests, and even fewer end-to-end tests.\n\n## The Big Picture\nPHPUnit has been the backbone of PHP testing for decades. Pest offers a more readable syntax with functions like `it()`, `expect()`, and `toBe()`, while still running on PHPUnit under the hood. Laravel uses PHPUnit by default and provides helper methods for HTTP testing, database testing, and mocking. Factories generate test data, and seeders populate databases for integration tests. A solid test suite is non-negotiable for production applications -- it enables continuous delivery, documents edge cases, and prevents regressions during refactoring.\n\n## Core Ideas\n\n### PHPUnit Test Structure\nTests are classes extending `PHPUnit\\Framework\\TestCase`. Methods prefixed with `test` or annotated with `#[Test]` are test cases. Assertions compare actual vs. expected values.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass UserTest extends TestCase {\n    public function test_full_name_is_constructed_from_first_and_last(): void {\n        $user = new \\App\\User('John', 'Doe'); // create a user instance\n        $this->assertEquals('John Doe', $user->fullName()); // assert fullName matches\n    }\n\n    #[Test]\n    public function email_validation_rejects_invalid_formats(): void {\n        $validator = new \\App\\Validator();\n        $this->assertFalse($validator->isEmail('not-an-email')); // assert returns false\n    }\n}\n```\n\n### Pest Syntax\nPest uses functions instead of classes. The `test()` and `it()` functions define cases; `expect()` enables a fluent assertion API.\n```php\n// tests/Unit/UserTest.php\ntest('full name combines first and last', function () {\n    $user = new \\App\\User('Jane', 'Doe');\n    expect($user->fullName())->toBe('Jane Doe'); // fluent assertion\n});\n\nit('validates email format correctly', function () {\n    $validator = new \\App\\Validator();\n    expect($validator->isEmail('jane@example.com'))->toBeTrue(); // passes\n    expect($validator->isEmail('bad'))->toBeFalse(); // fails for bad input\n});\n```\n\n### Data Providers\nData providers supply multiple input sets to a single test, avoiding duplication.\n```php\nuse PHPUnit\\Framework\\Attributes\\DataProvider;\n\nclass MathTest extends TestCase {\n    #[DataProvider('additionProvider')]\n    public function test_add(int $a, int $b, int $expected): void {\n        $this->assertEquals($expected, \\App\\Math::add($a, $b));\n    }\n\n    public static function additionProvider(): array {\n        return [\n            [1, 2, 3],                 // test case: 1 + 2 = 3\n            [0, 0, 0],                 // test case: 0 + 0 = 0\n            [-1, 1, 0],               // test case: -1 + 1 = 0\n        ];\n    }\n}\n\n// Pest equivalent\nit('adds numbers correctly', function (int $a, int $b, int $expected) {\n    expect(\\App\\Math::add($a, $b))->toBe($expected);\n})->with([\n    [1, 2, 3],\n    [0, 0, 0],\n    [-1, 1, 0],\n]);\n```\n\n### Mocking\nMocks replace real objects with test doubles that simulate behavior and verify interactions.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass OrderServiceTest extends TestCase {\n    public function test_order_sends_notification(): void {\n        $mailer = $this->createMock(\\App\\Mailer::class); // create test double\n        $mailer->expects($this->once())  // assert method is called exactly once\n               ->method('send')          // specify the method to mock\n               ->with('Thank you!')      // assert argument passed to send\n               ->willReturn(true);       // define return value\n\n        $service = new \\App\\OrderService($mailer); // inject mock\n        $service->processOrder(100);     // execute with mocked dependency\n    }\n}\n```\n\n### Laravel HTTP Tests\nLaravel provides methods like `get()`, `post()`, and `assertStatus()` to test HTTP endpoints without a real server.\n```php\nnamespace Tests\\Feature;\n\nuse Tests\\TestCase;\nuse App\\Models\\Post;\nuse App\\Models\\User;\n\nclass PostTest extends TestCase {\n    public function test_authenticated_user_can_create_post(): void {\n        $user = User::factory()->create(); // create a test user via factory\n\n        $response = $this->actingAs($user) // authenticate as this user\n                         ->post('/posts', [ // send POST request to /posts\n                             'title' => 'Test Title',\n                             'body' => 'Test body content',\n                         ]);\n\n        $response->assertStatus(302);      // assert redirect after creation\n        $this->assertDatabaseHas('posts', [ // verify database has the record\n            'title' => 'Test Title',\n        ]);\n    }\n}\n```\n\n### SetUp and TearDown\nRun common setup before each test and cleanup after. Prevents duplication of test scaffolding.\n```php\nuse PHPUnit\\Framework\\TestCase;\n\nclass UserRepositoryTest extends TestCase {\n    private \\App\\UserRepository $repository;\n\n    protected function setUp(): void {    // runs before every test method\n        $this->repository = new \\App\\UserRepository(); // fresh instance per test\n    }\n\n    protected function tearDown(): void {  // runs after every test method\n        \\Mockery::close();                 // clean up Mockery expectations\n    }\n\n    public function test_find_returns_null_for_missing_user(): void {\n        $result = $this->repository->find(999); // non-existent ID\n        $this->assertNull($result);         // expect null result\n    }\n}\n```\n\n## Wiring It Together\nA full Laravel feature test for a blog API endpoint:\n```php\n<?php\nnamespace Tests\\Feature;\n\nuse Tests\\TestCase;\nuse App\\Models\\User;\nuse App\\Models\\Post;\nuse Illuminate\\Foundation\\Testing\\RefreshDatabase;\n\nclass PostApiTest extends TestCase {\n    use RefreshDatabase;                  // reset database after each test\n\n    public function test_unauthenticated_user_cannot_create_post(): void {\n        $response = $this->postJson('/api/posts', [ // POST as JSON without auth\n            'title' => 'Hacked Post',\n            'body' => 'Should not appear',\n        ]);\n\n        $response->assertStatus(401);      // assert unauthorized response\n    }\n\n    public function test_authenticated_user_can_list_own_posts(): void {\n        $user = User::factory()            // use factory to create a test user\n            ->has(Post::factory()->count(3)) // create 3 posts for this user\n            ->create();\n\n        $response = $this->actingAs($user) // authenticate\n                         ->getJson('/api/posts'); // GET request expecting JSON\n\n        $response->assertStatus(200)       // assert successful response\n                 ->assertJsonCount(3);     // assert response has 3 posts\n    }\n\n    #[\\PHPUnit\\Framework\\Attributes\\DataProvider('validationProvider')]\n    public function test_post_validation_rules(string $field, mixed $value, string $errorKey): void {\n        $user = User::factory()->create();\n\n        $response = $this->actingAs($user)\n                         ->postJson('/api/posts', [\n                             $field => $value,\n                         ]);\n\n        $response->assertStatus(422)       // assert validation error status\n                 ->assertJsonValidationErrors([$errorKey]); // check specific field error\n    }\n\n    public static function validationProvider(): array {\n        return [\n            'title required' => ['title', '', 'title'],\n            'title too long' => ['title', str_repeat('a', 256), 'title'],\n            'body required' => ['body', null, 'body'],\n        ];\n    }\n}\n```\nThis combines PHPUnit structure, RefreshDatabase trait, Laravel HTTP test helpers (actingAs, postJson, getJson), factories with relationships, JSON assertions, and a data provider for comprehensive validation coverage." },
+          { id: "ns-php-wordpress", title: "WordPress Plugin & Theme Dev", shortDesc: "Hooks (actions/filters), CPT, meta boxes, shortcodes, the REST API, and block editor (Gutenberg).", difficulty: "advanced", readTimeMin: 13, keyPoints: ["Plugins extend functionality; themes control presentation; never edit core files", "Actions run code at specific points; filters modify data before output", "Shortcodes are macros that expand to dynamic content in post editor", "The Loop iterates through posts using have_posts() and the_post()", "WP_Query creates custom database queries outside the main Loop", "Always enqueue scripts and styles with wp_enqueue_script/wp_enqueue_style"], tags: ["PHP", "WordPress", "Plugins", "Themes"], content: "## What's This?\nWordPress plugin and theme development is the practice of extending WordPress's functionality without modifying core files. A plugin adds custom features, while a theme controls the visual presentation. The WordPress plugin system is built on hooks -- actions (trigger points) and filters (data modifiers) -- that let your code run at specific moments during request execution. Plugin and theme development exists because directly editing WordPress core would lose changes on every update; hooks provide stable, upgrade-safe extension points that survive core upgrades.\n\n## The Big Picture\nWordPress powers roughly 40% of all websites. Its plugin architecture has created a massive ecosystem with over 60,000 free plugins. Themes use a template hierarchy that falls back from page-specific templates to `index.php`. Custom post types extend WordPress beyond blog posts into any content type (products, events, portfolios). The Loop is the central pattern for displaying content. Understanding hooks (actions and filters), the template hierarchy, the Loop, and enqueuing assets is essential for any WordPress developer building custom websites or contributing to the ecosystem.\n\n## Core Ideas\n\n### Plugin Structure\nA plugin is a PHP file with a specific header comment placed in `wp-content/plugins/`. The header identifies the plugin in the admin dashboard.\n```php\n<?php\n/**\n * Plugin Name: Custom Quotes      // displayed name in plugins list\n * Description: Adds a custom quote post type and shortcode\n * Version: 1.0.0\n * Author: Your Name\n */\n\n// Prevent direct access\nif (!defined('ABSPATH')) {           // ABSPATH is WordPress root directory constant\n    exit;                            // stop execution if accessed directly\n}\n```\n\n### Actions and Filters\nActions run at specific points (e.g., `init`, `wp_head`); filters modify data (e.g., `the_content`, `excerpt_length`). Both use `add_action` and `add_filter`.\n```php\n// Action: runs code at a specific execution point\nadd_action('init', 'register_my_post_type'); // hook function into WordPress init event\n\nfunction register_my_post_type(): void {\n    register_post_type('quote', [       // register a custom post type\n        'public' => true,\n        'label' => 'Quotes',\n        'supports' => ['title', 'editor', 'thumbnail'],\n    ]);\n}\n\n// Filter: modifies content before output\nadd_filter('the_content', 'add_quote_prefix'); // filter post content before display\n\nfunction add_quote_prefix(string $content): string {\n    if (get_post_type() === 'quote') {  // only modify quote post type\n        return '<blockquote>' . $content . '</blockquote>'; // wrap in blockquote tags\n    }\n    return $content;                    // pass through unmodified\n}\n```\n\n### Shortcodes\nShortcodes are macros that expand to dynamic content. Register them with `add_shortcode`. The function returns a string that replaces the shortcode in post content.\n```php\nadd_shortcode('random_quote', 'render_random_quote'); // register [random_quote] shortcode\n\nfunction render_random_quote(): string {\n    $args = [\n        'post_type' => 'quote',        // query the quote post type\n        'posts_per_page' => 1,          // only fetch one post\n        'orderby' => 'rand',            // randomize the order\n    ];\n    $query = new WP_Query($args);       // create custom database query\n\n    if ($query->have_posts()) {         // check if any posts were found\n        $query->the_post();             // set up post data for template tags\n        return '<p class=\"quote\">' . get_the_content() . '</p>'; // return post content\n    }\n    return '<p>No quotes found.</p>';   // fallback when no posts exist\n}\n\n// Usage in post editor: [random_quote]\n```\n\n### The Loop\nThe Loop is WordPress's standard way of displaying posts. It iterates through posts from a query, setting up global post data for each iteration.\n```php\n// Typically in index.php or archive.php\nif (have_posts()) {                     // check if query returned any posts\n    while (have_posts()) {              // loop while there are posts to process\n        the_post();                     // set up $post global with current post data\n        ?>\n        <article>\n            <h2><a href=\"<?php the_permalink(); ?>\"><?php the_title(); ?></a></h2>\n            <div><?php the_excerpt(); ?></div>\n        </article>\n        <?php\n    }\n} else {\n    echo '<p>No posts found.</p>';      // shown when no posts match query\n}\n```\n\n### Enqueuing Assets\nUse `wp_enqueue_script` and `wp_enqueue_style` to load JavaScript and CSS. Always enqueue rather than hardcode tags to avoid duplication and manage dependencies.\n```php\nadd_action('wp_enqueue_scripts', 'load_plugin_assets'); // hook into frontend asset loading\n\nfunction load_plugin_assets(): void {\n    wp_enqueue_style(                  // register and enqueue a stylesheet\n        'my-plugin-styles',            // unique handle for this stylesheet\n        plugin_dir_url(__FILE__) . 'assets/style.css', // full URL to CSS file\n        [],                            // no dependencies\n        '1.0.0'                        // version string for cache busting\n    );\n\n    wp_enqueue_script(                 // register and enqueue a JavaScript file\n        'my-plugin-script',            // unique handle\n        plugin_dir_url(__FILE__) . 'assets/script.js', // full URL to JS file\n        ['jquery'],                    // depends on jQuery being loaded first\n        '1.0.0',                       // version\n        true                           // load in footer (not header)\n    );\n}\n```\n\n### Theme Template Hierarchy\nWordPress selects the appropriate template file based on the query. The hierarchy falls back from most specific to most generic (`index.php`).\n```php\n// templates in increasing specificity:\n// index.php          -> ultimate fallback for all requests\n// archive.php         -> archive pages (category, tag, date, author)\n// single.php          -> single post of any post type\n// single-quote.php    -> single post of \"quote\" post type only\n// page.php            -> static pages\n// page-about.php      -> static page with slug \"about\"\n// front-page.php      -> site front page (overrides index.php)\n\n// Example single-quote.php\n<?php\nget_header();                           // load header.php\nif (have_posts()) {\n    while (have_posts()) {\n        the_post();\n        ?>\n        <article>\n            <blockquote><?php the_content(); ?></blockquote>\n            <cite>&mdash; <?php the_title(); ?></cite>\n        </article>\n        <?php\n    }\n}\nget_footer();                           // load footer.php\n```\n\n## Wiring It Together\nA complete plugin that creates a \"Testimonial\" custom post type with a shortcode and proper asset enqueuing:\n```php\n<?php\n/**\n * Plugin Name: Testimonials Manager\n * Description: Custom testimonials post type with shortcode display\n * Version: 1.0.0\n */\n\nif (!defined('ABSPATH')) exit;         // block direct file access\n\n// 1. Register custom post type on WordPress init\nadd_action('init', 'tm_register_post_type');\n\nfunction tm_register_post_type(): void {\n    register_post_type('testimonial', [  // register testimonial CPT\n        'public' => true,\n        'label' => 'Testimonials',\n        'supports' => ['title', 'editor', 'thumbnail'],\n        'menu_icon' => 'dashicons-format-quote',\n    ]);\n}\n\n// 2. Add a shortcode to display testimonials\nadd_shortcode('testimonials', 'tm_render_testimonials');\n\nfunction tm_render_testimonials(): string {\n    $query = new WP_Query([\n        'post_type' => 'testimonial',\n        'posts_per_page' => 5,\n        'orderby' => 'date',\n        'order' => 'DESC',\n    ]);\n\n    if (!$query->have_posts()) {\n        return '<p>No testimonials yet.</p>';\n    }\n\n    $output = '<div class=\"testimonials-list\">';\n    while ($query->have_posts()) {\n        $query->the_post();\n        $output .= '<blockquote>';\n        $output .= get_the_content();\n        $output .= '<cite>&mdash; ' . get_the_title() . '</cite>';\n        $output .= '</blockquote>';\n    }\n    $output .= '</div>';\n    wp_reset_postdata();                 // restore global post data\n    return $output;\n}\n\n// 3. Enqueue stylesheet\nadd_action('wp_enqueue_scripts', 'tm_enqueue_assets');\n\nfunction tm_enqueue_assets(): void {\n    wp_enqueue_style(\n        'tm-styles',\n        plugin_dir_url(__FILE__) . 'testimonials.css',\n        [],\n        '1.0.0'\n    );\n}\n```\nThis plugin demonstrates the full cycle: registering a custom post type via an action hook, creating a shortcode with WP_Query and The Loop, and enqueuing frontend assets safely." },
+          { id: "ns-php-deploy", title: "Deployment & Tooling", shortDesc: "Laravel Forge, Envoyer, Docker/Sail, PHPStan, Laravel Horizon, and Octane.", difficulty: "advanced", readTimeMin: 14, keyPoints: [".env files store environment-specific configuration; never commit secrets to Git", "CI/CD pipelines automatically test and deploy code on push to main branch", "Laravel optimization: cache config, routes, views, and events for faster response times", "OPcache stores compiled PHP in memory; disable timestamp validation in production", "Queue workers process background jobs asynchronously; Supervisor keeps them running", "Laravel Forge automates server provisioning, Nginx setup, SSL, and deployment scripting"], tags: ["PHP", "Deployment", "DevOps", "Laravel"], content: "## What's This?\nDeployment and tooling in PHP covers the process of taking your application from a development environment to a production server where real users can access it. This includes environment configuration, CI/CD pipelines, server provisioning, caching, queue management, and monitoring. Deployment exists because running code on your local machine is fundamentally different from running it on a production server -- differences in PHP versions, extensions, database credentials, and performance requirements must be handled systematically to prevent downtime and security issues.\n\n## The Big Picture\nPHP deployment has evolved from FTP-uploading files to sophisticated CI/CD pipelines using GitHub Actions, GitLab CI, or Laravel Forge. Modern tooling includes Docker for consistent environments, Envoyer for zero-downtime deployments, and services like Laravel Vapor for serverless PHP. Performance optimization involves OPcache, config caching, queue workers, and CDN integration. A proper deployment workflow includes automated testing, environment separation (development/staging/production), secret management, and monitoring with tools like Flare or Sentry.\n\n## Core Ideas\n\n### Environment Configuration\nEnvironment variables separate configuration from code. Laravel uses a `.env` file for local development and sets real environment variables on the server. Never commit secrets to version control.\n```php\n// .env file (never committed to Git)\nAPP_ENV=production                 // current environment name\nAPP_DEBUG=false                    // disable debug mode in production\nDB_HOST=127.0.0.1                  // database host address\nDB_DATABASE=blog                   // database name\nDB_USERNAME=deploy_user            // database user\nDB_PASSWORD=secret                 // database password (keep secret)\n\n// Access in code\n$dbHost = env('DB_HOST', 'localhost'); // get env var with fallback default\n$isProduction = env('APP_ENV') === 'production'; // boolean check for environment\n```\n\n### Deployment Pipeline (CI/CD)\nA CI/CD pipeline automatically runs tests, builds assets, and deploys your application. GitHub Actions is a common choice for PHP projects.\n```yaml\n# .github/workflows/deploy.yml\nname: Deploy\non:\n  push:\n    branches: [main]               // trigger on pushes to main branch\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4   // checkout repository code\n      - uses: shivammathur/setup-php@v2 // install PHP with extensions\n        with:\n          php-version: '8.2'\n      - run: composer install --no-dev --optimize-autoloader // install prod deps\n      - run: php artisan config:cache   // cache config for performance\n      - run: php artisan route:cache    // cache routes for performance\n      - run: php artisan migrate --force // run database migrations (forced)\n```\n\n### Laravel Optimization Commands\nLaravel provides Artisan commands to cache configurations, routes, and views. These dramatically improve performance by reducing file parsing on each request.\n```bash\n# Run these on each deployment before putting the site live\nphp artisan config:cache            # merge all config files into one cached file\nphp artisan route:cache             # serialize route registrations for fast loading\nphp artisan view:cache              # pre-compile all Blade templates to plain PHP\nphp artisan event:cache             # cache event/listener registrations\nphp artisan optimize                # run all of the above at once\nphp artisan queue:restart           # restart queue workers to pick up code changes\n```\n\n### OPcache\nOPcache stores compiled PHP scripts in shared memory, eliminating the need to parse and compile on every request. Enable and configure it in `php.ini`.\n```ini\n; php.ini OPcache configuration for production\nopcache.enable=1                    ; enable OPcache globally\nopcache.memory_consumption=128      ; allocate 128MB for cached compiled scripts\nopcache.max_accelerated_files=10000 ; maximum number of cached PHP files\nopcache.validate_timestamps=0       ; disable timestamp checks in production (faster)\n```\n\n### Queues and Workers\nPHP queues handle time-consuming tasks (email, image processing) asynchronously. Laravel's queue system supports Redis, database, and SQS drivers. Workers process jobs in the background.\n```php\n// Dispatching a job to the queue\nuse App\\Jobs\\SendWelcomeEmail;\n\nSendWelcomeEmail::dispatch($user);   // push job onto the default queue\nSendWelcomeEmail::dispatch($user)->onQueue('emails'); // push to specific queue\n\n// Start queue worker (supervisor keeps it running)\n// php artisan queue:work --queue=emails,default --sleep=3 --tries=3\n\n// Supervisor configuration (/etc/supervisor/conf.d/laravel-worker.conf)\n[program:laravel-worker]\nprocess_name=%(program_name)s_%(process_num)02d\ncommand=php /var/www/artisan queue:work --sleep=3 --tries=3 --max-time=3600\nautostart=true                      ; start worker when supervisor starts\nautorestart=true                    ; restart worker if it crashes\nnumprocs=4                          ; run 4 worker processes in parallel\n```\n\n### Server Provisioning (Laravel Forge)\nLaravel Forge automates server provisioning on DigitalOcean, AWS, Linode, and others. It installs Nginx, PHP, MySQL, Redis, and configures queue workers, cron jobs, and SSL certificates.\n```bash\n# Forge handles these tasks automatically:\n# - Creates a server with Nginx, PHP 8.x, MySQL/PostgreSQL, Redis\n# - Configures Nginx sites with SSL via Let's Encrypt\n# - Sets up queue workers with Supervisor\n# - Configures cron jobs for scheduled tasks (php artisan schedule:run)\n# - Manages deployment scripts (git pull, composer install, migrations)\n# - Monitors server health and sends alerts\n#\n# Example deployment script configured in Forge:\n# cd /home/forge/example.com\n# git pull origin main\n# composer install --no-dev --no-interaction --optimize-autoloader\n# if [ -f artisan ]; then\n#   php artisan migrate --force\n#   php artisan config:cache\n#   php artisan route:cache\n#   php artisan view:cache\n#   php artisan queue:restart\n# fi\n```\n\n## Wiring It Together\nA complete GitHub Actions deployment workflow for a Laravel application:\n```yaml\n# .github/workflows/deploy.yml\nname: Deploy Laravel Application\non:\n  push:\n    branches: [main]\n\njobs:\n  test-and-deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Checkout code\n        uses: actions/checkout@v4\n\n      - name: Setup PHP\n        uses: shivammathur/setup-php@v2\n        with:\n          php-version: '8.2'\n          extensions: mbstring, pdo_mysql, redis, imagick\n\n      - name: Install dependencies\n        run: composer install --no-progress --prefer-dist --optimize-autoloader\n\n      - name: Run tests\n        run: php artisan test          // run PHPUnit test suite\n        env:\n          DB_CONNECTION: sqlite        // use SQLite for CI testing\n          DB_DATABASE: :memory:\n\n      - name: Deploy to production\n        if: success()                  // only deploy if tests pass\n        run: |\n          # Using Forge CLI or SSH deploy\n          # forge deploy your-site-id\n          # Or manually via SSH:\n          ssh deploy@example.com \"\n            cd /var/www/app &&\n            git pull origin main &&\n            composer install --no-dev --optimize-autoloader &&\n            php artisan migrate --force &&\n            php artisan config:cache &&\n            php artisan route:cache &&\n            php artisan view:cache &&\n            php artisan queue:restart\n          \"\n```\n```php\n// config/deploy.php -- deploy configuration checklist\nreturn [\n    'environments' => [\n        'local' => [\n            'debug' => true,\n            'opcache' => false,\n        ],\n        'staging' => [\n            'debug' => true,\n            'opcache' => true,\n        ],\n        'production' => [\n            'debug' => false,          // never show errors in production\n            'opcache' => true,          // always enable OPcache\n            'config_cache' => true,     // cache config on deploy\n            'queue_driver' => 'redis', // use Redis for production queues\n        ],\n    ],\n];\n```\nThis ties together environment configuration (env vars), CI/CD pipeline (GitHub Actions), Laravel optimization (config/route/view cache), database migrations, and queue management into a production-ready deployment workflow." },
         ],
       },
       // ── Swift (iOS) ──────────────────────────────────────────────────────
@@ -93482,16 +95678,16 @@ int main(int argc, char *argv[]) {
         title: "Swift (iOS)",
         description: "Swift from syntax to App Store — optionals, protocols, SwiftUI, UIKit, networking, concurrency, and app distribution.",
         topics: [
-          { id: "ns-swift-syntax", title: "Swift Syntax & Basics", shortDesc: "Variables (let/var), data types, string interpolation, optionals, and basic operators.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["Swift uses let for constants and var for variables, preferring immutability by default", "Type inference automatically detects types but Swift never performs implicit type conversion", "String interpolation with \\(expression) embeds values directly into strings", "Functions are defined with func, support external and internal parameter labels", "Arrays, dictionaries, and strings are all value types with built-in mutability control", "Swift compiles to native code via LLVM for C++-level performance"], tags: ["Swift", "syntax", "variables", "functions"], content: "## What's This?\n\nSwift is a modern, type-safe programming language created by Apple for building apps across iOS, macOS, watchOS, and tvOS. Think of it as a well-organized toolbox where every tool has a specific purpose and shape -- the language prevents you from putting a square peg in a round hole at compile time. Swift was designed to replace Objective-C with a safer, more expressive syntax while maintaining performance. It combines the best ideas from languages like Rust, Python, and C# into a coherent whole. Swift prioritizes readability and safety without sacrificing speed.\n\n## The Big Picture\n\nSwift sits at the center of Apple's entire software ecosystem. Every app on an Apple device is either written in Swift or Objective-C, and Apple is pushing Swift as the future. The language compiles down to native code using LLVM, giving it performance comparable to C++ while offering high-level abstractions. Swift's syntax directly feeds into SwiftUI (declarative UI), Combine (reactive programming), and the rest of the Apple frameworks. Understanding Swift's syntax fundamentals -- variables, types, functions, and control flow -- unlocks everything else in the Apple development world.\n\n## Core Ideas\n\n### Variables and Constants\n\nVariables store data that can change; constants store data that never changes. Swift encourages using constants by default with <code>let</code>, making your code safer and easier to reason about.\n\n```swift\nvar score = 0          // variable that can be changed later\nlet maxPlayers = 4     // constant that can never change\nscore = 10             // this is allowed because score is var\n// maxPlayers = 8      // this would cause a compile error\n```\n\n### Type Inference and Type Safety\n\nSwift infers types from values but never silently converts between incompatible types. This catches entire categories of bugs before your app runs.\n\n```swift\nlet name = \"Alice\"           // Swift infers this is a String\nlet count = 42               // Swift infers this is an Int\n// let result = name + count // compile error: cannot add String and Int\nlet message = name + String(count)  // explicit conversion is required\n```\n\n### Basic Data Types\n\nSwift provides rich built-in types for representing text, numbers, collections, and more. Each type has a specific purpose and memory layout.\n\n```swift\nlet title: String = \"Hello\"       // stores text\nlet year: Int = 2024               // whole number\nlet pi: Double = 3.14159           // floating-point number\nlet isActive: Bool = true          // true or false\nlet fruits: [String] = [\"Apple\", \"Banana\"]  // ordered collection\nlet scores: [String: Int] = [\"Alice\": 95]     // key-value pairs\n```\n\n### String Interpolation\n\nSwift embeds values directly into strings using <code>\\()</code> syntax, making string construction readable and safe.\n\n```swift\nlet age = 30\nlet greeting = \"You are \\(age) years old\"  // evaluates to \"You are 30 years old\"\nlet summary = \"Score: \\(score) out of \\(maxPlayers)\"  // multiple values inline\n```\n\n### Functions\n\nFunctions are reusable blocks of code that take inputs and return outputs. Swift functions use a clean syntax with labeled parameters.\n\n```swift\nfunc greet(name: String) -> String {            // takes a String, returns a String\n    return \"Hello, \\(name)!\"                   // builds the greeting\n}\nfunc add(_ a: Int, _ b: Int) -> Int {           // underscore removes external label\n    return a + b                                 // returns the sum\n}\nlet result = greet(name: \"Bob\")                 // calls the function\nlet sum = add(3, 5)                              // calls without parameter labels\n```\n\n## Wiring It Together\n\nHere is a complete program that defines a data model, processes a list, and produces a formatted report.\n\n```swift\nstruct Player {                                          // defines a Player struct\n    let name: String                                     // constant property for the name\n    var score: Int                                       // variable property for the score\n}\n\nfunc formatScore(for player: Player) -> String {         // takes a Player, returns String\n    return \"\\(player.name): \\(player.score) points\"    // interpolates name and score\n}\n\nlet players = [                                          // creates an array of players\n    Player(name: \"Alice\", score: 95),                   // first player\n    Player(name: \"Bob\", score: 82),                     // second player\n    Player(name: \"Charlie\", score: 73)                  // third player\n]\n\nlet maxPossible = 100                                     // constant for max score\nvar report = \"Game Report\\n\"                            // starts building the report\nreport += \"Maximum Score: \\(maxPossible)\\n\\n\"          // appends max score line\n\nfor player in players {                                   // loops over each player\n    let line = formatScore(for: player)                   // formats one player's score\n    report += line + \"\\n\"                                // appends to the report\n}\n\nprint(report)                                             // prints the full report\n```" },
-          { id: "ns-swift-optionals", title: "Optionals & Type Safety", shortDesc: "Optional binding (if-let, guard-let), forced unwrapping, nil coalescing, and optional chaining.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["Optionals are type-safe wrappers that can hold a value or nil, preventing null pointer crashes", "if let safely unwraps an optional and creates a scoped constant only when a value exists", "guard let unwraps with early return, keeping the main path unindented", "The nil-coalescing operator ?? provides a default value when the optional is nil", "Optional chaining lets you safely access properties and methods through optional references", "Force unwrapping with ! should only be used when you are absolutely certain the value exists"], tags: ["Swift", "optionals", "type safety", "nil handling"], content: "## What's This?\n\nOptionals are Swift's way of saying \"this value might be missing\" -- they are a type-safe wrapper around the concept of nil. Think of an Optional as a box that either contains a value or is empty; you must check inside the box before using the contents. Optionals exist to eliminate null pointer errors, one of the most common sources of crashes in languages like Objective-C and Java. By making the possibility of nil explicit at the type level, Swift forces you to handle missing values at compile time rather than discovering them at runtime. This is a cornerstone of Swift's approach to safety.\n\n## The Big Picture\n\nOptionals are woven into every Swift API. Foundation, UIKit, SwiftUI, and all system frameworks return optionals for operations that can fail -- parsing data, finding files, looking up dictionary keys, or casting types. The language provides multiple tools for working with optionals: optional binding (<code>if let</code>), force unwrapping (<code>!</code>), optional chaining (<code>?</code>), and nil-coalescing (<code>??</code>). Understanding optionals is essential because they interact with every other Swift feature: you cannot write realistic Swift code without handling them. They also demonstrate Swift's philosophy of shifting error detection from runtime to compile time.\n\n## Core Ideas\n\n### Optional Declaration\n\nAn Optional type is written with a <code>?</code> suffix on the type. It can hold either a value of that type or <code>nil</code>.\n\n```swift\nvar middleName: String? = nil       // an Optional String that starts as nil\nvar age: Int? = 30                  // an Optional Int containing 30\nmiddleName = \"James\"                // now it holds \"James\"\n// var name: String = nil           // compile error: non-optional cannot be nil\n```\n\n### Unwrapping with if let\n\nThe safest way to use an optional is to check if it contains a value and bind it to a new constant in one step.\n\n```swift\nlet optionalName: String? = \"Alice\"\nif let name = optionalName {                        // if optionalName has a value, assign it to name\n    print(\"Hello, \\(name)\")                       // this runs because optionalName is not nil\n} else {\n    print(\"No name provided\")                      // this would run if optionalName were nil\n}\n```\n\n### Guard let for Early Exit\n\n<code>guard let</code> unwraps an optional but requires an early return if nil, keeping the happy path unindented.\n\n```swift\nfunc process(userID: String?) {                     // receives an optional string\n    guard let id = userID else {                     // unwrap; if nil, execute the else block\n        print(\"Missing user ID\")                   // runs only when userID is nil\n        return                                       // must exit the function early\n    }\n    print(\"Processing user \\(id)\")                 // id is now a non-optional String\n}\n```\n\n### Nil-Coalescing Operator\n\nThe <code>??</code> operator provides a default value when the optional is nil, all in a single expression.\n\n```swift\nlet nickname: String? = nil\nlet displayName = nickname ?? \"Guest\"               // evaluates to \"Guest\" because nickname is nil\nlet input: String? = \"User123\"\nlet finalName = input ?? \"Anonymous\"                // evaluates to \"User123\" because input has a value\n```\n\n### Optional Chaining\n\nYou can call methods or access properties on an optional without unwrapping it first using <code>?</code> syntax.\n\n```swift\nclass Address {                                      // simple class with a street property\n    var street: String?                              // street is itself optional\n}\nclass Person {\n    var address: Address?                            // address is optional\n}\nlet person = Person()                                // address defaults to nil\nlet streetName = person.address?.street              // safely returns nil, does not crash\n// let street = person.address!.street               // would crash if address is nil\n```\n\n### Force Unwrapping\n\nUsing <code>!</code> after an optional asserts that it definitely has a value, crashing if it does not.\n\n```swift\nlet definitelyThere: String? = \"Hello\"\nlet result = definitelyThere!                        // safe here because we know it has a value\n// let crash: String? = nil\n// let bad = crash!                                  // crashes with runtime error\n```\n\n## Wiring It Together\n\nHere is a realistic user profile loader that fetches data from multiple optional sources and produces a formatted result.\n\n```swift\nstruct UserProfile {                                  // holds user display information\n    let firstName: String                             // required first name\n    let lastName: String                              // required last name\n    let middleName: String?                           // optional middle name\n    let age: Int?                                     // optional age\n}\n\nfunc displayName(for profile: UserProfile) -> String {          // builds a display name\n    var name = profile.firstName                                 // start with first name\n    if let middle = profile.middleName {                         // check if middle name exists\n        name += \" \\(middle)\"                                    // append middle name if present\n    }\n    name += \" \\(profile.lastName)\"                             // always append last name\n    return name\n}\n\nfunc ageDescription(for profile: UserProfile) -> String {        // returns age string or placeholder\n    guard let age = profile.age else {                           // unwrap age, exit if nil\n        return \"Age not disclosed\"\n    }\n    return \"\\(age) years old\"\n}\n\nlet profile = UserProfile(                                       // create a profile with missing middle name\n    firstName: \"Alice\",\n    lastName: \"Johnson\",\n    middleName: nil,\n    age: 30\n)\n\nlet display = displayName(for: profile)                          // produces \"Alice Johnson\"\nprint(display)\nlet ageInfo = ageDescription(for: profile)                       // produces \"30 years old\"\nprint(ageInfo)\n\n// Uses nil-coalescing for a fallback value\nlet tagline: String? = nil\nlet displayTagline = tagline ?? \"No tagline set\"                // evaluates to default\nprint(displayTagline)\n```" },
-          { id: "ns-swift-control-flow", title: "Control Flow & Functions", shortDesc: "for-in, while, switch with pattern matching, function parameters, in-out, and guard statements.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["if-else evaluates Boolean conditions with optional else if and else branches", "switch must be exhaustive and supports compound cases, value binding, and pattern matching", "for-in iterates over sequences like arrays, ranges, and dictionaries with clean syntax", "while loops repeat until a condition becomes false, checking before each iteration", "guard provides early exit when conditions fail, reducing nesting in the main path", "Functions encapsulate reusable logic with typed parameters and return values"], tags: ["Swift", "control flow", "functions", "loops"], content: "## What's This?\n\nControl flow determines the order in which code executes -- it is the decision-making backbone of every program. Think of it like a train switching tracks: based on conditions, your code takes different routes to reach the destination. Swift provides <code>if</code>, <code>switch</code>, <code>for-in</code>, <code>while</code>, and <code>guard</code> statements, each designed for specific patterns. These constructs exist because programs need to react to different inputs, repeat operations, and skip irrelevant work. Swift's control flow is particularly expressive, with powerful pattern matching in switch statements and clean iteration syntax.\n\n## The Big Picture\n\nControl flow is universal across programming languages, but Swift's implementation has unique strengths. The <code>switch</code> statement supports pattern matching, value binding, and compound cases, making it far more powerful than in C-family languages. Swift's <code>for-in</code> loops integrate seamlessly with its collections and ranges. <code>guard</code> provides a Swift-specific approach to early exit that reduces nesting. Together with functions, control flow forms the structural layer between data (variables, types) and behavior (algorithms, business logic). Every app, from a calculator to a social network, relies on these primitives to make decisions and repeat work.\n\n## Core Ideas\n\n### If-Else Statements\n\nThe most basic decision-making tool. Evaluate a Boolean condition and execute one of two branches.\n\n```swift\nlet temperature = 30\nif temperature > 25 {                               // checks if temperature exceeds 25\n    print(\"It is hot outside\")                      // executes when condition is true\n} else if temperature > 15 {                         // checks another condition\n    print(\"It is warm outside\")                     // executes when first is false but this is true\n} else {\n    print(\"It is cold outside\")                     // executes when all conditions are false\n}\n```\n\n### Switch Statements\n\nSwitch compares a value against multiple patterns and executes the matching branch. Swift switches must be exhaustive.\n\n```swift\nlet day = 3\nswitch day {\ncase 1:                                              // matches when day equals 1\n    print(\"Monday\")\ncase 2:                                              // matches when day equals 2\n    print(\"Tuesday\")\ncase 3:                                              // matches when day equals 3\n    print(\"Wednesday\")\ncase 4, 5:                                           // compound case matches 4 or 5\n    print(\"Thursday or Friday\")\ndefault:                                             // must cover all remaining values\n    print(\"Weekend\")\n}\n```\n\n### For-In Loops\n\nIterate over sequences like arrays, ranges, or dictionaries. The most common loop in Swift.\n\n```swift\nlet names = [\"Alice\", \"Bob\", \"Charlie\"]\nfor name in names {                                  // loops over each element in the array\n    print(\"Hello, \\(name)\")                         // prints each name\n}\nfor i in 0..<5 {                                     // half-open range: 0, 1, 2, 3, 4\n    print(\"Index \\(i)\")\n}\nfor (index, name) in names.enumerated() {             // get both index and value\n    print(\"\\(index + 1). \\(name)\")\n}\n```\n\n### While Loops\n\nRepeat code as long as a condition remains true. Useful when the number of iterations is unknown.\n\n```swift\nvar count = 3\nwhile count > 0 {                                    // checks condition before each iteration\n    print(\"\\(count)...\")                            // prints countdown\n    count -= 1                                        // decrements the counter\n}\nprint(\"Go!\")                                        // runs after the loop finishes\n```\n\n### Guard Statements\n\nGuard provides early exit when a condition is not met, keeping the main logic unindented.\n\n```swift\nfunc validate(age: Int?) {                           // receives an optional age\n    guard let age = age, age >= 18 else {             // unwrap and check condition\n        print(\"Access denied\")                       // runs if age is nil or under 18\n        return                                        // must exit the scope\n    }\n    print(\"Welcome! You are \\(age)\")                // runs only when both conditions pass\n}\n```\n\n### Functions with Parameters\n\nFunctions package reusable logic. They accept inputs, perform work, and optionally return a result.\n\n```swift\nfunc calculateTotal(items: [Double], taxRate: Double) -> Double {   // array and rate input\n    var total = 0.0                                                  // initialize accumulator\n    for item in items {                                              // loop through each price\n        total += item                                                // add each item price\n    }\n    return total * (1 + taxRate)                                     // apply tax and return\n}\nlet cart = [10.99, 24.99, 5.50]\nlet finalPrice = calculateTotal(items: cart, taxRate: 0.08)          // calls the function\nprint(\"Total: $\\(finalPrice)\")\n```\n\n## Wiring It Together\n\nHere is a complete order processing system that validates input, calculates totals, and generates a receipt.\n\n```swift\nstruct MenuItem {                                                    // defines a menu item\n    let name: String                                                 // item name\n    let price: Double                                                // item price\n}\n\nstruct Order {                                                       // defines an order\n    let items: [MenuItem]                                            // array of ordered items\n    let discountCode: String?                                        // optional discount\n}\n\nfunc applyDiscount(to total: Double, code: String?) -> Double {      // applies discount if valid\n    guard let code = code else {                                     // exit early if no code\n        return total\n    }\n    switch code {                                                    // match against known codes\n    case \"SAVE10\":\n        return total * 0.9                                           // 10 percent off\n    case \"SAVE20\":\n        return total * 0.8                                           // 20 percent off\n    default:\n        print(\"Unknown code: \\(code)\")\n        return total\n    }\n}\n\nfunc generateReceipt(for order: Order) {                             // produces a receipt string\n    var receipt = \"--- Receipt ---\\n\"\n    var subtotal = 0.0\n    for item in order.items {                                       // loop through ordered items\n        receipt += \"\\(item.name): $\\(item.price)\\n\"               // add each item line\n        subtotal += item.price                                       // accumulate subtotal\n    }\n    let total = applyDiscount(to: subtotal, code: order.discountCode) // compute final total\n    receipt += \"Subtotal: $\\(subtotal)\\n\"\n    receipt += \"Total: $\\(total)\\n\"\n    return receipt\n}\n\nlet items = [                                                       // sample menu items\n    MenuItem(name: \"Burger\", price: 12.99),\n    MenuItem(name: \"Fries\", price: 4.99),\n    MenuItem(name: \"Soda\", price: 2.50)\n]\nlet order = Order(items: items, discountCode: \"SAVE10\")             // create order with discount\nlet receipt = generateReceipt(for: order)                           // generate receipt\nprint(receipt)                                                      // prints full receipt\n```" },
-          { id: "ns-swift-structs-classes", title: "Structs, Classes & Enums", shortDesc: "Value vs reference types, inheritance, initializers, computed properties, property observers, and associated values.", difficulty: "foundational", readTimeMin: 11, keyPoints: ["Structs are value types: each copy is independent with its own data", "Classes are reference types: multiple variables can reference the same instance", "Enums define a fixed set of cases and can carry associated values per case", "Computed properties calculate values on demand instead of storing them", "Classes support inheritance, allowing subclasses to override and extend behavior", "Swift defaults to structs, using classes only when identity or shared mutability is needed"], tags: ["Swift", "structs", "classes", "enums"], content: "## What's This?\n\nStructs, classes, and enums are Swift's three primary ways to define custom data types. Think of structs as value types -- like a blueprint for a house where every copy is a distinct physical house. Classes are reference types -- like a single house with multiple addresses pointing to it. Enums define a finite set of related values, like traffic light colors. These constructs exist because real programs need to model real-world entities with associated data and behavior. Swift's approach uniquely prioritizes structs (value semantics) as the default, using classes only when reference semantics or inheritance are genuinely needed.\n\n## The Big Picture\n\nChoosing between structs and classes is one of the most important design decisions in Swift. The entire Swift standard library and most Apple frameworks are built on structs: <code>String</code>, <code>Array</code>, <code>Dictionary</code>, <code>Int</code>, and <code>Bool</code> are all structs. This means value semantics permeate the language. Classes are used primarily for UIKit views, view controllers, and situations requiring identity or shared mutable state. Enums combine with Swift's pattern matching to create powerful state machines and result types. The Swift compiler optimizes struct usage aggressively, often eliminating copies entirely. Mastering these three types is central to writing idiomatic Swift.\n\n## Core Ideas\n\n### Structs: Value Semantics\n\nStructs are copied when assigned or passed to a function. Each copy is independent -- mutations on one do not affect the other.\n\n```swift\nstruct Point {                                          // defines a struct type\n    var x: Double                                       // mutable x coordinate\n    var y: Double                                       // mutable y coordinate\n}\nvar p1 = Point(x: 10, y: 20)                            // creates a Point instance\nvar p2 = p1                                             // p2 is a full copy of p1\np2.x = 99                                               // modifies p2.x, p1.x remains 10\nprint(p1.x)                                             // prints 10, proving independence\n```\n\n### Classes: Reference Semantics\n\nClasses share a single instance. Assigning a class instance creates another reference to the same object.\n\n```swift\nclass Person {                                          // defines a class type\n    var name: String                                    // mutable name property\n    init(name: String) {                                // initializer sets up the instance\n        self.name = name\n    }\n}\nlet person1 = Person(name: \"Alice\")                    // creates a Person instance\nlet person2 = person1                                   // person2 references the same object\nperson2.name = \"Bob\"                                    // modifies the shared object\nprint(person1.name)                                     // prints \"Bob\" because both point to same object\n```\n\n### Enums with Associated Values\n\nEnums can store additional data alongside each case, making them powerful for modeling state.\n\n```swift\nenum NetworkResult {                                    // defines an enum type\n    case success(data: [String: Any])                   // holds a dictionary on success\n    case failure(error: String)                         // holds an error message on failure\n    case loading                                        // no associated data needed\n}\nlet result = NetworkResult.success(data: [\"id\": 1])   // creates a success case with data\nswitch result {                                         // switch must be exhaustive\ncase .success(let data):\n    print(\"Got data: \\(data)\")\ncase .failure(let error):\n    print(\"Error: \\(error)\")\ncase .loading:\n    print(\"Loading...\")\n}\n```\n\n### Computed Properties\n\nProperties that run code to calculate their value rather than storing it directly.\n\n```swift\nstruct Circle {                                         // defines a circle struct\n    var radius: Double                                  // stored property\n    var area: Double {                                  // computed property\n        return Double.pi * radius * radius              // calculates area from radius\n    }\n    var diameter: Double {                              // another computed property\n        get { return radius * 2 }                       // getter reads the value\n        set { radius = newValue / 2 }                   // setter updates radius from diameter\n    }\n}\nvar circle = Circle(radius: 5)\nprint(circle.area)                                      // prints 78.5398... calculated on demand\ncircle.diameter = 20                                    // sets diameter, which updates radius to 10\n```\n\n### Inheritance\n\nClasses can inherit from a parent class, gaining its properties and methods while adding or overriding behavior.\n\n```swift\nclass Vehicle {                                         // base class\n    var speed = 0                                       // stored property with default\n    func description() -> String {                      // method that can be overridden\n        return \"Moving at \\(speed) km/h\"\n    }\n}\nclass Car: Vehicle {                                   // Car inherits from Vehicle\n    var wheels = 4                                      // additional property\n    override func description() -> String {              // overrides the parent method\n        return \"Car with \\(wheels) wheels at \\(speed) km/h\"\n    }\n}\nlet car = Car()\ncar.speed = 100                                         // inherited from Vehicle\nprint(car.description())                                // calls Car's overridden version\n```\n\n## Wiring It Together\n\nHere is a complete media library system using structs, a class, and an enum to model different media types and playback.\n\n```swift\nenum MediaType {                                         // enum with associated values for media\n    case movie(duration: Int)                            // movie has a duration in minutes\n    case song(artist: String)                            // song has an artist name\n    case podcast(episodes: Int)                          // podcast has episode count\n}\n\nstruct MediaItem {                                       // value type representing one media item\n    let title: String                                    // constant title\n    let type: MediaType                                  // the media kind with associated data\n    var isFavorite: Bool = false                         // mutable favorite status\n    \n    var description: String {                            // computed property\n        switch type {\n        case .movie(let duration):\n            return \"Movie: \\(title) (\\(duration) min)\"\n        case .song(let artist):\n            return \"Song: \\(title) by \\(artist)\"\n        case .podcast(let episodes):\n            return \"Podcast: \\(title) (\\(episodes) episodes)\"\n        }\n    }\n}\n\nclass Playlist {                                         // reference type for a shared playlist\n    var name: String                                     // mutable playlist name\n    var items: [MediaItem]                               // mutable array of media items\n    \n    init(name: String, items: [MediaItem]) {             // designated initializer\n        self.name = name\n        self.items = items\n    }\n    \n    func add(_ item: MediaItem) {                        // adds a media item\n        items.append(item)\n    }\n    \n    func totalDuration() -> Int {                        // calculates total duration\n        var total = 0\n        for item in items {\n            if case .movie(let duration) = item.type {   // pattern match enum case\n                total += duration\n            }\n        }\n        return total\n    }\n}\n\nlet song = MediaItem(title: \"Imagine\", type: .song(artist: \"John Lennon\"), isFavorite: true)\nlet movie = MediaItem(title: \"Inception\", type: .movie(duration: 148))\nlet playlist = Playlist(name: \"Favorites\", items: [song, movie])\nplaylist.add(MediaItem(title: \"TED Talk\", type: .podcast(episodes: 1)))\n\nfor item in playlist.items {                             // iterate over shared playlist\n    print(item.description)\n}\nprint(\"Total movie duration: \\(playlist.totalDuration()) min\")\n```" },
-          { id: "ns-swift-protocols", title: "Protocols & Extensions", shortDesc: "Protocol definition, protocol inheritance, default implementations (protocol extensions), and protocol-oriented design.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["Protocols define a blueprint of requirements that conforming types must implement", "Any type (struct, class, enum) can conform to protocols, enabling polymorphism without inheritance", "Protocols can inherit from other protocols, combining requirements", "Protocol extensions provide default implementations, making requirements optional in practice", "Protocols can be used as variable types, enabling functions to accept any conforming type", "Codable is a protocol pair (Encodable + Decodable) for automatic JSON serialization"], tags: ["Swift", "protocols", "extensions", "protocol-oriented programming"], content: "## What's This?\n\nA protocol is a blueprint of methods, properties, and requirements that any conforming type must implement. Think of it like a job description -- it specifies what a candidate must be able to do without caring about their specific background. Protocols exist to enable polymorphism without inheritance, allowing unrelated types to share a common interface. They are Swift's primary tool for abstraction and form the foundation of protocol-oriented programming, a paradigm Swift actively promotes over class-based inheritance.\n\n## The Big Picture\n\nProtocols are the backbone of Swift's standard library and every Apple framework. <code>Codable</code>, <code>Equatable</code>, <code>Hashable</code>, <code>Identifiable</code>, and <code>Collection</code> are protocols that define shared behavior across thousands of types. SwiftUI relies heavily on protocols like <code>View</code> to compose UI. Protocol extensions allow you to provide default implementations, making protocols behave like traits or mixins in other languages. Combining protocols with generics enables highly reusable, type-safe code. Understanding protocols unlocks the ability to write code that works with any type meeting certain requirements rather than any specific concrete type.\n\n## Core Ideas\n\n### Defining and Conforming to Protocols\n\nA protocol declares requirements. Any type -- struct, class, or enum -- can declare conformance and implement them.\n\n```swift\nprotocol Describable {                                  // defines a protocol\n    var description: String { get }                     // requires a readable String property\n    func summary() -> String                            // requires a method returning String\n}\n\nstruct Product: Describable {                           // struct conforms to Describable\n    let name: String\n    let price: Double\n    \n    var description: String {                           // fulfills the property requirement\n        return \"\\(name): $\\(price)\"\n    }\n    \n    func summary() -> String {                          // fulfills the method requirement\n        return \"Product \\(name) costs $\\(price)\"\n    }\n}\n```\n\n### Protocol Inheritance\n\nA protocol can inherit from other protocols, combining their requirements.\n\n```swift\nprotocol Named {                                        // base protocol\n    var name: String { get }                            // requires a name property\n}\n\nprotocol Aged {                                         // another base protocol\n    var age: Int { get }                                // requires an age property\n}\n\nprotocol Person: Named, Aged {                          // combines both protocols\n    func greet() -> String                              // adds its own requirement\n}\n\nstruct Employee: Person {                               // must fulfill all three requirements\n    let name: String\n    let age: Int\n    let role: String\n    \n    func greet() -> String {\n        return \"Hi, I am \\(name), \\(age)-year-old \\(role)\"\n    }\n}\n```\n\n### Protocol Extensions\n\nExtensions can provide default implementations, making requirements optional and adding shared behavior.\n\n```swift\nprotocol Greeter {                                      // defines a protocol\n    func greet() -> String                              // method requirement\n}\n\nextension Greeter {                                     // adds default implementation\n    func greet() -> String {                            // this runs if conformer does not implement it\n        return \"Hello!\"\n    }\n}\n\nstruct FriendlyPerson: Greeter {                        // does not implement greet()\n    // uses the default implementation\n}\n\nstruct SpecificPerson: Greeter {\n    func greet() -> String {                            // overrides the default\n        return \"Hey there!\"\n    }\n}\n\nprint(FriendlyPerson().greet())                         // prints \"Hello!\" from default\nprint(SpecificPerson().greet())                         // prints \"Hey there!\" from custom\n```\n\n### Protocols as Types\n\nYou can use a protocol as a variable type, parameter type, or return type, enabling polymorphism.\n\n```swift\nprotocol Drivable {                                     // defines driving behavior\n    func drive() -> String\n}\n\nstruct Car: Drivable {\n    func drive() -> String { return \"Driving a car\" }\n}\n\nstruct Bike: Drivable {\n    func drive() -> String { return \"Riding a bike\" }\n}\n\nfunc travel(using vehicle: Drivable) {                  // accepts any Drivable type\n    print(vehicle.drive())                              // calls the appropriate implementation\n}\n\ntravel(using: Car())                                    // prints \"Driving a car\"\ntravel(using: Bike())                                   // prints \"Riding a bike\"\n```\n\n### Codable Protocol\n\n<code>Codable</code> combines <code>Encodable</code> and <code>Decodable</code> to serialize and deserialize data automatically.\n\n```swift\nstruct User: Codable {                                  // Codable enables JSON conversion\n    let id: Int\n    let name: String\n    let email: String\n}\n\nlet user = User(id: 1, name: \"Alice\", email: \"alice@example.com\")\nlet encoder = JSONEncoder()                             // creates a JSON encoder\nif let data = try? encoder.encode(user) {               // encodes User to JSON Data\n    let jsonString = String(data: data, encoding: .utf8) // converts bytes to readable string\n    print(jsonString ?? \"\")\n}\n\nlet json = \"\"\"{\"id\":2,\"name\":\"Bob\",\"email\":\"bob@example.com\"}\"\"\".data(using: .utf8)!\nlet decoder = JSONDecoder()                             // creates a JSON decoder\nif let decoded = try? decoder.decode(User.self, from: json) {  // decodes JSON to User\n    print(decoded.name)                                 // prints \"Bob\"\n}\n```\n\n## Wiring It Together\n\nHere is a complete data pipeline that defines protocols for persistence, conforms multiple types, and processes items polymorphically.\n\n```swift\nimport Foundation\n\nprotocol IdentifiableByID {                              // protocol for types with an ID\n    var id: String { get }\n}\n\nprotocol Persistable: Codable, IdentifiableByID {       // combines Codable and Identifiable\n    func save() throws                                  // requirement to save\n}\n\nextension Persistable {                                 // default save implementation\n    func save() throws {\n        let data = try JSONEncoder().encode(self)        // encodes self to JSON\n        let url = URL.documentsDirectory.appendingPathComponent(\"\\(id).json\") // builds file URL\n        try data.write(to: url)                          // writes to disk\n        print(\"Saved \\(id) to \\(url.lastPathComponent)\")\n    }\n}\n\nstruct Note: Persistable {                              // Note conforms to Persistable\n    let id: String\n    var title: String\n    var content: String\n}\n\nstruct Task: Persistable {                               // Task also conforms to Persistable\n    let id: String\n    var description: String\n    var isComplete: Bool\n}\n\nfunc batchSave(_ items: [any Persistable]) {             // accepts array of any Persistable type\n    for item in items {\n        do {\n            try item.save()                             // polymorphic call to save\n        } catch {\n            print(\"Failed to save \\(item.id): \\(error)\")\n        }\n    }\n}\n\nlet note = Note(id: \"note-1\", title: \"Shopping\", content: \"Milk, eggs, bread\")\nlet task = Task(id: \"task-1\", description: \"Buy groceries\", isComplete: false)\nbatchSave([note, task])                                  // saves both to disk\n```" },
-          { id: "ns-swift-concurrency", title: "Concurrency (async/await)", shortDesc: "async/await syntax, Task, TaskGroup, actors, Sendable, and MainActor.", difficulty: "advanced", readTimeMin: 11, keyPoints: ["async marks a function as asynchronous; await suspends execution until the async function completes", "Task creates a new asynchronous unit of work from a synchronous context", "async let starts multiple operations concurrently and awaits all results together", "Actors isolate their mutable state, preventing data races by serializing access", "Task groups enable dynamic parallelism with an arbitrary number of child tasks", "Swift concurrency is built into the language, enabling compiler-enforced correctness"], tags: ["Swift", "concurrency", "async/await", "actors"], content: "## What's This?\n\nSwift concurrency is a language-level system for writing asynchronous and parallel code using <code>async</code>/<code>await</code>, tasks, and actors. Think of it like a restaurant kitchen with multiple chefs: each chef (task) works independently on their orders, and they communicate results without blocking each other. Traditional completion-handler code was fragile and deeply nested; structured concurrency makes asynchronous code read like synchronous code. It exists because modern apps perform many operations simultaneously -- network calls, file I/O, animations -- and managing them manually with threads and callbacks was error-prone and led to callback hell.\n\n## The Big Picture\n\nSwift concurrency is the modern replacement for Grand Central Dispatch (GCD) and completion-handler patterns. It is built into the language itself rather than being a library, which means the compiler can enforce correctness -- preventing data races, ensuring task completion, and managing actor isolation. Apple has updated Foundation, SwiftUI, and all major frameworks to support async/await. The concurrency model includes <code>Task</code> for unit of work, <code>async let</code> for fire-and-forget parallel work, task groups for dynamic parallelism, and actors for protecting mutable state. Adopting Swift concurrency is now considered best practice for all new development on Apple platforms.\n\n## Core Ideas\n\n### Async Functions and Await\n\nMark a function with <code>async</code> to indicate it performs asynchronous work. Call it with <code>await</code> to suspend until it completes.\n\n```swift\nfunc fetchUserData() async -> String {                  // async function returns String\n    try await Task.sleep(nanoseconds: 1_000_000_000)    // simulates network delay (1 second)\n    return \"User data loaded\"\n}\n\nfunc loadProfile() async {                              // another async function\n    print(\"Loading...\")                                 // runs immediately\n    let result = await fetchUserData()                  // suspends here until fetchUserData completes\n    print(result)                                       // runs after fetchUserData returns\n}\n```\n\n### Tasks for Concurrent Work\n\nA <code>Task</code> represents a unit of asynchronous work. Use it to start async work from a synchronous context.\n\n```swift\nfunc startBackgroundWork() {                            // synchronous function\n    Task {                                              // creates a new asynchronous task\n        let data = await fetchUserData()                // await inside the task is allowed\n        print(\"Received: \\(data)\")\n    }\n    print(\"Task started\")                               // this runs immediately, does not wait\n}\n```\n\n### Async Let for Parallelism\n\nUse <code>async let</code> to start multiple async operations that run concurrently, then await all results.\n\n```swift\nfunc fetchUser() async -> String {                      // simulates fetching user\n    try await Task.sleep(nanoseconds: 500_000_000)\n    return \"Alice\"\n}\n\nfunc fetchPosts() async -> [String] {                   // simulates fetching posts\n    try await Task.sleep(nanoseconds: 700_000_000)\n    return [\"Post 1\", \"Post 2\"]\n}\n\nfunc loadDashboard() async {                            // loads user and posts concurrently\n    async let user = fetchUser()                        // starts fetching user in background\n    async let posts = fetchPosts()                      // starts fetching posts in background\n    let result = await \"User: \\(user), Posts: \\(posts.count)\" // awaits both, runs in parallel\n    print(result)\n}\n```\n\n### Actors for Safe Mutable State\n\nActors protect their mutable state from data races by ensuring only one task accesses them at a time.\n\n```swift\nactor BankAccount {                                     // actor automatically isolates its state\n    var balance: Double = 0                             // mutable state is actor-isolated\n    \n    func deposit(amount: Double) {                      // runs on the actor's executor\n        balance += amount                                // safe mutation, no data race possible\n    }\n    \n    func withdraw(amount: Double) -> Bool {              // also actor-isolated\n        if balance >= amount {\n            balance -= amount\n            return true\n        }\n        return false\n    }\n}\n\nlet account = BankAccount()                              // creates an actor instance\nTask {                                                   // starts a concurrent task\n    await account.deposit(amount: 100)                   // must await actor method calls\n    let success = await account.withdraw(amount: 50)     // awaits to cross actor boundary\n    print(success ? \"Withdrew\" : \"Failed\")\n}\n```\n\n### Task Groups for Dynamic Parallelism\n\nTask groups let you spawn an arbitrary number of child tasks and collect their results.\n\n```swift\nfunc downloadImage(url: String) async -> String {        // simulates downloading\n    try await Task.sleep(nanoseconds: 300_000_000)\n    return \"Image from \\(url)\"\n}\n\nfunc downloadAll() async {                               // downloads multiple images in parallel\n    let urls = [\"url1\", \"url2\", \"url3\", \"url4\"]\n    var results: [String] = []\n    \n    await withTaskGroup(of: String.self) { group in      // creates a task group\n        for url in urls {                                 // spawns one task per URL\n            group.addTask {                               // adds a child task\n                return await downloadImage(url: url)      // each task runs concurrently\n            }\n        }\n        for await result in group {                       // collects results as they complete\n            results.append(result)\n        }\n    }\n    print(\"Downloaded \\(results.count) images\")\n}\n```\n\n## Wiring It Together\n\nHere is a complete social media feed loader that fetches user data and posts concurrently, processes them, and updates an actor-backed cache.\n\n```swift\nimport Foundation\n\nstruct Post: Codable {                                   // a social media post\n    let id: Int\n    let title: String\n    let body: String\n}\n\nactor FeedCache {                                        // thread-safe cache using actor\n    private var cache: [String: Any] = [:]\n    \n    func cache(value: Any, forKey key: String) {         // stores a value\n        cache[key] = value\n        print(\"Cached \\(key)\")\n    }\n    \n    func retrieve(forKey key: String) -> Any? {          // retrieves a value\n        return cache[key]\n    }\n}\n\nfunc fetchPosts(for userID: Int) async throws -> [Post] { // simulates fetching posts from API\n    try await Task.sleep(nanoseconds: 1_000_000_000)\n    return [\n        Post(id: 1, title: \"Hello\", body: \"First post\"),\n        Post(id: 2, title: \"World\", body: \"Second post\")\n    ]\n}\n\nfunc loadFeed(for userID: Int) async {                   // orchestrates the full load\n    let cache = FeedCache()                               // creates actor-backed cache\n    \n    Task {                                               // starts caching work\n        await cache.cache(value: userID, forKey: \"last_user\")\n    }\n    \n    do {\n        let posts = try await fetchPosts(for: userID)    // fetches posts with error handling\n        for post in posts {\n            print(\"Post \\(post.id): \\(post.title)\")\n        }\n    } catch {\n        print(\"Failed to fetch: \\(error)\")\n    }\n}\n\n// Entry point\nlet userID = 42\nTask {                                                   // wraps the async call from synchronous context\n    await loadFeed(for: userID)\n    print(\"Feed loaded successfully\")\n}\n\nprint(\"Main thread continues while tasks run\")          // proves non-blocking execution\n```" },
-          { id: "ns-swift-swiftui", title: "SwiftUI Basics", shortDesc: "View/ViewBuilder, state ( @State, @Binding, @Observable), NavigationStack, and canvas previews.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["SwiftUI uses a declarative syntax where you describe what the UI should show, not how to create it", "@State creates mutable local storage that automatically refreshes the view when changed", "VStack, HStack, and ZStack arrange child views in vertical, horizontal, and depth layouts", "List displays scrollable rows; NavigationStack enables hierarchical push navigation", "@Binding creates a two-way connection to state owned by a parent view", "Views are lightweight structs that get efficiently diffed by SwiftUI's rendering engine"], tags: ["SwiftUI", "declarative UI", "iOS", "Apple platforms"], content: "## What's This?\n\nSwiftUI is a declarative UI framework for building Apple platform interfaces using Swift code instead of visual editors or storyboards. Think of it like describing a house to an architect vs. drawing every brick yourself -- you state what you want, and SwiftUI figures out how to render it. It was introduced in 2019 as a modern alternative to UIKit, leveraging Swift's type system and protocol-oriented design. SwiftUI exists because UI development was increasingly complex: auto layout constraints, manual view lifecycle management, and imperative state updates made apps hard to reason about and maintain.\n\n## The Big Picture\n\nSwiftUI represents Apple's strategic direction for UI development across all platforms. It enables a single codebase to target iOS, macOS, watchOS, and tvOS with minimal platform-specific code. SwiftUI integrates deeply with the Swift language, using property wrappers like <code>@State</code>, <code>@Binding</code>, <code>@ObservedObject</code>, and <code>@EnvironmentObject</code> for reactive data flow. The framework is built on a system of composable view structs that are cheap to create and diffed efficiently by the rendering engine. UIKit remains supported and can be embedded inside SwiftUI via <code>UIViewRepresentable</code>, but all new Apple projects start with SwiftUI as the primary framework.\n\n## Core Ideas\n\n### Declarative View Syntax\n\nViews are declared as structs conforming to the <code>View</code> protocol, returning their body compositionally.\n\n```swift\nimport SwiftUI\n\nstruct GreetingView: View {                             // a view is a struct conforming to View\n    var body: some View {                                // body is a computed property\n        Text(\"Hello, World!\")                           // displays static text\n            .font(.title)                                // applies title font modifier\n            .foregroundColor(.blue)                      // changes text color to blue\n            .padding()                                   // adds default padding around text\n    }\n}\n```\n\n### State for Local Mutability\n\n<code>@State</code> creates mutable storage that automatically triggers view updates when changed.\n\n```swift\nstruct CounterView: View {\n    @State private var count = 0                         // @State creates mutable storage\n    \n    var body: some View {\n        VStack {\n            Text(\"Count: \\(count)\")                     // displays current count\n                .font(.largeTitle)\n            Button(\"Increment\") {                        // creates a tappable button\n                count += 1                                // modifying @State triggers view refresh\n            }\n        }\n    }\n}\n```\n\n### Layout with Stacks\n\n<code>VStack</code>, <code>HStack</code>, and <code>ZStack</code> arrange views vertically, horizontally, or in depth.\n\n```swift\nstruct ProfileCard: View {\n    var body: some View {\n        VStack(alignment: .leading, spacing: 12) {        // vertical stack with leading alignment\n            HStack {                                      // horizontal stack for avatar + name\n                Circle()                                  // placeholder avatar\n                    .fill(Color.gray)\n                    .frame(width: 50, height: 50)\n                VStack(alignment: .leading) {\n                    Text(\"Alice Johnson\").bold()\n                    Text(\"iOS Developer\")\n                        .foregroundColor(.secondary)       // muted secondary color\n                }\n            }\n            Text(\"Building amazing apps with SwiftUI\")\n                .font(.body)\n        }\n        .padding()\n        .background(Color.gray.opacity(0.1))\n        .cornerRadius(12)\n    }\n}\n```\n\n### Lists and Navigation\n\n<code>List</code> displays scrollable rows. <code>NavigationStack</code> enables push-based navigation.\n\n```swift\nstruct Item: Identifiable {                              // Identifiable required for List\n    let id = UUID()\n    let name: String\n}\n\nstruct ItemListView: View {\n    let items = [                                        // sample data\n        Item(name: \"Apples\"),\n        Item(name: \"Bananas\"),\n        Item(name: \"Cherries\")\n    ]\n    \n    var body: some View {\n        NavigationStack {                                // enables navigation\n            List(items) { item in                        // iterates over items to create rows\n                NavigationLink(destination: Text(item.name)) {  // tappable row that pushes detail\n                    Text(item.name)\n                }\n            }\n            .navigationTitle(\"Grocery List\")             // sets the navigation bar title\n        }\n    }\n}\n```\n\n### Bindings for Two-Way Connections\n\n<code>@Binding</code> lets a child view read and write a state owned by a parent view.\n\n```swift\nstruct ToggleSwitch: View {\n    @Binding var isOn: Bool                              // binding to external state\n    \n    var body: some View {\n        Toggle(\"Enable\\(isOn ? \"d\" : \"\"):\", isOn: $isOn) // two-way toggle control\n    }\n}\n\nstruct ParentView: View {\n    @State private var featureEnabled = false             // source of truth\n    \n    var body: some View {\n        ToggleSwitch(isOn: $featureEnabled)               // passes binding to child\n        Text(\"Feature is \\(featureEnabled ? \"ON\" : \"OFF\")\")\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete SwiftUI task manager app that demonstrates state, bindings, lists, and navigation working together.\n\n```swift\nimport SwiftUI\n\nstruct TaskItem: Identifiable, Codable {                 // model with Identifiable conformance\n    let id = UUID()                                      // unique identifier\n    var title: String                                    // mutable title\n    var isComplete: Bool = false                         // completion status\n}\n\nstruct TaskRow: View {\n    @Binding var task: TaskItem                          // binding to parent's task data\n    \n    var body: some View {\n        HStack {\n            Image(systemName: task.isComplete            // shows checkmark or circle\n                  ? \"checkmark.circle.fill\"\n                  : \"circle\")\n                .foregroundColor(task.isComplete ? .green : .gray)\n                .onTapGesture {                          // toggles completion on tap\n                    task.isComplete.toggle()\n                }\n            Text(task.title)\n                .strikethrough(task.isComplete)          // strikethrough when done\n            Spacer()                                     // pushes content to leading edge\n        }\n    }\n}\n\nstruct ContentView: View {\n    @State private var tasks: [TaskItem] = [             // source of truth for task list\n        TaskItem(title: \"Buy groceries\"),\n        TaskItem(title: \"Walk the dog\"),\n        TaskItem(title: \"Write SwiftUI code\")\n    ]\n    @State private var newTaskTitle = \"\"                 // state for text field\n    \n    var body: some View {\n        NavigationStack {\n            VStack {\n                HStack {\n                    TextField(\"New task...\", text: $newTaskTitle)  // bound text input\n                        .textFieldStyle(.roundedBorder)\n                    Button(\"Add\") {\n                        let trimmed = newTaskTitle.trimmingCharacters(in: .whitespaces)\n                        guard !trimmed.isEmpty else { return }\n                        tasks.append(TaskItem(title: trimmed))\n                        newTaskTitle = \"\"\n                    }\n                }\n                .padding()\n                \n                List($tasks) { $task in                  // iterates over bindings to each task\n                    TaskRow(task: $task)                  // passes binding to child\n                }\n                .listStyle(.plain)\n            }\n            .navigationTitle(\"My Tasks\")\n        }\n    }\n}\n```" },
-          { id: "ns-swift-uikit", title: "UIKit & Storyboards", shortDesc: "UIViewController lifecycle, Auto Layout, UITableView/UICollectionView, segues, and programmatic UI.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["UIViewController manages a view hierarchy with lifecycle callbacks: viewDidLoad, viewWillAppear, viewDidAppear", "Auto Layout uses NSLayoutConstraint to define relationships between view positions and sizes", "UITableView displays scrollable rows using a data source pattern with cell reuse", "UINavigationController manages a stack-based navigation hierarchy with push and pop", "Storyboards provide visual layout with segues for transitions and @IBAction for event handling", "UIKit and SwiftUI can interoperate via UIHostingController and UIViewRepresentable"], tags: ["UIKit", "iOS", "view controllers", "storyboards"], content: "## What's This?\n\nUIKit is Apple's original imperative UI framework for iOS and tvOS, providing view controllers, views, gestures, and animations for building apps visually or programmatically. Think of it as a traditional toolkit where you manually arrange every component, respond to events, and manage the view lifecycle yourself. UIKit has been the backbone of iOS development since the first iPhone and remains widely used alongside or embedded within SwiftUI. It exists because not all UI problems fit a declarative model -- complex animations, custom drawing, and fine-grained control over the view hierarchy are sometimes easier with imperative code.\n\n## The Big Picture\n\nUIKit and SwiftUI coexist in modern iOS development. UIKit is mature, battle-tested, and offers capabilities SwiftUI has not fully replicated: collection view layouts, precise animation control, and deep integration with system services. Storyboards and XIB files provide visual layout tools, while programmatic UIKit (building views in code) gives complete control. The UIKit view controller lifecycle -- <code>viewDidLoad</code>, <code>viewWillAppear</code>, <code>viewDidAppear</code> -- remains critical knowledge. Apple's strategy is progressive: new features use SwiftUI first, but UIKit is not deprecated. Many production apps use both via <code>UIHostingController</code> (embedding SwiftUI in UIKit) and <code>UIViewRepresentable</code> (embedding UIKit in SwiftUI).\n\n## Core Ideas\n\n### UIViewController and View Lifecycle\n\nThe <code>UIViewController</code> manages a view hierarchy, responding to lifecycle events for setup and teardown.\n\n```swift\nimport UIKit\n\nclass MyViewController: UIViewController {               // subclass of UIViewController\n    \n    override func viewDidLoad() {                       // called once when view loads into memory\n        super.viewDidLoad()\n        view.backgroundColor = .white                    // sets background to white\n        print(\"View did load\")                           // good place for one-time setup\n    }\n    \n    override func viewWillAppear(_ animated: Bool) {     // called before view appears on screen\n        super.viewWillAppear(animated)\n        print(\"View will appear\")\n    }\n    \n    override func viewDidAppear(_ animated: Bool) {      // called after view appears on screen\n        super.viewDidAppear(animated)\n        print(\"View did appear\")                         // good place to start animations\n    }\n}\n```\n\n### Auto Layout with Constraints\n\nAuto Layout defines rules for view positions and sizes relative to each other, adapting to different screen sizes.\n\n```swift\nclass ConstraintViewController: UIViewController {\n    \n    let titleLabel: UILabel = {                         // creates a label\n        let label = UILabel()\n        label.text = \"Hello, UIKit\"\n        label.font = .systemFont(ofSize: 24, weight: .bold)\n        label.translatesAutoresizingMaskIntoConstraints = false  // required for Auto Layout\n        return label\n    }()\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.addSubview(titleLabel)                      // adds label to view hierarchy\n        \n        NSLayoutConstraint.activate([                    // activates multiple constraints\n            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),  // centers horizontally\n            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),  // centers vertically\n            titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20)\n        ])\n    }\n}\n```\n\n### Table View with Data Source\n\n<code>UITableView</code> displays scrollable rows of data using a data source pattern.\n\n```swift\nclass TableViewController: UITableViewController {       // subclass includes table view setup\n    \n    let items = [\"Apple\", \"Banana\", \"Cherry\", \"Date\"]   // sample data\n    \n    override func tableView(_ tableView: UITableView,    // returns number of rows\n                   numberOfRowsInSection section: Int) -> Int {\n        return items.count\n    }\n    \n    override func tableView(_ tableView: UITableView,    // configures each cell\n                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {\n        let cell = UITableViewCell(style: .default, reuseIdentifier: \"cell\")\n        cell.textLabel?.text = items[indexPath.row]       // sets cell text from data array\n        cell.accessoryType = .disclosureIndicator          // shows arrow on right side\n        return cell\n    }\n    \n    override func tableView(_ tableView: UITableView,    // handles row selection\n                   didSelectRowAt indexPath: IndexPath) {\n        tableView.deselectRow(at: indexPath, animated: true)  // visually deselects row\n        print(\"Selected \\(items[indexPath.row])\")\n    }\n}\n```\n\n### Navigation Controller\n\n<code>UINavigationController</code> manages a stack of view controllers with push/pop navigation.\n\n```swift\nclass DetailViewController: UIViewController {\n    \n    let detailText: String\n    \n    init(text: String) {                                 // custom initializer\n        self.detailText = text\n        super.init(nibName: nil, bundle: nil)\n    }\n    \n    required init?(coder: NSCoder) {                     // required for storyboard decoding\n        fatalError(\"init(coder:) has not been implemented\")\n    }\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.backgroundColor = .white\n        title = detailText                                // sets navigation bar title\n    }\n}\n\n// In AppDelegate or scene setup:\nlet rootVC = TableViewController()\nlet navController = UINavigationController(rootViewController: rootVC)  // wraps in navigation\n```\n\n### Storyboards and Segues\n\nStoryboards visually define screens and transitions. Segues connect view controllers with identifiers.\n\n```swift\nclass SourceViewController: UIViewController {\n    \n    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {  // called before segue\n        if segue.identifier == \"showDetail\" {           // checks which segue triggered\n            let destination = segue.destination as! DetailViewController  // casts to destination\n            destination.detailText = \"Passed Data\"       // passes data before transition\n        }\n    }\n    \n    @IBAction func buttonTapped(_ sender: UIButton) {    // action connected from storyboard\n        performSegue(withIdentifier: \"showDetail\", sender: self)  // triggers the segue\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete UIKit app that displays a list of items and navigates to a detail screen.\n\n```swift\nimport UIKit\n\nclass ItemListViewController: UITableViewController {    // main list screen\n    \n    let items = [\n        \"Introduction to Swift\",\n        \"Understanding Optionals\",\n        \"Control Flow in Swift\",\n        \"Structs vs Classes\"\n    ]\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        title = \"Topics\"                                   // sets navigation bar title\n        tableView.register(UITableViewCell.self, forCellReuseIdentifier: \"cell\")  // registers cell type\n    }\n    \n    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {\n        return items.count\n    }\n    \n    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {\n        let cell = tableView.dequeueReusableCell(withIdentifier: \"cell\", for: indexPath)\n        cell.textLabel?.text = items[indexPath.row]\n        cell.accessoryType = .disclosureIndicator\n        return cell\n    }\n    \n    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {\n        tableView.deselectRow(at: indexPath, animated: true)\n        let detailVC = DetailViewController()\n        detailVC.topicTitle = items[indexPath.row]\n        navigationController?.pushViewController(detailVC, animated: true)\n    }\n}\n\nclass DetailViewController: UIViewController {          // detail screen\n    \n    var topicTitle: String = \"\"\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.backgroundColor = .systemBackground\n        title = topicTitle\n        \n        let label = UILabel()\n        label.text = \"You selected: \\(topicTitle)\"\n        label.font = .systemFont(ofSize: 18)\n        label.translatesAutoresizingMaskIntoConstraints = false\n        view.addSubview(label)\n        \n        NSLayoutConstraint.activate([\n            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),\n            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)\n        ])\n    }\n}\n\n// Scene Delegate setup\nclass SceneDelegate: UIResponder, UIWindowSceneDelegate {\n    var window: UIWindow?\n    \n    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {\n        guard let windowScene = scene as? UIWindowScene else { return }\n        let window = UIWindow(windowScene: windowScene)\n        let navController = UINavigationController(rootViewController: ItemListViewController())\n        window.rootViewController = navController\n        self.window = window\n        window.makeKeyAndVisible()\n    }\n}\n```" },
-          { id: "ns-swift-networking", title: "Networking & Data Persistence", shortDesc: "URLSession, Codable, Core Data, SwiftData, UserDefaults, and Keychain.", difficulty: "advanced", readTimeMin: 12, keyPoints: ["URLSession with async/await provides the modern way to make HTTP requests in Swift", "Codable structures enable automatic JSON encoding and decoding with JSONEncoder and JSONDecoder", "UserDefaults stores small key-value preference data like login state and settings", "FileManager writes data to the app's documents directory for offline caching of JSON and files", "Network errors should be caught with do-catch and presented as user-friendly messages", "A typical architecture fetches from API, decodes with Codable, displays in UI, and caches locally"], tags: ["Swift", "networking", "Codable", "persistence"], content: "## What's This?\n\nNetworking in Swift involves making HTTP requests to remote servers, parsing responses, and persisting data locally. Think of it like sending letters through the postal service: you write a request (the letter), send it to an address (URL), receive a response (the reply), and file it away (persistence). Apple provides <code>URLSession</code> as the primary networking API, while <code>Codable</code> handles data parsing. Local persistence uses <code>UserDefaults</code> for small data, <code>FileManager</code> for files, and Core Data or SwiftData for complex object graphs. These tools exist because modern apps are useless without remote data -- user accounts, content feeds, cloud sync -- and must handle offline scenarios gracefully.\n\n## The Big Picture\n\nNetworking and persistence are the two pillars of data management in iOS apps. A typical architecture: fetch JSON from a REST API via <code>URLSession</code>, decode it with <code>Codable</code> into model structs, display with SwiftUI or UIKit, and cache locally for offline access. Apple has modernized networking with Swift concurrency: <code>URLSession</code> provides <code>async</code> methods that replace completion-handler callbacks. For persistence, Core Data remains the mature option for relational data, while SwiftData (introduced in iOS 17) offers a Swift-native alternative. <code>UserDefaults</code> handles preferences, and the file system stores documents and images. Third-party libraries like Alamofire and Realm exist but are less necessary as Apple's first-party APIs improve.\n\n## Core Ideas\n\n### URLSession Async Requests\n\n<code>URLSession</code> sends HTTP requests and receives responses asynchronously. The modern Swift approach uses async/await.\n\n```swift\nimport Foundation\n\nfunc fetchData(from urlString: String) async throws -> Data {  // async throws function\n    guard let url = URL(string: urlString) else {               // safely creates URL\n        throw URLError(.badURL)                                 // throws error if URL is invalid\n    }\n    let (data, response) = try await URLSession.shared.data(from: url)  // async network call\n    guard let httpResponse = response as? HTTPURLResponse,      // casts to HTTP response\n          httpResponse.statusCode == 200 else {                 // checks for success status\n        throw URLError(.badServerResponse)                      // throws on bad response\n    }\n    return data                                                 // returns raw response data\n}\n```\n\n### JSON Decoding with Codable\n\nDecode JSON data into Swift structs using <code>JSONDecoder</code> and the <code>Codable</code> protocol.\n\n```swift\nstruct User: Codable {                                      // model matches JSON structure\n    let id: Int\n    let name: String\n    let email: String\n}\n\nfunc decodeUser(from data: Data) -> User? {                 // tries to decode JSON to User\n    let decoder = JSONDecoder()                             // creates a JSON decoder\n    do {\n        let user = try decoder.decode(User.self, from: data) // decodes Data into User struct\n        return user\n    } catch {\n        print(\"Decoding error: \\(error)\")                 // handles malformed JSON gracefully\n        return nil\n    }\n}\n```\n\n### UserDefaults for Simple Persistence\n\n<code>UserDefaults</code> stores small amounts of user preferences as key-value pairs.\n\n```swift\nfunc savePreference(isLoggedIn: Bool) {                    // saves login state\n    UserDefaults.standard.set(isLoggedIn, forKey: \"isLoggedIn\")  // stores boolean\n    UserDefaults.standard.set(\"user_42\", forKey: \"lastUserID\")   // stores string\n}\n\nfunc loadPreference() -> Bool {                            // loads login state\n    return UserDefaults.standard.bool(forKey: \"isLoggedIn\") // returns false if key missing\n}\n```\n\n### File System Persistence\n\n<code>FileManager</code> writes data to the app's documents directory, useful for images and JSON files.\n\n```swift\nfunc saveToFile(data: Data, filename: String) {            // saves data to app documents\n    guard let documentsPath = FileManager.default.urls(     // gets documents directory\n            for: .documentDirectory, in: .userDomainMask).first else {\n        return\n    }\n    let fileURL = documentsPath.appendingPathComponent(filename)  // builds full file path\n    do {\n        try data.write(to: fileURL)                        // writes data to disk\n        print(\"Saved to \\(fileURL.lastPathComponent)\")\n    } catch {\n        print(\"Save failed: \\(error)\")\n    }\n}\n\nfunc loadFromFile(filename: String) -> Data? {            // loads data from documents\n    guard let documentsPath = FileManager.default.urls(\n            for: .documentDirectory, in: .userDomainMask).first else {\n        return nil\n    }\n    let fileURL = documentsPath.appendingPathComponent(filename)\n    return try? Data(contentsOf: fileURL)                  // returns nil on any failure\n}\n```\n\n### Error Handling in Networking\n\nNetwork operations can fail in many ways -- wrap calls in do-catch blocks and present user-friendly errors.\n\n```swift\nenum NetworkError: Error {                                 // custom error types\n    case invalidURL\n    case noData\n    case decodingFailed\n}\n\nfunc loadUserProfile(userID: Int) async {                  // orchestrates the full load\n    let urlString = \"https://api.example.com/users/\\(userID)\"\n    do {\n        let data = try await fetchData(from: urlString)    // network call can throw\n        guard let user = decodeUser(from: data) else {      // decoding can fail\n            throw NetworkError.decodingFailed\n        }\n        print(\"Loaded user: \\(user.name)\")\n    } catch let error as NetworkError {                    // catches custom errors\n        print(\"Network error: \\(error)\")\n    } catch {                                              // catches any other error\n        print(\"Unexpected error: \\(error)\")\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete networking and persistence system that fetches a user list from an API, caches it to disk, and loads from cache when offline.\n\n```swift\nimport Foundation\n\nstruct Repository: Codable {                               // matches GitHub API repo shape\n    let id: Int\n    let name: String\n    let description: String?\n    let stars: Int\n}\n\nclass RepositoryService {                                  // handles all repo operations\n    private let cacheFileName = \"repos_cache.json\"\n    \n    func fetchRepositories() async throws -> [Repository] {  // fetches from API\n        let urlString = \"https://api.github.com/repositories\"\n        let data = try await fetchData(from: urlString)\n        let repos = try JSONDecoder().decode([Repository].self, from: data) // decodes array\n        saveToCache(repos)                                   // caches for offline use\n        return repos\n    }\n    \n    private func saveToCache(_ repos: [Repository]) {       // persists to file\n        guard let data = try? JSONEncoder().encode(repos) else { return } // encodes to JSON\n        saveToFile(data: data, filename: cacheFileName)\n    }\n    \n    func loadCachedRepositories() -> [Repository]? {        // loads from cache\n        guard let data = loadFromFile(filename: cacheFileName) else { return nil }\n        return try? JSONDecoder().decode([Repository].self, from: data)\n    }\n    \n    private func fetchData(from urlString: String) async throws -> Data {\n        guard let url = URL(string: urlString) else {\n            throw NetworkError.invalidURL\n        }\n        let (data, response) = try await URLSession.shared.data(from: url)\n        guard let httpResponse = response as? HTTPURLResponse,\n              httpResponse.statusCode == 200 else {\n            throw URLError(.badServerResponse)\n        }\n        return data\n    }\n    \n    private func saveToFile(data: Data, filename: String) {\n        guard let path = FileManager.default.urls(\n                for: .documentDirectory, in: .userDomainMask).first else { return }\n        let url = path.appendingPathComponent(filename)\n        try? data.write(to: url)\n    }\n    \n    private func loadFromFile(filename: String) -> Data? {\n        guard let path = FileManager.default.urls(\n                for: .documentDirectory, in: .userDomainMask).first else { return nil }\n        let url = path.appendingPathComponent(filename)\n        return try? Data(contentsOf: url)\n    }\n}\n\n// Usage\nlet service = RepositoryService()\nTask {\n    do {\n        let repos = try await service.fetchRepositories()  // fetches and caches\n        print(\"Fetched \\(repos.count) repositories\")\n    } catch {\n        print(\"Fetch failed, loading from cache...\")\n        if let cached = service.loadCachedRepositories() {  // falls back to cache\n            print(\"Loaded \\(cached.count) from cache\")\n        }\n    }\n}\n```" },
-          { id: "ns-swift-tooling", title: "App Distribution & Tooling", shortDesc: "Xcode basics, Swift Package Manager, TestFlight, App Store Connect, and CI with GitHub Actions.", difficulty: "advanced", readTimeMin: 12, keyPoints: ["Xcode organizes projects with build settings, code signing, and deployment target configuration", "Swift Package Manager declaratively manages dependencies in Package.swift with version pinning", "XCTest provides unit testing with setUp, tearDown, and assertions like XCTAssertEqual", "TestFlight enables beta distribution to internal and external testers before App Store release", "Code signing with certificates and provisioning profiles ensures app authenticity and integrity", "CI pipelines automate testing, archiving, and deployment to TestFlight on every tag or commit"], tags: ["Swift", "Xcode", "CI/CD", "App Store distribution"], content: "## What's This?\n\nApp distribution and tooling encompasses everything required to build, test, package, and deliver a Swift app to users through the App Store or TestFlight. Think of it like a factory assembly line: you write the blueprint (code), check quality (testing), package the product (archiving), and ship it to stores (distribution). Apple provides Xcode as the integrated development environment, Swift Package Manager for dependencies, and App Store Connect for managing releases. These tools exist because shipping software involves far more than writing code: code signing, provisioning profiles, beta testing, release management, and analytics are all essential for a professional app.\n\n## The Big Picture\n\nApple's tooling ecosystem forms a pipeline from development to production. Xcode handles editing, debugging, and profiling. Swift Package Manager (SPM) manages dependencies and has become the standard over CocoaPods and Carthage. TestFlight enables beta distribution with up to 10,000 external testers. App Store Connect manages app metadata, pricing, in-app purchases, and release approvals. Continuous integration (CI) services like Xcode Cloud, GitHub Actions, and Bitrise automate building and testing. Code signing with Apple Developer Program certificates ensures app authenticity. The modern workflow emphasizes automation: CI pipelines run tests on every commit, deploy to TestFlight automatically, and submit to the App Store with minimal manual steps.\n\n## Core Ideas\n\n### Xcode Workspace and Project Structure\n\nAn Xcode project organizes source files, resources, build settings, and configurations into a navigable structure.\n\n```swift\n// No direct code -- Xcode project is configured via .xcodeproj and .xcworkspace files.\n// Key configurations:\n// - BUNDLE_IDENTIFIER: com.example.myapp (unique app identifier)\n// - DEVELOPMENT_TEAM: team ID from Apple Developer account\n// - CODE_SIGN_STYLE: Automatic (Xcode manages provisioning) or Manual\n// - DEPLOYMENT_TARGET: minimum iOS version supported (e.g., 16.0)\n// - SWIFT_VERSION: 5 (language version for compilation)\n```\n\n### Swift Package Manager\n\nSPM manages library dependencies declaratively in a <code>Package.swift</code> file. It is integrated into Xcode.\n\n```swift\n// swift-tools-version: 5.9\nimport PackageDescription\n\nlet package = Package(\n    name: \"MyApp\",                                       // package name\n    platforms: [\n        .iOS(.v16)                                        // minimum iOS version\n    ],\n    dependencies: [\n        .package(url: \"https://github.com/Alamofire/Alamofire.git\", from: \"5.9.0\"),  // external dep\n        .package(url: \"https://github.com/onevcat/Kingfisher.git\", from: \"7.12.0\")   // image caching\n    ],\n    targets: [\n        .executableTarget(                                // main app target\n            name: \"MyApp\",\n            dependencies: [\n                \"Alamofire\",                               // links Alamofire library\n                \"Kingfisher\"                               // links Kingfisher library\n            ]\n        ),\n        .testTarget(                                      // test target\n            name: \"MyAppTests\",\n            dependencies: [\"MyApp\"]                       // tests depend on main target\n        )\n    ]\n)\n```\n\n### Unit Testing with XCTest\n\nXCTest provides assertions to verify your code behaves correctly. Tests run schematically in Xcode or CI.\n\n```swift\nimport XCTest\n@testable import MyApp                                   // imports main module for testing\n\nfinal class CalculatorTests: XCTestCase {                 // test class inheriting from XCTestCase\n    \n    var calculator: Calculator!                          // subject under test\n    \n    override func setUp() {                              // runs before each test method\n        super.setUp()\n        calculator = Calculator()                         // fresh instance for every test\n    }\n    \n    func testAddition() {                                 // test method must start with \"test\"\n        let result = calculator.add(2, 3)                 // calls the method being tested\n        XCTAssertEqual(result, 5, \"2 + 3 should equal 5\") // assertion with failure message\n    }\n    \n    func testDivisionByZero() {                           // tests error handling\n        XCTAssertThrowsError(try calculator.divide(10, 0)) { error in  // asserts error is thrown\n            XCTAssertEqual(error as? CalcError, CalcError.divisionByZero)\n        }\n    }\n}\n```\n\n### App Store Connect and TestFlight\n\nApp Store Connect manages app metadata, pricing, and releases. TestFlight distributes beta builds.\n\n```swift\n// No direct code -- configuration is done via App Store Connect web interface.\n// Key steps for distribution:\n// 1. Archive the app in Xcode (Product > Archive)\n// 2. Upload to App Store Connect via Xcode Organizer or xcrun altool\n// 3. Configure build in TestFlight for internal/external testers\n// 4. Submit for App Store review when ready\n//\n// Export options for distribution:\n// - Development: for testing on registered devices\n// - Ad Hoc: for limited device distribution (up to 100 devices)\n// - App Store: for production submission\n// - Enterprise: for in-house distribution (requires Enterprise account)\n```\n\n### Code Signing and Provisioning\n\nCode signing ensures the app comes from a trusted source and has not been tampered with.\n\n```bash\n# These commands are run in Terminal, not in Swift code:\n\n# Check available signing identities in keychain\nsecurity find-identity -v -p codesigning\n\n# Export archived app for distribution\nxcodebuild -exportArchive \\\n  -archivePath MyApp.xcarchive \\\n  -exportPath ./MyApp.ipa \\\n  -exportOptionsPlist ExportOptions.plist\n\n# Upload to App Store Connect using altool\nxcrun altool --upload-app \\\n  -f MyApp.ipa \\\n  -t ios \\\n  -u username@example.com \\\n  -p @keychain:AC_PASSWORD\n```\n\n### Continuous Integration with GitHub Actions\n\nAutomate builds and tests on every push using CI workflows.\n\n```yaml\n# .github/workflows/ios.yml -- YAML configuration, not Swift\nname: iOS CI\n\non:\n  push:\n    branches: [ main ]\n  pull_request:\n    branches: [ main ]\n\njobs:\n  build:\n    runs-on: macos-latest\n    steps:\n      - uses: actions/checkout@v4               # checks out repository code\n      - name: Build and Test\n        run: |\n          xcodebuild test \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -destination 'platform=iOS Simulator,name=iPhone 15' \\\n            -resultBundlePath TestResults\n      - name: Upload test results\n        uses: actions/upload-artifact@v4        # saves test results as artifact\n        with:\n          name: test-results\n          path: TestResults.xcresult\n```\n\n## Wiring It Together\n\nHere is a complete CI/CD pipeline setup incorporating testing, code signing, and TestFlight distribution.\n\n```yaml\n# .github/workflows/release.yml\nname: Build and Deploy to TestFlight\n\non:\n  push:\n    tags:\n      - 'v*'                                    # triggers only on version tags like v1.0\n\njobs:\n  test-and-deploy:\n    runs-on: macos-14\n    steps:\n      - uses: actions/checkout@v4               # pulls latest code\n      \n      - uses: maxim-lobanov/setup-xcode@v1     # sets up Xcode version\n        with:\n          xcode-version: '15.4'\n      \n      - name: Install dependencies\n        run: xcodebuild -resolvePackageDependencies  # resolves SPM packages\n      \n      - name: Run tests\n        run: |\n          xcodebuild test \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -destination 'platform=iOS Simulator,name=iPhone 16' \\\n            -sdk iphonesimulator || exit 1      # fails workflow if tests fail\n      \n      - name: Archive app\n        run: |\n          xcodebuild archive \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -archivePath MyApp.xcarchive \\\n            -configuration Release \\\n            DEVELOPMENT_TEAM=${{ secrets.TEAM_ID }}\n      \n      - name: Export IPA\n        run: |\n          xcodebuild -exportArchive \\\n            -archivePath MyApp.xcarchive \\\n            -exportPath ./output \\\n            -exportOptionsPlist ExportOptions.plist\n      \n      - name: Upload to TestFlight\n        env:\n          APP_STORE_CONNECT_USERNAME: ${{ secrets.AC_USERNAME }}\n          APP_STORE_CONNECT_PASSWORD: ${{ secrets.AC_PASSWORD }}\n        run: |\n          xcrun altool --upload-app \\\n            -f ./output/MyApp.ipa \\\n            -t ios \\\n            -u \"$APP_STORE_CONNECT_USERNAME\" \\\n            -p \"$APP_STORE_CONNECT_PASSWORD\"\n```" },
+          { id: "ns-swift-syntax", title: "Swift Syntax & Basics", shortDesc: "Variables (let/var), data types, string interpolation, optionals, and basic operators.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["Swift uses let for constants and var for variables, preferring immutability by default", "Type inference automatically detects types but Swift never performs implicit type conversion", "String interpolation with \\(expression) embeds values directly into strings", "Functions are defined with func, support external and internal parameter labels", "Arrays, dictionaries, and strings are all value types with built-in mutability control", "Swift compiles to native code via LLVM for C++-level performance"], tags: ["Swift", "syntax", "variables", "functions"], content: "## What's This?\n\nSwift is a modern, type-safe programming language created by Apple for building apps across iOS, macOS, watchOS, and tvOS. Think of it as a well-organized toolbox where every tool has a specific purpose and shape -- the language prevents you from putting a square peg in a round hole at compile time. Swift was designed to replace Objective-C with a safer, more expressive syntax while maintaining performance. It combines the best ideas from languages like Rust, Python, and C# into a coherent whole. Swift prioritizes readability and safety without sacrificing speed.\n\n## The Big Picture\n\nSwift sits at the center of Apple's entire software ecosystem. Every app on an Apple device is either written in Swift or Objective-C, and Apple is pushing Swift as the future. The language compiles down to native code using LLVM, giving it performance comparable to C++ while offering high-level abstractions. Swift's syntax directly feeds into SwiftUI (declarative UI), Combine (reactive programming), and the rest of the Apple frameworks. Understanding Swift's syntax fundamentals -- variables, types, functions, and control flow -- unlocks everything else in the Apple development world.\n\n## Core Ideas\n\n### Variables and Constants\n\nVariables store data that can change; constants store data that never changes. Swift encourages using constants by default with `let`, making your code safer and easier to reason about.\n\n```swift\nvar score = 0          // variable that can be changed later\nlet maxPlayers = 4     // constant that can never change\nscore = 10             // this is allowed because score is var\n// maxPlayers = 8      // this would cause a compile error\n```\n\n### Type Inference and Type Safety\n\nSwift infers types from values but never silently converts between incompatible types. This catches entire categories of bugs before your app runs.\n\n```swift\nlet name = \"Alice\"           // Swift infers this is a String\nlet count = 42               // Swift infers this is an Int\n// let result = name + count // compile error: cannot add String and Int\nlet message = name + String(count)  // explicit conversion is required\n```\n\n### Basic Data Types\n\nSwift provides rich built-in types for representing text, numbers, collections, and more. Each type has a specific purpose and memory layout.\n\n```swift\nlet title: String = \"Hello\"       // stores text\nlet year: Int = 2024               // whole number\nlet pi: Double = 3.14159           // floating-point number\nlet isActive: Bool = true          // true or false\nlet fruits: [String] = [\"Apple\", \"Banana\"]  // ordered collection\nlet scores: [String: Int] = [\"Alice\": 95]     // key-value pairs\n```\n\n### String Interpolation\n\nSwift embeds values directly into strings using `\\()` syntax, making string construction readable and safe.\n\n```swift\nlet age = 30\nlet greeting = \"You are \\(age) years old\"  // evaluates to \"You are 30 years old\"\nlet summary = \"Score: \\(score) out of \\(maxPlayers)\"  // multiple values inline\n```\n\n### Functions\n\nFunctions are reusable blocks of code that take inputs and return outputs. Swift functions use a clean syntax with labeled parameters.\n\n```swift\nfunc greet(name: String) -> String {            // takes a String, returns a String\n    return \"Hello, \\(name)!\"                   // builds the greeting\n}\nfunc add(_ a: Int, _ b: Int) -> Int {           // underscore removes external label\n    return a + b                                 // returns the sum\n}\nlet result = greet(name: \"Bob\")                 // calls the function\nlet sum = add(3, 5)                              // calls without parameter labels\n```\n\n## Wiring It Together\n\nHere is a complete program that defines a data model, processes a list, and produces a formatted report.\n\n```swift\nstruct Player {                                          // defines a Player struct\n    let name: String                                     // constant property for the name\n    var score: Int                                       // variable property for the score\n}\n\nfunc formatScore(for player: Player) -> String {         // takes a Player, returns String\n    return \"\\(player.name): \\(player.score) points\"    // interpolates name and score\n}\n\nlet players = [                                          // creates an array of players\n    Player(name: \"Alice\", score: 95),                   // first player\n    Player(name: \"Bob\", score: 82),                     // second player\n    Player(name: \"Charlie\", score: 73)                  // third player\n]\n\nlet maxPossible = 100                                     // constant for max score\nvar report = \"Game Report\\n\"                            // starts building the report\nreport += \"Maximum Score: \\(maxPossible)\\n\\n\"          // appends max score line\n\nfor player in players {                                   // loops over each player\n    let line = formatScore(for: player)                   // formats one player's score\n    report += line + \"\\n\"                                // appends to the report\n}\n\nprint(report)                                             // prints the full report\n```" },
+          { id: "ns-swift-optionals", title: "Optionals & Type Safety", shortDesc: "Optional binding (if-let, guard-let), forced unwrapping, nil coalescing, and optional chaining.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["Optionals are type-safe wrappers that can hold a value or nil, preventing null pointer crashes", "if let safely unwraps an optional and creates a scoped constant only when a value exists", "guard let unwraps with early return, keeping the main path unindented", "The nil-coalescing operator ?? provides a default value when the optional is nil", "Optional chaining lets you safely access properties and methods through optional references", "Force unwrapping with ! should only be used when you are absolutely certain the value exists"], tags: ["Swift", "optionals", "type safety", "nil handling"], content: "## What's This?\n\nOptionals are Swift's way of saying \"this value might be missing\" -- they are a type-safe wrapper around the concept of nil. Think of an Optional as a box that either contains a value or is empty; you must check inside the box before using the contents. Optionals exist to eliminate null pointer errors, one of the most common sources of crashes in languages like Objective-C and Java. By making the possibility of nil explicit at the type level, Swift forces you to handle missing values at compile time rather than discovering them at runtime. This is a cornerstone of Swift's approach to safety.\n\n## The Big Picture\n\nOptionals are woven into every Swift API. Foundation, UIKit, SwiftUI, and all system frameworks return optionals for operations that can fail -- parsing data, finding files, looking up dictionary keys, or casting types. The language provides multiple tools for working with optionals: optional binding (`if let`), force unwrapping (`!`), optional chaining (`?`), and nil-coalescing (`??`). Understanding optionals is essential because they interact with every other Swift feature: you cannot write realistic Swift code without handling them. They also demonstrate Swift's philosophy of shifting error detection from runtime to compile time.\n\n## Core Ideas\n\n### Optional Declaration\n\nAn Optional type is written with a `?` suffix on the type. It can hold either a value of that type or `nil`.\n\n```swift\nvar middleName: String? = nil       // an Optional String that starts as nil\nvar age: Int? = 30                  // an Optional Int containing 30\nmiddleName = \"James\"                // now it holds \"James\"\n// var name: String = nil           // compile error: non-optional cannot be nil\n```\n\n### Unwrapping with if let\n\nThe safest way to use an optional is to check if it contains a value and bind it to a new constant in one step.\n\n```swift\nlet optionalName: String? = \"Alice\"\nif let name = optionalName {                        // if optionalName has a value, assign it to name\n    print(\"Hello, \\(name)\")                       // this runs because optionalName is not nil\n} else {\n    print(\"No name provided\")                      // this would run if optionalName were nil\n}\n```\n\n### Guard let for Early Exit\n\n`guard let` unwraps an optional but requires an early return if nil, keeping the happy path unindented.\n\n```swift\nfunc process(userID: String?) {                     // receives an optional string\n    guard let id = userID else {                     // unwrap; if nil, execute the else block\n        print(\"Missing user ID\")                   // runs only when userID is nil\n        return                                       // must exit the function early\n    }\n    print(\"Processing user \\(id)\")                 // id is now a non-optional String\n}\n```\n\n### Nil-Coalescing Operator\n\nThe `??` operator provides a default value when the optional is nil, all in a single expression.\n\n```swift\nlet nickname: String? = nil\nlet displayName = nickname ?? \"Guest\"               // evaluates to \"Guest\" because nickname is nil\nlet input: String? = \"User123\"\nlet finalName = input ?? \"Anonymous\"                // evaluates to \"User123\" because input has a value\n```\n\n### Optional Chaining\n\nYou can call methods or access properties on an optional without unwrapping it first using `?` syntax.\n\n```swift\nclass Address {                                      // simple class with a street property\n    var street: String?                              // street is itself optional\n}\nclass Person {\n    var address: Address?                            // address is optional\n}\nlet person = Person()                                // address defaults to nil\nlet streetName = person.address?.street              // safely returns nil, does not crash\n// let street = person.address!.street               // would crash if address is nil\n```\n\n### Force Unwrapping\n\nUsing `!` after an optional asserts that it definitely has a value, crashing if it does not.\n\n```swift\nlet definitelyThere: String? = \"Hello\"\nlet result = definitelyThere!                        // safe here because we know it has a value\n// let crash: String? = nil\n// let bad = crash!                                  // crashes with runtime error\n```\n\n## Wiring It Together\n\nHere is a realistic user profile loader that fetches data from multiple optional sources and produces a formatted result.\n\n```swift\nstruct UserProfile {                                  // holds user display information\n    let firstName: String                             // required first name\n    let lastName: String                              // required last name\n    let middleName: String?                           // optional middle name\n    let age: Int?                                     // optional age\n}\n\nfunc displayName(for profile: UserProfile) -> String {          // builds a display name\n    var name = profile.firstName                                 // start with first name\n    if let middle = profile.middleName {                         // check if middle name exists\n        name += \" \\(middle)\"                                    // append middle name if present\n    }\n    name += \" \\(profile.lastName)\"                             // always append last name\n    return name\n}\n\nfunc ageDescription(for profile: UserProfile) -> String {        // returns age string or placeholder\n    guard let age = profile.age else {                           // unwrap age, exit if nil\n        return \"Age not disclosed\"\n    }\n    return \"\\(age) years old\"\n}\n\nlet profile = UserProfile(                                       // create a profile with missing middle name\n    firstName: \"Alice\",\n    lastName: \"Johnson\",\n    middleName: nil,\n    age: 30\n)\n\nlet display = displayName(for: profile)                          // produces \"Alice Johnson\"\nprint(display)\nlet ageInfo = ageDescription(for: profile)                       // produces \"30 years old\"\nprint(ageInfo)\n\n// Uses nil-coalescing for a fallback value\nlet tagline: String? = nil\nlet displayTagline = tagline ?? \"No tagline set\"                // evaluates to default\nprint(displayTagline)\n```" },
+          { id: "ns-swift-control-flow", title: "Control Flow & Functions", shortDesc: "for-in, while, switch with pattern matching, function parameters, in-out, and guard statements.", difficulty: "foundational", readTimeMin: 10, keyPoints: ["if-else evaluates Boolean conditions with optional else if and else branches", "switch must be exhaustive and supports compound cases, value binding, and pattern matching", "for-in iterates over sequences like arrays, ranges, and dictionaries with clean syntax", "while loops repeat until a condition becomes false, checking before each iteration", "guard provides early exit when conditions fail, reducing nesting in the main path", "Functions encapsulate reusable logic with typed parameters and return values"], tags: ["Swift", "control flow", "functions", "loops"], content: "## What's This?\n\nControl flow determines the order in which code executes -- it is the decision-making backbone of every program. Think of it like a train switching tracks: based on conditions, your code takes different routes to reach the destination. Swift provides `if`, `switch`, `for-in`, `while`, and `guard` statements, each designed for specific patterns. These constructs exist because programs need to react to different inputs, repeat operations, and skip irrelevant work. Swift's control flow is particularly expressive, with powerful pattern matching in switch statements and clean iteration syntax.\n\n## The Big Picture\n\nControl flow is universal across programming languages, but Swift's implementation has unique strengths. The `switch` statement supports pattern matching, value binding, and compound cases, making it far more powerful than in C-family languages. Swift's `for-in` loops integrate seamlessly with its collections and ranges. `guard` provides a Swift-specific approach to early exit that reduces nesting. Together with functions, control flow forms the structural layer between data (variables, types) and behavior (algorithms, business logic). Every app, from a calculator to a social network, relies on these primitives to make decisions and repeat work.\n\n## Core Ideas\n\n### If-Else Statements\n\nThe most basic decision-making tool. Evaluate a Boolean condition and execute one of two branches.\n\n```swift\nlet temperature = 30\nif temperature > 25 {                               // checks if temperature exceeds 25\n    print(\"It is hot outside\")                      // executes when condition is true\n} else if temperature > 15 {                         // checks another condition\n    print(\"It is warm outside\")                     // executes when first is false but this is true\n} else {\n    print(\"It is cold outside\")                     // executes when all conditions are false\n}\n```\n\n### Switch Statements\n\nSwitch compares a value against multiple patterns and executes the matching branch. Swift switches must be exhaustive.\n\n```swift\nlet day = 3\nswitch day {\ncase 1:                                              // matches when day equals 1\n    print(\"Monday\")\ncase 2:                                              // matches when day equals 2\n    print(\"Tuesday\")\ncase 3:                                              // matches when day equals 3\n    print(\"Wednesday\")\ncase 4, 5:                                           // compound case matches 4 or 5\n    print(\"Thursday or Friday\")\ndefault:                                             // must cover all remaining values\n    print(\"Weekend\")\n}\n```\n\n### For-In Loops\n\nIterate over sequences like arrays, ranges, or dictionaries. The most common loop in Swift.\n\n```swift\nlet names = [\"Alice\", \"Bob\", \"Charlie\"]\nfor name in names {                                  // loops over each element in the array\n    print(\"Hello, \\(name)\")                         // prints each name\n}\nfor i in 0..<5 {                                     // half-open range: 0, 1, 2, 3, 4\n    print(\"Index \\(i)\")\n}\nfor (index, name) in names.enumerated() {             // get both index and value\n    print(\"\\(index + 1). \\(name)\")\n}\n```\n\n### While Loops\n\nRepeat code as long as a condition remains true. Useful when the number of iterations is unknown.\n\n```swift\nvar count = 3\nwhile count > 0 {                                    // checks condition before each iteration\n    print(\"\\(count)...\")                            // prints countdown\n    count -= 1                                        // decrements the counter\n}\nprint(\"Go!\")                                        // runs after the loop finishes\n```\n\n### Guard Statements\n\nGuard provides early exit when a condition is not met, keeping the main logic unindented.\n\n```swift\nfunc validate(age: Int?) {                           // receives an optional age\n    guard let age = age, age >= 18 else {             // unwrap and check condition\n        print(\"Access denied\")                       // runs if age is nil or under 18\n        return                                        // must exit the scope\n    }\n    print(\"Welcome! You are \\(age)\")                // runs only when both conditions pass\n}\n```\n\n### Functions with Parameters\n\nFunctions package reusable logic. They accept inputs, perform work, and optionally return a result.\n\n```swift\nfunc calculateTotal(items: [Double], taxRate: Double) -> Double {   // array and rate input\n    var total = 0.0                                                  // initialize accumulator\n    for item in items {                                              // loop through each price\n        total += item                                                // add each item price\n    }\n    return total * (1 + taxRate)                                     // apply tax and return\n}\nlet cart = [10.99, 24.99, 5.50]\nlet finalPrice = calculateTotal(items: cart, taxRate: 0.08)          // calls the function\nprint(\"Total: $\\(finalPrice)\")\n```\n\n## Wiring It Together\n\nHere is a complete order processing system that validates input, calculates totals, and generates a receipt.\n\n```swift\nstruct MenuItem {                                                    // defines a menu item\n    let name: String                                                 // item name\n    let price: Double                                                // item price\n}\n\nstruct Order {                                                       // defines an order\n    let items: [MenuItem]                                            // array of ordered items\n    let discountCode: String?                                        // optional discount\n}\n\nfunc applyDiscount(to total: Double, code: String?) -> Double {      // applies discount if valid\n    guard let code = code else {                                     // exit early if no code\n        return total\n    }\n    switch code {                                                    // match against known codes\n    case \"SAVE10\":\n        return total * 0.9                                           // 10 percent off\n    case \"SAVE20\":\n        return total * 0.8                                           // 20 percent off\n    default:\n        print(\"Unknown code: \\(code)\")\n        return total\n    }\n}\n\nfunc generateReceipt(for order: Order) {                             // produces a receipt string\n    var receipt = \"--- Receipt ---\\n\"\n    var subtotal = 0.0\n    for item in order.items {                                       // loop through ordered items\n        receipt += \"\\(item.name): $\\(item.price)\\n\"               // add each item line\n        subtotal += item.price                                       // accumulate subtotal\n    }\n    let total = applyDiscount(to: subtotal, code: order.discountCode) // compute final total\n    receipt += \"Subtotal: $\\(subtotal)\\n\"\n    receipt += \"Total: $\\(total)\\n\"\n    return receipt\n}\n\nlet items = [                                                       // sample menu items\n    MenuItem(name: \"Burger\", price: 12.99),\n    MenuItem(name: \"Fries\", price: 4.99),\n    MenuItem(name: \"Soda\", price: 2.50)\n]\nlet order = Order(items: items, discountCode: \"SAVE10\")             // create order with discount\nlet receipt = generateReceipt(for: order)                           // generate receipt\nprint(receipt)                                                      // prints full receipt\n```" },
+          { id: "ns-swift-structs-classes", title: "Structs, Classes & Enums", shortDesc: "Value vs reference types, inheritance, initializers, computed properties, property observers, and associated values.", difficulty: "foundational", readTimeMin: 11, keyPoints: ["Structs are value types: each copy is independent with its own data", "Classes are reference types: multiple variables can reference the same instance", "Enums define a fixed set of cases and can carry associated values per case", "Computed properties calculate values on demand instead of storing them", "Classes support inheritance, allowing subclasses to override and extend behavior", "Swift defaults to structs, using classes only when identity or shared mutability is needed"], tags: ["Swift", "structs", "classes", "enums"], content: "## What's This?\n\nStructs, classes, and enums are Swift's three primary ways to define custom data types. Think of structs as value types -- like a blueprint for a house where every copy is a distinct physical house. Classes are reference types -- like a single house with multiple addresses pointing to it. Enums define a finite set of related values, like traffic light colors. These constructs exist because real programs need to model real-world entities with associated data and behavior. Swift's approach uniquely prioritizes structs (value semantics) as the default, using classes only when reference semantics or inheritance are genuinely needed.\n\n## The Big Picture\n\nChoosing between structs and classes is one of the most important design decisions in Swift. The entire Swift standard library and most Apple frameworks are built on structs: `String`, `Array`, `Dictionary`, `Int`, and `Bool` are all structs. This means value semantics permeate the language. Classes are used primarily for UIKit views, view controllers, and situations requiring identity or shared mutable state. Enums combine with Swift's pattern matching to create powerful state machines and result types. The Swift compiler optimizes struct usage aggressively, often eliminating copies entirely. Mastering these three types is central to writing idiomatic Swift.\n\n## Core Ideas\n\n### Structs: Value Semantics\n\nStructs are copied when assigned or passed to a function. Each copy is independent -- mutations on one do not affect the other.\n\n```swift\nstruct Point {                                          // defines a struct type\n    var x: Double                                       // mutable x coordinate\n    var y: Double                                       // mutable y coordinate\n}\nvar p1 = Point(x: 10, y: 20)                            // creates a Point instance\nvar p2 = p1                                             // p2 is a full copy of p1\np2.x = 99                                               // modifies p2.x, p1.x remains 10\nprint(p1.x)                                             // prints 10, proving independence\n```\n\n### Classes: Reference Semantics\n\nClasses share a single instance. Assigning a class instance creates another reference to the same object.\n\n```swift\nclass Person {                                          // defines a class type\n    var name: String                                    // mutable name property\n    init(name: String) {                                // initializer sets up the instance\n        self.name = name\n    }\n}\nlet person1 = Person(name: \"Alice\")                    // creates a Person instance\nlet person2 = person1                                   // person2 references the same object\nperson2.name = \"Bob\"                                    // modifies the shared object\nprint(person1.name)                                     // prints \"Bob\" because both point to same object\n```\n\n### Enums with Associated Values\n\nEnums can store additional data alongside each case, making them powerful for modeling state.\n\n```swift\nenum NetworkResult {                                    // defines an enum type\n    case success(data: [String: Any])                   // holds a dictionary on success\n    case failure(error: String)                         // holds an error message on failure\n    case loading                                        // no associated data needed\n}\nlet result = NetworkResult.success(data: [\"id\": 1])   // creates a success case with data\nswitch result {                                         // switch must be exhaustive\ncase .success(let data):\n    print(\"Got data: \\(data)\")\ncase .failure(let error):\n    print(\"Error: \\(error)\")\ncase .loading:\n    print(\"Loading...\")\n}\n```\n\n### Computed Properties\n\nProperties that run code to calculate their value rather than storing it directly.\n\n```swift\nstruct Circle {                                         // defines a circle struct\n    var radius: Double                                  // stored property\n    var area: Double {                                  // computed property\n        return Double.pi * radius * radius              // calculates area from radius\n    }\n    var diameter: Double {                              // another computed property\n        get { return radius * 2 }                       // getter reads the value\n        set { radius = newValue / 2 }                   // setter updates radius from diameter\n    }\n}\nvar circle = Circle(radius: 5)\nprint(circle.area)                                      // prints 78.5398... calculated on demand\ncircle.diameter = 20                                    // sets diameter, which updates radius to 10\n```\n\n### Inheritance\n\nClasses can inherit from a parent class, gaining its properties and methods while adding or overriding behavior.\n\n```swift\nclass Vehicle {                                         // base class\n    var speed = 0                                       // stored property with default\n    func description() -> String {                      // method that can be overridden\n        return \"Moving at \\(speed) km/h\"\n    }\n}\nclass Car: Vehicle {                                   // Car inherits from Vehicle\n    var wheels = 4                                      // additional property\n    override func description() -> String {              // overrides the parent method\n        return \"Car with \\(wheels) wheels at \\(speed) km/h\"\n    }\n}\nlet car = Car()\ncar.speed = 100                                         // inherited from Vehicle\nprint(car.description())                                // calls Car's overridden version\n```\n\n## Wiring It Together\n\nHere is a complete media library system using structs, a class, and an enum to model different media types and playback.\n\n```swift\nenum MediaType {                                         // enum with associated values for media\n    case movie(duration: Int)                            // movie has a duration in minutes\n    case song(artist: String)                            // song has an artist name\n    case podcast(episodes: Int)                          // podcast has episode count\n}\n\nstruct MediaItem {                                       // value type representing one media item\n    let title: String                                    // constant title\n    let type: MediaType                                  // the media kind with associated data\n    var isFavorite: Bool = false                         // mutable favorite status\n    \n    var description: String {                            // computed property\n        switch type {\n        case .movie(let duration):\n            return \"Movie: \\(title) (\\(duration) min)\"\n        case .song(let artist):\n            return \"Song: \\(title) by \\(artist)\"\n        case .podcast(let episodes):\n            return \"Podcast: \\(title) (\\(episodes) episodes)\"\n        }\n    }\n}\n\nclass Playlist {                                         // reference type for a shared playlist\n    var name: String                                     // mutable playlist name\n    var items: [MediaItem]                               // mutable array of media items\n    \n    init(name: String, items: [MediaItem]) {             // designated initializer\n        self.name = name\n        self.items = items\n    }\n    \n    func add(_ item: MediaItem) {                        // adds a media item\n        items.append(item)\n    }\n    \n    func totalDuration() -> Int {                        // calculates total duration\n        var total = 0\n        for item in items {\n            if case .movie(let duration) = item.type {   // pattern match enum case\n                total += duration\n            }\n        }\n        return total\n    }\n}\n\nlet song = MediaItem(title: \"Imagine\", type: .song(artist: \"John Lennon\"), isFavorite: true)\nlet movie = MediaItem(title: \"Inception\", type: .movie(duration: 148))\nlet playlist = Playlist(name: \"Favorites\", items: [song, movie])\nplaylist.add(MediaItem(title: \"TED Talk\", type: .podcast(episodes: 1)))\n\nfor item in playlist.items {                             // iterate over shared playlist\n    print(item.description)\n}\nprint(\"Total movie duration: \\(playlist.totalDuration()) min\")\n```" },
+          { id: "ns-swift-protocols", title: "Protocols & Extensions", shortDesc: "Protocol definition, protocol inheritance, default implementations (protocol extensions), and protocol-oriented design.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["Protocols define a blueprint of requirements that conforming types must implement", "Any type (struct, class, enum) can conform to protocols, enabling polymorphism without inheritance", "Protocols can inherit from other protocols, combining requirements", "Protocol extensions provide default implementations, making requirements optional in practice", "Protocols can be used as variable types, enabling functions to accept any conforming type", "Codable is a protocol pair (Encodable + Decodable) for automatic JSON serialization"], tags: ["Swift", "protocols", "extensions", "protocol-oriented programming"], content: "## What's This?\n\nA protocol is a blueprint of methods, properties, and requirements that any conforming type must implement. Think of it like a job description -- it specifies what a candidate must be able to do without caring about their specific background. Protocols exist to enable polymorphism without inheritance, allowing unrelated types to share a common interface. They are Swift's primary tool for abstraction and form the foundation of protocol-oriented programming, a paradigm Swift actively promotes over class-based inheritance.\n\n## The Big Picture\n\nProtocols are the backbone of Swift's standard library and every Apple framework. `Codable`, `Equatable`, `Hashable`, `Identifiable`, and `Collection` are protocols that define shared behavior across thousands of types. SwiftUI relies heavily on protocols like `View` to compose UI. Protocol extensions allow you to provide default implementations, making protocols behave like traits or mixins in other languages. Combining protocols with generics enables highly reusable, type-safe code. Understanding protocols unlocks the ability to write code that works with any type meeting certain requirements rather than any specific concrete type.\n\n## Core Ideas\n\n### Defining and Conforming to Protocols\n\nA protocol declares requirements. Any type -- struct, class, or enum -- can declare conformance and implement them.\n\n```swift\nprotocol Describable {                                  // defines a protocol\n    var description: String { get }                     // requires a readable String property\n    func summary() -> String                            // requires a method returning String\n}\n\nstruct Product: Describable {                           // struct conforms to Describable\n    let name: String\n    let price: Double\n    \n    var description: String {                           // fulfills the property requirement\n        return \"\\(name): $\\(price)\"\n    }\n    \n    func summary() -> String {                          // fulfills the method requirement\n        return \"Product \\(name) costs $\\(price)\"\n    }\n}\n```\n\n### Protocol Inheritance\n\nA protocol can inherit from other protocols, combining their requirements.\n\n```swift\nprotocol Named {                                        // base protocol\n    var name: String { get }                            // requires a name property\n}\n\nprotocol Aged {                                         // another base protocol\n    var age: Int { get }                                // requires an age property\n}\n\nprotocol Person: Named, Aged {                          // combines both protocols\n    func greet() -> String                              // adds its own requirement\n}\n\nstruct Employee: Person {                               // must fulfill all three requirements\n    let name: String\n    let age: Int\n    let role: String\n    \n    func greet() -> String {\n        return \"Hi, I am \\(name), \\(age)-year-old \\(role)\"\n    }\n}\n```\n\n### Protocol Extensions\n\nExtensions can provide default implementations, making requirements optional and adding shared behavior.\n\n```swift\nprotocol Greeter {                                      // defines a protocol\n    func greet() -> String                              // method requirement\n}\n\nextension Greeter {                                     // adds default implementation\n    func greet() -> String {                            // this runs if conformer does not implement it\n        return \"Hello!\"\n    }\n}\n\nstruct FriendlyPerson: Greeter {                        // does not implement greet()\n    // uses the default implementation\n}\n\nstruct SpecificPerson: Greeter {\n    func greet() -> String {                            // overrides the default\n        return \"Hey there!\"\n    }\n}\n\nprint(FriendlyPerson().greet())                         // prints \"Hello!\" from default\nprint(SpecificPerson().greet())                         // prints \"Hey there!\" from custom\n```\n\n### Protocols as Types\n\nYou can use a protocol as a variable type, parameter type, or return type, enabling polymorphism.\n\n```swift\nprotocol Drivable {                                     // defines driving behavior\n    func drive() -> String\n}\n\nstruct Car: Drivable {\n    func drive() -> String { return \"Driving a car\" }\n}\n\nstruct Bike: Drivable {\n    func drive() -> String { return \"Riding a bike\" }\n}\n\nfunc travel(using vehicle: Drivable) {                  // accepts any Drivable type\n    print(vehicle.drive())                              // calls the appropriate implementation\n}\n\ntravel(using: Car())                                    // prints \"Driving a car\"\ntravel(using: Bike())                                   // prints \"Riding a bike\"\n```\n\n### Codable Protocol\n\n`Codable` combines `Encodable` and `Decodable` to serialize and deserialize data automatically.\n\n```swift\nstruct User: Codable {                                  // Codable enables JSON conversion\n    let id: Int\n    let name: String\n    let email: String\n}\n\nlet user = User(id: 1, name: \"Alice\", email: \"alice@example.com\")\nlet encoder = JSONEncoder()                             // creates a JSON encoder\nif let data = try? encoder.encode(user) {               // encodes User to JSON Data\n    let jsonString = String(data: data, encoding: .utf8) // converts bytes to readable string\n    print(jsonString ?? \"\")\n}\n\nlet json = \"\"\"{\"id\":2,\"name\":\"Bob\",\"email\":\"bob@example.com\"}\"\"\".data(using: .utf8)!\nlet decoder = JSONDecoder()                             // creates a JSON decoder\nif let decoded = try? decoder.decode(User.self, from: json) {  // decodes JSON to User\n    print(decoded.name)                                 // prints \"Bob\"\n}\n```\n\n## Wiring It Together\n\nHere is a complete data pipeline that defines protocols for persistence, conforms multiple types, and processes items polymorphically.\n\n```swift\nimport Foundation\n\nprotocol IdentifiableByID {                              // protocol for types with an ID\n    var id: String { get }\n}\n\nprotocol Persistable: Codable, IdentifiableByID {       // combines Codable and Identifiable\n    func save() throws                                  // requirement to save\n}\n\nextension Persistable {                                 // default save implementation\n    func save() throws {\n        let data = try JSONEncoder().encode(self)        // encodes self to JSON\n        let url = URL.documentsDirectory.appendingPathComponent(\"\\(id).json\") // builds file URL\n        try data.write(to: url)                          // writes to disk\n        print(\"Saved \\(id) to \\(url.lastPathComponent)\")\n    }\n}\n\nstruct Note: Persistable {                              // Note conforms to Persistable\n    let id: String\n    var title: String\n    var content: String\n}\n\nstruct Task: Persistable {                               // Task also conforms to Persistable\n    let id: String\n    var description: String\n    var isComplete: Bool\n}\n\nfunc batchSave(_ items: [any Persistable]) {             // accepts array of any Persistable type\n    for item in items {\n        do {\n            try item.save()                             // polymorphic call to save\n        } catch {\n            print(\"Failed to save \\(item.id): \\(error)\")\n        }\n    }\n}\n\nlet note = Note(id: \"note-1\", title: \"Shopping\", content: \"Milk, eggs, bread\")\nlet task = Task(id: \"task-1\", description: \"Buy groceries\", isComplete: false)\nbatchSave([note, task])                                  // saves both to disk\n```" },
+          { id: "ns-swift-concurrency", title: "Concurrency (async/await)", shortDesc: "async/await syntax, Task, TaskGroup, actors, Sendable, and MainActor.", difficulty: "advanced", readTimeMin: 11, keyPoints: ["async marks a function as asynchronous; await suspends execution until the async function completes", "Task creates a new asynchronous unit of work from a synchronous context", "async let starts multiple operations concurrently and awaits all results together", "Actors isolate their mutable state, preventing data races by serializing access", "Task groups enable dynamic parallelism with an arbitrary number of child tasks", "Swift concurrency is built into the language, enabling compiler-enforced correctness"], tags: ["Swift", "concurrency", "async/await", "actors"], content: "## What's This?\n\nSwift concurrency is a language-level system for writing asynchronous and parallel code using `async`/`await`, tasks, and actors. Think of it like a restaurant kitchen with multiple chefs: each chef (task) works independently on their orders, and they communicate results without blocking each other. Traditional completion-handler code was fragile and deeply nested; structured concurrency makes asynchronous code read like synchronous code. It exists because modern apps perform many operations simultaneously -- network calls, file I/O, animations -- and managing them manually with threads and callbacks was error-prone and led to callback hell.\n\n## The Big Picture\n\nSwift concurrency is the modern replacement for Grand Central Dispatch (GCD) and completion-handler patterns. It is built into the language itself rather than being a library, which means the compiler can enforce correctness -- preventing data races, ensuring task completion, and managing actor isolation. Apple has updated Foundation, SwiftUI, and all major frameworks to support async/await. The concurrency model includes `Task` for unit of work, `async let` for fire-and-forget parallel work, task groups for dynamic parallelism, and actors for protecting mutable state. Adopting Swift concurrency is now considered best practice for all new development on Apple platforms.\n\n## Core Ideas\n\n### Async Functions and Await\n\nMark a function with `async` to indicate it performs asynchronous work. Call it with `await` to suspend until it completes.\n\n```swift\nfunc fetchUserData() async -> String {                  // async function returns String\n    try await Task.sleep(nanoseconds: 1_000_000_000)    // simulates network delay (1 second)\n    return \"User data loaded\"\n}\n\nfunc loadProfile() async {                              // another async function\n    print(\"Loading...\")                                 // runs immediately\n    let result = await fetchUserData()                  // suspends here until fetchUserData completes\n    print(result)                                       // runs after fetchUserData returns\n}\n```\n\n### Tasks for Concurrent Work\n\nA `Task` represents a unit of asynchronous work. Use it to start async work from a synchronous context.\n\n```swift\nfunc startBackgroundWork() {                            // synchronous function\n    Task {                                              // creates a new asynchronous task\n        let data = await fetchUserData()                // await inside the task is allowed\n        print(\"Received: \\(data)\")\n    }\n    print(\"Task started\")                               // this runs immediately, does not wait\n}\n```\n\n### Async Let for Parallelism\n\nUse `async let` to start multiple async operations that run concurrently, then await all results.\n\n```swift\nfunc fetchUser() async -> String {                      // simulates fetching user\n    try await Task.sleep(nanoseconds: 500_000_000)\n    return \"Alice\"\n}\n\nfunc fetchPosts() async -> [String] {                   // simulates fetching posts\n    try await Task.sleep(nanoseconds: 700_000_000)\n    return [\"Post 1\", \"Post 2\"]\n}\n\nfunc loadDashboard() async {                            // loads user and posts concurrently\n    async let user = fetchUser()                        // starts fetching user in background\n    async let posts = fetchPosts()                      // starts fetching posts in background\n    let result = await \"User: \\(user), Posts: \\(posts.count)\" // awaits both, runs in parallel\n    print(result)\n}\n```\n\n### Actors for Safe Mutable State\n\nActors protect their mutable state from data races by ensuring only one task accesses them at a time.\n\n```swift\nactor BankAccount {                                     // actor automatically isolates its state\n    var balance: Double = 0                             // mutable state is actor-isolated\n    \n    func deposit(amount: Double) {                      // runs on the actor's executor\n        balance += amount                                // safe mutation, no data race possible\n    }\n    \n    func withdraw(amount: Double) -> Bool {              // also actor-isolated\n        if balance >= amount {\n            balance -= amount\n            return true\n        }\n        return false\n    }\n}\n\nlet account = BankAccount()                              // creates an actor instance\nTask {                                                   // starts a concurrent task\n    await account.deposit(amount: 100)                   // must await actor method calls\n    let success = await account.withdraw(amount: 50)     // awaits to cross actor boundary\n    print(success ? \"Withdrew\" : \"Failed\")\n}\n```\n\n### Task Groups for Dynamic Parallelism\n\nTask groups let you spawn an arbitrary number of child tasks and collect their results.\n\n```swift\nfunc downloadImage(url: String) async -> String {        // simulates downloading\n    try await Task.sleep(nanoseconds: 300_000_000)\n    return \"Image from \\(url)\"\n}\n\nfunc downloadAll() async {                               // downloads multiple images in parallel\n    let urls = [\"url1\", \"url2\", \"url3\", \"url4\"]\n    var results: [String] = []\n    \n    await withTaskGroup(of: String.self) { group in      // creates a task group\n        for url in urls {                                 // spawns one task per URL\n            group.addTask {                               // adds a child task\n                return await downloadImage(url: url)      // each task runs concurrently\n            }\n        }\n        for await result in group {                       // collects results as they complete\n            results.append(result)\n        }\n    }\n    print(\"Downloaded \\(results.count) images\")\n}\n```\n\n## Wiring It Together\n\nHere is a complete social media feed loader that fetches user data and posts concurrently, processes them, and updates an actor-backed cache.\n\n```swift\nimport Foundation\n\nstruct Post: Codable {                                   // a social media post\n    let id: Int\n    let title: String\n    let body: String\n}\n\nactor FeedCache {                                        // thread-safe cache using actor\n    private var cache: [String: Any] = [:]\n    \n    func cache(value: Any, forKey key: String) {         // stores a value\n        cache[key] = value\n        print(\"Cached \\(key)\")\n    }\n    \n    func retrieve(forKey key: String) -> Any? {          // retrieves a value\n        return cache[key]\n    }\n}\n\nfunc fetchPosts(for userID: Int) async throws -> [Post] { // simulates fetching posts from API\n    try await Task.sleep(nanoseconds: 1_000_000_000)\n    return [\n        Post(id: 1, title: \"Hello\", body: \"First post\"),\n        Post(id: 2, title: \"World\", body: \"Second post\")\n    ]\n}\n\nfunc loadFeed(for userID: Int) async {                   // orchestrates the full load\n    let cache = FeedCache()                               // creates actor-backed cache\n    \n    Task {                                               // starts caching work\n        await cache.cache(value: userID, forKey: \"last_user\")\n    }\n    \n    do {\n        let posts = try await fetchPosts(for: userID)    // fetches posts with error handling\n        for post in posts {\n            print(\"Post \\(post.id): \\(post.title)\")\n        }\n    } catch {\n        print(\"Failed to fetch: \\(error)\")\n    }\n}\n\n// Entry point\nlet userID = 42\nTask {                                                   // wraps the async call from synchronous context\n    await loadFeed(for: userID)\n    print(\"Feed loaded successfully\")\n}\n\nprint(\"Main thread continues while tasks run\")          // proves non-blocking execution\n```" },
+          { id: "ns-swift-swiftui", title: "SwiftUI Basics", shortDesc: "View/ViewBuilder, state ( @State, @Binding, @Observable), NavigationStack, and canvas previews.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["SwiftUI uses a declarative syntax where you describe what the UI should show, not how to create it", "@State creates mutable local storage that automatically refreshes the view when changed", "VStack, HStack, and ZStack arrange child views in vertical, horizontal, and depth layouts", "List displays scrollable rows; NavigationStack enables hierarchical push navigation", "@Binding creates a two-way connection to state owned by a parent view", "Views are lightweight structs that get efficiently diffed by SwiftUI's rendering engine"], tags: ["SwiftUI", "declarative UI", "iOS", "Apple platforms"], content: "## What's This?\n\nSwiftUI is a declarative UI framework for building Apple platform interfaces using Swift code instead of visual editors or storyboards. Think of it like describing a house to an architect vs. drawing every brick yourself -- you state what you want, and SwiftUI figures out how to render it. It was introduced in 2019 as a modern alternative to UIKit, leveraging Swift's type system and protocol-oriented design. SwiftUI exists because UI development was increasingly complex: auto layout constraints, manual view lifecycle management, and imperative state updates made apps hard to reason about and maintain.\n\n## The Big Picture\n\nSwiftUI represents Apple's strategic direction for UI development across all platforms. It enables a single codebase to target iOS, macOS, watchOS, and tvOS with minimal platform-specific code. SwiftUI integrates deeply with the Swift language, using property wrappers like `@State`, `@Binding`, `@ObservedObject`, and `@EnvironmentObject` for reactive data flow. The framework is built on a system of composable view structs that are cheap to create and diffed efficiently by the rendering engine. UIKit remains supported and can be embedded inside SwiftUI via `UIViewRepresentable`, but all new Apple projects start with SwiftUI as the primary framework.\n\n## Core Ideas\n\n### Declarative View Syntax\n\nViews are declared as structs conforming to the `View` protocol, returning their body compositionally.\n\n```swift\nimport SwiftUI\n\nstruct GreetingView: View {                             // a view is a struct conforming to View\n    var body: some View {                                // body is a computed property\n        Text(\"Hello, World!\")                           // displays static text\n            .font(.title)                                // applies title font modifier\n            .foregroundColor(.blue)                      // changes text color to blue\n            .padding()                                   // adds default padding around text\n    }\n}\n```\n\n### State for Local Mutability\n\n`@State` creates mutable storage that automatically triggers view updates when changed.\n\n```swift\nstruct CounterView: View {\n    @State private var count = 0                         // @State creates mutable storage\n    \n    var body: some View {\n        VStack {\n            Text(\"Count: \\(count)\")                     // displays current count\n                .font(.largeTitle)\n            Button(\"Increment\") {                        // creates a tappable button\n                count += 1                                // modifying @State triggers view refresh\n            }\n        }\n    }\n}\n```\n\n### Layout with Stacks\n\n`VStack`, `HStack`, and `ZStack` arrange views vertically, horizontally, or in depth.\n\n```swift\nstruct ProfileCard: View {\n    var body: some View {\n        VStack(alignment: .leading, spacing: 12) {        // vertical stack with leading alignment\n            HStack {                                      // horizontal stack for avatar + name\n                Circle()                                  // placeholder avatar\n                    .fill(Color.gray)\n                    .frame(width: 50, height: 50)\n                VStack(alignment: .leading) {\n                    Text(\"Alice Johnson\").bold()\n                    Text(\"iOS Developer\")\n                        .foregroundColor(.secondary)       // muted secondary color\n                }\n            }\n            Text(\"Building amazing apps with SwiftUI\")\n                .font(.body)\n        }\n        .padding()\n        .background(Color.gray.opacity(0.1))\n        .cornerRadius(12)\n    }\n}\n```\n\n### Lists and Navigation\n\n`List` displays scrollable rows. `NavigationStack` enables push-based navigation.\n\n```swift\nstruct Item: Identifiable {                              // Identifiable required for List\n    let id = UUID()\n    let name: String\n}\n\nstruct ItemListView: View {\n    let items = [                                        // sample data\n        Item(name: \"Apples\"),\n        Item(name: \"Bananas\"),\n        Item(name: \"Cherries\")\n    ]\n    \n    var body: some View {\n        NavigationStack {                                // enables navigation\n            List(items) { item in                        // iterates over items to create rows\n                NavigationLink(destination: Text(item.name)) {  // tappable row that pushes detail\n                    Text(item.name)\n                }\n            }\n            .navigationTitle(\"Grocery List\")             // sets the navigation bar title\n        }\n    }\n}\n```\n\n### Bindings for Two-Way Connections\n\n`@Binding` lets a child view read and write a state owned by a parent view.\n\n```swift\nstruct ToggleSwitch: View {\n    @Binding var isOn: Bool                              // binding to external state\n    \n    var body: some View {\n        Toggle(\"Enable\\(isOn ? \"d\" : \"\"):\", isOn: $isOn) // two-way toggle control\n    }\n}\n\nstruct ParentView: View {\n    @State private var featureEnabled = false             // source of truth\n    \n    var body: some View {\n        ToggleSwitch(isOn: $featureEnabled)               // passes binding to child\n        Text(\"Feature is \\(featureEnabled ? \"ON\" : \"OFF\")\")\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete SwiftUI task manager app that demonstrates state, bindings, lists, and navigation working together.\n\n```swift\nimport SwiftUI\n\nstruct TaskItem: Identifiable, Codable {                 // model with Identifiable conformance\n    let id = UUID()                                      // unique identifier\n    var title: String                                    // mutable title\n    var isComplete: Bool = false                         // completion status\n}\n\nstruct TaskRow: View {\n    @Binding var task: TaskItem                          // binding to parent's task data\n    \n    var body: some View {\n        HStack {\n            Image(systemName: task.isComplete            // shows checkmark or circle\n                  ? \"checkmark.circle.fill\"\n                  : \"circle\")\n                .foregroundColor(task.isComplete ? .green : .gray)\n                .onTapGesture {                          // toggles completion on tap\n                    task.isComplete.toggle()\n                }\n            Text(task.title)\n                .strikethrough(task.isComplete)          // strikethrough when done\n            Spacer()                                     // pushes content to leading edge\n        }\n    }\n}\n\nstruct ContentView: View {\n    @State private var tasks: [TaskItem] = [             // source of truth for task list\n        TaskItem(title: \"Buy groceries\"),\n        TaskItem(title: \"Walk the dog\"),\n        TaskItem(title: \"Write SwiftUI code\")\n    ]\n    @State private var newTaskTitle = \"\"                 // state for text field\n    \n    var body: some View {\n        NavigationStack {\n            VStack {\n                HStack {\n                    TextField(\"New task...\", text: $newTaskTitle)  // bound text input\n                        .textFieldStyle(.roundedBorder)\n                    Button(\"Add\") {\n                        let trimmed = newTaskTitle.trimmingCharacters(in: .whitespaces)\n                        guard !trimmed.isEmpty else { return }\n                        tasks.append(TaskItem(title: trimmed))\n                        newTaskTitle = \"\"\n                    }\n                }\n                .padding()\n                \n                List($tasks) { $task in                  // iterates over bindings to each task\n                    TaskRow(task: $task)                  // passes binding to child\n                }\n                .listStyle(.plain)\n            }\n            .navigationTitle(\"My Tasks\")\n        }\n    }\n}\n```" },
+          { id: "ns-swift-uikit", title: "UIKit & Storyboards", shortDesc: "UIViewController lifecycle, Auto Layout, UITableView/UICollectionView, segues, and programmatic UI.", difficulty: "intermediate", readTimeMin: 11, keyPoints: ["UIViewController manages a view hierarchy with lifecycle callbacks: viewDidLoad, viewWillAppear, viewDidAppear", "Auto Layout uses NSLayoutConstraint to define relationships between view positions and sizes", "UITableView displays scrollable rows using a data source pattern with cell reuse", "UINavigationController manages a stack-based navigation hierarchy with push and pop", "Storyboards provide visual layout with segues for transitions and @IBAction for event handling", "UIKit and SwiftUI can interoperate via UIHostingController and UIViewRepresentable"], tags: ["UIKit", "iOS", "view controllers", "storyboards"], content: "## What's This?\n\nUIKit is Apple's original imperative UI framework for iOS and tvOS, providing view controllers, views, gestures, and animations for building apps visually or programmatically. Think of it as a traditional toolkit where you manually arrange every component, respond to events, and manage the view lifecycle yourself. UIKit has been the backbone of iOS development since the first iPhone and remains widely used alongside or embedded within SwiftUI. It exists because not all UI problems fit a declarative model -- complex animations, custom drawing, and fine-grained control over the view hierarchy are sometimes easier with imperative code.\n\n## The Big Picture\n\nUIKit and SwiftUI coexist in modern iOS development. UIKit is mature, battle-tested, and offers capabilities SwiftUI has not fully replicated: collection view layouts, precise animation control, and deep integration with system services. Storyboards and XIB files provide visual layout tools, while programmatic UIKit (building views in code) gives complete control. The UIKit view controller lifecycle -- `viewDidLoad`, `viewWillAppear`, `viewDidAppear` -- remains critical knowledge. Apple's strategy is progressive: new features use SwiftUI first, but UIKit is not deprecated. Many production apps use both via `UIHostingController` (embedding SwiftUI in UIKit) and `UIViewRepresentable` (embedding UIKit in SwiftUI).\n\n## Core Ideas\n\n### UIViewController and View Lifecycle\n\nThe `UIViewController` manages a view hierarchy, responding to lifecycle events for setup and teardown.\n\n```swift\nimport UIKit\n\nclass MyViewController: UIViewController {               // subclass of UIViewController\n    \n    override func viewDidLoad() {                       // called once when view loads into memory\n        super.viewDidLoad()\n        view.backgroundColor = .white                    // sets background to white\n        print(\"View did load\")                           // good place for one-time setup\n    }\n    \n    override func viewWillAppear(_ animated: Bool) {     // called before view appears on screen\n        super.viewWillAppear(animated)\n        print(\"View will appear\")\n    }\n    \n    override func viewDidAppear(_ animated: Bool) {      // called after view appears on screen\n        super.viewDidAppear(animated)\n        print(\"View did appear\")                         // good place to start animations\n    }\n}\n```\n\n### Auto Layout with Constraints\n\nAuto Layout defines rules for view positions and sizes relative to each other, adapting to different screen sizes.\n\n```swift\nclass ConstraintViewController: UIViewController {\n    \n    let titleLabel: UILabel = {                         // creates a label\n        let label = UILabel()\n        label.text = \"Hello, UIKit\"\n        label.font = .systemFont(ofSize: 24, weight: .bold)\n        label.translatesAutoresizingMaskIntoConstraints = false  // required for Auto Layout\n        return label\n    }()\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.addSubview(titleLabel)                      // adds label to view hierarchy\n        \n        NSLayoutConstraint.activate([                    // activates multiple constraints\n            titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),  // centers horizontally\n            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),  // centers vertically\n            titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20)\n        ])\n    }\n}\n```\n\n### Table View with Data Source\n\n`UITableView` displays scrollable rows of data using a data source pattern.\n\n```swift\nclass TableViewController: UITableViewController {       // subclass includes table view setup\n    \n    let items = [\"Apple\", \"Banana\", \"Cherry\", \"Date\"]   // sample data\n    \n    override func tableView(_ tableView: UITableView,    // returns number of rows\n                   numberOfRowsInSection section: Int) -> Int {\n        return items.count\n    }\n    \n    override func tableView(_ tableView: UITableView,    // configures each cell\n                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {\n        let cell = UITableViewCell(style: .default, reuseIdentifier: \"cell\")\n        cell.textLabel?.text = items[indexPath.row]       // sets cell text from data array\n        cell.accessoryType = .disclosureIndicator          // shows arrow on right side\n        return cell\n    }\n    \n    override func tableView(_ tableView: UITableView,    // handles row selection\n                   didSelectRowAt indexPath: IndexPath) {\n        tableView.deselectRow(at: indexPath, animated: true)  // visually deselects row\n        print(\"Selected \\(items[indexPath.row])\")\n    }\n}\n```\n\n### Navigation Controller\n\n`UINavigationController` manages a stack of view controllers with push/pop navigation.\n\n```swift\nclass DetailViewController: UIViewController {\n    \n    let detailText: String\n    \n    init(text: String) {                                 // custom initializer\n        self.detailText = text\n        super.init(nibName: nil, bundle: nil)\n    }\n    \n    required init?(coder: NSCoder) {                     // required for storyboard decoding\n        fatalError(\"init(coder:) has not been implemented\")\n    }\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.backgroundColor = .white\n        title = detailText                                // sets navigation bar title\n    }\n}\n\n// In AppDelegate or scene setup:\nlet rootVC = TableViewController()\nlet navController = UINavigationController(rootViewController: rootVC)  // wraps in navigation\n```\n\n### Storyboards and Segues\n\nStoryboards visually define screens and transitions. Segues connect view controllers with identifiers.\n\n```swift\nclass SourceViewController: UIViewController {\n    \n    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {  // called before segue\n        if segue.identifier == \"showDetail\" {           // checks which segue triggered\n            let destination = segue.destination as! DetailViewController  // casts to destination\n            destination.detailText = \"Passed Data\"       // passes data before transition\n        }\n    }\n    \n    @IBAction func buttonTapped(_ sender: UIButton) {    // action connected from storyboard\n        performSegue(withIdentifier: \"showDetail\", sender: self)  // triggers the segue\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete UIKit app that displays a list of items and navigates to a detail screen.\n\n```swift\nimport UIKit\n\nclass ItemListViewController: UITableViewController {    // main list screen\n    \n    let items = [\n        \"Introduction to Swift\",\n        \"Understanding Optionals\",\n        \"Control Flow in Swift\",\n        \"Structs vs Classes\"\n    ]\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        title = \"Topics\"                                   // sets navigation bar title\n        tableView.register(UITableViewCell.self, forCellReuseIdentifier: \"cell\")  // registers cell type\n    }\n    \n    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {\n        return items.count\n    }\n    \n    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {\n        let cell = tableView.dequeueReusableCell(withIdentifier: \"cell\", for: indexPath)\n        cell.textLabel?.text = items[indexPath.row]\n        cell.accessoryType = .disclosureIndicator\n        return cell\n    }\n    \n    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {\n        tableView.deselectRow(at: indexPath, animated: true)\n        let detailVC = DetailViewController()\n        detailVC.topicTitle = items[indexPath.row]\n        navigationController?.pushViewController(detailVC, animated: true)\n    }\n}\n\nclass DetailViewController: UIViewController {          // detail screen\n    \n    var topicTitle: String = \"\"\n    \n    override func viewDidLoad() {\n        super.viewDidLoad()\n        view.backgroundColor = .systemBackground\n        title = topicTitle\n        \n        let label = UILabel()\n        label.text = \"You selected: \\(topicTitle)\"\n        label.font = .systemFont(ofSize: 18)\n        label.translatesAutoresizingMaskIntoConstraints = false\n        view.addSubview(label)\n        \n        NSLayoutConstraint.activate([\n            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),\n            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)\n        ])\n    }\n}\n\n// Scene Delegate setup\nclass SceneDelegate: UIResponder, UIWindowSceneDelegate {\n    var window: UIWindow?\n    \n    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {\n        guard let windowScene = scene as? UIWindowScene else { return }\n        let window = UIWindow(windowScene: windowScene)\n        let navController = UINavigationController(rootViewController: ItemListViewController())\n        window.rootViewController = navController\n        self.window = window\n        window.makeKeyAndVisible()\n    }\n}\n```" },
+          { id: "ns-swift-networking", title: "Networking & Data Persistence", shortDesc: "URLSession, Codable, Core Data, SwiftData, UserDefaults, and Keychain.", difficulty: "advanced", readTimeMin: 12, keyPoints: ["URLSession with async/await provides the modern way to make HTTP requests in Swift", "Codable structures enable automatic JSON encoding and decoding with JSONEncoder and JSONDecoder", "UserDefaults stores small key-value preference data like login state and settings", "FileManager writes data to the app's documents directory for offline caching of JSON and files", "Network errors should be caught with do-catch and presented as user-friendly messages", "A typical architecture fetches from API, decodes with Codable, displays in UI, and caches locally"], tags: ["Swift", "networking", "Codable", "persistence"], content: "## What's This?\n\nNetworking in Swift involves making HTTP requests to remote servers, parsing responses, and persisting data locally. Think of it like sending letters through the postal service: you write a request (the letter), send it to an address (URL), receive a response (the reply), and file it away (persistence). Apple provides `URLSession` as the primary networking API, while `Codable` handles data parsing. Local persistence uses `UserDefaults` for small data, `FileManager` for files, and Core Data or SwiftData for complex object graphs. These tools exist because modern apps are useless without remote data -- user accounts, content feeds, cloud sync -- and must handle offline scenarios gracefully.\n\n## The Big Picture\n\nNetworking and persistence are the two pillars of data management in iOS apps. A typical architecture: fetch JSON from a REST API via `URLSession`, decode it with `Codable` into model structs, display with SwiftUI or UIKit, and cache locally for offline access. Apple has modernized networking with Swift concurrency: `URLSession` provides `async` methods that replace completion-handler callbacks. For persistence, Core Data remains the mature option for relational data, while SwiftData (introduced in iOS 17) offers a Swift-native alternative. `UserDefaults` handles preferences, and the file system stores documents and images. Third-party libraries like Alamofire and Realm exist but are less necessary as Apple's first-party APIs improve.\n\n## Core Ideas\n\n### URLSession Async Requests\n\n`URLSession` sends HTTP requests and receives responses asynchronously. The modern Swift approach uses async/await.\n\n```swift\nimport Foundation\n\nfunc fetchData(from urlString: String) async throws -> Data {  // async throws function\n    guard let url = URL(string: urlString) else {               // safely creates URL\n        throw URLError(.badURL)                                 // throws error if URL is invalid\n    }\n    let (data, response) = try await URLSession.shared.data(from: url)  // async network call\n    guard let httpResponse = response as? HTTPURLResponse,      // casts to HTTP response\n          httpResponse.statusCode == 200 else {                 // checks for success status\n        throw URLError(.badServerResponse)                      // throws on bad response\n    }\n    return data                                                 // returns raw response data\n}\n```\n\n### JSON Decoding with Codable\n\nDecode JSON data into Swift structs using `JSONDecoder` and the `Codable` protocol.\n\n```swift\nstruct User: Codable {                                      // model matches JSON structure\n    let id: Int\n    let name: String\n    let email: String\n}\n\nfunc decodeUser(from data: Data) -> User? {                 // tries to decode JSON to User\n    let decoder = JSONDecoder()                             // creates a JSON decoder\n    do {\n        let user = try decoder.decode(User.self, from: data) // decodes Data into User struct\n        return user\n    } catch {\n        print(\"Decoding error: \\(error)\")                 // handles malformed JSON gracefully\n        return nil\n    }\n}\n```\n\n### UserDefaults for Simple Persistence\n\n`UserDefaults` stores small amounts of user preferences as key-value pairs.\n\n```swift\nfunc savePreference(isLoggedIn: Bool) {                    // saves login state\n    UserDefaults.standard.set(isLoggedIn, forKey: \"isLoggedIn\")  // stores boolean\n    UserDefaults.standard.set(\"user_42\", forKey: \"lastUserID\")   // stores string\n}\n\nfunc loadPreference() -> Bool {                            // loads login state\n    return UserDefaults.standard.bool(forKey: \"isLoggedIn\") // returns false if key missing\n}\n```\n\n### File System Persistence\n\n`FileManager` writes data to the app's documents directory, useful for images and JSON files.\n\n```swift\nfunc saveToFile(data: Data, filename: String) {            // saves data to app documents\n    guard let documentsPath = FileManager.default.urls(     // gets documents directory\n            for: .documentDirectory, in: .userDomainMask).first else {\n        return\n    }\n    let fileURL = documentsPath.appendingPathComponent(filename)  // builds full file path\n    do {\n        try data.write(to: fileURL)                        // writes data to disk\n        print(\"Saved to \\(fileURL.lastPathComponent)\")\n    } catch {\n        print(\"Save failed: \\(error)\")\n    }\n}\n\nfunc loadFromFile(filename: String) -> Data? {            // loads data from documents\n    guard let documentsPath = FileManager.default.urls(\n            for: .documentDirectory, in: .userDomainMask).first else {\n        return nil\n    }\n    let fileURL = documentsPath.appendingPathComponent(filename)\n    return try? Data(contentsOf: fileURL)                  // returns nil on any failure\n}\n```\n\n### Error Handling in Networking\n\nNetwork operations can fail in many ways -- wrap calls in do-catch blocks and present user-friendly errors.\n\n```swift\nenum NetworkError: Error {                                 // custom error types\n    case invalidURL\n    case noData\n    case decodingFailed\n}\n\nfunc loadUserProfile(userID: Int) async {                  // orchestrates the full load\n    let urlString = \"https://api.example.com/users/\\(userID)\"\n    do {\n        let data = try await fetchData(from: urlString)    // network call can throw\n        guard let user = decodeUser(from: data) else {      // decoding can fail\n            throw NetworkError.decodingFailed\n        }\n        print(\"Loaded user: \\(user.name)\")\n    } catch let error as NetworkError {                    // catches custom errors\n        print(\"Network error: \\(error)\")\n    } catch {                                              // catches any other error\n        print(\"Unexpected error: \\(error)\")\n    }\n}\n```\n\n## Wiring It Together\n\nHere is a complete networking and persistence system that fetches a user list from an API, caches it to disk, and loads from cache when offline.\n\n```swift\nimport Foundation\n\nstruct Repository: Codable {                               // matches GitHub API repo shape\n    let id: Int\n    let name: String\n    let description: String?\n    let stars: Int\n}\n\nclass RepositoryService {                                  // handles all repo operations\n    private let cacheFileName = \"repos_cache.json\"\n    \n    func fetchRepositories() async throws -> [Repository] {  // fetches from API\n        let urlString = \"https://api.github.com/repositories\"\n        let data = try await fetchData(from: urlString)\n        let repos = try JSONDecoder().decode([Repository].self, from: data) // decodes array\n        saveToCache(repos)                                   // caches for offline use\n        return repos\n    }\n    \n    private func saveToCache(_ repos: [Repository]) {       // persists to file\n        guard let data = try? JSONEncoder().encode(repos) else { return } // encodes to JSON\n        saveToFile(data: data, filename: cacheFileName)\n    }\n    \n    func loadCachedRepositories() -> [Repository]? {        // loads from cache\n        guard let data = loadFromFile(filename: cacheFileName) else { return nil }\n        return try? JSONDecoder().decode([Repository].self, from: data)\n    }\n    \n    private func fetchData(from urlString: String) async throws -> Data {\n        guard let url = URL(string: urlString) else {\n            throw NetworkError.invalidURL\n        }\n        let (data, response) = try await URLSession.shared.data(from: url)\n        guard let httpResponse = response as? HTTPURLResponse,\n              httpResponse.statusCode == 200 else {\n            throw URLError(.badServerResponse)\n        }\n        return data\n    }\n    \n    private func saveToFile(data: Data, filename: String) {\n        guard let path = FileManager.default.urls(\n                for: .documentDirectory, in: .userDomainMask).first else { return }\n        let url = path.appendingPathComponent(filename)\n        try? data.write(to: url)\n    }\n    \n    private func loadFromFile(filename: String) -> Data? {\n        guard let path = FileManager.default.urls(\n                for: .documentDirectory, in: .userDomainMask).first else { return nil }\n        let url = path.appendingPathComponent(filename)\n        return try? Data(contentsOf: url)\n    }\n}\n\n// Usage\nlet service = RepositoryService()\nTask {\n    do {\n        let repos = try await service.fetchRepositories()  // fetches and caches\n        print(\"Fetched \\(repos.count) repositories\")\n    } catch {\n        print(\"Fetch failed, loading from cache...\")\n        if let cached = service.loadCachedRepositories() {  // falls back to cache\n            print(\"Loaded \\(cached.count) from cache\")\n        }\n    }\n}\n```" },
+          { id: "ns-swift-tooling", title: "App Distribution & Tooling", shortDesc: "Xcode basics, Swift Package Manager, TestFlight, App Store Connect, and CI with GitHub Actions.", difficulty: "advanced", readTimeMin: 12, keyPoints: ["Xcode organizes projects with build settings, code signing, and deployment target configuration", "Swift Package Manager declaratively manages dependencies in Package.swift with version pinning", "XCTest provides unit testing with setUp, tearDown, and assertions like XCTAssertEqual", "TestFlight enables beta distribution to internal and external testers before App Store release", "Code signing with certificates and provisioning profiles ensures app authenticity and integrity", "CI pipelines automate testing, archiving, and deployment to TestFlight on every tag or commit"], tags: ["Swift", "Xcode", "CI/CD", "App Store distribution"], content: "## What's This?\n\nApp distribution and tooling encompasses everything required to build, test, package, and deliver a Swift app to users through the App Store or TestFlight. Think of it like a factory assembly line: you write the blueprint (code), check quality (testing), package the product (archiving), and ship it to stores (distribution). Apple provides Xcode as the integrated development environment, Swift Package Manager for dependencies, and App Store Connect for managing releases. These tools exist because shipping software involves far more than writing code: code signing, provisioning profiles, beta testing, release management, and analytics are all essential for a professional app.\n\n## The Big Picture\n\nApple's tooling ecosystem forms a pipeline from development to production. Xcode handles editing, debugging, and profiling. Swift Package Manager (SPM) manages dependencies and has become the standard over CocoaPods and Carthage. TestFlight enables beta distribution with up to 10,000 external testers. App Store Connect manages app metadata, pricing, in-app purchases, and release approvals. Continuous integration (CI) services like Xcode Cloud, GitHub Actions, and Bitrise automate building and testing. Code signing with Apple Developer Program certificates ensures app authenticity. The modern workflow emphasizes automation: CI pipelines run tests on every commit, deploy to TestFlight automatically, and submit to the App Store with minimal manual steps.\n\n## Core Ideas\n\n### Xcode Workspace and Project Structure\n\nAn Xcode project organizes source files, resources, build settings, and configurations into a navigable structure.\n\n```swift\n// No direct code -- Xcode project is configured via .xcodeproj and .xcworkspace files.\n// Key configurations:\n// - BUNDLE_IDENTIFIER: com.example.myapp (unique app identifier)\n// - DEVELOPMENT_TEAM: team ID from Apple Developer account\n// - CODE_SIGN_STYLE: Automatic (Xcode manages provisioning) or Manual\n// - DEPLOYMENT_TARGET: minimum iOS version supported (e.g., 16.0)\n// - SWIFT_VERSION: 5 (language version for compilation)\n```\n\n### Swift Package Manager\n\nSPM manages library dependencies declaratively in a `Package.swift` file. It is integrated into Xcode.\n\n```swift\n// swift-tools-version: 5.9\nimport PackageDescription\n\nlet package = Package(\n    name: \"MyApp\",                                       // package name\n    platforms: [\n        .iOS(.v16)                                        // minimum iOS version\n    ],\n    dependencies: [\n        .package(url: \"https://github.com/Alamofire/Alamofire.git\", from: \"5.9.0\"),  // external dep\n        .package(url: \"https://github.com/onevcat/Kingfisher.git\", from: \"7.12.0\")   // image caching\n    ],\n    targets: [\n        .executableTarget(                                // main app target\n            name: \"MyApp\",\n            dependencies: [\n                \"Alamofire\",                               // links Alamofire library\n                \"Kingfisher\"                               // links Kingfisher library\n            ]\n        ),\n        .testTarget(                                      // test target\n            name: \"MyAppTests\",\n            dependencies: [\"MyApp\"]                       // tests depend on main target\n        )\n    ]\n)\n```\n\n### Unit Testing with XCTest\n\nXCTest provides assertions to verify your code behaves correctly. Tests run schematically in Xcode or CI.\n\n```swift\nimport XCTest\n@testable import MyApp                                   // imports main module for testing\n\nfinal class CalculatorTests: XCTestCase {                 // test class inheriting from XCTestCase\n    \n    var calculator: Calculator!                          // subject under test\n    \n    override func setUp() {                              // runs before each test method\n        super.setUp()\n        calculator = Calculator()                         // fresh instance for every test\n    }\n    \n    func testAddition() {                                 // test method must start with \"test\"\n        let result = calculator.add(2, 3)                 // calls the method being tested\n        XCTAssertEqual(result, 5, \"2 + 3 should equal 5\") // assertion with failure message\n    }\n    \n    func testDivisionByZero() {                           // tests error handling\n        XCTAssertThrowsError(try calculator.divide(10, 0)) { error in  // asserts error is thrown\n            XCTAssertEqual(error as? CalcError, CalcError.divisionByZero)\n        }\n    }\n}\n```\n\n### App Store Connect and TestFlight\n\nApp Store Connect manages app metadata, pricing, and releases. TestFlight distributes beta builds.\n\n```swift\n// No direct code -- configuration is done via App Store Connect web interface.\n// Key steps for distribution:\n// 1. Archive the app in Xcode (Product > Archive)\n// 2. Upload to App Store Connect via Xcode Organizer or xcrun altool\n// 3. Configure build in TestFlight for internal/external testers\n// 4. Submit for App Store review when ready\n//\n// Export options for distribution:\n// - Development: for testing on registered devices\n// - Ad Hoc: for limited device distribution (up to 100 devices)\n// - App Store: for production submission\n// - Enterprise: for in-house distribution (requires Enterprise account)\n```\n\n### Code Signing and Provisioning\n\nCode signing ensures the app comes from a trusted source and has not been tampered with.\n\n```bash\n# These commands are run in Terminal, not in Swift code:\n\n# Check available signing identities in keychain\nsecurity find-identity -v -p codesigning\n\n# Export archived app for distribution\nxcodebuild -exportArchive \\\n  -archivePath MyApp.xcarchive \\\n  -exportPath ./MyApp.ipa \\\n  -exportOptionsPlist ExportOptions.plist\n\n# Upload to App Store Connect using altool\nxcrun altool --upload-app \\\n  -f MyApp.ipa \\\n  -t ios \\\n  -u username@example.com \\\n  -p @keychain:AC_PASSWORD\n```\n\n### Continuous Integration with GitHub Actions\n\nAutomate builds and tests on every push using CI workflows.\n\n```yaml\n# .github/workflows/ios.yml -- YAML configuration, not Swift\nname: iOS CI\n\non:\n  push:\n    branches: [ main ]\n  pull_request:\n    branches: [ main ]\n\njobs:\n  build:\n    runs-on: macos-latest\n    steps:\n      - uses: actions/checkout@v4               # checks out repository code\n      - name: Build and Test\n        run: |\n          xcodebuild test \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -destination 'platform=iOS Simulator,name=iPhone 15' \\\n            -resultBundlePath TestResults\n      - name: Upload test results\n        uses: actions/upload-artifact@v4        # saves test results as artifact\n        with:\n          name: test-results\n          path: TestResults.xcresult\n```\n\n## Wiring It Together\n\nHere is a complete CI/CD pipeline setup incorporating testing, code signing, and TestFlight distribution.\n\n```yaml\n# .github/workflows/release.yml\nname: Build and Deploy to TestFlight\n\non:\n  push:\n    tags:\n      - 'v*'                                    # triggers only on version tags like v1.0\n\njobs:\n  test-and-deploy:\n    runs-on: macos-14\n    steps:\n      - uses: actions/checkout@v4               # pulls latest code\n      \n      - uses: maxim-lobanov/setup-xcode@v1     # sets up Xcode version\n        with:\n          xcode-version: '15.4'\n      \n      - name: Install dependencies\n        run: xcodebuild -resolvePackageDependencies  # resolves SPM packages\n      \n      - name: Run tests\n        run: |\n          xcodebuild test \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -destination 'platform=iOS Simulator,name=iPhone 16' \\\n            -sdk iphonesimulator || exit 1      # fails workflow if tests fail\n      \n      - name: Archive app\n        run: |\n          xcodebuild archive \\\n            -project MyApp.xcodeproj \\\n            -scheme MyApp \\\n            -archivePath MyApp.xcarchive \\\n            -configuration Release \\\n            DEVELOPMENT_TEAM=${{ secrets.TEAM_ID }}\n      \n      - name: Export IPA\n        run: |\n          xcodebuild -exportArchive \\\n            -archivePath MyApp.xcarchive \\\n            -exportPath ./output \\\n            -exportOptionsPlist ExportOptions.plist\n      \n      - name: Upload to TestFlight\n        env:\n          APP_STORE_CONNECT_USERNAME: ${{ secrets.AC_USERNAME }}\n          APP_STORE_CONNECT_PASSWORD: ${{ secrets.AC_PASSWORD }}\n        run: |\n          xcrun altool --upload-app \\\n            -f ./output/MyApp.ipa \\\n            -t ios \\\n            -u \"$APP_STORE_CONNECT_USERNAME\" \\\n            -p \"$APP_STORE_CONNECT_PASSWORD\"\n```" },
         ],
       },
       // ── Terminal / Shell ─────────────────────────────────────────────────
