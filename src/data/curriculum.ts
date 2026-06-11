@@ -10305,6 +10305,1803 @@ Key Principle:
           },
         ],
       },
+      {
+        id: "cheat-mobile",
+        title: "React Native & Mobile Development",
+        description: "Comprehensive reference for building cross-platform mobile applications with React Native, Expo, and native device APIs.",
+        topics: [
+          {
+            id: "cheat-rn-fundamentals",
+            title: "React Native Fundamentals & Architecture",
+            shortDesc: "Core concepts: the bridge, threading model, JS runtime, and how React Native maps JavaScript to native UI.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "React Native uses a JavaScript bridge to communicate between the JS thread and native threads asynchronously via a serialized JSON message queue.",
+              "The new architecture (Fabric renderer + TurboModules + JSI) eliminates the bridge for synchronous native-to-JS calls and enables concurrent React features.",
+              "The JS thread handles all React logic, the native main thread handles UI rendering, and additional threads handle shadow tree layout and garbage collection.",
+              "Hermes is a JS engine optimized for RN — it precompiles bytecode, reduces app startup time, and uses less memory than JSC or V8.",
+              "Expo is the recommended starting point for most projects because it provides a managed workflow, OTA updates, and a vast library of prebuilt native modules.",
+            ],
+            content: `## Quick Reference
+
+React Native is a framework for building native mobile apps using JavaScript and React. It maps React components to native platform widgets (UIView on iOS, View on Android). The core architectural components include the JavaScript thread (runs React logic), the native main thread (UI rendering), the shadow thread (layout computation using Yoga), and the bridge or JSI (communication layer).
+
+## Language Fundamentals
+
+React Native uses JavaScript (or TypeScript) as its programming language. The JavaScript environment in RN differs from the browser:
+
+| Feature | Browser | React Native (Hermes) | React Native (JSC) |
+|---------|---------|----------------------|---------------------|
+| Global object | <code>window</code> | <code>global</code> | <code>global</code> |
+| DOM APIs | Full DOM | None | None |
+| Web APIs | Full set | Limited (<code>fetch</code>, <code>console</code>, <code>setTimeout</code>) | Limited |
+| Debugger | DevTools | Chrome DevTools via Hermes CLI | Chrome DevTools via proxy |
+| ES support | Varies | ES2021+ | ES2020+ |
+
+## Framework by Framework Reference
+
+### Expo (Recommended for most projects)
+
+Expo provides a managed workflow with a build service (EAS), OTA updates, and prebuilt native modules. You write JavaScript and Expo handles the native compilation.
+
+### React Native CLI (Bare workflow)
+
+The bare workflow gives full control over native code (Xcode, Android Studio projects). Required when you need custom native modules not available in Expo or need to integrate with existing native apps.
+
+| Aspect | Expo Managed | React Native CLI |
+|--------|-------------|------------------|
+| Setup time | Minutes | Hours (Xcode + Android Studio) |
+| Native code access | Via config plugins | Full access |
+| OTA updates | Built-in (EAS Update) | Manual setup |
+| Build service | EAS Build (cloud) | Local or custom CI |
+| Custom native modules | Expo Modules API | TurboModules / NativeModules |
+
+## Comparison Tables
+
+### JS Engine Comparison
+
+| Engine | Startup Time | Bundle Size | Memory Usage | Debugging |
+|--------|-------------|-------------|-------------|------------|
+| Hermes | Fast (bytecode precompilation) | Smaller (bytecode) | Lower | Hermes CLI + Chrome DevTools |
+| JSC | Slow (parse + compile) | Larger (JS text) | Higher | Chrome DevTools via proxy |
+| V8 (via JSI) | Medium | Larger | Medium | Chrome DevTools |
+
+### Old Architecture vs New Architecture
+
+| Aspect | Old Architecture | New Architecture |
+|--------|-----------------|------------------|
+| Bridge | Async, JSON serialization | JSI (synchronous, direct) |
+| Renderer | Legacy | Fabric (shared C++ core) |
+| Native modules | NativeModules (async) | TurboModules (sync optional) |
+| React features | React 17 max | React 18+ (Concurrent, Suspense) |
+| Type safety | None at boundary | Codegen-generated types |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Not handling the bridge asynchrony** — In the old architecture, <code>NativeModules</code> calls are always async. Accessing a native module's return value synchronously returns <code>undefined</code>. Always <code>await</code> native module calls or use TurboModules (new arch) for synchronous access.
+
+2. **Blocking the JS thread** — Expensive synchronous computations (image processing, data transformation) block React renders and animations. Offload heavy work to a separate thread using <code>InteractionManager</code> or Hermes <code>Worker</code> API.
+
+3. **Ignoring the bridge serialization cost** — Every bridge call serializes arguments to JSON on one side and deserializes on the other. Passing large objects (big arrays, complex data) across the bridge frequently kills performance. Keep bridge payloads small.
+
+4. **Using browser-specific APIs without polyfills** — <code>document</code>, <code>window</code>, <code>localStorage</code>, <code>XMLHttpRequest</code> are not available in RN. Use polyfills or platform-specific alternatives. <code>fetch</code> is available but has RN-specific quirks.
+
+5. **Not configuring Hermes correctly** — Hermes requires specific Metro config (<code>metro.config.js</code>) and build flags. Without proper configuration, Hermes may fail silently or produce larger bundles. Always verify Hermes is enabled in production builds.
+
+6. **Mixing community libraries without checking compatibility** — Not all libraries support both architectures (old vs new), both platforms (iOS + Android), or all JS engines (Hermes + JSC). Check library documentation for compatibility before adding dependencies.
+
+7. **Assuming identical behavior across iOS and Android** — Platform differences exist in keyboard handling, gesture detection, status bar behavior, and screen metrics. Test both platforms. Use <code>Platform.OS</code> to branch platform-specific code.
+
+8. **Overlooking the Metro bundler cache** — Stale Metro cache causes mysterious JS bundle errors. Run <code>npx react-native start --reset-cache</code> when encountering inexplicable runtime errors after dependency changes.
+
+9. **Not using <code>Platform.select</code> for platform-specific values** — Inline platform branching (<code>Platform.OS === 'ios' ? ... : ...</code>) is verbose and hard to read. Use <code>Platform.select({ ios: ..., android: ..., default: ... })</code> for cleaner platform-specific code.
+
+10. **Disabling the yellow box / red box in development** — React Native's warning and error overlays provide critical debugging information. Suppressing them during development hides bugs that manifest in production. Use them to catch issues early.
+
+11. **Forgetting to add native modules to the Podfile** — After adding a library with native code on iOS, always run <code>cd ios && pod install</code>. The Metro bundler doesn't warn about missing native module linking; the app crashes at runtime instead.
+
+12. **Not understanding the reload cycle** — Fast Refresh preserves component state but does not reset native module state. Native module singletons retain values across reloads, which can cause inconsistent behavior after code changes.
+
+## Complete API Reference
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>AppRegistry</code> | <code>AppRegistry.registerComponent(appName, () => App)</code> | Registers the root component of the app |
+| <code>NativeModules</code> | <code>NativeModules.ModuleName.method()</code> | Accesses native modules (old arch, async) |
+| <code>Platform</code> | <code>Platform.OS</code>, <code>Platform.Version</code>, <code>Platform.select()</code> | Provides OS detection and platform-specific branching |
+| <code>Dimensions</code> | <code>Dimensions.get('window'</code> | Returns screen dimensions |
+| <code>PixelRatio</code> | <code>PixelRatio.get()</code>, <code>PixelRatio.getFontScale()</code> | Provides device pixel density information |
+| <code>InteractionManager</code> | <code>InteractionManager.runAfterInteractions(() => {})</code> | Schedules work after animations/transitions complete |
+| <code>StatusBar</code> | <code>&lt;StatusBar barStyle="dark-content" /&gt;</code> | Controls the device status bar |
+| <code>KeyboardAvoidingView</code> | <code>&lt;KeyboardAvoidingView behavior="padding" /&gt;</code> | Automatically adjusts view to avoid keyboard |
+| <code>BackHandler</code> | <code>BackHandler.addEventListener('hardwareBackPress', handler)</code> | Handles Android hardware back button |
+| <code>PermissionsAndroid</code> | <code>PermissionsAndroid.request(permission)</code> | Requests Android runtime permissions |
+
+## Practice Questions
+
+1. **Q:** What is the JavaScript bridge in React Native and how does it work? **A:** The bridge is an asynchronous communication layer between the JavaScript thread and the native threads. It serializes function calls and return values as JSON messages queued in both directions. This enables JavaScript to invoke native UI operations and native code to call back into JavaScript.
+
+2. **Q:** How does the new architecture (Fabric + TurboModules) differ from the old bridge architecture? **A:** The new architecture replaces the async JSON-serializing bridge with JSI (JavaScript Interface), which allows synchronous, direct native function calls from JavaScript. Fabric is the new renderer that shares a C++ core across platforms. TurboModules allow native modules to be lazily loaded and synchronously invoked.
+
+3. **Q:** What threading model does React Native use? **A:** React Native uses three main threads: the JS thread (executes JavaScript, runs React reconciler), the native main/UI thread (renders native views, handles touch events), and the shadow thread (computes layout using Yoga). The new architecture adds a dedicated layout thread.
+
+4. **Q:** Why does Hermes improve startup performance? **A:** Hermes precompiles JavaScript bytecode ahead of time, eliminating the need to parse and compile JS at runtime. This reduces app startup time by 30-50% and uses less memory because the bytecode is smaller than JS source text and can be mmap'd directly from disk.
+
+5. **Q:** What is the difference between Expo managed workflow and React Native CLI? **A:** Expo managed workflow provides a build service (EAS), OTA updates, and prebuilt native modules with zero native configuration. React Native CLI gives full access to native code (Xcode, Android Studio), enabling custom native modules and integration with existing native apps, but requires more setup.
+
+6. **Q:** How does <code>InteractionManager</code> help with performance? **A:** <code>InteractionManager.runAfterInteractions()</code> defers expensive work until after animations and transitions complete. This prevents JS thread contention during navigation transitions, ensuring smooth animations without frame drops.
+
+7. **Q:** What is the purpose of <code>AppRegistry</code>? **A:** <code>AppRegistry</code> is the entry point for React Native apps. It registers the root component with <code>AppRegistry.registerComponent(appName, () => AppComponent)</code>, which the native runtime uses to instantiate the JavaScript application.
+
+8. **Q:** How do you handle platform-specific code in React Native? **A:** Use <code>Platform.OS === 'ios'</code> or <code>Platform.OS === 'android'</code> for conditional logic. For values, use <code>Platform.select({ ios: value1, android: value2 })</code>. For entire files, use <code>.ios.js</code> / <code>.android.js</code> file extensions for automatic platform resolution.
+`,
+            tags: ["React Native", "Architecture", "Mobile"],
+          },
+          {
+            id: "cheat-rn-ui",
+            title: "UI Components & Styling",
+            shortDesc: "Core components, StyleSheet API, Flexbox layout, and responsive design patterns in React Native.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "React Native uses a subset of CSS — Flexbox for layout, no CSS cascade, no descendant selectors, no animations via CSS — all animations use the Animated API or Reanimated.",
+              "Core components (<View>, <Text>, <Image>, <ScrollView>, <FlatList>) map to native widgets — they are NOT HTML elements.",
+              "StyleSheet.create() optimizes style objects by freezing them and sending references across the bridge rather than serializing full style objects on every render.",
+              "Flexbox in RN defaults to flexDirection: 'column' (not 'row' like on the web), and all positions are relative by default.",
+              "PixelRatio and Dimensions APIs are essential for responsive layouts — there are no CSS media queries in RN.",
+            ],
+            content: `## Quick Reference
+
+React Native uses a flexible styling system based on a CSS subset. Styles are defined as JavaScript objects using <code>StyleSheet.create()</code>. The layout engine is Yoga, which implements Flexbox. Unlike web CSS, RN has no cascade, no inheritance (except <code>Text</code> inherits from parent <code>Text</code>), no CSS selectors, and no CSS animations.
+
+## Language Fundamentals
+
+RN styling is JavaScript objects, not CSS files. Key differences from web CSS:
+
+| Web CSS Feature | React Native Equivalent | Notes |
+|-----------------|------------------------|-------|
+| <code>class</code> / <code>className</code> | <code>style</code> prop | Pass a style object or array of objects |
+| <code>div</code>, <code>span</code> | <code>View</code>, <code>Text</code> | Core components, not HTML |
+| <code>px</code> units | Numbers (<code>16</code>) | All dimensions are density-independent pixels (dp) |
+| <code>%</code> units | <code>'50%'</code> string | Percentage strings still work |
+| CSS selectors | None | No descendant selectors, no pseudo-classes |
+| <code>hover</code>, <code>focus</code> | <code>Pressable</code> | Use Pressable component for interactive states |
+| Media queries | <code>Dimensions</code> API + <code>useWindowDimensions()</code> | Manual responsive logic |
+| CSS animations | <code>Animated</code> or <code>Reanimated</code> | Imperative animation APIs |
+| <code>display: none</code> | <code>{ display: 'none' }</code> | Works the same |
+
+## Framework by Framework Reference
+
+### StyleSheet.create
+
+<code>StyleSheet.create()</code> creates immutable style objects with numeric IDs. This reduces bridge traffic because only IDs are passed across the bridge, not full style objects.
+
+\`\`\`typescript
+// StyleSheet.create returns frozen style objects
+// Each style gets a numeric ID sent across the bridge
+// instead of serializing the full object each render
+import { StyleSheet, View, Text } from 'react-native';
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,                    // Fill available space
+    backgroundColor: '#fff',     // White background
+    paddingHorizontal: 16,       // 16dp horizontal padding
+  },
+  title: {
+    fontSize: 20,                // 20dp font size
+    fontWeight: '600',           // Semi-bold weight
+    color: '#1a1a1a',            // Dark text color
+    marginBottom: 8,             // 8dp bottom margin
+  },
+  card: {
+    padding: 12,                 // 12dp padding on all sides
+    borderRadius: 8,             // 8dp rounded corners
+    shadowColor: '#000',         // Shadow color (iOS)
+    shadowOffset: {              // Shadow offset (iOS)
+      width: 0,                  // No horizontal offset
+      height: 2,                 // 2dp vertical offset
+    },
+    shadowOpacity: 0.1,          // 10% shadow opacity (iOS)
+    shadowRadius: 4,             // 4dp shadow blur radius (iOS)
+    elevation: 3,                // Android shadow elevation
+  },
+});
+
+function Card({ title, children }) {
+  return (
+    <View style={styles.card}>        {/* Apply card style */}
+      <Text style={styles.title}>{title}</Text>  {/* Apply title style */}
+      {children}
+    </View>
+  );
+}
+\`\`\`
+
+
+### Inline Styles
+
+Inline styles are convenient for dynamic values but create new objects each render, which can trigger unnecessary re-renders in child components.
+
+\`\`\`typescript
+// Inline styles create new objects every render
+// This breaks PureComponent and React.memo optimization
+<View style={{
+  flex: 1,
+  backgroundColor: isActive ? '#007AFF' : '#E5E5EA',  // Dynamic color
+  padding: 16,
+}}>
+  <Text>Content</Text>
+</View>
+\`\`\`
+
+
+### Array Styles
+
+You can pass an array of style objects. Later styles override earlier ones. This is useful for composing base styles with overrides.
+
+\`\`\`typescript
+// Array styles: later styles override earlier ones
+// Base style from StyleSheet.create is combined with inline override
+<View style={[styles.base, isActive && styles.active, { marginTop: 20 }]}>
+  <Text>Composed styles</Text>
+</View>
+\`\`\`
+
+
+## Comparison Tables
+
+### Core Component Comparison
+
+| Component | Purpose | Renders to (iOS) | Renders to (Android) | Virtualization |
+|-----------|---------|-------------------|---------------------|----------------|
+| <code>View</code> | Generic container | <code>UIView</code> | <code>android.view.View</code> | No |
+| <code>Text</code> | Text display | <code>UILabel</code> / <code>UITextView</code> | <code>android.widget.TextView</code> | No |
+| <code>Image</code> | Image display | <code>UIImageView</code> | <code>android.widget.ImageView</code> | No |
+| <code>ScrollView</code> | Scrollable content | <code>UIScrollView</code> | <code>android.widget.ScrollView</code> | No |
+| <code>FlatList</code> | Virtualized list | <code>UICollectionView</code> | <code>androidx.recyclerview.widget.RecyclerView</code> | Yes |
+| <code>SectionList</code> | Sectioned list | <code>UICollectionView</code> | <code>androidx.recyclerview.widget.RecyclerView</code> | Yes |
+| <code>Pressable</code> | Touch handling | <code>UIControl</code> | <code>android.view.View</code> with touch listeners | No |
+
+### Flexbox Defaults
+
+| Property | React Native Default | Web Default |
+|----------|---------------------|-------------|
+| <code>flexDirection</code> | <code>column</code> | <code>row</code> |
+| <code>alignItems</code> | <code>stretch</code> | <code>stretch</code> |
+| <code>justifyContent</code> | <code>flex-start</code> | <code>flex-start</code> |
+| <code>position</code> | <code>relative</code> | <code>static</code> |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Assuming web CSS behavior in RN** — There is no CSS cascade in RN. Styles defined on a parent <code>View</code> do not apply to child <code>Text</code> nodes. Each component must be styled explicitly. Only <code>Text</code> components inherit styles from parent <code>Text</code> components.
+
+2. **Creating style objects inline inside render** — Inline style objects create new object references every render. This defeats <code>React.memo</code> and <code>PureComponent</code> optimization because child components receive new style props each render. Always use <code>StyleSheet.create()</code> for static styles.
+
+3. **Not handling device pixel density** — Fixed pixel values render differently on devices with different pixel densities. Use <code>PixelRatio</code> to convert between dp and physical pixels. For 1px borders, use <code>StyleSheet.hairlineWidth</code> instead of <code>borderWidth: 1</code>.
+
+4. **Forgetting that <code>overflow: visible</code> is the default on iOS but not Android** — On Android, <code>overflow: hidden</code> is the default for <code>View</code>. Content that overflows a <code>View</code>'s bounds is clipped on Android but visible on iOS. Set <code>overflow: visible</code> explicitly for consistent cross-platform behavior.
+
+5. **Overusing <code>ScrollView</code> for long lists** — <code>ScrollView</code> renders all children upfront. For lists with more than ~20 items, use <code>FlatList</code> which virtualizes off-screen rows and recycles components, dramatically reducing memory usage.
+
+6. **Using <code>key</code> prop incorrectly with <code>FlatList</code>** — <code>FlatList</code> requires a <code>keyExtractor</code> prop (not the React <code>key</code> prop) to identify unique rows. Without it, <code>FlatList</code> cannot efficiently track item identity, causing incorrect re-renders and scroll position issues.
+
+7. **Nesting <code>Text</code> without considering inheritance** — Inside a <code>Text</code> component, nested <code>Text</code> components inherit the parent's styles. This can cause unexpected font sizes and colors. Explicitly style nested <code>Text</code> elements.
+
+8. **Ignoring <code>useWindowDimensions</code> for responsive layouts** — Static <code>Dimensions.get('window')</code> does not update on orientation change. Use the <code>useWindowDimensions()</code> hook which re-renders the component when dimensions change, ensuring responsive layouts.
+
+9. **Not memoizing expensive style computations** — Dynamic styles computed from props or state should be wrapped in <code>useMemo</code>. Otherwise, every render recomputes the style objects, creating new references and triggering child re-renders.
+
+10. **Using percentage-based dimensions without a parent with defined dimensions** — Percentage values in RN work like the web: they reference the parent's dimension. If the parent has <code>flex: 1</code> or an explicit <code>width</code>/<code>height</code>, the percentage resolves correctly. If the parent has no defined size, the percentage resolves to 0.
+
+11. **Setting <code>flex: 1</code> on too many sibling components** — <code>flex: 1</code> distributes available space equally among siblings. With many siblings each having <code>flex: 1</code>, available space is divided into too many pieces, leaving each sibling with minimal height. Use <code>flex: 0</code> or explicit heights for items that should size to content.
+
+12. **Applying shadow and elevation simultaneously** — <code>shadow*</code> props (iOS) and <code>elevation</code> (Android) serve the same purpose. Setting both does not create a combined effect — each platform ignores the other's shadow property. Handle shadow styling with <code>Platform.select</code> for platform-specific values.
+
+## Complete API Reference
+
+| Component | Key Props | Description |
+|-----------|-----------|-------------|
+| <code>View</code> | <code>style</code>, <code>onLayout</code>, <code>onTouchStart</code>, <code>onTouchEnd</code> | The most fundamental component for building UI |
+| <code>Text</code> | <code>style</code>, <code>numberOfLines</code>, <code>onPress</code>, <code>selectable</code> | Displays text content with style inheritance |
+| <code>Image</code> | <code>source</code>, <code>style</code>, <code>resizeMode</code>, <code>onLoad</code>, <code>onError</code> | Displays images from network, assets, or local storage |
+| <code>ScrollView</code> | <code>contentContainerStyle</code>, <code>horizontal</code>, <code>onScroll</code>, <code>pagingEnabled</code> | Scrollable container for content |
+| <code>FlatList</code> | <code>data</code>, <code>renderItem</code>, <code>keyExtractor</code>, <code>onEndReached</code>, <code>ListEmptyComponent</code> | Virtualized list for performant long lists |
+| <code>SectionList</code> | <code>sections</code>, <code>renderItem</code>, <code>renderSectionHeader</code>, <code>keyExtractor</code> | Sectioned virtualized list |
+| <code>Pressable</code> | <code>onPress</code>, <code>onPressIn</code>, <code>onPressOut</code>, <code>style</code> (function), <code>hitSlop</code> | Wrapper for press interactions with state |
+| <code>TextInput</code> | <code>value</code>, <code>onChangeText</code>, <code>placeholder</code>, <code>secureTextEntry</code>, <code>keyboardType</code> | Text input field |
+| <code>Modal</code> | <code>visible</code>, <code>animationType</code>, <code>onRequestClose</code>, <code>transparent</code> | Native modal presentation |
+| <code>ActivityIndicator</code> | <code>size</code>, <code>color</code>, <code>animating</code> | Loading spinner |
+
+## Practice Questions
+
+1. **Q:** What is the difference between <code>ScrollView</code> and <code>FlatList</code>? **A:** <code>ScrollView</code> renders all children at once, suitable for small amounts of content. <code>FlatList</code> virtualizes rows, rendering only the visible items and recycling off-screen components. <code>FlatList</code> is required for lists with more than ~20 items.
+
+2. **Q:** How does StyleSheet.create improve performance? **A:** <code>StyleSheet.create()</code> creates immutable style objects with numeric IDs. These IDs are sent across the bridge instead of serialized JSON style objects, reducing bridge traffic. The style objects are frozen, preventing accidental mutation.
+
+3. **Q:** Why does React Native default to <code>flexDirection: 'column'</code> instead of <code>'row'</code>? **A:** Mobile screens are taller than they are wide. The default column direction matches the natural vertical flow of mobile UIs (headers, content, tab bars arranged top-to-bottom). The web defaults to row because HTML documents flow horizontally.
+
+4. **Q:** How do you create a responsive layout in React Native? **A:** Use <code>useWindowDimensions()</code> to get current screen dimensions and react to orientation changes. Use flex ratios (<code>flex: 1</code>, <code>flex: 2</code>) instead of fixed widths. Use <code>PixelRatio</code> to adjust for pixel density. Consider tablet vs phone breakpoints manually.
+
+5. **Q:** What components can render text in React Native? **A:** Only the <code>Text</code> component can render text. You cannot put text directly inside a <code>View</code> — it will not render. All text must be wrapped in a <code>Text</code> component or a component that extends it.
+
+6. **Q:** How do shadows work in React Native? **A:** iOS uses <code>shadowColor</code>, <code>shadowOffset</code>, <code>shadowOpacity</code>, and <code>shadowRadius</code> props. Android uses the <code>elevation</code> prop (which creates a shadow via ambient light simulation). They are not interchangeable — use <code>Platform.select</code> for cross-platform shadow styling.
+
+7. **Q:** What is <code>hitSlop</code> used for? **A:** <code>hitSlop</code> extends the touchable area of a component beyond its visual bounds. This is useful for small touch targets (< 44x44dp) that fail Apple's Human Interface Guidelines for minimum touch area.
+
+8. **Q:** How do you handle different screen sizes in React Native? **A:** Use flex layout (flex ratios), <code>useWindowDimensions()</code> for breakpoints, percentage-based dimensions, and <code>PixelRatio</code> adjustments. For text, consider using <code>RFValue</code> (react-native-responsive-fontsize) or scaling functions based on screen width relative to a base design width.
+`,
+            tags: ["React Native", "UI", "Styling", "Mobile"],
+          },
+          {
+            id: "cheat-rn-navigation",
+            title: "Navigation & Routing",
+            shortDesc: "Stack navigation, tab navigation, deep linking, and routing patterns for React Native apps.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "React Navigation is the de facto standard navigation library for React Native — it provides stack, tab, drawer, and native stack navigators.",
+              "Expo Router provides file-based routing similar to Next.js App Router, built on top of React Navigation with automatic deep linking.",
+              "Navigation state (history, params) lives in JavaScript memory — it is not persisted by default and resets on app restart unless explicitly saved.",
+              "Deep linking requires configuring URI schemes on iOS (Info.plist) and intent filters on Android (AndroidManifest.xml) plus linking config in the navigator.",
+              "Native Stack Navigator uses原生 platform transitions (UINavigationController on iOS, FragmentTransaction on Android) for 60fps animations.",
+            ],
+            content: `## Quick Reference
+
+Navigation in React Native is handled by JavaScript-based navigation libraries (not the web's URL-based routing). React Navigation provides stack (push/pop), tab (bottom/top), and drawer navigators. Each navigator manages a navigation state object containing route names, params, and history. Deep linking maps external URLs to specific screens.
+
+## Language Fundamentals
+
+Navigation in RN differs fundamentally from web routing:
+
+| Aspect | Web Routing (React Router) | React Navigation |
+|--------|---------------------------|------------------|
+| History | Browser history (URL) | JavaScript state object |
+| Navigation | <code>&lt;a&gt;</code> or <code>useNavigate()</code> | <code>navigation.navigate()</code> or <code>useRouter()</code> |
+| Deep links | Automatic (URL path) | Manual config (URI scheme + path mapping) |
+| Transitions | Instant (no animation) | Animated (native or JS-driven) |
+| State persistence | URL param persistence | Manual (AsyncStorage, MMKV) |
+| Back behavior | Browser back button | <code>navigation.goBack()</code> or header back button |
+
+## Framework by Framework Reference
+
+### React Navigation
+
+React Navigation is the community-standard library with stack, tab, drawer, and native stack navigators.
+
+\`\`\`typescript
+// Install: npm install @react-navigation/native @react-navigation/native-stack @react-navigation/bottom-tabs
+
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+// Define route parameter types for type safety
+// Each screen hasits own params type; use undefined for no params
+type RootStackParamList = {
+  Home: undefined;                    // Home screen has no params
+  Profile: { userId: string };        // Profile screen requires userId param
+  Settings: { tab?: string };         // Settings has optional tab param
+};
+
+// Create stack navigator with type parameter
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// Tab navigator (no type parameter for brevity)
+const Tab = createBottomTabNavigator();
+
+function HomeStack() {
+  return (
+    <Stack.Navigator
+      initialRouteName="Home"                     // First screen shown
+      screenOptions={{
+        headerStyle: { backgroundColor: '#007AFF' },  // Blue header bar
+        headerTintColor: '#fff',                       // White header text
+        headerTitleStyle: { fontWeight: 'bold' },      // Bold header title
+        animation: 'slide_from_right',                 // iOS-style slide animation
+      }}
+    >
+      {/* Define each screen in the stack */}
+      <Stack.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: 'Home' }}                   // Header title
+      />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={({ route }) => ({                    // Dynamic header based on route params
+          title: route.params.userId
+            ? \`User \${route.params.userId}\`         // Escape the template literal param
+            : 'Profile',
+        })}
+      />
+    </Stack.Navigator>
+  );
+}
+
+// Tab navigator with multiple stacks as tab screens
+function AppNavigator() {
+  return (
+    <NavigationContainer>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarActiveTintColor: '#007AFF',         // Active tab color
+          tabBarInactiveTintColor: '#8E8E93',        // Inactive tab color
+          headerShown: false,                        // Hide header (stack provides its own)
+        }}
+      >
+        <Tab.Screen
+          name="HomeTab"
+          component={HomeStack}                      // Stack navigator as tab content
+          options={{ tabBarLabel: 'Home', tabBarIcon: ({ color }) => <HomeIcon color={color} /> }}
+        />
+        <Tab.Screen name="SettingsTab" component={SettingsScreen} />
+      </Tab.Navigator>
+    </NavigationContainer>
+  );
+}
+\`\`\`
+
+
+### Expo Router
+
+Expo Router provides file-based routing similar to Next.js. Files in the <code>app/</code> directory automatically become routes.
+
+\`\`\`typescript
+// File-based routing with Expo Router
+// app/index.tsx -> route "/"
+// app/profile/[userId].tsx -> route "/profile/:userId"
+// app/settings.tsx -> route "/settings"
+
+import { Link, useRouter, useLocalSearchParams } from 'expo-router';
+import { View, Text, Button } from 'react-native';
+
+// app/index.tsx - Home screen
+export default function Home() {
+  const router = useRouter();                        // Access router for programmatic navigation
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      {/* Link component works like <a> tag */}
+      <Link href="/settings">Go to Settings</Link>
+
+      {/* Programmatic navigation with params */}
+      <Button
+        title="View Profile"
+        onPress={() => router.push('/profile/user-123')}     // Push to profile route
+      />
+    </View>
+  );
+}
+
+// app/profile/[userId].tsx - Dynamic route
+export default function Profile() {
+  // Extract route parameters from the URL
+  // For route /profile/user-123, userId = "user-123"
+  const { userId } = useLocalSearchParams<{ userId: string }>();
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text>User ID: {userId}</Text>
+      <Button
+        title="Go Back"
+        onPress={() => router.back()}                 // Navigate back in history
+      />
+    </View>
+  );
+}
+\`\`\`
+
+
+### Deep Linking Configuration
+
+Deep linking maps external URLs to in-app screens.
+
+\`\`\`typescript
+// Deep linking configuration for React Navigation
+const linking = {
+  prefixes: ['myapp://', 'https://myapp.com'],       // URI schemes to handle
+  config: {
+    screens: {
+      Home: '',                                        // myapp:// or https://myapp.com
+      Profile: 'profile/:userId',                       // myapp://profile/user-123
+      Settings: 'settings',                              // myapp://settings
+      NotFound: '*',                                     // Catch-all for unmatched routes
+    },
+  },
+};
+
+// Pass linking config to NavigationContainer
+function App() {
+  return (
+    <NavigationContainer linking={linking}>
+      <RootNavigator />
+    </NavigationContainer>
+  );
+}
+\`\`\`
+
+
+## Comparison Tables
+
+### Navigator Types
+
+| Navigator | Use Case | Animation | Performance | Platform |
+|-----------|----------|-----------|-------------|----------|
+| Native Stack | Push/pop screens | Native platform transitions | Best (native drivers) | iOS + Android |
+| Stack | Custom animations | JS-driven | Good | iOS + Android |
+| Bottom Tab | Main app sections | None (instant switch) | Excellent (lazy loading) | iOS + Android |
+| Material Top Tab | Top tab bar | Material Design | Good | Android-style |
+| Drawer | Side menu | Slide-in from left | Good | iOS + Android |
+
+### React Navigation vs Expo Router
+
+| Feature | React Navigation | Expo Router |
+|---------|-----------------|-------------|
+| Setup | Manual (navigator components) | Automatic (file-based routing) |
+| Type safety | Manual param list types | Automatic (file path inference) |
+| Deep linking | Manual linking config | Automatic from file structure |
+| Navigation patterns | Full control | Abstraction over React Navigation |
+| Learning curve | Steeper | Familiar (Next.js pattern) |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Not resetting navigation state after logout** — After logout, the stack retains previous screens in history. Pressing back after logout re-shows logged-in screens. Use <code>CommonActions.reset</code> to replace the navigation state with a fresh auth screen.
+
+2. **Passing non-serializable params** — Navigation params are serialized deeply by React Navigation. Passing functions, circular references, or large objects causes errors and performance issues. Only pass plain, serializable data (strings, numbers, plain objects).
+
+3. **Nesting navigators incorrectly** — Deeply nested navigators (tab inside stack inside drawer) create complex state trees and unexpected back behavior. Each nested navigator has its own state. Keep the navigation hierarchy flat where possible.
+
+4. **Not handling back button behavior on Android** — Android's hardware back button navigates within the React Navigation stack by default but may behave unexpectedly with modals or nested navigators. Use <code>BackHandler</code> to customize back behavior for specific screens.
+
+5. **Ignoring deep linking setup for production** — Deep links require platform-specific configuration: iOS needs associated domains and universal links; Android needs intent filters and app links. Without this, external links cannot open the app. Configure before production release.
+
+6. **Over-fetching data on every navigation** — Navigation events (<code>useFocusEffect</code>) trigger on every screen focus, including when returning from a pushed screen. Cache fetched data to avoid redundant network requests on repeated navigations.
+
+7. **Not handling screen preloading** — React Navigation renders screens lazily by default. Use <code>lazy: false</code> on tab screens that need to be ready immediately. For stack screens, use <code>useFocusEffect</code> for data loading instead of <code>useEffect</code>.
+
+8. **Using <code>navigation.navigate</code> when <code>navigation.push</code> is needed** — <code>navigate</code> reuses existing screens in the stack if one with the same name exists. <code>push</code> always adds a new screen. Use <code>push</code> for screens that should appear multiple times in the stack (e.g., product detail pages).
+
+9. **Not handling screen options updates** — <code>navigation.setOptions</code> is the correct way to update header options after navigation. Mutating route params or setting options directly on the screen component does not take effect.
+
+10. **Misunderstanding the navigation lifecycle** — The component <code>useEffect</code> runs on mount, not on screen focus. When navigating back from a pushed screen, <code>useEffect</code> does not re-run. Use <code>useFocusEffect</code> from React Navigation for focus-dependent logic.
+
+11. **Not type-checking navigation props** — Without TypeScript param lists, <code>navigation.navigate('Profile', {})</code> accepts any params, leading to runtime crashes from missing or mistyped params. Always define <code>RootStackParamList</code> types.
+
+12. **Using Expo Router without understanding React Navigation** — Expo Router is an abstraction layer. When you need custom transitions, modals, or complex navigation patterns, you need to understand the underlying React Navigation APIs.
+
+## Complete API Reference
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>navigation.navigate</code> | <code>navigate(name, params?)</code> | Navigate to a screen (reuses existing if in stack) |
+| <code>navigation.push</code> | <code>push(name, params?)</code> | Always push a new screen onto the stack |
+| <code>navigation.goBack</code> | <code>goBack()</code> | Go back to the previous screen |
+| <code>navigation.replace</code> | <code>replace(name, params?)</code> | Replace the current screen (no back to it) |
+| <code>navigation.reset</code> | <code>reset(state)</code> | Reset the navigation state entirely |
+| <code>navigation.setParams</code> | <code>setParams(params)</code> | Update the current screen's route params |
+| <code>navigation.setOptions</code> | <code>setOptions(options)</code> | Update the current screen's navigation options |
+| <code>navigation.addListener</code> | <code>addListener(event, callback)</code> | Listen to navigation events (focus, blur) |
+| <code>useFocusEffect</code> | <code>useFocusEffect(callback)</code> | Run effect when screen gains focus |
+| <code>useRoute</code> | <code>useRoute()</code> | Access the current route object and params |
+| <code>useNavigation</code> | <code>useNavigation()</code> | Access the navigation object |
+| <code>CommonActions.reset</code> | <code>CommonActions.reset(state)</code> | Create a reset action for dispatch |
+
+## Practice Questions
+
+1. **Q:** What is the difference between <code>navigate</code> and <code>push</code> in React Navigation? **A:** <code>navigate('Screen')</code> checks if a screen with that name already exists in the stack and reuses it (popping back to it if needed). <code>push('Screen')</code> always adds a new screen to the stack, allowing multiple instances of the same screen type (e.g., multiple product detail screens).
+
+2. **Q:** How does deep linking work in React Navigation? **A:** Deep linking maps URL patterns to screens via the <code>linking</code> config passed to <code>NavigationContainer</code>. For example, <code>profile/:userId</code> maps to the Profile screen with the URL segment as <code>route.params.userId</code>. You also need platform config (URI scheme, intent filters, associated domains).
+
+3. **Q:** What is the purpose of <code>useFocusEffect</code>? **A:** <code>useFocusEffect</code> runs a callback every time the screen gains focus (including initial mount and when returning from other screens). Unlike <code>useEffect</code> which runs only on mount, <code>useFocusEffect</code> re-runs on focus — useful for refreshing data or analytics tracking.
+
+4. **Q:** How do you pass data back from a pushed screen? **A:** Pass a callback function as a navigation param and call it before going back. Alternatively, use a shared state store (Zustand, Redux) or use <code>route.params</code> with <code>navigation.setParams</code> to update the parent screen's params before navigating back.
+
+5. **Q:** What is the proper way to handle authentication flow navigation? **A:** Use <code>CommonActions.reset</code> to replace the entire navigation state when authenticating or logging out. This removes all previous screens from the stack, preventing the user from navigating back to auth-required screens after logout.
+
+6. **Q:** How does Expo Router differ from React Navigation? **A:** Expo Router provides file-based routing (files in <code>app/</code> become routes) built on top of React Navigation. It auto-generates the navigator structure and deep linking config from the file system. React Navigation requires manual navigator setup but offers more control over transitions and behavior.
+
+7. **Q:** What are navigation params restrictions in React Navigation? **A:** Params must be JSON-serializable (strings, numbers, booleans, plain objects, arrays). Functions, class instances, circular references, symbols, and <code>undefined</code> values are not supported. Params are deep-cloned internally, so mutations after navigation do not propagate.
+
+8. **Q:** How do you configure a tab navigator with different headers for each tab? **A:** Set <code>headerShown: false</code> on the tab navigator's <code>screenOptions</code>. Then wrap each tab's content in its own stack navigator that provides the header. Each stack navigator can have different header styles for its screens.
+`,
+            tags: ["React Native", "Navigation", "Routing", "Mobile"],
+          },
+          {
+            id: "cheat-rn-state",
+            title: "State Management & Persistence",
+            shortDesc: "Local component state, global state stores, and local persistence strategies for React Native apps.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "React Native supports all React state patterns (useState, useReducer, Context) plus mobile-specific concerns like state persistence across app restarts.",
+              "AsyncStorage is a simple, unencrypted, key-value storage system (8MB limit on Android). For production, use MMKV which is 30x faster and supports encryption.",
+              "Zustand is the recommended global state library for React Native — it is tiny (1KB), has no boilerplate, does not require providers, and integrates with MMKV for persistence.",
+              "Redux Toolkit is appropriate for large apps with complex state logic but adds boilerplate. Use RTK Query for server state caching and synchronization.",
+              "State that must survive app restarts (auth tokens, preferences, draft data) should be persisted to MMKV or AsyncStorage, while ephemeral UI state lives in React state.",
+            ],
+            content: `## Quick Reference
+
+State management in React Native follows the same React patterns (useState, useReducer, Context) with additional considerations for mobile: persistence across app restarts, memory constraints, and offline support. Choose the simplest state solution that meets your needs — local state for component data, Context for shared UI state, Zustand or Redux for global app state.
+
+## Language Fundamentals
+
+React state management fundamentals apply identically in React Native:
+
+- <code>useState</code> — Local component state
+- <code>useReducer</code> — Complex local state with reducer pattern
+- <code>useContext</code> + <code>createContext</code> — Shared state without prop drilling
+- <code>useRef</code> — Mutable values that persist across renders without triggering re-renders
+
+The key mobile-specific difference is the need for state persistence — web apps have local/session storage, mobile apps use MMKV, AsyncStorage, SQLite, or file storage.
+
+## Framework by Framework Reference
+
+### Zustand (Recommended for most apps)
+
+Zustand is a minimalist state management library with a hooks-based API. It works without providers and integrates easily with persistence middleware.
+
+\`\`\`typescript
+// Install: npm install zustand zustand/middleware
+import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { MMKV } from 'react-native-mmkv';
+
+// Initialize MMKV storage instance
+// MMKV is 30x faster than AsyncStorage and supports encryption
+const storage = new MMKV({
+  id: 'app-storage',                      // Storage instance identifier
+  encryptionKey: 'my-encryption-key',     // Optional AES encryption
+});
+
+// Create a zustand store with the MMKV-backed persist middleware
+// The store automatically saves and hydrates state from MMKV
+// Define the store's state shape and actions
+interface AuthState {
+  token: string | null;                   // Authentication token
+  profile: { id: string; name: string } | null;  // User profile
+  login: (token: string) => void;         // Action to set token
+  logout: () => void;                     // Action to clear state
+}
+
+const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      // Initial state values
+      token: null,
+      profile: null,
+      // login action: update token in state (auto-persisted)
+      login: (token: string) => set({ token }),
+      // logout action: clear all auth state
+      logout: () => set({ token: null, profile: null }),
+    }),
+    {
+      name: 'auth-storage',               // Key name in MMKV
+      storage: createJSONStorage(() => ({  // JSON serialization wrapper
+        getItem: (key) => storage.getString(key) ?? null,
+        setItem: (key, value) => storage.set(key, value),
+        removeItem: (key) => storage.delete(key),
+      })),
+    }
+  )
+);
+
+// Usage in component — hook automatically re-renders on state change
+function ProfileScreen() {
+  const { token, profile, logout } = useAuthStore();
+
+  return (
+    <View>
+      <Text>Token: {token}</Text>
+      <Button title="Logout" onPress={logout} />
+    </View>
+  );
+}
+\`\`\`
+
+### Redux Toolkit
+
+Redux Toolkit is suitable for large applications with complex state interactions and team scalability needs.
+
+\`\`\`typescript
+// Install: npm install @reduxjs/toolkit react-redux
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import { MMKV } from 'react-native-mmkv';
+
+// Define a slice of state with reducers
+// createSlice auto-generates action creators and action types
+const authSlice = createSlice({
+  name: 'auth',                              // Slice name (prefixes action types)
+  initialState: {                            // Initial state shape
+    token: null as string | null,
+    profile: null as { id: string; name: string } | null,
+  },
+  reducers: {
+    // login reducer: sets token from action payload
+    login: (state, action: PayloadAction<string>) => {
+      state.token = action.payload;           // Immer handles immutability
+    },
+    // logout reducer: clears all auth state
+    logout: (state) => {
+      state.token = null;
+      state.profile = null;
+    },
+  },
+});
+
+// Export auto-generated action creators
+export const { login, logout } = authSlice.actions;
+
+// Configure the Redux store with persist middleware
+const store = configureStore({
+  reducer: { auth: authSlice.reducer },
+});
+
+// Wrap app in Provider
+function App() {
+  return (
+    <Provider store={store}>
+      <RootNavigator />
+    </Provider>
+  );
+}
+\`\`\`
+
+### Context API (For shared UI state only)
+
+React Context is appropriate for theme, localization, and UI state that does not change frequently. Avoid Context for frequently-updating global state because all consumers re-render on every change.
+
+\`\`\`typescript
+// Theme context with React Context API
+// Use Context for shared UI state that changes infrequently
+import { createContext, useContext, useState, ReactNode } from 'react';
+
+// Define theme values
+type Theme = 'light' | 'dark';
+
+// Context value type includes state and setter
+interface ThemeContextValue {
+  theme: Theme;                              // Current theme value
+  toggleTheme: () => void;                   // Function to toggle theme
+}
+
+// Create context with default value (used when no provider exists)
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: 'light',
+  toggleTheme: () => {},
+});
+
+// Provider component wraps the app
+function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<Theme>('light');
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// Custom hook for consuming theme context
+function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within ThemeProvider');
+  }
+  return context;
+}
+\`\`\`
+
+### MMKV vs AsyncStorage
+
+\`\`\`typescript
+// MMKV: synchronous, fast, encrypted key-value storage
+// Use for auth tokens, user preferences, cached API data
+import { MMKV } from 'react-native-mmkv';
+
+const mmkv = new MMKV({ id: 'default' });
+
+// Synchronous read/write — no await needed
+mmkv.set('userToken', 'abc123');            // Store a string
+mmkv.set('loginCount', 42);                 // Store a number
+mmkv.set('isPremium', true);               // Store a boolean
+
+const token = mmkv.getString('userToken');  // Returns string | null
+const count = mmkv.getNumber('loginCount');  // Returns number | NaN
+const premium = mmkv.getBoolean('isPremium'); // Returns boolean | null
+
+// AsyncStorage: older, async, unencrypted
+// Deprecated in favor of MMKV for most use cases
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+await AsyncStorage.setItem('key', 'value');          // Async write
+const value = await AsyncStorage.getItem('key');     // Async read (returns null if missing)
+await AsyncStorage.removeItem('key');                // Delete a key
+await AsyncStorage.clear();                          // Clear all keys
+await AsyncStorage.getAllKeys();                     // Get all stored keys
+\`\`\`
+
+## Comparison Tables
+
+### State Management Libraries
+
+| Library | Bundle Size | Boilerplate | Provider Needed | Persistence | Suitable For |
+|---------|-------------|-------------|-----------------|-------------|--------------|
+| Zustand | ~1KB | Minimal | No | Plugin (MMKV) | Most apps |
+| Redux Toolkit | ~11KB | Medium | Yes | Plugin (RTK Query) | Large apps, teams |
+| Context API | 0KB (built-in) | Minimal | Yes | Manual | UI state, themes |
+| Jotai | ~3KB | Minimal | No | Plugin (MMKV) | Medium apps |
+| TanStack Query | ~12KB | Low | Yes (devtools) | Built-in cache | Server state |
+
+### Storage Solutions
+
+| Storage | Sync/Async | Speed | Encryption | Max Size | Use Case |
+|---------|-----------|-------|------------|----------|----------|
+| MMKV | Sync | 30x faster than AsyncStorage | AES-256 | Unlimited | Auth tokens, prefs, cache |
+| AsyncStorage | Async | Slow | None | ~8MB Android | Legacy apps, small data |
+| SQLite (expo-sqlite) | Async | Fast | Optional | Unlimited | Structured data, offline DB |
+| react-native-fs | Async | Fast | Manual | Unlimited | Files, images, blobs |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Using Context for frequently-updating state** — Every consumer of a Context re-renders when the context value changes. For state that updates frequently (real-time data, animations), use Zustand or Redux which allow selectors to subscribe to specific slices.
+
+2. **Not handling state hydration** — Persisted state loads asynchronously (or synchronously with MMKV). During hydration, the store returns default values. This causes a flash of incorrect UI on app launch. Show a splash screen or skeleton until hydrataion completes.
+
+3. **Storing non-serializable values in persisted state** — Functions, Date instances, Maps, Sets, and circular references cannot be serialized to JSON. When passed through persist middleware, they silently convert to <code>null</code> or cause errors. Store only plain JSON-serializable values.
+
+4. **Over-persisting ephemeral state** — UI state (scroll position, selected tab, modal visibility) does not need to survive app restarts. Persisting this state adds startup latency and complexity. Only persist state that has meaning across sessions.
+
+5. **Forgetting to clear persisted state on logout** — When a user logs out, persisted state containing previous user's data (auth tokens, cached responses, preferences) must be cleared. Use store actions to reset all persisted slices.
+
+6. **Not using selectors for performance** — Accessing the entire store in every consumer component re-renders all of them on any state change. Use selectors (<code>useAuthStore((state) => state.token)</code>) to subscribe only to the specific slice each component needs.
+
+7. **Mixing too many state management libraries** — Using Context for theme, Zustand for auth, Redux for data, and useState for UI state creates cognitive overhead. Pick one global state solution and use it consistently for all shared state.
+
+8. **Storing derived state in the store** — Computed values that depend on other state should be derived in components with <code>useMemo</code> or using Zustand's derived state pattern. Storing redundant derived values in the store creates sync bugs.
+
+9. **Not handling offline state gracefully** — Mobile apps lose connectivity frequently. Network-dependent state (API data, sync status) should reflect connectivity. Use <code>NetInfo</code> to detect offline state and show appropriate UI feedback.
+
+10. **Mutating Zustand state outside of actions** — Zustand state can be mutated directly (no Immer) but this bypasses React's batching and subscribers. Always use the <code>set</code> function provided to the store creator to ensure proper reactivity.
+
+11. **Using AsyncStorage for large data** — AsyncStorage blocks the JS thread during reads/writes of large data. For anything over 100KB, use MMKV or SQLite. AsyncStorage on Android has an 8MB limit and is deprecated by React Native core.
+
+12. **Not encrypting sensitive persisted data** — Auth tokens, API keys, and user data stored in AsyncStorage or unencrypted MMKV are accessible on rooted/jailbroken devices. Use MMKV with <code>encryptionKey</code> or react-native-keychain for sensitive credentials.
+
+## Complete API Reference
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>useState</code> | <code>useState&lt;T&gt;(initial: T | () => T)</code> | Local component state with setter |
+| <code>useReducer</code> | <code>useReducer&lt;S, A&gt;(reducer, initial, init?)</code> | Complex state with reducer pattern |
+| <code>createContext</code> | <code>createContext&lt;T&gt;(defaultValue: T)</code> | Create a context for shared state |
+| <code>create</code> (Zustand) | <code>create&lt;T&gt;((set, get) => ...)</code> | Create a Zustand store |
+| <code>persist</code> (Zustand) | <code>persist(store, config)</code> | Middleware to persist Zustand state |
+| <code>configureStore</code> (RTK) | <code>configureStore({ reducer, middleware })</code> | Create Redux store with good defaults |
+| <code>createSlice</code> (RTK) | <code>createSlice({ name, initialState, reducers })</code> | Auto-generate actions and reducers |
+| <code>MMKV.set</code> | <code>set(key: string, value: string | number | boolean)</code> | Store a value synchronously |
+| <code>MMKV.getString</code> | <code>getString(key: string): string | null</code> | Read a string value synchronously |
+
+## Practice Questions
+
+1. **Q:** When should you use Zustand instead of React Context for global state? **A:** Use Zustand when state updates frequently, when multiple components need selective subscriptions to specific state slices, when you need state persistence, or when state logic is complex enough to warrant a dedicated store. Use Context only for infrequently-changing shared UI state like theme or locale.
+
+2. **Q:** How do you persist Zustand state with MMKV? **A:** Use the <code>persist</code> middleware with a custom storage adapter that wraps MMKV's <code>getString</code>, <code>set</code>, and <code>delete</code> methods. The adapter must implement <code>getItem</code>, <code>setItem</code>, and <code>removeItem</code> with JSON serialization.
+
+3. **Q:** What is the problem with storing non-serializable values in persisted state? **A:** Non-serializable values (functions, Dates, Maps, Sets, class instances) cannot be converted to JSON. When the persist middleware serializes the state, these values are silently dropped or converted to <code>null</code>. On rehydration, they are missing, causing runtime errors or undefined behavior.
+
+4. **Q:** Why is MMKV faster than AsyncStorage? **A:** MMKV is synchronous (no async bridge calls), uses memory-mapped files for instant reads, and stores data in a binary format. AsyncStorage is asynchronous (bridge overhead), serializes to JSON text, and has a slower <code>SharedPreferences</code> backend on Android.
+
+5. **Q:** What is the correct way to reset Zustand store state? **A:** Define a <code>reset</code> action in the store that calls <code>set(initialState)</code> or use Zustand's <code>StoreApi.destroy()</code>. For persisted stores, also call <code>useAuthStore.persist.clearStorage()</code> or manually remove the persisted key from MMKV.
+
+6. **Q:** How does Redux Toolkit's <code>createSlice</code> reduce boilerplate? **A:** <code>createSlice</code> auto-generates action creators and action type strings from the reducer functions you define. It uses Immer internally to allow mutable-style state updates. This eliminates the need for separate action type constants, action creator functions, and immutable spread operators.
+
+7. **Q:** What is the difference between <code>useState</code> and <code>useRef</code> for values that persist across renders? **A:** <code>useState</code> triggers a re-render when the value changes. <code>useRef</code> persists the value across renders but changing it does not cause a re-render. Use <code>useRef</code> for values that need to persist but should not trigger UI updates (e.g., timers, subscriptions).
+
+8. **Q:** When should you use <code>useReducer</code> instead of <code>useState</code>? **A:** Use <code>useReducer</code> when state logic involves multiple sub-values that depend on each other, when the next state depends on the previous state in complex ways, or when the state update logic is extracted to a testable reducer function outside the component.
+`,
+            tags: ["React Native", "State Management", "Persistence", "Mobile"],
+          },
+          {
+            id: "cheat-rn-native-modules",
+            title: "Native Modules & Device APIs",
+            shortDesc: "Accessing device hardware, native SDKs, and building custom native modules for iOS and Android.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "Native modules bridge JavaScript to native (Swift/Kotlin) code — use TurboModules (new arch) for synchronous calls or NativeModules (old arch) for async calls.",
+              "Expo Modules API provides a simplified way to write native modules with Swift/Kotlin that work in both Expo managed and bare workflows.",
+              "Device APIs (camera, GPS, accelerometer, biometrics, notifications) are accessed through community libraries like expo-camera, expo-location, and react-native-firebase.",
+              "Permissions on iOS use Info.plist description strings and are granted per-use; Android uses runtime permission requests from API 23+.",
+              "The Expo SDK includes 200+ prebuilt native modules that work out of the box without native build configuration.",
+            ],
+            content: `## Quick Reference
+
+React Native apps can access device hardware and platform SDKs through native modules. These modules are written in Swift/Objective-C (iOS) or Kotlin/Java (Android) and exposed to JavaScript through a bridge or JSI. The Expo SDK provides 200+ prebuilt native modules. For custom native functionality not covered by Expo, use the Expo Modules API (managed + bare) or TurboModules (bare only).
+
+## Language Fundamentals
+
+Native module development requires understanding both JavaScript and native platform languages:
+
+| Platform | Language | Build System | Key Concepts |
+|----------|----------|-------------|--------------|
+| iOS | Swift or Objective-C | Xcode, CocoaPods | UIView, UIViewController, Delegates, Grand Central Dispatch |
+| Android | Kotlin or Java | Gradle, Android Studio | Activity, Fragment, Intent, Lifecycle, Context |
+
+The JavaScript-to-native communication layer determines how data flows:
+- <strong>Old architecture (Bridge):</strong> Async, JSON serialization, queued messages
+- <strong>New architecture (JSI):</strong> Synchronous, direct function calls, shared memory
+
+## Framework by Framework Reference
+
+### Expo Modules API (Recommended)
+
+Expo Modules API is the recommended approach for building custom native modules. It works in both Expo managed workflow and bare React Native.
+
+\`\`\`swift
+// iOS native module using Expo Modules API (Swift)
+// File: modules/CameraModule.swift
+
+import ExpoModulesCore
+
+// Define the module class extending the Expo Module base
+// ExpoModulesCore provides the module registration and JS bridging
+public class CameraModule: Module {
+  // Each module requires a name that matches the JS import
+  public func definition() -> ModuleDefinition {
+    // Name used to access from JavaScript: NativeModules.Camera
+    Name("Camera")
+
+    // Synchronous method: reads a property immediately
+    // Returns the current flash mode setting
+    Function("isFlashAvailable") {
+      return UIDevice.current.hasFlash
+    }
+
+    // Async method: calls native API and returns result via promise
+    // Promise-based methods can run long operations without blocking JS
+    AsyncFunction("takePicture") { (options: TakePictureOptions, promise: Promise) in
+      // Configure camera with options
+      // Execute native camera capture
+      // Resolve promise with image data or reject with error
+      promise.resolve(["uri": imagePath, "width": width, "height": height])
+    }
+
+    // Event emitter: send events from native to JavaScript
+    // Use for camera stream frames, sensor updates, etc.
+    Events("onFrameCaptured")
+  }
+}
+\`\`\`
+
+\`\`\`kotlin
+// Android native module using Expo Modules API (Kotlin)
+// File: modules/CameraModule.kt
+
+package expo.modules.camera
+
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
+
+// Define the module class for Android
+class CameraModule : Module() {
+  // Module definition configures the module's JS interface
+  override fun definition() = ModuleDefinition {
+    // Name matches the JS import: NativeModules.Camera
+    Name("Camera")
+
+    // Synchronous property read
+    Function("isFlashAvailable") {
+      return@Function packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)
+    }
+
+    // Async function with promise
+    AsyncFunction("takePicture") { options: TakePictureOptions ->
+      // Launch camera intent, capture image
+      // Return result map to JavaScript
+      return@AsyncFunction mapOf("uri" to imageUri, "width" to width, "height" to height)
+    }
+
+    // Register event emitter for ongoing camera events
+    Events("onFrameCaptured")
+  }
+}
+\`\`\`
+
+\`\`\`typescript
+// JavaScript side: access the native module
+// Expo Modules API auto-generates TypeScript types
+import { CameraModule } from './modules/CameraModule';
+
+// Directly call native methods with full type safety
+// TypeScript knows parameter types and return types
+async function capturePhoto() {
+  // Check if flash is available (synchronous call via JSI)
+  const flashAvailable = CameraModule.isFlashAvailable();
+
+  // Call native method with typed options object
+  // Returns a typed result based on the native implementation
+  const result = await CameraModule.takePicture({
+    quality: 0.8,         // Image quality from 0 to 1
+    format: 'jpeg',       // Output format: jpeg or png
+    flashMode: 'auto',    // Flash mode: on, off, auto
+  });
+
+  // result.uri is typed as string, result.width as number
+  return result.uri;
+}
+
+// Listen to native events
+// onFrameCaptured fires from native when a camera frame is available
+const subscription = CameraModule.addListener('onFrameCaptured', (frame) => {
+  console.log('Frame received:', frame.timestamp);
+});
+
+// Clean up listener when component unmounts
+subscription.remove();
+\`\`\`
+
+### TurboModules (New Architecture)
+
+TurboModules provide synchronous native calls via JSI without the bridge overhead.
+
+\`\`\`cpp
+// C++ TurboModule spec (shared between iOS and Android)
+// File: NativeCameraModule.h
+#include <NativeCameraModuleSpec.h>
+#include <react/renderer/core/EventEmitter.h>
+
+// TurboModules use a C++ spec that generates typed interfaces
+// for both iOS (Objective-C/Swift) and Android (Java/Kotlin)
+class NativeCameraModuleSpec : public TurboModule {
+  std::function<jsi::Value(jsi::Runtime &rt, bool hasFlash)> isFlashAvailable;
+  std::function<void(jsi::Runtime &rt, jsi::Value options, jsi::Function resolve, jsi::Function reject)> takePicture;
+};
+\`\`\`
+
+### Permission Handling
+
+Device APIs require explicit permissions from the user. The permission model differs between iOS and Android.
+
+\`\`\`typescript
+// iOS: permissions declared in Info.plist with usage descriptions
+// Android: permissions declared in AndroidManifest.xml, runtime (API 23+)
+
+import { Platform, PermissionsAndroid } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+
+// Expo's permission API abstracts platform differences
+async function requestCameraPermission() {
+  // Request camera permission using Expo API
+  // This handles both iOS (Info.plist prompt) and Android (runtime dialog)
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+
+  if (status !== 'granted') {
+    // Permission denied — show explanatory UI
+    Alert.alert('Permission required', 'Camera access is needed to take photos.');
+    return false;
+  }
+  return true;
+}
+
+// Android-only runtime permission example
+async function requestAndroidLocationPermission() {
+  try {
+    // Android requires runtime permission request for dangerous permissions
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: 'Location Permission',
+        message: 'This app needs access to your location for map features.',
+        buttonPositive: 'Grant',
+        buttonNegative: 'Deny',
+      }
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  } catch (err) {
+    console.warn('Permission request error:', err);
+    return false;
+  }
+}
+\`\`\`
+
+## Comparison Tables
+
+### Native Module Approaches
+
+| Approach | Architecture | Sync Calls | Setup Complexity | Expo Compatible | Type Safety |
+|----------|-------------|------------|-------------------|-----------------|-------------|
+| Expo Modules API | Bridge + JSI | Yes (some) | Low | Both managed + bare | Auto-generated |
+| TurboModules | JSI only | Yes | High (codegen setup) | Bare only | Codegen |
+| NativeModules | Bridge | No | Medium | Bare only | Manual types |
+| Community libs (expo-*) | Varies | Varies | None (install only) | Managed + bare | Varies |
+
+### Device API Libraries
+
+| API | Expo Library | Bare RN Library | iOS Config | Android Config |
+|-----|-------------|-----------------|------------|----------------|
+| Camera | expo-camera | react-native-vision-camera | NSCameraUsageDescription | CAMERA permission |
+| Location | expo-location | @react-native-community/geolocation | NSLocationWhenInUseUsageDescription | ACCESS_FINE_LOCATION |
+| Biometrics | expo-local-authentication | react-native-biometrics | Face ID / Touch ID config | BIOMETRIC permission |
+| Notifications | expo-notifications | @notifee/react-native | Push Notification capability | Firebase Cloud Messaging |
+| File System | expo-file-system | react-native-fs | iCloud entitlements (optional) | Storage permissions |
+| Sensors | expo-sensors | react-native-sensors | No config | No config |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Not cleaning up native event listeners** — Native event listeners (camera frames, sensor updates, location changes) hold references to JavaScript callbacks. Failing to remove them when a component unmounts causes memory leaks and crashes. Always remove listeners in the cleanup function of <code>useEffect</code>.
+
+2. **Calling native modules before the app is ready** — Native modules may not be initialized during the app's startup phase. Calling them in <code>AppRegistry.registerComponent</code> or before the first render completes can cause crashes. Use <code>useEffect</code> or <code>SplashScreen</code> to delay native calls.
+
+3. **Ignoring thread safety in native code** — Native module methods can be called from multiple threads. UI updates must be dispatched to the main thread. Data access from background threads requires locks or serial queues. Use <code>DispatchQueue.main.async</code> (iOS) or <code>runOnUiThread</code> (Android) for UI operations.
+
+4. **Not handling permission denial gracefully** — Users can deny permissions. The app must handle denial without crashing. Show a clear explanation of why the permission is needed and offer a way to re-request or navigate to settings.
+
+5. **Passing large data (images, files) through the bridge** — Passing image bitmaps or large files through the bridge serializes them to JSON/base64, which blocks the JS thread. Use file URIs or shared memory (JSI) instead. On iOS, use <code>ph://</code> URIs; on Android, use <code>content://</code> URIs.
+
+6. **Not checking if a native module is available** — Not all devices have all hardware (no camera on iPads without camera, no compass on some devices). Check <code>NativeModules.ModuleName</code> for <code>undefined</code> before calling it. Use <code>expo-device</code> or platform APIs to check hardware availability.
+
+7. **Forgetting to run pod install after adding native dependencies** — After adding a library with native iOS code, you must run <code>cd ios && pod install</code>. The Metro bundler does not warn about missing native module linking — the app compiles but crashes at runtime with <code>Native module cannot be null</code>.
+
+8. **Using TurboModules without the new architecture renderer** — TurboModules require the new architecture (Fabric renderer + JSI runtime). If the app is still using the old bridge, TurboModules are not available. Check <code>global.__turboModuleProxy</code> to verify TurboModule support.
+
+9. **Not handling app background state** — Native modules should stop heavy operations (camera, GPS, animations) when the app enters the background. Use iOS <code>applicationDidEnterBackground</code> and Android <code>onPause</code> lifecycle callbacks to pause native operations.
+
+10. **Storing sensitive data in native module state** — Native module instances persist across the app's lifecycle. Sensitive data (API keys, tokens) stored in native module properties can be read from memory dumps. Use the iOS Keychain or Android EncryptedSharedPreferences for sensitive values.
+
+11. **Not configuring ProGuard rules for Android** — Release builds with ProGuard enabled may strip native module classes. Add ProGuard keep rules for native module classes and React Native internals in <code>proguard-rules.pro</code>.
+
+12. **Assuming synchronous return from Expo Functions that are async** — Expo Modules API <code>Function</code> is synchronous for simple returns but <code>AsyncFunction</code> returns a Promise. Mixing them up causes <code>undefined</code> values. Check the module definition to know which API to use from JavaScript.
+
+## Complete API Reference
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>NativeModules</code> | <code>NativeModules.ModuleName.method()</code> | Access old-architecture native modules (async) |
+| <code>TurboModuleRegistry</code> | <code>TurboModuleRegistry.getEnforcing(name)</code> | Access new-architecture TurboModules (sync) |
+| <code>DeviceEventEmitter</code> | <code>DeviceEventEmitter.addListener(event, handler)</code> | Listen to native events from any module |
+| <code>PermissionsAndroid</code> | <code>PermissionsAndroid.request(permission, rationale?)</code> | Request Android runtime permissions |
+| <code>Platform</code> | <code>Platform.OS</code>, <code>Platform.Version</code> | Detect OS type and version |
+| <code>expo-camera</code> | <code>CameraView</code> component + <code>takePictureAsync()</code> | Camera access with preview |
+| <code>expo-location</code> | <code>requestForegroundPermissionsAsync()</code>, <code>getCurrentPositionAsync()</code> | Device location access |
+| <code>expo-notifications</code> | <code>requestPermissionsAsync()</code>, <code>scheduleNotificationAsync()</code> | Push and local notifications |
+| <code>expo-biometrics</code> | <code>authenticateAsync()</code> | Biometric authentication (Face ID, Touch ID, fingerprint) |
+| <code>expo-file-system</code> | <code>readAsStringAsync(uri)</code>, <code>writeAsStringAsync(uri, content)</code> | File system access |
+
+## Practice Questions
+
+1. **Q:** What is the difference between Expo Modules API and TurboModules? **A:** Expo Modules API works in both Expo managed and bare workflows, provides auto-generated TypeScript types, and simplifies native module development with a declarative API. TurboModules are part of the new React Native architecture, require the Fabric renderer, use JSI for synchronous calls, and work only in bare workflow.
+
+2. **Q:** How do permissions differ between iOS and Android in React Native? **A:** iOS requires permission descriptions in <code>Info.plist</code> and prompts the user at first use. Android (API 23+) requires both manifest declarations and runtime permission requests via <code>PermissionsAndroid.request()</code>. iOS permissions can be toggled in Settings; Android permissions can be revoked at any time.
+
+3. **Q:** What is the best practice for passing large data between native and JavaScript? **A:** Avoid serializing large data (images, files) through the bridge. Use file URIs (<code>file://</code>, <code>content://</code>, <code>ph://</code>) that the native side can read directly from the file system. For streamed data, use JSI shared memory or incremental event-based passing.
+
+4. **Q:** How do you handle native module method calls on the correct thread? **A:** In native module implementations, dispatch UI-related calls to the main thread. iOS: use <code>DispatchQueue.main.async</code> or <code>dispatch_async(dispatch_get_main_queue(), ^{})</code>. Android: use <code>runOnUiThread()</code> on the Activity reference. The Expo Modules API handles thread dispatching automatically for you.
+
+5. **Q:** What causes the <code>Native module cannot be null</code> error? **A:** This error occurs when JavaScript tries to import a native module that is not linked in the native build. Common causes: forgetting to run <code>pod install</code> (iOS), missing Gradle dependency (Android), ProGuard stripping the module class, or the module not supporting the current architecture (new vs old).
+
+6. **Q:** How do you check if a device has specific hardware available? **A:** Use <code>NativeModules.ModuleName !== null</code> for module availability. For hardware features (camera, compass, biometrics), use platform-specific APIs via native modules. Expo provides <code>expo-device</code> with device capability checks like <code>Device.isDevice</code> and platform utilities.
+
+7. **Q:** What is the benefit of Expo Modules API over the old NativeModules? **A:** Expo Modules API provides auto-generated TypeScript types, works in both managed and bare workflows, handles thread dispatching automatically, provides a clean Swift/Kotlin API with proper lifecycle management, and integrates with Expo's build system. NativeModules requires manual linking, manual TypeScript types, and only works in bare workflow.
+
+8. **Q:** How do you handle app background state in native modules? **A:** Register for lifecycle callbacks in the native module. On iOS: implement <code>applicationDidEnterBackground</code> observer. On Android: override <code>onPause</code> in the Activity or use <code>Application.ActivityLifecycleCallbacks</code>. Expo Modules API provides <code>OnAppBecomesActive</code> and <code>OnAppEntersBackground</code> lifecycle event handlers.
+`,
+            tags: ["React Native", "Native Modules", "Device APIs", "Mobile"],
+          },
+          {
+            id: "cheat-rn-performance",
+            title: "Performance Optimization & Debugging",
+            shortDesc: "Profiling, reducing re-renders, optimizing lists, image optimization, and debugging tools for React Native.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "React Native performance bottlenecks typically involve the JS thread (React renders), the bridge (serialization), or the native thread (layout, images).",
+              "FlatList virtualization is essential for long lists — use getItemLayout for fixed-height items, windowSize to control render window, and removeClippedSubviews for off-screen removal.",
+              "React.memo, useMemo, and useCallback prevent unnecessary re-renders but only help if child components are expensive to render — measure before optimizing.",
+              "The React DevTools profiler shows component render timings; Flipper provides native-side profiling including layout, network, and SQLite queries.",
+              "Image optimization (resize at source, cache aggressively, use blurhash placeholders) has the biggest visual impact on perceived performance.",
+            ],
+            content: `## Quick Reference
+
+React Native performance optimization focuses on three threads: JavaScript thread (React renders, business logic), native main thread (UI updates, animations), and bridge/JSI (data transfer). The most impactful optimizations are: reduce JS thread work (useMemo, list virtualization, InteractionManager), reduce bridge traffic (StyleSheet IDs, native driver for animations), and optimize native work (image caching, hardware acceleration).
+
+## Language Fundamentals
+
+Performance optimization in RN uses the same React tools plus mobile-specific profiling:
+
+| Optimization | React (Web) | React Native |
+|-------------|-------------|--------------|
+| Profiling | React DevTools, Chrome Profiler | React DevTools, Flipper, Hermes Profiler |
+| List rendering | windowing (react-window) | FlatList (built-in) |
+| Image optimization | srcset, lazy loading | resizeMode, cachify, expo-image |
+| Animations | CSS animations, Framer Motion | Animated API (native driver), Reanimated 3 |
+| Bundle size | Code splitting, tree shaking | Metro code splitting, Hermes bytecode |
+
+## Framework by Framework Reference
+
+### FlatList Optimization
+
+FlatList is the most critical component to optimize in any RN app. Poorly configured FlatLists cause frame drops on scroll.
+
+\`\`\`typescript
+import { FlatList, Text, View } from 'react-native';
+
+// Optimized FlatList with all performance props configured
+function ProductList({ products }: { products: Product[] }) {
+  return (
+    <FlatList
+      data={products}
+      // renderItem: memoize to prevent re-renders on parent re-render
+      renderItem={({ item }) => <ProductCard product={item} />}
+      // keyExtractor: unique key for each item (required for identity tracking)
+      keyExtractor={(item) => item.id}
+      // getItemLayout: skip measurement for fixed-height items (huge perf gain)
+      getItemLayout={(_, index) => ({
+        length: ITEM_HEIGHT,           // Fixed item height in dp
+        offset: ITEM_HEIGHT * index,   // Precomputed y-offset for each item
+        index,
+      })}
+      // windowSize: number of screens worth of items to render (default 21)
+      windowSize={5}                    // 5 screens worth: 2.5 above + 2.5 below viewport
+      // maxToRenderPerBatch: items rendered per batch during scroll
+      maxToRenderPerBatch={10}          // Render 10 items per batch
+      // initialNumToRender: items rendered on first mount
+      initialNumToRender={10}           // Show 10 items immediately
+      // removeClippedSubviews: detach off-screen views from native hierarchy
+      removeClippedSubviews={true}      // Frees memory for off-screen items
+      // onEndReached: infinite scroll pagination
+      onEndReached={() => loadMoreProducts()}
+      onEndReachedThreshold={0.5}       // Trigger when 50% from bottom
+      // ListEmptyComponent: shown when data array is empty
+      ListEmptyComponent={<Text>No products found</Text>}
+      // Maintain scroll position on list updates
+      maintainVisibleContentPosition={{
+        minIndexForVisible: 0,          // Maintain position for updates before index 0
+      }}
+    />
+  );
+}
+
+// Memoize the item component to prevent re-renders
+// FlatList items re-render when their data changes or when parent re-renders
+// React.memo prevents re-render if props haven't changed (shallow comparison)
+const ProductCard = React.memo(function ProductCard({ product }: { product: Product }) {
+  return (
+    <View style={styles.card}>
+      <Text style={styles.name}>{product.name}</Text>
+      <Text style={styles.price}>{"\$"}{product.price}</Text>
+    </View>
+  );
+});
+\`\`\`
+
+### Image Optimization
+
+Images are the largest performance bottleneck in most RN apps. Resizing, caching, and format optimization have massive impact.
+
+\`\`\`typescript
+// Use expo-image (or react-native-fast-image) for optimized image loading
+// These libraries provide disk caching, resize-on-download, and fade-in
+import Image from 'expo-image';
+
+function OptimizedImage({ uri, priority }: { uri: string; priority: 'low' | 'high' }) {
+  return (
+    <Image
+      source={{ uri }}
+      // Resize image at source to display dimensions (saves memory)
+      // A 300x200 image displayed at 150x100 should be resized server-side
+      style={{ width: 150, height: 100 }}
+      // contentFit: how the image fits within its container
+      contentFit="cover"                // cover: crop to fill, contain: fit entire image
+      // transition: fade-in animation for smooth loading
+      transition={300}                  // 300ms fade-in duration
+      // priority: control loading order for above-the-fold images
+      priority={priority === 'high' ? 'high' : 'low'}
+      // placeholder: show blurhash while image loads (visual perceived performance)
+      placeholder={{ blurhash: 'LFE$Rj00ADxs~W%M9Z%M9Z%M9Z%M' }}
+      // cachePolicy: control caching behavior
+      cachePolicy="memory-disk"         // Cache in memory and disk
+      // onLoad: callback when image finishes loading
+      onLoad={() => console.log('Image loaded')}
+      // recyclingKey: prevent flicker when list item is recycled
+      recyclingKey={uri}
+    />
+  );
+}
+\`\`\`
+
+### JS Thread Optimization
+
+The JS thread handles all React rendering. Blocking it causes frame drops.
+
+\`\`\`typescript
+import { InteractionManager, LayoutAnimation } from 'react-native';
+
+// Heavy computation should happen after animations complete
+// InteractionManager defers work until all animations and transitions finish
+function useExpensiveData(data: LargeDataSet) {
+  const [processed, setProcessed] = useState(null);
+
+  useEffect(() => {
+    // Run after navigation transitions and animations finish
+    // This prevents frame drops during screen transitions
+    InteractionManager.runAfterInteractions(() => {
+      // Expensive computation that would otherwise block the JS thread
+      const result = performExpensiveComputation(data);
+      setProcessed(result);
+    });
+  }, [data]);
+
+  return processed;
+}
+
+// Use native driver for animations to avoid JS thread involvement
+// Native driver runs animations on the native UI thread (60fps guaranteed)
+function AnimatedBox() {
+  // Create animated value
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // useNativeDriver: true runs the animation on the native thread
+    // This means the animation continues even if the JS thread is busy
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,             // REQUIRED for 60fps animations
+    }).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim }}>
+      <Text>This animates at 60fps even with JS thread blocking</Text>
+    </Animated.View>
+  );
+}
+
+// React.memo, useMemo, and useCallback prevent unnecessary re-renders
+// Only add these when profiling shows they are needed
+function ExpensiveComponent({ data, onPress }: { data: BigObject; onPress: () => void }) {
+  // useMemo: memoize expensive computations
+  const processed = useMemo(() => expensiveTransform(data), [data]);
+
+  // useCallback: memoize callbacks to prevent child re-renders
+  const handlePress = useCallback(() => {
+    onPress(processed.id);
+  }, [onPress, processed.id]);
+
+  return <ChildComponent data={processed} onPress={handlePress} />;
+}
+\`\`\`
+
+### Debugging Tools Comparison
+
+\`\`\`typescript
+// React DevTools: component tree, props, state, profiler
+// Install: npm install -D @react-native/dev-middleware
+// Features: component hierarchy, useState/useReducer inspection, render timeline
+
+// Flipper: native-level debugging (network, layout, SQLite, crashes)
+// Download: https://fbflipper.com
+// Features: network request inspector, layout inspector, database viewer, crash reporter
+
+// Hermes Profiler: JS engine profiling
+// Usage: npx react-native start --ram-bundle --profile
+// Features: CPU profiling, memory heap snapshots, flame graphs
+
+// Custom performance monitoring with Performance API
+import { PerformanceObserver, performance } from 'perf_hooks';
+
+// Mark start of operation
+performance.mark('loadFeedStart');
+
+// Load data from API
+await loadFeedData();
+
+// Mark end of operation and measure duration
+performance.mark('loadFeedEnd');
+performance.measure('Feed Load Time', 'loadFeedStart', 'loadFeedEnd');
+
+// Get measurement results
+const measures = performance.getEntriesByType('measure');
+console.log('Feed loaded in:', measures[0].duration, 'ms');
+\`\`\`
+
+## Comparison Tables
+
+### Optimization Strategy Impact
+
+| Optimization | Effort | Impact | When to Use |
+|-------------|--------|--------|-------------|
+| FlatList virtualization | Low | High | Lists with > 20 items |
+| Image caching + resize | Medium | High | Any app with images |
+| React.memo + useMemo | Low | Medium | Frequent re-renders detected |
+| Native driver animations | Low | High | All Animated API animations |
+| Hermes bytecode | Low | High | All production builds |
+| JS thread profiling | Medium | Medium | Frame drops during navigation |
+| Bundle splitting | High | Medium | Large apps (> 50MB) |
+| Reanimated 3 | Medium | High | Complex gesture animations |
+
+### Debugging Tools
+
+| Tool | What It Inspects | Platform | Setup Complexity |
+|------|-----------------|----------|-----------------|
+| React DevTools | Component tree, props, state, render timeline | JS | Low (npm install) |
+| Flipper | Network, layout, SQLite, crashes, logs | iOS + Android | Medium (desktop app) |
+| Hermes CLI Profiler | CPU flame graphs, heap, bytecode | iOS + Android | Low (built-in) |
+| Chrome DevTools | Console, network, sources (JSC only) | iOS + Android | Medium (proxy config) |
+| React Native DevTools | LogBox, elements, performance overlay | iOS + Android | Built-in |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Premature optimization** — Adding React.memo, useMemo, and useCallback everywhere without profiling adds complexity without benefit. Use the React DevTools profiler to identify actual bottlenecks, then optimize only the components that re-render unnecessarily.
+
+2. **Creating new objects in render that break memoization** — Inline functions and objects create new references each render, defeating React.memo. Use useCallback for functions and useMemo for objects passed as props to memoized children.
+
+3. **Not using the native driver for animations** — Animated API defaults to <code>useNativeDriver: false</code>. Without the native driver, each animation frame triggers a JS thread update, causing frame drops during complex animations. Always set <code>useNativeDriver: true</code> when animating non-layout properties (opacity, transform).
+
+4. **Rendering all items in a ScrollView** — ScrollView renders all children at once. For lists with more than ~20 items, switch to FlatList. ScrollView with many items causes slow initial render and high memory usage.
+
+5. **Not providing getItemLayout for FlatList** — Without <code>getItemLayout</code>, FlatList measures each item on layout to compute scroll offsets. For fixed-height items, providing this prop skips measurement entirely, making scroll-to-index instant.
+
+6. **Loading full-resolution images** — Loading a 4000x3000 camera photo into a 150x100 thumbnail consumes ~48MB of uncompressed memory. Resize images server-side or use <code>expo-image</code> with <code>contentFit</code> to avoid loading full resolution into memory.
+
+7. **Blocking the JS thread with synchronous operations** — Heavy synchronous work (image processing, JSON parsing of large arrays) blocks React rendering. Use <code>InteractionManager</code>, <code>requestAnimationFrame</code>, or web workers (Hermes Workers) to defer or parallelize expensive work.
+
+8. **Ignoring LogBox warnings** — React Native's LogBox warns about performance issues (slow renders, large images, missing keys). Each warning represents a real performance or correctness problem. Address warnings before they become production issues.
+
+9. **Not caching API responses** — Without caching, every screen mount triggers a network request, causing loading spinners on every navigation. Implement a caching layer (React Query, SWR, or MMKV-based cache) with stale-while-revalidate for instant screen loads.
+
+10. **Using inline styles in list item components** — Inline styles inside <code>renderItem</code> create new style objects on every render, breaking <code>React.memo</code> on the item component. Extract styles to <code>StyleSheet.create</code> outside the component.
+
+11. **Not profiling on a real device** — iOS Simulator and Android Emulator run on a desktop GPU and CPU, masking performance issues. Always profile on a physical device (preferably a low-end device) to measure real-world performance.
+
+12. **Overusing Reanimated without understanding its threading model** — Reanimated 3 runs animations and shared values on the UI thread. Worklets run on the UI thread and cannot access JS thread variables directly. Use <code>runOnJS</code> to communicate back to the JS thread when needed.
+
+## Complete API Reference
+
+| API | Signature | Description |
+|-----|-----------|-------------|
+| <code>React.memo</code> | <code>React.memo(Component, areEqual?)</code> | Memoize component to skip re-renders on unchanged props |
+| <code>useMemo</code> | <code>useMemo(fn, deps)</code> | Memoize expensive computed values |
+| <code>useCallback</code> | <code>useCallback(fn, deps)</code> | Memoize callback functions |
+| <code>FlatList</code> | <code>&lt;FlatList data={...} renderItem={...} /&gt;</code> | Virtualized list with configurable window size |
+| <code>InteractionManager</code> | <code>InteractionManager.runAfterInteractions(fn)</code> | Defer work after animations |
+| <code>Animated.timing</code> | <code>Animated.timing(value, { toValue, duration, useNativeDriver })</code> | Create time-based animation |
+| <code>useWindowDimensions</code> | <code>useWindowDimensions()</code> | Reactive screen dimensions hook |
+| <code>PerformanceObserver</code> | <code>new PerformanceObserver(callback)</code> | Observe performance entries |
+| <code>expo-image</code> | <code>&lt;Image source={...} contentFit="cover" /&gt;</code> | Optimized image component with caching |
+| <code>StyleSheet.create</code> | <code>StyleSheet.create(object)</code> | Create frozen style objects with numeric IDs |
+
+## Practice Questions
+
+1. **Q:** How does the native driver improve animation performance? **A:** The native driver runs animations on the native UI thread instead of the JS thread. Each animation frame is calculated natively, so the animation continues at 60fps even if the JS thread is blocked by renders or data processing. This is essential for smooth animations in complex apps.
+
+2. **Q:** What is the role of <code>getItemLayout</code> in FlatList performance? **A:** <code>getItemLayout</code> tells FlatList the exact position and size of every item without measuring them. This eliminates the need for onLayout callbacks on each item, making scroll-to-index operations instant and reducing the initial render cost. Only works for fixed-height items.
+
+3. **Q:** How does Hermes bytecode improve startup performance? **A:** Hermes precompiles JavaScript source into bytecode during the build phase. At runtime, the app loads bytecode directly without parsing or JIT compilation, reducing startup time by 30-50% and using less memory since bytecode is smaller and can be memory-mapped.
+
+4. **Q:** What is the difference between <code>useNativeDriver: true</code> and <code>useNativeDriver: false</code>? **A:** With <code>true</code>, the animation runs entirely on the native thread — JS is not involved per frame. With <code>false</code>, every animation frame updates the JS value and sends it back over the bridge, causing JS thread involvement and potential frame drops. Layout properties (height, width, position) require <code>false</code>.
+
+5. **Q:** When should you use <code>InteractionManager.runAfterInteractions()</code>? **A:** Use it to defer non-urgent work (API data processing, image metadata extraction, analytics logging) until after navigation transitions and animations complete. This prevents frame drops during the transition by keeping the JS thread free for animation work.
+
+6. **Q:** What causes unnecessary re-renders in React Native and how do you diagnose them? **A:** Common causes: inline objects/functions as props (breaks React.memo), parent re-renders propagating, context updates, and state updates in unrelated components. Diagnose using React DevTools profiler (record interactions and inspect re-render timings) and the <code>why-did-you-render</code> library.
+
+7. **Q:** How does <code>windowSize</code> affect FlatList performance? **A:** <code>windowSize</code> controls how many screens worth of items are rendered above and below the viewport. Default is 21 (10.5 above, 10.5 below). Reducing it to 5-7 renders fewer off-screen items, saving memory and reducing initial render time, but may show blank areas during fast scrolling.
+
+8. **Q:** What is the impact of image size on React Native memory? **A:** A 4000x3000 pixel image (12MP camera photo) consumes 48MB when decoded to RGBA (4000 * 3000 * 4 bytes). Displaying several such images in a list can cause the app to exceed the device memory limit and crash. Always resize images to display dimensions at the source or use <code>expo-image</code> with appropriate <code>contentFit</code>.
+`,
+            tags: ["React Native", "Performance", "Debugging", "Mobile"],
+          },
+          {
+            id: "cheat-rn-build-pipeline",
+            title: "Build, CI-CD & Deployment",
+            shortDesc: "Building React Native apps for production, CI/CD pipelines, code signing, and app store deployment.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "EAS Build (Expo Application Services) handles cloud-based builds for both Expo managed and bare apps — no local Xcode/Android Studio required.",
+              "iOS code signing requires an Apple Developer account, certificates, provisioning profiles, and push notification keys — all managed via EAS or manually in Xcode.",
+              "Android signing uses a keystore (.jks or .keystore) with a release key — Google Play manages app signing with Play App Signing by default.",
+              "EAS Update provides OTA (over-the-air) JavaScript updates for Expo apps without going through app store review — critical for fixing bugs quickly.",
+              "CI/CD pipelines (GitHub Actions, EAS Build) automate building, signing, and submitting to app stores with version bumping and changelog generation.",
+            ],
+            content: `## Quick Reference
+
+Building and deploying React Native apps involves platform-specific tooling (Xcode for iOS, Android Studio for Android), code signing (certificates and provisioning profiles), and distribution (App Store Connect, Google Play Console). EAS (Expo Application Services) simplifies the entire pipeline by providing cloud builds, automatic code signing management, OTA updates, and store submission.
+
+## Language Fundamentals
+
+Mobile app deployment differs fundamentally from web deployment:
+
+| Aspect | Web Deployment | Mobile Deployment |
+|--------|---------------|-------------------|
+| Review process | None (instant) | App Store Review (1-48 hours), Google Play (hours-3 days) |
+| Updates | Instant on reload | App store update or OTA (JS-only) |
+| Versioning | Single version (git) | Semantic version + build number per platform |
+| Code signing | HTTPS certificate | Apple certificates + provisioning profiles |
+| Distribution | URL | App Store, Google Play, MDM, TestFlight |
+| Testing | Staging URL | TestFlight, Internal Track, emulators |
+
+## Framework by Framework Reference
+
+### EAS Build (Recommended)
+
+EAS Build compiles your app in the cloud, producing platform-specific binaries (.ipa for iOS, .aab/.apk for Android).
+
+\`\`\`json
+// eas.json — EAS Build configuration file
+// Defines build profiles for different environments
+{
+  "cli": {
+    "version": ">= 3.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,     // Build Expo Go-like client for dev
+      "distribution": "internal"      // Not submitted to app stores
+    },
+    "preview": {
+      "distribution": "internal",     // Internal testing via EAS
+      "android": {
+        "buildType": "apk"            // Generate APK (not AAB) for direct install
+      },
+      "ios": {
+        "simulator": true             // Build for iOS Simulator (no code signing)
+      }
+    },
+    "production": {
+      "autoIncrement": true,          // Auto-increment build number per build
+      "channel": "production",        // OTA update channel name
+      "ios": {
+        "enterpriseProvisioning": false,  // Use App Store provisioning
+        "simulator": false            // Real device build with code signing
+      },
+      "android": {
+        "buildType": "app-bundle"     // Android App Bundle (AAB) for Play Store
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "your@apple.com",
+        "ascAppId": "1234567890",     // App Store Connect app ID
+        "appleTeamId": "TEAM123456"   // Apple Developer team ID
+      },
+      "android": {
+        "track": "production",        // Play Store track: production, beta, alpha
+        "releaseStatus": "completed"  // Release directly, not in draft
+      }
+    }
+  }
+}
+\`\`\`
+
+### Manual iOS Build (React Native CLI)
+
+Manual iOS builds require Xcode, an Apple Developer account, and manual certificate management.
+
+\`\`\`bash
+# 1. Install CocoaPods dependencies
+cd ios && pod install && cd ..
+
+# 2. Build for iOS simulator (no code signing needed)
+npx react-native run-ios
+
+# 3. Create a production build archive
+# Open the .xcworkspace in Xcode
+# Select Product > Archive
+# This produces an .xcarchive file
+
+# 4. Export the archive for App Store submission
+# Xcode Organizer: Distribute App > App Store Connect > Upload
+
+# 5. Alternative: build via xcodebuild command line
+xcodebuild \
+  -workspace ios/MyApp.xcworkspace \
+  -scheme MyApp \
+  -configuration Release \
+  -archivePath MyApp.xcarchive \
+  archive
+\`\`\`
+
+### Manual Android Build (React Native CLI)
+
+Android builds use Gradle and require a keystore for signing.
+
+\`\`\`bash
+# 1. Generate upload keystore (if not exists)
+keytool -genkey -v \
+  -keystore my-release-key.jks \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -alias my-key-alias
+
+# 2. Configure signing in android/app/build.gradle
+# Add signing config for release build type
+
+# 3. Build Android App Bundle (AAB) for Play Store
+cd android && ./gradlew bundleRelease
+
+# Output: android/app/build/outputs/bundle/release/app-release.aab
+
+# 4. Build APK for direct distribution
+cd android && ./gradlew assembleRelease
+
+# Output: android/app/build/outputs/apk/release/app-release.apk
+\`\`\`
+
+### EAS Update (OTA JavaScript Updates)
+
+EAS Update delivers JavaScript and asset updates without app store review.
+
+\`\`\`typescript
+// eas-update configuration in app.json
+{
+  "expo": {
+    "runtimeVersion": {
+      "policy": "appVersion"           // Update only within same app version
+    },
+    "updates": {
+      "url": "https://u.expo.dev/YOUR_PROJECT_ID",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",  // Check for update on app start
+      "fallbackToCacheTimeout": 0       // Show cached version immediately
+    }
+  }
+}
+\`\`\`
+
+\`\`\`bash
+# Publish an OTA update to the production channel
+eas update --branch production --message "Fix checkout crash on empty cart"
+
+# Rollback to a previous update
+eas update:rollback --branch production --channel-id PREVIOUS_UPDATE_ID
+
+# View update history
+eas update:list --branch production
+\`\`\`
+
+### CI/CD Pipeline (GitHub Actions)
+
+Automate build and deployment in CI/CD.
+
+\`\`\`yaml
+# .github/workflows/deploy.yml
+# Automatically build and submit to app stores on tag push
+name: Deploy to App Stores
+
+on:
+  push:
+    tags:
+      - 'v*'                         # Triggered by tags like v1.2.3
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Check out the repository code
+      - uses: actions/checkout@v4
+
+      # Set up Node.js for the Expo/EAS CLI
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Install dependencies
+      - run: npm ci
+
+      # Install EAS CLI for build commands
+      - run: npm install -g eas-cli
+
+      # Log in to Expo account (uses stored credentials)
+      - run: eas login --non-interactive
+        env:
+          EXPO_TOKEN: \${{ secrets.EXPO_TOKEN }}    # Expo access token
+
+      # Build for both platforms in the cloud
+      - run: eas build --platform all --profile production --non-interactive
+
+      # Submit to both app stores
+      - run: eas submit --platform all --profile production --non-interactive
+        env:
+          APPLE_APP_SPECIFIC_PASSWORD: \${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+\`\`\`
+
+## Comparison Tables
+
+### Build Approaches
+
+| Approach | Setup | Cost | Time | Custom Native Code | Best For |
+|----------|-------|------|------|-------------------|----------|
+| EAS Build | Low (install CLI) | Free tier + paid tiers | ~15-30 min cloud build | Yes (config plugins) | Most Expo projects |
+| Local Xcode | High (mac + Xcode) | Mac hardware cost | ~5-15 min local | Full control | Bare RN, complex native config |
+| Local Android Studio | Medium (any OS) | Free | ~5-15 min local | Full control | Bare RN, custom Gradle config |
+| GitHub Actions + EAS | Medium | Actions minutes | ~20-40 min | Yes | Teams wanting CI/CD |
+
+### Deployment Targets
+
+| Target | Review Required | Distribution Method | Update Speed | Access Control |
+|--------|----------------|-------------------|-------------|----------------|
+| App Store | Yes (1-48h) | App Store app | Slow (review) | Public or TestFlight |
+| Google Play | Yes (hours-3d) | Play Store app | Slow (review) | Public or Internal/Closed tracks |
+| TestFlight | No (beta only) | TestFlight app | Fast (upload) | Invited testers (up to 10K) |
+| EAS Update | No (JS only) | OTA patch | Instant | Branch-based |
+| MDM/Enterprise | No | In-house distribution | Fast | Internal employees |
+| Ad Hoc | No (limited) | Provisioning profile | Fast | Up to 100 devices |
+
+## Common Pitfalls & Anti-patterns
+
+1. **Not incrementing the build number before submission** — App stores reject builds with the same version + build number as a previously submitted build. Use EAS <code>autoIncrement: true</code> or manually bump <code>versionCode</code> (Android) and <code>CFBundleVersion</code> (iOS) before each submission.
+
+2. **Using development certificates for production** — Development certificates and provisioning profiles expire after 7 days (free account) or 1 year (paid account). Production builds require distribution certificates and App Store provisioning profiles. EAS manages this automatically.
+
+3. **Not testing OTA updates before deployment** — EAS Update delivers JavaScript bundles, but native code changes (new libraries, native module updates) require a full app store build. Publishing an OTA update that depends on a native module not present in the installed binary causes crashes.
+
+4. **Hardcoding API keys and secrets in the bundle** — Secrets included in the JavaScript bundle are extractable from the app binary. Use environment variables in EAS Build (<code>eas build --profile production</code> with secrets in <code>eas.json</code>'s <code>env</code> section) or runtime configuration from a secure backend.
+
+5. **Not configuring ProGuard / R8 for Android release builds** — Without ProGuard/R8, the Android APK/AAB includes unused Java/Kotlin classes, increasing size by 2-5MB. Enable minification in <code>android/app/build.gradle</code> with <code>minifyEnabled true</code> and add keep rules for React Native classes.
+
+6. **Forgetting to update the iOS deployment target** — Xcode defaults to the latest iOS SDK. If your app targets devices running older iOS versions, set the deployment target in Xcode or <code>app.json</code>'s <code>expo.ios.deploymentTarget</code> to match your minimum supported version.
+
+7. **Submitting an Android App Bundle (AAB) without testing** — AABs are assembled by Google Play and cannot be installed directly on devices. Always test the AAB using <code>bundletool</code> before submission. Run <code>java -jar bundletool.jar build-apks --bundle=app-release.aab --output=app.apks</code> to generate test APKs.
+
+8. **Not handling app store review rejection proactively** — App store rejections are common (metadata, privacy, design guidelines). Prepare review notes explaining login credentials, test accounts, and any unusual app behaviors. Submit to TestFlight or Internal Track for initial review feedback before production submission.
+
+9. **Mixing up iOS distribution methods** — App Store distribution uses App Store provisioning profiles. Enterprise distribution uses In-House provisioning profiles. Ad Hoc distribution uses device-registered provisioning profiles. Using the wrong type causes installation failures. EAS manages selection automatically.
+
+10. **Not backing up the Android keystore** — Losing the keystore file or its password makes it impossible to sign updates for an existing Android app. You must publish as a new app with a different package name. Store the keystore securely and back it up. Google Play App Signing mitigates this by using a separate upload key.
+
+11. **Building for iOS without a Mac or EAS** — iOS builds require Xcode, which only runs on macOS. Without a Mac, use EAS Build (cloud-based) or a CI service with macOS runners (GitHub Actions, CircleCI). Local Windows/Linux cannot produce iOS binaries.
+
+12. **Not using .gitignore for build artifacts and secrets** — Build outputs, keystore files, <code>.env</code> files, and certificates should be in <code>.gitignore</code>. Committing these exposes secrets and bloats the repository. Use EAS Secrets or CI/CD environment variables for sensitive values.
+
+## Complete API Reference
+
+| API / Tool | Command / Config | Description |
+|------------|------------------|-------------|
+| <code>eas build</code> | <code>eas build --platform ios --profile production</code> | Build iOS binary in the cloud |
+| <code>eas submit</code> | <code>eas submit --platform android --profile production</code> | Submit built binary to app store |
+| <code>eas update</code> | <code>eas update --branch production --message "Fix"</code> | Publish OTA JS update |
+| <code>eas.json</code> | Build profiles (development, preview, production) | EAS configuration for builds and submission |
+| <code>app.json</code> | <code>expo.version</code>, <code>expo.ios.buildNumber</code>, <code>expo.android.versionCode</code> | App version and build number configuration |
+| <code>eas secret:create</code> | <code>eas secret:create --name API_KEY --value "..."</code> | Store environment secrets for EAS Build |
+| <code>eas channel:list</code> | <code>eas channel:list</code> | List OTA update channels |
+| <code>gradlew bundleRelease</code> | <code>cd android && ./gradlew bundleRelease</code> | Build Android App Bundle locally |
+| <code>xcodebuild archive</code> | <code>xcodebuild -workspace ... -scheme ... archive</code> | Build iOS archive locally |
+| <code>keytool</code> | <code>keytool -genkey -keystore my-key.jks -alias my-alias</code> | Generate Android signing keystore |
+
+## Practice Questions
+
+1. **Q:** What is the difference between EAS Build and local builds? **A:** EAS Build compiles the app on Expo's cloud infrastructure, requiring no local Xcode or Android Studio setup. It handles code signing, version management, and produces platform-specific binaries. Local builds require macOS (for iOS), Xcode, Android Studio, and manual certificate management but offer full control over the build process.
+
+2. **Q:** How does EAS Update deliver updates without app store review? **A:** EAS Update delivers JavaScript bundles and assets (not native code) to running apps. The app checks for updates on launch (or in the background) and downloads new JS bundles. Since only JS changes (no native code), these updates bypass app store review. Native code changes still require a full app store submission.
+
+3. **Q:** What is the purpose of code signing for mobile apps? **A:** Code signing ensures the app binary has not been tampered with and identifies the developer. iOS uses Apple-issued certificates and provisioning profiles to sign apps and restrict installation. Android uses a keystore to sign APK/AAB files, ensuring updates come from the same developer. Without signing, devices refuse to install the app.
+
+4. **Q:** How do you handle versioning for React Native apps? **A:** Use semantic versioning (<code>major.minor.patch</code>) in <code>app.json</code>'s <code>expo.version</code>. Each platform requires a build number: iOS uses <code>expo.ios.buildNumber</code> (incrementing string), Android uses <code>expo.android.versionCode</code> (incrementing integer). EAS can auto-increment build numbers with <code>autoIncrement: true</code>.
+
+5. **Q:** What is the difference between Android APK and AAB formats? **A:** APK (Android Package Kit) is the legacy format that can be installed directly on devices. AAB (Android App Bundle) is the modern format required by Google Play, which generates optimized APKs for each device configuration (CPU architecture, screen density, language) dynamically at install time. AAB reduces app size by 20-40%.
+
+6. **Q:** How do you handle secrets and API keys in EAS Build? **A:** Use <code>eas secret:create</code> to store encrypted secrets in the EAS project. Configure environment variable mappings in <code>eas.json</code>'s build profile <code>env</code> section. At build time, EAS injects these as environment variables that can be accessed via <code>process.env.API_KEY</code> in the bundled code.
+
+7. **Q:** What happens if you lose your Android keystore? **A:** Without the original keystore, you cannot sign updates to your existing app on Google Play. You must create a new app listing with a different package name. Google Play App Signing mitigates this by using a separate upload key for submission while Google manages the app signing key. With Play App Signing enabled, you can request an upload key reset.
+
+8. **Q:** How do you configure CI/CD for a React Native app? **A:** Use EAS Build in CI/CD (GitHub Actions, CircleCI) with <code>EXPO_TOKEN</code> for authentication. Trigger builds on git tags or branch pushes. Use EAS Submit for automatic store submission. Store secrets (Apple ID, keystore passwords) in CI/CD environment variables or EAS Secrets. Cache CocoaPods and Gradle dependencies between builds.
+`,
+            tags: ["React Native", "Build", "CI/CD", "Deployment", "Mobile"],
+          },
+        ],
+      },
     ],
   },
 
