@@ -1,0 +1,33 @@
+name: Fix Inline Code Tags
+on:
+  workflow_dispatch:
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Fix <code> tags -> backtick inline code
+        run: python3 .github/scripts/fix-code-tags.py
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: fix/code-tags-to-backticks
+          title: "fix: convert <code> tags to backtick inline code in all topics"
+          commit-message: "fix: convert <code> tags to backtick inline code in all topics"
+          body: |
+            Converts all `<code>...</code>` tags to backtick inline code (`` `...` ``)
+            across CHEAT and NUTSHELL topics in `curriculum.ts`.
+
+            ReactMarkdown escapes raw HTML by default, so `<code>` was
+            rendering as visible literal text instead of styled inline code.
+
+            This also decodes HTML entities (`&lt;`, `&gt;`, `&amp;`, etc.)
+            inside code spans and handles multi-line `<code>` blocks.
+          delete-branch: true
