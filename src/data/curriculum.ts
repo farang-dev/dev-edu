@@ -72989,16 +72989,2580 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "TypeScript",
         description: "TypeScript from basics to advanced — type system, generics, utility types, and integration with React and Node.js.",
         topics: [
-          { id: "ns-ts-basics", title: "TypeScript Basics", shortDesc: "Setup (tsc, tsconfig.json), primitive types, type annotations, and the compilation pipeline.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-interfaces", title: "Interfaces & Type Aliases", shortDesc: "Interface vs type, optional/readonly properties, index signatures, and declaration merging.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-unions", title: "Unions, Intersections & Narrowing", shortDesc: "Union and intersection types, discriminated unions, type guards, and the never type.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-generics", title: "Generics", shortDesc: "Generic functions, constraints, conditional types, mapped types, and infer.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-utility", title: "Utility Types & Templates", shortDesc: "Partial, Required, Pick, Omit, Record, template literal types, and recursive types.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-modules", title: "Modules & Declaration Files", shortDesc: "ESM in TypeScript, ambient declarations (.d.ts), triple-slash directives, and publishing types.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-react", title: "TypeScript with React", shortDesc: "FC types, hooks typing, event handlers, children props, and context generics.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-node", title: "TypeScript with Node.js", shortDesc: "tsx/ts-node, Express typing, async handlers, and using Zod for runtime validation.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-advanced", title: "Advanced Type Patterns", shortDesc: "Branded types, phantom types, builder pattern with generics, and type-safe state machines.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-ts-compiler", title: "Compiler Configuration & Tooling", shortDesc: "tsconfig.json in depth, project references, tsc --build, and ESLint with typescript-eslint.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-ts-basics",
+            title: "TypeScript Basics",
+            shortDesc: "Setup (tsc, tsconfig.json), primitive types, type annotations, and the compilation pipeline.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+              "Installing TypeScript and generating tsconfig.json via tsc --init",
+              "The seven primitive types: string, number, boolean, null, undefined, bigint, symbol",
+              "Type annotations on variables, function parameters, and return values",
+              "The three-stage compilation pipeline: parse, type-check, emit",
+              "How tsconfig.json controls target, strictness, and output directories",
+            ],
+            content: `## What's This?
+
+TypeScript is a superset of JavaScript that adds optional static type checking. You write .ts files with type annotations, run the tsc compiler to check for errors and strip types away, and the resulting plain JavaScript runs anywhere JS runs. It acts like a spell-checker for your code -- catching mismatched assignments and missing properties before deployment instead of at runtime.
+
+## The Big Picture
+
+TypeScript builds directly on JavaScript: every .js file is a valid .ts file. The compiler bridges development and execution -- it reads .ts files, validates them against the type system, and emits clean .js output with zero type information. Mastering basics (types, annotations, compilation) leads naturally into interfaces, generics, and the full type system that makes TypeScript powerful at scale.
+
+## Core Ideas
+
+### Installing and Configuring
+
+Install TypeScript via npm and generate a tsconfig.json to control compilation behaviour.
+
+\`\`\`bash
+npm install -g typescript     # Install globally
+mkdir project && cd project
+tsc --init                    # Creates tsconfig.json
+\`\`\`
+
+The tsconfig.json centralises compiler options. The two most important are target (JS version to emit) and strict (enables all type-checking rules).
+
+\`\`\`json
+{
+  "compilerOptions": {
+    "target": "ES2020",         // Emit modern JS syntax
+    "strict": true,             // Enable all strict checks
+    "outDir": "./dist",         // Compiled JS goes here
+    "rootDir": "./src"          // Source .ts files here
+  }
+}
+\`\`\`
+
+### Seven Primitive Types
+
+TypeScript mirrors JavaScript primitives and lets you annotate them with a colon-type syntax.
+
+\`\`\`typescript
+let name: string = "Alice";      // String: text values
+let age: number = 30;            // Number: integers and floats
+let isDone: boolean = false;     // Boolean: true or false
+let empty: null = null;          // Null: intentional absence
+let undef: undefined = undefined;// Undefined: unset value
+let big: bigint = 100n;          // Bigint: numbers beyond 2^53
+let sym: symbol = Symbol("id");  // Symbol: unique identifier
+\`\`\`
+
+Each annotation declares what type the variable may hold. Assigning a value of a different type produces a compile-time error.
+
+### Type Annotations on Functions
+
+Annotations on parameters constrain what arguments are accepted; annotations on return values constrain what the function produces.
+
+\`\`\`typescript
+function greet(name: string): string {
+  // name must be a string, return must be a string
+  return "Hello, " + name;
+}
+
+function add(a: number, b: number): number {
+  // Both parameters and the return are numbers
+  return a + b;
+}
+
+function logMessage(msg: string): void {
+  // void means the function returns nothing useful
+  console.log(msg);
+}
+\`\`\`
+
+### The Compilation Pipeline
+
+The pipeline has three stages: parsing (tsc reads .ts files into an abstract syntax tree), type-checking (the compiler validates every annotation and usage against the type system), and emission (the compiler strips all type information and writes plain .js files).
+
+\`\`\`bash
+# Step 1: Compile (parse + type-check + emit)
+tsc
+
+# Step 2: Run the output
+node dist/index.js
+\`\`\`
+
+## Wiring It Together
+
+A program that reads a user's name and returns a time-based greeting -- demonstrating annotations, compilation, and running the output end-to-end.
+
+\`\`\`typescript
+// src/greet.ts
+
+function getGreeting(name: string): string {
+  // Takes a string parameter, returns a string
+  const hour: number = new Date().getHours();
+  // Extract the current hour (0-23)
+
+  if (hour < 12) {
+    return "Good morning, " + name;
+  } else if (hour < 18) {
+    return "Good afternoon, " + name;
+  } else {
+    return "Good evening, " + name;
+  }
+}
+
+const user: string = "Alice";
+const message: string = getGreeting(user);
+// Pass a string argument, receive a string result
+console.log(message);
+// Prints appropriate greeting for the current time
+\`\`\`
+
+\`\`\`bash
+tsc                      # Compiles src/greet.ts -> dist/greet.js
+node dist/greet.js       # Outputs "Good morning, Alice" (at 9am)
+\`\`\`
+`,
+            tags: ["typescript", "basics", "type-system", "setup"],
+          },
+          {
+            id: "ns-ts-interfaces",
+            title: "Interfaces & Type Aliases",
+            shortDesc: "Interface vs type, optional/readonly properties, index signatures, and declaration merging.",
+            difficulty: "foundational",
+            readTimeMin: 14,
+            keyPoints: [
+              "Interface declaration with optional (?) and readonly properties",
+              "Type aliases for primitives, unions, and object shapes",
+              "Key differences: interface supports declaration merging, type aliases support computed properties",
+              "Index signatures for dynamic property access",
+              "Extending interfaces and intersecting types with &",
+            ],
+            content: `## What's This?
+
+Interfaces and type aliases are TypeScript's tools for describing the shape of data. An interface defines a contract that an object must satisfy -- think of it as a blueprint for an object's structure. A type alias creates a name for any type, including primitives, unions, and complex object shapes. Both exist to give names to types, making code self-documenting and enabling the compiler to catch structural mismatches at compile time rather than runtime.
+
+## The Big Picture
+
+Interfaces and types are the foundation of TypeScript's structural type system. Building on primitive types from TypeScript Basics, they let you describe real-world data shapes (API responses, configuration objects, component props). Understanding which to use in which situation is essential before moving on to generics, utility types, and advanced patterns. The rule of thumb: prefer interface for object shapes you expect to extend, prefer type aliases for everything else.
+
+## Core Ideas
+
+### Interfaces
+
+An interface describes the shape of an object -- the names and types of its properties.
+
+\`\`\`typescript
+interface User {
+  name: string;       // Required string property
+  age: number;        // Required number property
+  email?: string;     // Optional property (may be undefined)
+  readonly id: number;// Readonly: cannot be changed after creation
+}
+\`\`\`
+
+The interface acts as a contract. Any object assigned to User must have name (string), age (number), and id (number). email is optional. The id property cannot be reassigned after initial creation.
+
+### Optional and Readonly Properties
+
+Optional properties use a ? suffix -- the property may be present or absent. Readonly properties use the readonly keyword -- the property can be set during construction but not reassigned later.
+
+\`\`\`typescript
+interface Config {
+  apiKey: string;          // Required
+  timeout?: number;        // Optional: can be omitted
+  readonly baseUrl: string;// Readonly: cannot change after init
+}
+
+const cfg: Config = { apiKey: "abc", baseUrl: "https://api.example.com" };
+// cfg.baseUrl = "https://other.com"; // Error: readonly
+\`\`\`
+
+### Type Aliases
+
+A type alias creates a name for any type. Unlike interfaces, type aliases can represent primitives, unions, tuples, and computed types.
+
+\`\`\`typescript
+type ID = string | number;                 // Union of string and number
+type Point = { x: number; y: number };     // Object shape (like an interface)
+type Name = string;                        // Just a string
+type Pair<T> = [T, T];                     // Generic tuple type
+\`\`\`
+
+### Interface vs Type: Key Differences
+
+| Feature | Interface | Type Alias |
+|---------|-----------|------------|
+| Object shapes | Yes | Yes |
+| Primitives and unions | No | Yes |
+| Declaration merging | Yes | No |
+| Computed properties | No | Yes |
+| Extends/intersect | extends | & (intersection) |
+
+Declaration merging means multiple interface declarations with the same name are automatically combined.
+
+### Declaration Merging
+
+If you declare two interfaces with the same name, TypeScript merges them into one.
+
+\`\`\`typescript
+interface User {
+  name: string;
+}
+
+interface User {
+  age: number;
+}
+
+// User now has both name and age
+const u: User = { name: "Alice", age: 30 }; // OK
+\`\`\`
+
+This is useful for augmenting types from third-party libraries.
+
+### Index Signatures
+
+Index signatures describe objects with dynamic property keys.
+
+\`\`\`typescript
+interface StringMap {
+  [key: string]: string;    // Any string key maps to a string value
+}
+
+const translations: StringMap = {
+  hello: "bonjour",
+  goodbye: "au revoir",
+};
+\`\`\`
+
+The key type must be string or number. The value type applies to all properties.
+
+### Extending and Intersecting
+
+Interfaces use extends to inherit from another interface. Type aliases use & (intersection) to combine multiple types.
+
+\`\`\`typescript
+interface Person {
+  name: string;
+}
+
+interface Employee extends Person {
+  // Inherits name from Person
+  employeeId: number;
+}
+
+type Admin = Person & { role: string };
+// Intersection: Admin has name (from Person) and role
+
+const emp: Employee = { name: "Bob", employeeId: 123 };
+const admin: Admin = { name: "Carol", role: "superadmin" };
+\`\`\`
+
+## Wiring It Together
+
+A realistic example: defining types for a blog API response.
+
+\`\`\`typescript
+// Basic shape for an author
+interface Author {
+  readonly id: number;   // Cannot change after creation
+  name: string;
+  avatar?: string;       // Optional -- author may not have one
+}
+
+// Shape for a blog post, extending base shape
+interface Post {
+  readonly id: number;
+  title: string;
+  body: string;
+  author: Author;        // Nested interface
+  tags: string[];        // Array of strings
+  publishedAt: Date;
+}
+
+// Type alias for API response wrapping
+type ApiResponse<T> = {
+  data: T;               // The actual payload
+  error?: string;        // Optional error message
+  ok: boolean;           // Success indicator
+};
+
+// Usage: simulate fetching a post
+const response: ApiResponse<Post> = {
+  ok: true,
+  data: {
+    id: 1,
+    title: "Hello World",
+    body: "First post!",
+    author: { id: 42, name: "Alice" },
+    tags: ["typescript", "web"],
+    publishedAt: new Date(),
+  },
+};
+
+console.log(response.data.author.name); // "Alice"
+\`\`\`
+`,
+            tags: ["typescript", "interfaces", "type-aliases", "type-system"],
+          },
+          {
+            id: "ns-ts-unions",
+            title: "Unions, Intersections & Narrowing",
+            shortDesc: "Union and intersection types, discriminated unions, type guards, and the never type.",
+            difficulty: "foundational",
+            readTimeMin: 15,
+            keyPoints: [
+              "Union types (|) for values that can be one of several types",
+              "Intersection types (&) for combining multiple types into one",
+              "Type narrowing via typeof, instanceof, and custom type guards",
+              "Discriminated unions with a literal discriminant property",
+              "The never type for exhaustive checking and unreachable code",
+            ],
+            content: `## What's This?
+
+Unions and intersections are TypeScript's way of composing types. A union type (|) says "this value could be type A or type B" -- like a menu where you pick one option. An intersection type (&) says "this value must satisfy both type A and type B" -- like a mashup where you combine all features. Narrowing is the process of refining a broad union type into a specific one using runtime checks. These tools exist because real data is rarely one shape: an API might return a user object or an error object; a function might accept a string or a number.
+
+## The Big Picture
+
+Unions, intersections, and narrowing flow directly from interfaces and type aliases. They enable expressive modelling of real-world data: "this function returns either a success result or an error" (union), "this object is both a Person and an Employee" (intersection), and "handle each case separately" (narrowing). Mastery here unlocks discriminated unions (TypeScript's most powerful pattern for state machines) and the never type for exhaustive checking.
+
+## Core Ideas
+
+### Union Types
+
+A union type declares that a value can be one of several types, separated by |.
+
+\`\`\`typescript
+type StringOrNumber = string | number;
+
+function format(value: StringOrNumber): string {
+  // value can be either a string or a number
+  return String(value);
+}
+
+type Status = "idle" | "loading" | "success" | "error";
+// A union of specific string literal values
+
+let state: Status = "idle";   // OK
+state = "loading";            // OK
+state = "invalid";            // Error: not in the union
+\`\`\`
+
+Union types are inclusive -- the value must match at least one member of the union. String literal unions (like Status) are especially useful for modelling finite states.
+
+### Intersection Types
+
+An intersection type combines multiple types into one. The resulting type must satisfy all constituent types.
+
+\`\`\`typescript
+interface Person {
+  name: string;
+}
+
+interface Employee {
+  employeeId: number;
+}
+
+type Worker = Person & Employee;
+
+const w: Worker = {
+  name: "Alice",     // From Person
+  employeeId: 123,   // From Employee
+};
+// Both properties required!
+\`\`\`
+
+### Type Narrowing with typeof
+
+Narrowing is the process of refining a union type to a specific member using runtime checks. The typeof operator narrows primitive types.
+
+\`\`\`typescript
+function pad(value: string | number): string {
+  if (typeof value === "string") {
+    // Inside this branch, TypeScript knows value is string
+    return value.padStart(5, " ");
+  }
+  // Outside the if, value must be number
+  return value.toString().padStart(5, "0");
+}
+\`\`\`
+
+TypeScript tracks the control flow and narrows the type within each branch automatically. This is called control flow analysis.
+
+### Narrowing with instanceof
+
+The instanceof operator narrows class instances.
+
+\`\`\`typescript
+class ApiError {
+  constructor(public code: number, public message: string) {}
+}
+
+class ApiSuccess {
+  constructor(public data: unknown) {}
+}
+
+type ApiResult = ApiError | ApiSuccess;
+
+function handleResult(result: ApiResult): void {
+  if (result instanceof ApiError) {
+    // result is ApiError here
+    console.error("Error " + result.code + ": " + result.message);
+  } else {
+    // result is ApiSuccess here
+    console.log("Success:", result.data);
+  }
+}
+\`\`\`
+
+### Discriminated Unions
+
+A discriminated union uses a common property (the discriminant) with a literal type to distinguish members. This is the most powerful union pattern in TypeScript.
+
+\`\`\`typescript
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "rectangle"; width: number; height: number }
+  | { kind: "triangle"; base: number; height: number };
+
+// The kind property is the discriminant
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle":
+      // TypeScript knows shape has radius here
+      return Math.PI * shape.radius ** 2;
+    case "rectangle":
+      // TypeScript knows shape has width and height
+      return shape.width * shape.height;
+    case "triangle":
+      // TypeScript knows shape has base and height
+      return (shape.base * shape.height) / 2;
+  }
+}
+\`\`\`
+
+Each branch of the switch narrows Shape to a specific member based on the kind literal.
+
+### The never Type
+
+The never type represents values that can never occur. It is useful for exhaustive checking in discriminated unions -- if you add a new member to the union but forget to handle it, TypeScript reports an error.
+
+\`\`\`typescript
+function assertNever(value: never): never {
+  throw new Error("Unexpected value: " + value);
+}
+
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle":
+      return Math.PI * shape.radius ** 2;
+    case "rectangle":
+      return shape.width * shape.height;
+    case "triangle":
+      return (shape.base * shape.height) / 2;
+    default:
+      // If we add a new shape kind without handling it,
+      // TypeScript will error here because shape won't be never
+      return assertNever(shape);
+  }
+}
+\`\`\`
+
+## Wiring It Together
+
+A realistic example: modelling a payment processing system using discriminated unions, narrowing, and exhaustive checks.
+
+\`\`\`typescript
+// Each payment method is a member of a discriminated union
+type Payment =
+  | { type: "credit_card"; cardNumber: string; cvv: string }
+  | { type: "paypal"; email: string }
+  | { type: "crypto"; walletAddress: string; network: string };
+
+// Process payment by narrowing on the type discriminant
+function processPayment(payment: Payment): string {
+  switch (payment.type) {
+    case "credit_card":
+      // payment is narrowed to credit_card branch
+      return "Processing card " + payment.cardNumber.slice(-4);
+    case "paypal":
+      // payment is narrowed to paypal branch
+      return "Processing PayPal account " + payment.email;
+    case "crypto":
+      // payment is narrowed to crypto branch
+      return "Sending on " + payment.network + " to " + payment.walletAddress;
+    default:
+      // Exhaustive check -- if a new payment type is added,
+      // this line will cause a compile error if not handled
+      const _exhaustive: never = payment;
+      return _exhaustive;
+  }
+}
+
+console.log(processPayment({ type: "paypal", email: "alice@example.com" }));
+// "Processing PayPal account alice@example.com"
+\`\`\`
+`,
+            tags: ["typescript", "unions", "narrowing", "type-system"],
+          },
+          {
+            id: "ns-ts-generics",
+            title: "Generics",
+            shortDesc: "Generic functions, constraints, conditional types, mapped types, and infer.",
+            difficulty: "intermediate",
+            readTimeMin: 18,
+            keyPoints: [
+              "Generic functions and type parameters for reusable, type-safe code",
+              "Constraints (extends) to restrict generic type parameters",
+              "Conditional types for type-level if/else logic",
+              "Mapped types for transforming object types property by property",
+              "The infer keyword for extracting types from within other types",
+            ],
+            content: `## What's This?
+
+Generics let you write code that works with any type while preserving type safety. Instead of writing separate functions for string arrays, number arrays, and boolean arrays, you write one generic function that handles them all. The type parameter (like T in Array<T>) acts as a placeholder: the caller supplies the concrete type, and TypeScript checks consistency everywhere T appears. Generics exist because real code must be reusable -- without them, you would need to copy-paste the same logic for every type or resort to <code>any</code> (which disables type checking).
+
+## The Big Picture
+
+Generics are the backbone of TypeScript's standard library -- Array, Promise, Map, Set are all generic. Building on interfaces and unions, generics let you build data structures and algorithms that are both reusable and type-safe. After mastering generics, you will naturally progress to utility types (which use generics internally) and advanced patterns like branded types and builder patterns.
+
+## Core Ideas
+
+### Generic Functions
+
+A generic function declares a type parameter in angle brackets before the parameter list. The type parameter captures the caller-provided type and uses it throughout the function signature.
+
+\`\`\`typescript
+function firstElement<T>(arr: T[]): T | undefined {
+  // T is a type parameter: it captures the element type
+  return arr[0];
+}
+
+const num = firstElement([1, 2, 3]);
+// T inferred as number, num is number | undefined
+
+const str = firstElement(["a", "b", "c"]);
+// T inferred as string, str is string | undefined
+\`\`\`
+
+The type parameter T is inferred from the argument. The return type T | undefined guarantees that the result has the same element type as the array.
+
+### Multiple Type Parameters
+
+Functions can have multiple type parameters.
+
+\`\`\`typescript
+function pair<A, B>(a: A, b: B): [A, B] {
+  return [a, b];     // Returns a tuple of exactly two types
+}
+
+const p = pair("hello", 42);
+// p is typed as [string, number]
+\`\`\`
+
+### Generic Constraints with extends
+
+The extends keyword constrains what types a type parameter can accept. It says "T must satisfy at least this shape."
+
+\`\`\`typescript
+interface HasLength {
+  length: number;
+}
+
+function logLength<T extends HasLength>(item: T): T {
+  // T is constrained: it must have a length property
+  console.log(item.length);
+  return item;
+}
+
+logLength("hello");       // OK: string has length
+logLength([1, 2, 3]);     // OK: array has length
+logLength(42);            // Error: number has no length
+\`\`\`
+
+### Generic Interfaces and Types
+
+Both interfaces and type aliases can accept type parameters.
+
+\`\`\`typescript
+interface ApiResponse<T> {
+  data: T;             // T is the type of the payload
+  error: string | null;
+  status: number;
+}
+
+type Result<T> = { success: true; value: T } | { success: false; error: string };
+// A generic discriminated union
+
+const response: ApiResponse<{ id: number; name: string }> = {
+  data: { id: 1, name: "Alice" },
+  error: null,
+  status: 200,
+};
+\`\`\`
+
+### Conditional Types
+
+Conditional types select one type or another based on a condition, using the syntax T extends U ? X : Y. This is type-level if/else.
+
+\`\`\`typescript
+type IsString<T> = T extends string ? "yes" : "no";
+
+type A = IsString<string>;  // "yes"
+type B = IsString<number>;  // "no"
+
+// Extract element type from an array or keep the type
+type ElementType<T> = T extends (infer E)[] ? E : T;
+
+type C = ElementType<string[]>;  // string
+type D = ElementType<number>;    // number (not an array, keeps T)
+\`\`\`
+
+### Mapped Types
+
+Mapped types transform an object type by iterating over its keys. The syntax is { [K in keyof T]: NewType }.
+
+\`\`\`typescript
+type Readonly<T> = {
+  readonly [K in keyof T]: T[K];
+  // For every key K in T, make the property readonly
+};
+
+type Optional<T> = {
+  [K in keyof T]?: T[K];
+  // For every key K in T, make the property optional
+};
+
+interface User {
+  name: string;
+  age: number;
+}
+
+type ReadonlyUser = Readonly<User>;
+// { readonly name: string; readonly age: number; }
+\`\`\`
+
+Mapped types let you create many type transformations without manual duplication.
+
+### The infer Keyword
+
+The infer keyword works inside conditional types to extract a type from another type. It lets you "unpack" types like the return type of a function or the element type of an array.
+
+\`\`\`typescript
+type ReturnType<T> = T extends (...args: unknown[]) => infer R ? R : never;
+// If T is a function type, infer R as its return type
+
+type MyType = ReturnType<() => string>;
+// string
+
+// Extract the type wrapped by a Promise
+type Unwrap<T> = T extends Promise<infer U> ? U : T;
+
+type Unwrapped = Unwrap<Promise<number>>;
+// number
+\`\`\`
+
+### Keyof Operator
+
+The keyof operator produces a union of the keys of a type. It is often used with mapped types and generic constraints.
+
+\`\`\`typescript
+interface User {
+  name: string;
+  age: number;
+  email: string;
+}
+
+type UserKeys = keyof User;
+// "name" | "age" | "email"
+
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  // K can only be a valid key of T
+  return obj[key];
+}
+
+const user: User = { name: "Alice", age: 30, email: "alice@example.com" };
+const name = getProperty(user, "name");  // string
+const age = getProperty(user, "age");    // number
+// getProperty(user, "invalid");         // Error
+\`\`\`
+
+## Wiring It Together
+
+A complete example: a generic state store with subscribe and update methods, demonstrating generics, constraints, mapped types, and conditional types.
+
+\`\`\`typescript
+// Define a generic store that holds state of type T
+class Store<T extends Record<string, unknown>> {
+  private state: T;
+
+  constructor(initial: T) {
+    this.state = initial;  // Set initial state
+  }
+
+  // Get a slice of state by key, with a constraint on K
+  get<K extends keyof T>(key: K): T[K] {
+    return this.state[key];
+  }
+
+  // Update state by providing a partial
+  set(partial: Partial<T>): void {
+    // Partial<T> makes all properties optional
+    this.state = { ...this.state, ...partial };
+  }
+
+  // Get all state keys
+  keys(): (keyof T)[] {
+    return Object.keys(this.state) as (keyof T)[];
+  }
+}
+
+// Use the store
+const store = new Store({ count: 0, label: "counter" });
+
+store.get("count");    // number: 0
+store.get("label");    // string: "counter"
+
+store.set({ count: 5 });  // Only updates count, label stays
+console.log(store.get("count"));  // 5
+
+// Conditional type: extract the return type of store.get
+type StoreValue<T, K extends keyof T> = T[K];
+// For a given key K, return the corresponding value type
+\`\`\`
+`,
+            tags: ["typescript", "generics", "type-system", "advanced"],
+          },
+          {
+            id: "ns-ts-utility",
+            title: "Utility Types & Templates",
+            shortDesc: "Partial, Required, Pick, Omit, Record, template literal types, and recursive types.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "Partial<T>, Required<T>, Pick<T,K>, Omit<T,K>, and Record<K,T> for common type transformations",
+              "How mapped types power these utilities internally",
+              "Template literal types for building string patterns at the type level",
+              "Recursive types for deeply nested data structures like JSON",
+              "Combining utilities to create precise, derived types without duplication",
+            ],
+            content: `## What's This?
+
+Utility types are pre-built generic type transformations shipped with TypeScript. They let you derive new types from existing ones with zero boilerplate -- Partial makes every property optional, Required makes every property mandatory, Pick extracts a subset of keys, Omit excludes certain keys, and Record builds an object type from a key union. Template literal types extend this idea to strings, letting you construct string patterns at the type level (like \`/api/\${string}\`). Recursive types let a type reference itself, enabling accurate modelling of tree structures like JSON. These tools exist because real applications constantly need variations of the same shapes -- an update API endpoint needs the same fields as a create endpoint but with everything optional.
+
+## The Big Picture
+
+Utility types are built on generics and mapped types internally. Partial<T> is a mapped type that adds ? to every property; Pick<T,K> uses keyof and conditional types under the hood. Understanding how they work deepens your grasp of mapped and conditional types. Template literal types give you string-level pattern matching, and recursive types handle nested structures like ASTs, JSON, or deeply nested config objects. Together, these tools dramatically reduce the amount of type definitions you need to write and maintain.
+
+## Core Ideas
+
+### Partial<T> -- Make All Properties Optional
+
+Partial wraps every property of T in a ? marker, allowing any subset of properties to be provided.
+
+\`\`\`typescript
+interface User {
+  name: string;
+  age: number;
+  email: string;
+}
+
+function updateUser(id: number, updates: Partial<User>): void {
+  // updates can have any subset of User properties
+  console.log("Updating", id, updates);
+}
+
+updateUser(1, { name: "Alice" });            // OK: partial update
+updateUser(2, { name: "Bob", age: 25 });     // OK: two fields
+// updateUser(3, { invalid: true });         // Error: not a User key
+\`\`\`
+
+### Required<T> -- Make All Properties Required
+
+Required is the opposite of Partial: it removes ? from every property.
+
+\`\`\`typescript
+interface Config {
+  host?: string;
+  port?: number;
+  timeout?: number;
+}
+
+// All properties become mandatory
+function init(config: Required<Config>): void {
+  console.log(config.host, config.port, config.timeout);
+}
+
+init({ host: "localhost", port: 3000, timeout: 5000 }); // OK
+// init({ host: "localhost" });                          // Error: port and timeout missing
+\`\`\`
+
+### Pick<T, K> -- Select Specific Keys
+
+Pick creates a type with only the specified keys K from T.
+
+\`\`\`typescript
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  author: string;
+  createdAt: Date;
+}
+
+// Pick only the keys for a list view -- less data
+type PostSummary = Pick<Post, "id" | "title" | "author">;
+
+const summary: PostSummary = {
+  id: 1,
+  title: "Hello",
+  author: "Alice",
+  // body and createdAt are excluded
+};
+\`\`\`
+
+### Omit<T, K> -- Exclude Specific Keys
+
+Omit creates a type with all keys of T except those in K.
+
+\`\`\`typescript
+// Create a type for creating a new post (no id or createdAt yet)
+type CreatePostInput = Omit<Post, "id" | "createdAt">;
+
+const input: CreatePostInput = {
+  title: "New Post",
+  body: "Content here",
+  author: "Bob",
+  // id and createdAt are not needed
+};
+\`\`\`
+
+| Utility | What It Does | Example Use Case |
+|---------|-------------|------------------|
+| Partial<T> | All properties become optional | API update payloads |
+| Required<T> | All properties become mandatory | Ensuring config completeness |
+| Pick<T, K> | Keep only keys K | List view projections |
+| Omit<T, K> | Remove keys K | Create input without generated fields |
+
+### Record<K, T> -- Object Type from Keys
+
+Record creates an object type where every key in K maps to a value of type T.
+
+\`\`\`typescript
+type Role = "admin" | "editor" | "viewer";
+
+// Map each role to its permissions object
+type RolePermissions = Record<Role, { canWrite: boolean; canDelete: boolean }>;
+
+const permissions: RolePermissions = {
+  admin:  { canWrite: true, canDelete: true },
+  editor: { canWrite: true, canDelete: false },
+  viewer: { canWrite: false, canDelete: false },
+};
+\`\`\`
+
+### Template Literal Types
+
+Template literal types construct string types using pattern matching. They use the same \${} syntax as JavaScript template literals but operate at the type level.
+
+\`\`\`typescript
+type EventName = \`on\${string}\`;
+// Matches any string starting with "on" (e.g., "onClick", "onChange")
+
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type ApiPath = \`/api/\${HttpMethod}\`;
+// Matches "/api/GET" | "/api/POST" | "/api/PUT" | "/api/DELETE"
+
+// Combine with unions for exhaustive route patterns
+type UserRoutes = \`/users/\${number}\`;
+// Matches "/users/1", "/users/42", etc.
+\`\`\`
+
+Template literal types can also use infer in conditional types to parse strings:
+
+\`\`\`typescript
+type ExtractId<T extends string> =
+  T extends \`/users/\${infer Id}\` ? Id : never;
+
+type Id = ExtractId<"/users/42">;
+// "42" (extracted as a string literal type)
+\`\`\`
+
+### Recursive Types
+
+A recursive type references itself. This is essential for tree structures like JSON, where a value can be a primitive, an array, or an object containing more JSON values.
+
+\`\`\`typescript
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JSONValue[]          // Array of JSON values
+  | { [key: string]: JSONValue };  // Object with JSON values
+
+// Type-safe JSON parsing
+function parseJSON(text: string): JSONValue {
+  return JSON.parse(text);
+}
+
+const data = parseJSON('{"user":{"name":"Alice","scores":[1,2,3]}}');
+// data is fully typed as JSONValue -- recursively checked
+\`\`\`
+
+## Wiring It Together
+
+A realistic example: building type-safe API functions for a blog. Combines Partial, Pick, Omit, Record, and template literal types.
+
+\`\`\`typescript
+// Base domain type
+interface Post {
+  id: number;
+  title: string;
+  body: string;
+  authorId: number;
+  tags: string[];
+  createdAt: Date;
+}
+
+// 1. Create input: all fields except generated ones
+type CreatePost = Omit<Post, "id" | "createdAt">;
+
+// 2. Update input: same as CreatePost but all optional
+type UpdatePost = Partial<CreatePost>;
+
+// 3. List view: only fields needed for a summary
+type PostListItem = Pick<Post, "id" | "title" | "authorId">;
+
+// 4. Map of endpoint paths to their handler types
+type Route = "create" | "update" | "delete" | "list";
+type RouteHandlers = Record<Route, (input: unknown) => unknown>;
+
+// 5. Template literal for API URL patterns
+type ApiUrl = \`/api/posts/\${"create" | "list" | "update" | "delete"}\`;
+
+// Implementation using the derived types
+function createPost(input: CreatePost): Post {
+  // input has title, body, authorId, tags (no id or createdAt)
+  return {
+    id: Date.now(),          // Generate id
+    ...input,
+    createdAt: new Date(),   // Set timestamp
+  };
+}
+
+function updatePost(input: UpdatePost): void {
+  // input has every field optional
+  if (input.title) console.log("New title:", input.title);
+  if (input.body) console.log("New body:", input.body);
+}
+
+// Type-safe route mapping
+const handlers: RouteHandlers = {
+  create: (input) => createPost(input as CreatePost),
+  update: (input) => updatePost(input as UpdatePost),
+  delete: (input) => console.log("Delete", input),
+  list: () => console.log("List posts"),
+};
+\`\`\`
+`,
+            tags: ["typescript", "utility-types", "template-literals", "type-system"],
+          },
+          {
+  id: "ns-ts-modules",
+  title: "Modules & Declaration Files",
+  shortDesc: "ESM in TypeScript, ambient declarations (.d.ts), triple-slash directives, and publishing types.",
+  difficulty: "intermediate",
+  readTimeMin: 18,
+  keyPoints: [
+    "ES module syntax in TypeScript with type-only imports",
+    "Ambient declaration files (.d.ts) for describing JS libraries",
+    "Triple-slash directives for legacy type reference management",
+    "Publishing .d.ts files alongside npm packages",
+    "module and moduleResolution settings in tsconfig.json",
+  ],
+  tags: ["typescript", "modules", "declaration-files", "type-system"],
+  content: `## What's This?
+
+TypeScript modules use the same ES module syntax (import/export) as JavaScript but add type-only imports and exports for compile-time-only types. Ambient declaration files (.d.ts) describe the shapes of existing JavaScript libraries to the TypeScript compiler without carrying the actual implementation code. Triple-slash directives are XML-like comments that served as the original module resolution mechanism before tsconfig.json took over. Publishing types means shipping .d.ts files alongside your npm package so consumers get full type checking. These mechanisms exist because TypeScript must bridge the gap between its type system and the diverse JavaScript module ecosystem.
+
+## The Big Picture
+
+Modules are how TypeScript organises code, building on the import/export patterns from TypeScript Basics. Declaration files let TypeScript understand any JavaScript library -- from Lodash to Express -- as if it were written in TypeScript. After learning modules and declarations, you will be able to structure real applications, consume any npm package with types, and publish your own typed libraries. This knowledge is a prerequisite for the React and Node with TypeScript topics that follow.
+
+## Core Ideas
+
+### ES Module Syntax in TypeScript
+
+TypeScript uses the same import/export syntax as JavaScript ES modules, with two additions: type-only imports (import type) and namespace imports for type declarations.
+
+\`\`\`typescript
+// math.ts -- a module that exports functions and types
+export function add(a: number, b: number): number {
+  return a + b;
+}
+
+export interface MathResult {
+  sum: number;
+  operation: string;
+}
+
+// app.ts -- consuming the module
+import { add } from "./math.js";
+//                     ^ Note: .js extension in imports, not .ts
+import type { MathResult } from "./math.js";
+// import type is erased at compile time -- zero runtime cost
+
+const result: MathResult = { sum: add(2, 3), operation: "add" };
+console.log(result);
+\`\`\`
+
+TypeScript requires the .js extension in import paths (even for .ts files) because after compilation the output files are .js. The import type syntax guarantees the import is completely removed from the emitted JavaScript.
+
+### Ambient Declarations (.d.ts)
+
+Ambient declaration files (.d.ts) describe the shape of JavaScript code to TypeScript without providing implementation. Use the declare keyword to announce that a variable, function, or class exists at runtime.
+
+\`\`\`typescript
+// globals.d.ts -- declare global variables available at runtime
+declare const API_KEY: string;
+// Tells TS: there is a global string constant called API_KEY
+
+declare function fetchData(url: string): Promise<unknown>;
+// Tells TS: fetchData accepts a URL and returns a Promise
+
+// Describe an entire JS library module
+declare module "my-old-lib" {
+  export function doSomething(input: string): number;
+  export const version: string;
+}
+\`\`\`
+
+When TypeScript compiles, it reads .d.ts files to understand the types of external code. The .d.ts files contain only type information with no executable code.
+
+### Triple-Slash Directives
+
+Triple-slash directives are single-line comments starting with /// that tell the compiler about dependencies. They predate tsconfig.json but still appear in legacy code and DefinitelyTyped packages.
+
+\`\`\`typescript
+/// <reference types="node" />
+// Pulls in type declarations for Node.js globals (Buffer, process, etc.)
+
+/// <reference path="./types.d.ts" />
+// Includes another declaration file in the compilation unit
+
+/// <reference lib="es2021" />
+// Includes a built-in lib definition for a specific ES version
+\`\`\`
+
+In modern TypeScript, these are usually replaced by the types, include, and lib fields in tsconfig.json.
+
+### Publishing Types
+
+To publish a package with TypeScript types, set the types (or typings) field in package.json to point at your bundled .d.ts entry point.
+
+\`\`\`json
+{
+  "name": "my-lib",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"]
+}
+\`\`\`
+
+\`\`\`bash
+# Generate declaration files during build
+tsc --declaration --emitDeclarationOnly --outDir dist
+\`\`\`
+
+For community-maintained types (when a library author does not ship types), publish to DefinitelyTyped as @types/package-name. TypeScript automatically resolves @types/* packages.
+
+### Module Configuration in tsconfig.json
+
+Two settings control module behaviour: module (the output format) and moduleResolution (how import paths are resolved).
+
+| Setting | Values | Purpose |
+|---------|--------|---------|
+| module | "ES2022", "CommonJS", "NodeNext" | Controls emitted module syntax |
+| moduleResolution | "node", "node16", "nodenext", "bundler" | Controls path resolution algorithm |
+| declaration | true/false | Whether to generate .d.ts files |
+| rootDir | "./src" | Base directory for source files |
+| outDir | "./dist" | Output directory for compiled files |
+
+\`\`\`json
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  }
+}
+\`\`\`
+
+## Wiring It Together
+
+A complete example: building and publishing a simple typed statistics library.
+
+\`\`\`typescript
+// src/math.ts
+export function sum(values: number[]): number {
+  // Takes an array of numbers and returns their total
+  return values.reduce((acc, v) => acc + v, 0);
+}
+
+export interface Stats {
+  sum: number;
+  average: number;
+  count: number;
+}
+
+export function computeStats(values: number[]): Stats {
+  // Returns a structured statistics object
+  return {
+    sum: sum(values),
+    average: sum(values) / values.length,
+    count: values.length,
+  };
+}
+\`\`\`
+
+\`\`\`json
+// package.json -- the types field points to the generated .d.ts
+{
+  "name": "@example/stats-lib",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --declaration --outDir dist"
+  }
+}
+\`\`\`
+
+\`\`\`typescript
+// tsconfig.json
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "target": "ES2022"
+  }
+}
+\`\`\`
+
+\`\`\`typescript
+// src/index.ts -- re-export public API from a single entry point
+export { sum, computeStats } from "./math.js";
+export type { Stats } from "./math.js";
+\`\`\`
+
+\`\`\`bash
+# Build: generates dist/index.js + dist/index.d.ts
+npm run build
+# Consumers get full type information from the .d.ts files
+\`\`\`
+`,
+},
+          {
+  id: "ns-ts-react",
+  title: "TypeScript with React",
+  shortDesc: "FC types, hooks typing, event handlers, children props, and context generics.",
+  difficulty: "advanced",
+  readTimeMin: 20,
+  keyPoints: [
+    "Typing React function components with React.FC and explicit props interfaces",
+    "useState and useRef generics for type-safe state and DOM references",
+    "Typing event handlers with React.MouseEvent, React.ChangeEvent, etc.",
+    "Typing children with React.ReactNode and React.PropsWithChildren",
+    "Generic context with createContext and useContext for type-safe providers",
+  ],
+  tags: ["typescript", "react", "hooks", "frontend"],
+  content: `## What's This?
+
+TypeScript with React means using static types to describe component props, state, event handlers, and context values. Instead of passing <code>any</code> around and hoping for the best, you define interfaces for every data shape that flows through your component tree. The compiler catches missing props, wrong handler signatures, and mismatched state updates before you ever open a browser. This exists because React applications are large graphs of components passing data between each other -- without types, a simple prop rename can break dozens of components silently.
+
+## The Big Picture
+
+TypeScript with React builds on TypeScript Basics, Interfaces, and Generics. Each React concept maps to a TypeScript pattern: component props become interfaces, hooks become generic functions, and context becomes a generic provider/consumer pair. After mastering this topic, you will be ready to build production React applications with full type safety, and the patterns here (generic hooks, typed event handlers) carry directly into React Native and Next.js.
+
+## Core Ideas
+
+### Typing Function Components
+
+A function component is a function that receives props and returns JSX. Type it by defining an interface for the props and using the React.FC (FunctionComponent) generic type.
+
+\`\`\`typescript
+import React from "react";
+
+interface GreetingProps {
+  name: string;
+  age?: number;       // Optional prop
+}
+
+const Greeting: React.FC<GreetingProps> = ({ name, age }) => {
+  // name is string, age is number | undefined
+  return (
+    <div>
+      Hello, {name}! {age !== undefined && <span>Age: {age}</span>}
+    </div>
+  );
+};
+
+// Usage -- TypeScript checks that name is provided
+<Greeting name="Alice" age={30} />   // OK
+<Greeting name="Bob" />               // OK: age is optional
+// <Greeting />                       // Error: name is required
+\`\`\`
+
+React.FC automatically includes the children prop in the props type. For components that do not need children, define the props interface directly without React.FC.
+
+### Typing Hooks: useState and useRef
+
+useState is a generic function: <code>useState&lt;T&gt;(initial: T)</code>. TypeScript infers the type from the initial value but you can also specify it explicitly for union types.
+
+\`\`\`typescript
+import React, { useState, useRef } from "react";
+
+// Type is inferred from initial value
+const [count, setCount] = useState(0);
+// count is number, setCount is React.Dispatch<React.SetStateAction<number>>
+
+// Explicit generic for union type
+const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
+// Only the three string literals are valid values
+
+// useRef with a DOM element
+const inputRef = useRef<HTMLInputElement>(null);
+// inputRef.current is HTMLInputElement | null
+
+// useRef with a mutable value (not DOM)
+const intervalRef = useRef<number | null>(null);
+// intervalRef.current is number | null
+\`\`\`
+
+The generic parameter tells TypeScript what type the ref or state will hold. For DOM refs, provide the HTML element type and pass null as the initial value.
+
+### Typing Event Handlers
+
+React exports event types for every DOM event. Use them as the parameter type in event handler functions.
+
+\`\`\`typescript
+import React, { useState } from "react";
+
+const Form = () => {
+  const [value, setValue] = useState("");
+
+  // ChangeEvent for input/select/textarea changes
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // e.target.value is a string
+    setValue(e.target.value);
+  };
+
+  // MouseEvent for click, double-click, etc.
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // e.currentTarget is the button element
+    console.log("Clicked at", e.clientX, e.clientY);
+  };
+
+  // FormEvent for form submission
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();   // e has preventDefault()
+    console.log("Submitted:", value);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input type="text" value={value} onChange={handleChange} />
+      <button onClick={handleClick}>Submit</button>
+    </form>
+  );
+};
+\`\`\`
+
+Each event type is generic over the HTML element that the event targets. The most common event types are <code>React.ChangeEvent</code>, <code>React.MouseEvent</code>, <code>React.FormEvent</code>, and <code>React.KeyboardEvent</code>.
+
+### Typing Children Props
+
+Children in React can be strings, elements, fragments, or arrays of any of these. The type <code>React.ReactNode</code> captures all valid children types.
+
+\`\`\`typescript
+import React from "react";
+
+// Explicit children prop
+interface CardProps {
+  title: string;
+  children: React.ReactNode;  // Any renderable content
+}
+
+const Card: React.FC<CardProps> = ({ title, children }) => {
+  return (
+    <div className="card">
+      <h2>{title}</h2>
+      <div className="card-body">{children}</div>
+    </div>
+  );
+};
+
+// React.PropsWithChildren adds children automatically
+interface AlertProps {
+  variant: "info" | "error";
+}
+
+const Alert: React.FC<React.PropsWithChildren<AlertProps>> = ({
+  variant,
+  children,
+}) => {
+  return <div className={\`alert alert-\${variant}\`}>{children}</div>;
+};
+
+<Card title="Hello">
+  <p>This is the card body</p>
+</Card>
+\`\`\`
+
+React.ReactNode includes ReactElement, string, number, boolean, null, undefined, and arrays of these.
+
+### Generic Context with createContext
+
+Context provides a way to pass data through the component tree without prop drilling. createContext is a generic function that returns a typed Context object.
+
+\`\`\`typescript
+import React, { createContext, useContext, useState } from "react";
+
+// Define the shape of the context value
+interface ThemeContextValue {
+  theme: "light" | "dark";
+  toggleTheme: () => void;
+}
+
+// Create context with a default value (used when no provider exists)
+const ThemeContext = createContext<ThemeContextValue>({
+  theme: "light",
+  toggleTheme: () => {},
+});
+
+// Provider component -- wraps children and provides the value
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
+
+// Custom hook for consuming the context
+const useTheme = (): ThemeContextValue => {
+  const context = useContext(ThemeContext);
+  // context is fully typed as ThemeContextValue
+  return context;
+};
+
+// Usage in a child component
+const ThemedButton: React.FC = () => {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      style={{ background: theme === "dark" ? "#333" : "#fff" }}
+    >
+      Current theme: {theme}
+    </button>
+  );
+};
+\`\`\`
+
+The generic parameter to createContext determines the type of the value accessible via useContext. The provider must supply a value matching that type exactly.
+
+## Wiring It Together
+
+A complete example: a todo list app using typed components, hooks, events, and context.
+
+\`\`\`typescript
+import React, { createContext, useContext, useState } from "react";
+
+// -- Data types --
+interface Todo {
+  id: number;
+  text: string;
+  done: boolean;
+}
+
+// -- Context --
+interface TodoContextValue {
+  todos: Todo[];
+  addTodo: (text: string) => void;
+  toggleTodo: (id: number) => void;
+}
+
+const TodoContext = createContext<TodoContextValue>({
+  todos: [],
+  addTodo: () => {},
+  toggleTodo: () => {},
+});
+
+// -- Provider --
+const TodoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  const addTodo = (text: string) => {
+    setTodos((prev) => [...prev, { id: Date.now(), text, done: false }]);
+  };
+
+  const toggleTodo = (id: number) => {
+    setTodos((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+    );
+  };
+
+  return (
+    <TodoContext.Provider value={{ todos, addTodo, toggleTodo }}>
+      {children}
+    </TodoContext.Provider>
+  );
+};
+
+// -- Components --
+const AddTodoForm: React.FC = () => {
+  const [text, setText] = useState("");
+  const { addTodo } = useContext(TodoContext);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();             // Prevent page reload
+    if (text.trim()) addTodo(text); // Add the todo
+    setText("");                    // Clear the input
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={text}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          setText(e.target.value)
+        }
+      />
+      <button type="submit">Add</button>
+    </form>
+  );
+};
+
+const TodoList: React.FC = () => {
+  const { todos, toggleTodo } = useContext(TodoContext);
+
+  return (
+    <ul>
+      {todos.map((todo) => (
+        <li key={todo.id}>
+          <span
+            style={{
+              textDecoration: todo.done ? "line-through" : "none",
+            }}
+            onClick={() => toggleTodo(todo.id)}
+          >
+            {todo.text}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+// -- App --
+const App: React.FC = () => {
+  return (
+    <TodoProvider>
+      <h1>Todo List</h1>
+      <AddTodoForm />
+      <TodoList />
+    </TodoProvider>
+  );
+};
+
+export default App;
+\`\`\`
+
+The entire app is type-safe: todos have a guaranteed shape, event handlers receive correctly typed events, and context consumers always get the right value type.
+`,
+},
+          {
+  id: "ns-ts-node",
+  title: "TypeScript with Node.js",
+  shortDesc: "tsx/ts-node, Express typing, async handlers, and using Zod for runtime validation.",
+  difficulty: "advanced",
+  readTimeMin: 20,
+  keyPoints: [
+    "Running TypeScript directly on Node with tsx or ts-node",
+    "Typing Express Request, Response, NextFunction, and async RequestHandler",
+    "Wrapping async Express route handlers to catch promise rejections",
+    "Validating request bodies at runtime with Zod schemas",
+    "Inferring static types from Zod schemas for end-to-end type safety",
+  ],
+  tags: ["typescript", "nodejs", "express", "zod"],
+  content: `## What's This?
+
+TypeScript with Node.js means writing server-side code in TypeScript and running it on Node. Because Node runs JavaScript, you need a runtime executor (tsx or ts-node) that compiles TypeScript on the fly, or a build step that emits .js files first. Express typing adds static types to the familiar request/response/next function signatures. Async handler wrappers ensure that promise rejections in async Express routes are forwarded to error-handling middleware. Zod provides runtime validation of external data (like HTTP request bodies) and derives static TypeScript types from the validation schemas, giving you both runtime safety and compile-time checks.
+
+## The Big Picture
+
+TypeScript with Node.js builds on TypeScript Basics, Generics, and the Modules topic. Express typing applies interfaces and generics to the HTTP layer, Zod applies generics and type inference to validation, and tsx/ts-node solves the "how do I run this?" problem that every server-side TypeScript project faces. After learning these patterns, you can build production-ready APIs with compile-time guarantees, runtime validation, and proper error handling -- the foundation for any backend service.
+
+## Core Ideas
+
+### Running TypeScript on Node
+
+Node cannot execute .ts files directly. Two popular tools bridge the gap: tsx (the modern choice, fast and zero-config) and ts-node (the original, more configurable). Both compile TypeScript to JavaScript in memory and execute it.
+
+\`\`\`bash
+# Install tsx
+npm install -D tsx
+
+# Run a TypeScript file directly
+npx tsx src/server.ts
+
+# Alternative with ts-node
+npm install -D ts-node
+npx ts-node src/server.ts
+\`\`\`
+
+\`\`\`json
+// package.json scripts
+{
+  "scripts": {
+    "dev": "tsx watch src/server.ts",   // Watch mode with tsx
+    "build": "tsc",                      // Production build
+    "start": "node dist/server.js"       // Run compiled output
+  }
+}
+\`\`\`
+
+For production, compile with tsc first and run the emitted .js files. tsx and ts-node are primarily for development.
+
+### Typing Express Request, Response, and NextFunction
+
+Express ships its own types (@types/express) that define Request, Response, NextFunction, and RequestHandler as generic types.
+
+\`\`\`typescript
+import express, { Request, Response, NextFunction } from "express";
+
+const app = express();
+
+// Basic typed route handler
+app.get("/hello", (req: Request, res: Response, next: NextFunction) => {
+  // req has typed properties: req.params, req.query, req.body, etc.
+  res.json({ message: "Hello, world!" });
+});
+
+// Typing route parameters with generics
+app.get("/users/:id", (req: Request<{ id: string }>, res: Response) => {
+  // req.params.id is typed as string
+  const userId = req.params.id;
+  res.json({ userId });
+});
+
+// RequestHandler type for reusable middleware
+import { RequestHandler } from "express";
+
+const logger: RequestHandler = (req, res, next) => {
+  // req, res, next are all typed automatically
+  console.log(\`\${req.method} \${req.path}\`);
+  next();
+};
+
+app.use(logger);
+\`\`\`
+
+The Request generic has four type parameters: <code>Request&lt;Params, ResBody, ReqBody, Query&gt;</code>. You only need to specify the ones you use.
+
+### Async Handler Wrapper
+
+Express does not catch promise rejections from async route handlers. If an async handler throws, the error is swallowed unless you wrap it in a try/catch or use a wrapper function.
+
+\`\`\`typescript
+import { Request, Response, NextFunction, RequestHandler } from "express";
+
+// Wrapper that catches async errors and forwards them
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>): RequestHandler =>
+  (req, res, next) => {
+    // Wrap the async function call so rejections go to next(err)
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
+// Usage: the handler can be async without try/catch
+app.get(
+  "/data",
+  asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const data = await fetchDataFromDb();
+    // If fetchDataFromDb rejects, the error goes to error middleware
+    res.json(data);
+  })
+);
+
+// Error-handling middleware (four parameters = Express recognises it)
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error("Error:", err.message);
+  res.status(500).json({ error: err.message });
+});
+\`\`\`
+
+The asyncHandler wrapper captures the promise returned by the async function and calls <code>next(err)</code> if it rejects, ensuring no unhandled promise rejections.
+
+### Zod for Runtime Validation
+
+Zod is a schema declaration and validation library. You define a schema with Zod's chainable API, then use it to validate untrusted data (like request bodies). Zod also infers a TypeScript type from each schema, giving you one source of truth for validation logic and static types.
+
+\`\`\`typescript
+import { z } from "zod";
+
+// Define a schema for creating a user
+const createUserSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email format"),
+  age: z.number().int().positive().optional(),
+});
+
+// Infer the TypeScript type from the schema
+type CreateUserInput = z.infer<typeof createUserSchema>;
+// Equivalent to: { name: string; email: string; age?: number | undefined }
+
+// Validate request body in a route handler
+app.post(
+  "/users",
+  asyncHandler(async (req: Request, res: Response) => {
+    // parse() throws a ZodError if validation fails
+    const input: CreateUserInput = createUserSchema.parse(req.body);
+    // At this point, input is fully typed and validated
+
+    const user = await createUserInDb(input);
+    res.status(201).json(user);
+  })
+);
+
+// Safer alternative: safeParse returns a result object
+app.post(
+  "/users-safe",
+  asyncHandler(async (req: Request, res: Response) => {
+    const result = createUserSchema.safeParse(req.body);
+
+    if (!result.success) {
+      // result.error is a ZodError with structured details
+      return res.status(400).json({ errors: result.error.issues });
+    }
+
+    // result.data is typed as CreateUserInput
+    const user = await createUserInDb(result.data);
+    res.status(201).json(user);
+  })
+);
+\`\`\`
+
+Zod schemas are composable: you can extend them, combine them with unions, and derive partial/omit variants -- all while maintaining type safety.
+
+### Combining Express Params with Zod
+
+For routes that need both URL parameters and a validated body, combine Express's param typing with Zod validation.
+
+\`\`\`typescript
+import { Request, Response } from "express";
+import { z } from "zod";
+
+// Schema for the body
+const updateUserSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().email().optional(),
+});
+
+// Route with typed params + Zod-validated body
+app.patch(
+  "/users/:id",
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const { id } = req.params;          // id is string
+    const data = updateUserSchema.parse(req.body);
+    // data is { name?: string; email?: string }
+
+    const updated = await updateUserInDb(Number(id), data);
+    res.json(updated);
+  })
+);
+\`\`\`
+
+## Wiring It Together
+
+A complete example: a CRUD API for todos with Express, TypeScript, Zod validation, and async error handling.
+
+\`\`\`typescript
+import express, { Request, Response, NextFunction, RequestHandler } from "express";
+import { z } from "zod";
+
+// -- Schemas --
+const createTodoSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  completed: z.boolean().optional().default(false),
+});
+
+const updateTodoSchema = z.object({
+  title: z.string().min(1).optional(),
+  completed: z.boolean().optional(),
+});
+
+type Todo = {
+  id: number;
+  title: string;
+  completed: boolean;
+};
+
+// -- In-memory store --
+let todos: Todo[] = [];
+let nextId = 1;
+
+// -- Async handler wrapper --
+const asyncHandler =
+  (fn: (req: Request, res: Response, next: NextFunction) => Promise<void>): RequestHandler =>
+  (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+
+// -- Express app --
+const app = express();
+app.use(express.json());
+
+// CREATE
+app.post(
+  "/todos",
+  asyncHandler(async (req: Request, res: Response) => {
+    const input = createTodoSchema.parse(req.body);
+    // input is validated and typed: { title: string; completed: boolean }
+    const todo: Todo = { id: nextId++, ...input };
+    todos.push(todo);
+    res.status(201).json(todo);
+  })
+);
+
+// READ ALL
+app.get(
+  "/todos",
+  asyncHandler(async (_req: Request, res: Response) => {
+    res.json(todos);
+  })
+);
+
+// READ ONE
+app.get(
+  "/todos/:id",
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const todo = todos.find((t) => t.id === Number(req.params.id));
+    if (!todo) {
+      res.status(404).json({ error: "Todo not found" });
+      return;
+    }
+    res.json(todo);
+  })
+);
+
+// UPDATE
+app.patch(
+  "/todos/:id",
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const data = updateTodoSchema.parse(req.body);
+    const todo = todos.find((t) => t.id === Number(req.params.id));
+    if (!todo) {
+      res.status(404).json({ error: "Todo not found" });
+      return;
+    }
+    Object.assign(todo, data);
+    res.json(todo);
+  })
+);
+
+// DELETE
+app.delete(
+  "/todos/:id",
+  asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const index = todos.findIndex((t) => t.id === Number(req.params.id));
+    if (index === -1) {
+      res.status(404).json({ error: "Todo not found" });
+      return;
+    }
+    todos.splice(index, 1);
+    res.status(204).send();
+  })
+);
+
+// Error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof z.ZodError) {
+    // Zod validation errors get a 400 response
+    res.status(400).json({ error: "Validation failed", details: err.issues });
+    return;
+  }
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
+app.listen(3000, () => console.log("Server running on port 3000"));
+\`\`\`
+
+Every route is fully typed: request parameters are constrained by Express generics, request bodies are validated and typed by Zod, and async errors are always forwarded to the error handler. No any, no unhandled rejections, no manual validation.
+`,
+},
+          {
+  id: "ns-ts-advanced",
+  title: "Advanced Type Patterns",
+  shortDesc: "Branded types, phantom types, builder pattern with generics, and type-safe state machines.",
+  difficulty: "advanced",
+  readTimeMin: 22,
+  keyPoints: [
+    "Branded types for preventing accidental mixing of structurally compatible types",
+    "Phantom type parameters that exist only at compile time to encode extra constraints",
+    "Builder pattern with generics to enforce method call order at compile time",
+    "Type-safe state machines using discriminated unions to model legal state transitions",
+    "Combining these patterns to eliminate entire categories of runtime bugs",
+  ],
+  tags: ["typescript", "advanced-patterns", "type-system", "type-safety"],
+  content: `## What's This?
+
+Advanced type patterns are techniques that leverage TypeScript's type system to enforce business rules at compile time rather than runtime. Branded types add a phantom brand property to distinguish structurally identical types like UserId and OrderId. Phantom types use a type parameter that exists only at the type level (never at runtime) to encode additional constraints. The builder pattern with generics enforces a specific sequence of method calls -- the compiler rejects code that calls methods in the wrong order. Type-safe state machines use discriminated unions to model finite states and their legal transitions, making invalid states unrepresentable. These patterns exist because real-world bugs often come from mixing up identifiers, calling setup methods in the wrong order, or reaching impossible states -- and TypeScript's type system can catch all of these before the code runs.
+
+## The Big Picture
+
+Advanced patterns build on Generics, Unions, and Conditional Types. Branded types use intersection types and a never-property trick; phantom types use unused generic parameters; builders chain generics through method returns; state machines extend discriminated unions with a transition function that narrows the return type. Mastering these patterns elevates you from a TypeScript user to a TypeScript power user -- you design types that make illegal states impossible, turning runtime errors into compile-time errors.
+
+## Core Ideas
+
+### Branded Types
+
+A branded type adds a unique brand property that exists only at the type level. This prevents accidental assignment between structurally identical types.
+
+\`\`\`typescript
+// Define a brand helper -- the brand property is a never at runtime
+type Brand<T, B> = T & { __brand: B };
+
+// Create distinct branded types
+type UserId = Brand<number, "UserId">;
+type OrderId = Brand<number, "OrderId">;
+
+// Functions accept only the branded type
+function getUser(id: UserId): string {
+  return "User " + id;
+}
+
+function getOrder(id: OrderId): string {
+  return "Order " + id;
+}
+
+const userId = 42 as UserId;
+const orderId = 99 as OrderId;
+
+getUser(userId);     // OK
+getOrder(orderId);   // OK
+// getUser(orderId); // Error: OrderId is not assignable to UserId
+
+// Without brands, both are just numbers -- easy to mix up
+\`\`\`
+
+The <code>__brand</code> property is never actually assigned a value at runtime (it's typed as never), so it adds zero runtime overhead. The cast <code>as UserId</code> is typically isolated to a validation function that parses and sanitises input.
+
+### Phantom Types
+
+A phantom type has a type parameter that is used only in the type definition, never in the runtime value. It lets you encode extra information in the type without affecting the runtime representation.
+
+\`\`\`typescript
+// Phantom type parameter T is never used at runtime
+class Meter<T> {
+  constructor(public value: number) {}
+  // T appears only in the type signature, not in the constructor
+}
+
+// Create type aliases for different units (the phantom tag)
+type Meters = Meter<"m">;
+type Feet = Meter<"ft">;
+
+// Conversion functions -- the phantom tag prevents unit mismatches
+function toFeet(m: Meters): Feet {
+  // Only access value at runtime, the phantom tag is compile-time only
+  return new Meter<"ft">(m.value * 3.281) as Feet;
+}
+
+function addMeters(a: Meters, b: Meters): Meters {
+  return new Meter<"m">(a.value + b.value) as Meters;
+}
+
+const distance1 = new Meter<"m">(100) as Meters;
+const distance2 = new Meter<"m">(50) as Meters;
+
+addMeters(distance1, distance2);     // OK: both are Meters
+// addMeters(distance1, feetValue);  // Error: Feet vs Meters mismatch
+\`\`\`
+
+The phantom type parameter T affects only type checking. At runtime, every Meter is just { value: number }. This makes phantom types ideal for encoding units, currencies, or any compile-time constraint that should have zero runtime cost.
+
+### Builder Pattern with Generics
+
+The builder pattern uses a chain of method calls to construct an object. With generics, you can enforce that certain methods must be called before others -- the type of the builder instance changes as you call methods.
+
+\`\`\`typescript
+// Each step is a distinct type that tracks which methods have been called
+interface StepNone {
+  name: false;
+  age: false;
+  email: false;
+}
+
+interface StepName {
+  name: true;
+  age: false;
+  email: false;
+}
+
+interface StepAge {
+  name: true;
+  age: true;
+  email: false;
+}
+
+type StepComplete = StepAge & { email: true };
+
+class UserBuilder<S extends { name: boolean; age: boolean; email: boolean }> {
+  // Private state accumulates values
+  private data: Partial<{ name: string; age: number; email: string }> = {};
+
+  // Each method returns the builder at a new step type
+  setName(name: string): UserBuilder<S & { name: true }> {
+    this.data.name = name;
+    return this as unknown as UserBuilder<S & { name: true }>;
+  }
+
+  setAge(age: number): UserBuilder<S & { age: true }> {
+    this.data.age = age;
+    return this as unknown as UserBuilder<S & { age: true }>;
+  }
+
+  setEmail(email: string): UserBuilder<S & { email: true }> {
+    this.data.email = email;
+    return this as unknown as UserBuilder<S & { email: true }>;
+  }
+
+  // Build is only available when all required fields are set
+  build(this: UserBuilder<StepComplete>): { name: string; age: number; email: string } {
+    return this.data as { name: string; age: number; email: string };
+  }
+}
+
+// Usage -- the compiler enforces the build order
+const user = new UserBuilder<StepNone>()
+  .setName("Alice")
+  .setAge(30)
+  .setEmail("alice@example.com")
+  .build();
+// OK: all required methods called
+
+// new UserBuilder<StepNone>().setName("Alice").build();
+// Error: build requires StepComplete, but age and email are missing
+\`\`\`
+
+The type parameter S tracks which properties have been set via intersection types. Each method narrows S by adding a true flag. The build method uses a this parameter to require the final step type.
+
+### Type-Safe State Machines
+
+A type-safe state machine models a finite set of states and the legal transitions between them. The current state is a discriminated union, and the transition function returns a new state based on the current state and an action. Invalid transitions produce compile-time errors.
+
+\`\`\`typescript
+// Define every possible state as a discriminated union member
+type TrafficLightState =
+  | { status: "red"; remaining: number }
+  | { status: "green"; remaining: number }
+  | { status: "yellow"; remaining: number };
+
+// Define actions that can cause transitions
+type TrafficAction =
+  | { type: "tick" }
+  | { type: "reset" };
+
+// Transition function: given a state and an action, return the new state
+function transition(
+  state: TrafficLightState,
+  action: TrafficAction
+): TrafficLightState {
+  switch (state.status) {
+    case "red":
+      if (action.type === "tick" && state.remaining <= 1) {
+        return { status: "green", remaining: 30 };
+      }
+      return { ...state, remaining: state.remaining - 1 };
+
+    case "green":
+      if (action.type === "tick" && state.remaining <= 1) {
+        return { status: "yellow", remaining: 5 };
+      }
+      return { ...state, remaining: state.remaining - 1 };
+
+    case "yellow":
+      if (action.type === "tick" && state.remaining <= 1) {
+        return { status: "red", remaining: 20 };
+      }
+      return { ...state, remaining: state.remaining - 1 };
+
+    default:
+      return state;
+  }
+}
+
+// The compiler knows the exact shape in each branch
+const current: TrafficLightState = { status: "red", remaining: 20 };
+const next = transition(current, { type: "tick" });
+// next.status is typed as "red" | "green" | "yellow" (refined by control flow)
+\`\`\`
+
+For stricter enforcement where the compiler tracks which exact state you are in, use a generic state machine with a type parameter for the current state:
+
+\`\`\`typescript
+// A more advanced version with exact state tracking
+type Machine<S> = { state: S };
+
+function createMachine<S extends TrafficLightState>(
+  initialState: S
+): Machine<S> {
+  return { state: initialState };
+}
+
+function tick<S extends TrafficLightState>(
+  machine: Machine<S>
+): Machine<TrafficLightState> {
+  return {
+    state: transition(machine.state, { type: "tick" }),
+  };
+}
+
+const machine = createMachine({ status: "red", remaining: 20 });
+// machine is Machine<{ status: "red"; remaining: number }>
+\`\`\`
+
+## Wiring It Together
+
+A complete example: a type-safe workflow for processing orders with branded IDs, phantom units, a builder for order creation, and a state machine for order status.
+
+\`\`\`typescript
+// -- Branded types --
+type OrderId = Brand<number, "OrderId">;
+type ProductId = Brand<number, "ProductId">;
+
+// -- Phantom units for prices --
+class Price<C extends string> {
+  constructor(public amount: number) {}
+}
+type USD = Price<"USD">;
+type EUR = Price<"EUR">;
+
+function convertToEur(usd: USD): EUR {
+  return new Price<EUR>(usd.amount * 0.92) as EUR;
+}
+
+// -- Builder pattern for order creation --
+interface OrderData {
+  productId: ProductId;
+  quantity: number;
+  price: EUR;
+}
+
+interface OrderBuilderState {
+  product: boolean;
+  quantity: boolean;
+  price: boolean;
+}
+
+class OrderBuilder<S extends OrderBuilderState> {
+  private data: Partial<OrderData> = {};
+
+  withProduct(id: ProductId): OrderBuilder<S & { product: true }> {
+    this.data.productId = id;
+    return this as unknown as OrderBuilder<S & { product: true }>;
+  }
+
+  withQuantity(qty: number): OrderBuilder<S & { quantity: true }> {
+    this.data.quantity = qty;
+    return this as unknown as OrderBuilder<S & { quantity: true }>;
+  }
+
+  withPrice(price: EUR): OrderBuilder<S & { price: true }> {
+    this.data.price = price;
+    return this as unknown as OrderBuilder<S & { price: true }>;
+  }
+
+  build(this: OrderBuilder<{ product: true; quantity: true; price: true }>): OrderData {
+    return this.data as OrderData;
+  }
+}
+
+// -- State machine for order processing --
+type OrderStatus =
+  | { kind: "pending" }
+  | { kind: "confirmed"; confirmedAt: Date }
+  | { kind: "shipped"; trackingId: string }
+  | { kind: "delivered"; deliveredAt: Date }
+  | { kind: "cancelled"; reason: string };
+
+type OrderEvent =
+  | { type: "confirm" }
+  | { type: "ship"; trackingId: string }
+  | { type: "deliver" }
+  | { type: "cancel"; reason: string };
+
+function transitionOrder(
+  status: OrderStatus,
+  event: OrderEvent
+): OrderStatus {
+  switch (status.kind) {
+    case "pending":
+      if (event.type === "confirm") {
+        return { kind: "confirmed", confirmedAt: new Date() };
+      }
+      if (event.type === "cancel") {
+        return { kind: "cancelled", reason: event.reason };
+      }
+      // Other events are impossible in pending state
+      return status;
+
+    case "confirmed":
+      if (event.type === "ship") {
+        return { kind: "shipped", trackingId: event.trackingId };
+      }
+      if (event.type === "cancel") {
+        return { kind: "cancelled", reason: event.reason };
+      }
+      return status;
+
+    case "shipped":
+      if (event.type === "deliver") {
+        return { kind: "delivered", deliveredAt: new Date() };
+      }
+      return status;
+
+    default:
+      return status;  // delivered and cancelled are terminal states
+  }
+}
+
+// -- Usage: combining all patterns --
+const productId = 101 as ProductId;
+const priceUSD = new Price<USD>(29.99) as USD;
+const priceEUR = convertToEur(priceUSD);
+
+const orderData = new OrderBuilder()
+  .withProduct(productId)
+  .withQuantity(2)
+  .withPrice(priceEUR)
+  .build();
+// All three methods were called -- build succeeds
+
+let orderStatus: OrderStatus = { kind: "pending" };
+orderStatus = transitionOrder(orderStatus, { type: "confirm" });
+// orderStatus is now { kind: "confirmed"; confirmedAt: Date }
+orderStatus = transitionOrder(orderStatus, { type: "ship", trackingId: "TRK123" });
+// orderStatus is now { kind: "shipped"; trackingId: string }
+orderStatus = transitionOrder(orderStatus, { type: "deliver" });
+// orderStatus is now { kind: "delivered"; deliveredAt: Date }
+
+console.log("Order complete:", orderData, orderStatus);
+\`\`\`
+
+Branded types prevent passing a ProductId where an OrderId is expected. Phantom units prevent mixing USD and EUR. The builder ensures all required fields are set before build is called. The state machine ensures orders follow the legal lifecycle: pending -> confirmed -> shipped -> delivered, with cancellation possible from pending or confirmed.
+`,
+},
+          {
+  id: "ns-ts-compiler",
+  title: "Compiler Configuration & Tooling",
+  shortDesc: "tsconfig.json in depth, project references, tsc --build, and ESLint with typescript-eslint.",
+  difficulty: "advanced",
+  readTimeMin: 22,
+  keyPoints: [
+    "Deep understanding of tsconfig.json: target, module, strict, lib, paths, and more",
+    "Project references for splitting large codebases into composable sub-projects",
+    "Incremental builds with tsc --build for faster recompilation",
+    "Configuring ESLint with typescript-eslint for type-aware linting rules",
+    "Balancing strictness, performance, and correctness in compiler configuration",
+  ],
+  tags: ["typescript", "compiler", "tooling", "eslint"],
+  content: `## What's This?
+
+The TypeScript compiler (tsc) is controlled by tsconfig.json, a JSON file that determines how your TypeScript code is parsed, type-checked, and emitted. Every option affects either the input (what is type-checked and how strictly), the transformation (what JavaScript syntax is emitted), or the output (where files land). Project references let you split a large codebase into smaller sub-projects that reference each other, enabling incremental builds and better organisation. The <code>tsc --build</code> flag orchestrates building multiple project references in dependency order. ESLint with typescript-eslint brings TypeScript-aware linting rules that catch type-level issues and enforce code style with type information. Understanding these tools is the difference between "it compiles" and "the team is productive."
+
+## The Big Picture
+
+Compiler configuration sits at the foundation of every TypeScript project. It builds on everything else in TypeScript: target and lib affect what syntax and APIs you can use, strict affects how the type system behaves, and project references affect how large codebases are structured. Modern TypeScript projects increasingly rely on tools like ESLint alongside the compiler for code quality. After mastering this topic, you can configure TypeScript for any project size, from a single-file script to a monorepo with dozens of packages.
+
+## Core Ideas
+
+### tsconfig.json in Depth
+
+The tsconfig.json file has a root-level options section and a compilerOptions section. The most influential settings control output, strictness, and module behaviour.
+
+\`\`\`json
+{
+  "compilerOptions": {
+    // -- Output --
+    "target": "ES2022",          // JS syntax version to emit (async/await, etc.)
+    "module": "NodeNext",        // Module system: ES2022, CommonJS, NodeNext
+    "moduleResolution": "NodeNext", // How import paths resolve (node, bundler, etc.)
+    "outDir": "./dist",          // Emit compiled JS here
+    "rootDir": "./src",          // Find source .ts files here
+    "declaration": true,         // Generate .d.ts files
+    "sourceMap": true,           // Generate .js.map for debugging
+
+    // -- Strictness --
+    "strict": true,              // Enable all strict checks (recommended)
+    "noUncheckedIndexedAccess": true, // Add undefined to index access types
+    "noImplicitReturns": true,   // Error if not all paths return a value
+    "forceConsistentCasingInFileNames": true, // Catch import path casing errors
+
+    // -- Environment --
+    "lib": ["ES2022", "DOM"],    // Which API definitions to include
+    "skipLibCheck": true,        // Skip type checking of .d.ts files (faster)
+    "types": ["node"],           // Auto-include @types/node
+  },
+  "include": ["src"],            // Files to compile
+  "exclude": ["node_modules"]    // Files to skip
+}
+\`\`\`
+
+| Option | What It Controls | Recommended |
+|--------|-----------------|-------------|
+| target | Output JS syntax version | "ES2022" or newer |
+| strict | Master switch for type strictness | true |
+| module | Emitted module format | "NodeNext" for Node, "ES2022" for browser |
+| lib | Which standard library types to include | Match your target + runtime |
+| skipLibCheck | Skip checking .d.ts | true for faster builds |
+
+The strict flag enables <code>strictNullChecks</code>, <code>strictFunctionTypes</code>, <code>strictBindCallApply</code>, <code>noImplicitAny</code>, and others. Always set it to true for new projects.
+
+### Path Aliases
+
+The paths option maps import prefixes to directory locations, allowing cleaner imports without relative path chains.
+
+\`\`\`json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],              // import { x } from "@/utils/helpers"
+      "@components/*": ["src/components/*"] // import { Button } from "@components/Button"
+    }
+  }
+}
+\`\`\`
+
+\`\`\`typescript
+// Instead of: import { formatDate } from "../../../utils/helpers";
+import { formatDate } from "@/utils/helpers";
+// Cleaner import that works regardless of file depth
+\`\`\`
+
+Note that bundlers (Vite, Webpack) or runtime loaders (tsx, ts-node) must also be configured to resolve these aliases.
+
+### Project References
+
+Project references split a large TypeScript codebase into multiple tsconfig files that reference each other. Each sub-project has its own tsconfig with <code>composite: true</code>.
+
+\`\`\`json
+// packages/lib/tsconfig.json -- a library project
+{
+  "compilerOptions": {
+    "composite": true,            // Required for project references
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true
+  },
+  "include": ["src"]
+}
+\`\`\`
+
+\`\`\`json
+// packages/app/tsconfig.json -- depends on the lib project
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "references": [
+    { "path": "../lib" }          // Declare dependency on lib
+  ],
+  "include": ["src"]
+}
+\`\`\`
+
+\`\`\`json
+// Root tsconfig.json -- orchestrates all sub-projects
+{
+  "files": [],
+  "references": [
+    { "path": "packages/lib" },
+    { "path": "packages/app" }
+  ]
+}
+\`\`\`
+
+Each referenced project is built independently. The referencing project can import from the referenced one and gets its types automatically.
+
+### tsc --build for Incremental Builds
+
+The <code>tsc --build</code> flag compiles all referenced projects in dependency order. It uses <code>.tsbuildinfo</code> files to skip rebuilding projects whose source files have not changed.
+
+\`\`\`bash
+# Build everything (all referenced projects)
+tsc --build
+
+# Force rebuild of everything
+tsc --build --force
+
+# Clean build artifacts
+tsc --build --clean
+
+# Watch mode for all projects
+tsc --build --watch
+\`\`\`
+
+\`\`\`json
+// Enable incremental builds in tsconfig
+{
+  "compilerOptions": {
+    "incremental": true,           // Generate .tsbuildinfo for faster rebuilds
+    "tsBuildInfoFile": "./dist/.tsbuildinfo" // Where to store build info
+  }
+}
+\`\`\`
+
+The <code>--build</code> flag respects the dependency graph defined by references. If only <code>packages/app</code> changed, only that project and anything depending on it is rebuilt.
+
+### ESLint with typescript-eslint
+
+ESLint with the typescript-eslint plugin provides TypeScript-aware lint rules that go beyond what tsc alone checks. The parser reads TypeScript syntax, and the rules use the type checker to catch issues like <code>any</code> misuse or unnecessary type assertions.
+
+\`\`\`bash
+# Install dependencies
+npm install -D eslint @typescript-eslint/parser @typescript-eslint/eslint-plugin
+\`\`\`
+
+\`\`\`javascript
+// eslint.config.js (flat config format)
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,       // Use the TS project service for type-aware rules
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",     // Disallow any
+      "@typescript-eslint/no-unused-vars": "error",      // No unused variables
+      "@typescript-eslint/prefer-as-const": "error",     // Prefer "as const" over literal casts
+      "@typescript-eslint/no-floating-promises": "error", // Must await or handle promises
+    },
+  }
+);
+\`\`\`
+
+| Rule | What It Catches | Type-Aware |
+|------|----------------|------------|
+| no-explicit-any | Prevents using the any escape hatch | No |
+| no-floating-promises | Catches unhandled promise rejections | Yes |
+| no-unsafe-argument | Detects passing unsafe types to functions | Yes |
+| prefer-as-const | Suggests "as const" over manual literal types | No |
+| consistent-type-imports | Enforces import type for type-only imports | No |
+
+Type-aware rules (like no-floating-promises) use TypeScript's type checker to make decisions, so they catch more nuanced issues but require the parser to have access to the project's tsconfig.
+
+### Combining ESLint with Prettier
+
+Prettier handles formatting (spacing, quotes, semicolons) while ESLint handles logic errors and code quality. Use eslint-config-prettier to disable ESLint rules that conflict with Prettier.
+
+\`\`\`bash
+npm install -D prettier eslint-config-prettier
+\`\`\`
+
+\`\`\`javascript
+// eslint.config.js -- add prettier at the end
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+import prettier from "eslint-config-prettier";
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  prettier,  // Disables formatting rules that clash with Prettier
+  { rules: { "@typescript-eslint/no-explicit-any": "error" } }
+);
+\`\`\`
+
+\`\`\`json
+// .prettierrc
+{
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "all"
+}
+\`\`\`
+
+## Wiring It Together
+
+A complete example: a monorepo with two packages (shared library and app) using project references, incremental builds, and ESLint.
+
+\`\`\`
+project-root/
+  packages/
+    shared/
+      src/
+        index.ts
+      tsconfig.json
+      package.json
+    app/
+      src/
+        index.ts
+      tsconfig.json
+      package.json
+  tsconfig.json          # Root orchestrator
+  eslint.config.js
+  package.json
+\`\`\`
+
+\`\`\`typescript
+// packages/shared/src/index.ts
+export function greet(name: string): string {
+  return "Hello, " + name;
+}
+
+export interface User {
+  id: number;
+  name: string;
+}
+\`\`\`
+
+\`\`\`json
+// packages/shared/tsconfig.json
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true
+  },
+  "include": ["src"]
+}
+\`\`\`
+
+\`\`\`typescript
+// packages/app/src/index.ts
+import { greet, User } from "@myorg/shared";
+// Import from the shared package (resolved via project reference)
+
+const user: User = { id: 1, name: "Alice" };
+const message = greet(user.name);
+// greeting is typed as string
+
+async function sendGreeting(): Promise<void> {
+  const response = await fetch("/api/greet", {
+    method: "POST",
+    body: JSON.stringify({ name: user.name }),
+  });
+  // Response handling...
+  console.log(await response.text());
+}
+
+sendGreeting(); // no-floating-promises would catch this!
+\`\`\`
+
+\`\`\`json
+// packages/app/tsconfig.json
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true
+  },
+  "references": [
+    { "path": "../shared" }
+  ],
+  "include": ["src"]
+}
+\`\`\`
+
+\`\`\`json
+// Root tsconfig.json
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "packages/app" }
+  ]
+}
+\`\`\`
+
+\`\`\`javascript
+// eslint.config.js
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/consistent-type-imports": "error",
+    },
+  }
+);
+\`\`\`
+
+\`\`\`json
+// Root package.json scripts
+{
+  "scripts": {
+    "build": "tsc --build",                  // Build all projects in order
+    "build:clean": "tsc --build --clean",    // Remove all build artifacts
+    "watch": "tsc --build --watch",          // Rebuild on changes
+    "lint": "eslint packages/",              // Lint all packages
+    "lint:fix": "eslint packages/ --fix",
+    "typecheck": "tsc --build --noEmit"      // Type-check without emitting
+  }
+}
+\`\`\`
+
+\`\`\`bash
+# Development workflow
+npm run build       # Compiles shared first, then app
+npm run lint        # Catches no-floating-promises on sendGreeting()
+npm run watch       # Continuous incremental rebuilds
+\`\`\`
+
+Project references ensure shared is built before app. Incremental builds with --build skip unchanged projects. ESLint with typescript-eslint catches the floating promise on sendGreeting() and prevents explicit any usage. The root tsconfig orchestrates everything with a single command.
+`,
+},
         ],
       },
       // ── Go ──────────────────────────────────────────────────────────────
@@ -73007,16 +75571,2339 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "Go",
         description: "Go from the ground up — syntax, concurrency, interfaces, the standard library, web frameworks, and tooling.",
         topics: [
-          { id: "ns-go-syntax", title: "Syntax & Basics", shortDesc: "Package structure, variables, constants, zero values, fmt, and the go toolchain.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-data-types", title: "Data Types & Control Flow", shortDesc: "Basic types, arrays, slices, maps, structs, if/switch/for, and defer.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-functions", title: "Functions & Methods", shortDesc: "Multiple return values, variadic functions, methods, and function values.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-interfaces", title: "Interfaces & Embedding", shortDesc: "Interface satisfaction, empty interface, type assertions, struct embedding, and composition.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-concurrency", title: "Concurrency (Goroutines & Channels)", shortDesc: "Goroutines, channels, select, sync primitives (Mutex, WaitGroup), and the actor model.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-errors", title: "Error Handling", shortDesc: "Error interface, sentinel errors, wrapping (%w), As/Is, and panic/recover.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-packages", title: "Packages & Modules", shortDesc: "go mod, module structure, internal packages, vendoring, and workspace mode.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-stdlib", title: "Standard Library", shortDesc: "io, net/http, encoding/json, context, time, and testing packages.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-web", title: "Web Frameworks (Gin, Echo, Chi)", shortDesc: "Routing, middleware, request binding, validation, and building REST APIs.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-go-testing", title: "Testing & Benchmarking", shortDesc: "go test, table-driven tests, subtests, benchmarks, fuzzing, and testify.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-go-syntax",
+            title: "Syntax & Basics",
+            shortDesc: "Package structure, variables, constants, zero values, fmt, and the go toolchain.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+              "Go programs are organised into packages with package declarations and import statements",
+              "Variables are declared with var or := (short declaration) and have zero values by default",
+              "Constants use const with compile-time evaluation for immutable values",
+              "The fmt package provides formatted I/O with Println, Printf, and Sprintf",
+              "The go toolchain compiles, runs, formats, and manages dependencies from a single binary",
+            ],
+            tags: ["go", "syntax", "basics"],
+            content: `## What's This?
+
+Go is a compiled, statically typed language developed at Google that prioritises simplicity and readability. Programs are organised into packages (directories of .go files), variables are explicitly typed or inferred, constants are immutable compile-time values, and every declared variable starts with a zero value (no undefined state). The fmt package provides console output and formatted strings, while the single go binary handles compiling, running, formatting, and dependency management.
+
+Think of a package like a filing cabinet drawer — every .go file in the same directory belongs to the same drawer and shares its contents. The go toolchain is the office manager: it knows how to find files, compile them, run the result, and keep the workspace tidy.
+
+## The Big Picture
+
+Syntax basics are the foundation for everything else in Go. The package system determines how code is organised and reused. Variables and constants are how you store data. The go toolchain is what you interact with daily — go build, go run, go fmt, go mod. Once you understand these, you can move on to data types, control flow, functions, and eventually interfaces and concurrency.
+
+## Core Ideas
+
+### Package Structure
+
+Every Go file starts with a <code>package</code> declaration that identifies which package it belongs to. Files in the same directory must share the same package name. The <code>main</code> package is special — it defines an executable program and must contain a <code>func main()</code> entry point.
+
+\`\`\`go
+package main           // Declare this file belongs to the main package
+import "fmt"           // Import the standard library fmt package
+
+func main() {          // Entry point — execution starts here
+    fmt.Println("Hello, Go")
+}
+\`\`\`
+
+### Variables and Zero Values
+
+Go guarantees every variable has a well-defined value. Variables declared without an explicit initialiser get a <code>zero value</code>: 0 for numbers, false for booleans, "" for strings, nil for pointers/slices/maps/channels/interfaces.
+
+\`\`\`go
+var age int            // zero value: 0
+var name string        // zero value: ""
+var active bool        // zero value: false
+var price float64      // zero value: 0.0
+count := 10            // Short declaration: type inferred as int
+msg := "hello"         // Short declaration: type inferred as string
+\`\`\`
+
+### Constants
+
+Constants are immutable values evaluated at compile time. Use <code>const</code> for values that never change. <code>iota</code> generates sequential integer constants within a <code>const</code> block.
+
+\`\`\`go
+const Pi = 3.14159                      // Untyped constant
+const AppName string = "MyApp"          // Typed constant
+
+const (
+    StatusOK = iota                     // 0
+    StatusNotFound                      // 1
+    StatusError                         // 2
+)
+\`\`\`
+
+### The fmt Package
+
+<code>fmt</code> provides formatted I/O. <code>Println</code> prints with spaces and a newline. <code>Printf</code> uses format verbs (%s for string, %d for int). <code>Sprintf</code> returns a formatted string without printing.
+
+\`\`\`go
+name := "Alice"
+age := 30
+fmt.Println("Hello", name)            // Hello Alice
+fmt.Printf("%s is %d years old\n", name, age)  // Alice is 30 years old
+greeting := fmt.Sprintf("Hi, %s", name)         // greeting = "Hi, Alice"
+\`\`\`
+
+### The Go Toolchain
+
+The <code>go</code> binary is the single entry point for compiling, running, and managing code. <code>go run</code> compiles and runs in one step. <code>go build</code> produces a binary. <code>go fmt</code> auto-formats code. <code>go mod init</code> creates a new module.
+
+\`\`\`bash
+go run main.go         # Compile and run in one step
+go build -o myapp .    # Compile and produce a binary named myapp
+go fmt ./...           # Auto-format all Go files in the module
+go mod init example    # Create a new module
+\`\`\`
+
+## Wiring It Together
+
+A complete Go program that demonstrates package structure, variables, constants, formatted output, and the build-run cycle.
+
+\`\`\`go
+package main                    // Executable package
+
+import "fmt"                    // Import fmt for output
+
+const AppVersion = "1.0.0"      // Compile-time constant
+
+func main() {
+    var name string             // Declared, zero value ""
+    name = "Alice"              // Assign a value
+
+    age := 30                   // Short declaration, type inferred as int
+    pi := 3.14159               // Short declaration
+
+    fmt.Printf("App version: %s\n", AppVersion)
+    fmt.Printf("Name: %s, Age: %d\n", name, age)
+    fmt.Printf("Pi \u2248 %.2f\n", pi)
+}
+\`\`\`
+
+\`\`\`bash
+go run main.go                  # Compile + run
+# Output:
+# App version: 1.0.0
+# Name: Alice, Age: 30
+# Pi \u2248 3.14
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-data-types",
+            title: "Data Types & Control Flow",
+            shortDesc: "Basic types, arrays, slices, maps, structs, if/switch/for, and defer.",
+            difficulty: "foundational",
+            readTimeMin: 15,
+            keyPoints: [
+              "Go provides basic types (bool, string, int, float64, byte, rune) with explicit conversions",
+              "Arrays are fixed-size contiguous elements; slices are dynamic views backed by arrays",
+              "Maps are unordered key-value collections created with make or map literals",
+              "Structs group named fields into a single type, comparable to classes without methods",
+              "Control flow uses if/else, switch (with implicit break), and for (the only loop keyword)",
+              "defer schedules a function call to run when the surrounding function returns",
+            ],
+            tags: ["go", "data-types", "control-flow"],
+            content: `## What's This?
+
+Go's type system covers primitive types (bool, string, integers, floats), composite types (arrays, slices, maps, structs), and control flow constructs (if, switch, for, defer). Unlike many languages that have while and do-while loops, Go uses for for all looping, with different forms for different scenarios. Defer is a unique Go feature that ensures a function call runs when the parent function exits, commonly used for cleanup.
+
+Think of slices as a flexible hotel booking — you reserve a block of rooms (the backing array) but can check in to a subset (the slice). Maps are like a coat-check counter: you hand over a ticket (key) and get your coat (value) back instantly. Structs are an ID card: a fixed set of labelled fields (name, photo, ID number) clipped together.
+
+## The Big Picture
+
+Data types determine what you can store and how. Control flow determines what runs and when. Together they form the logic layer of any program. Understanding types and control flow leads naturally to functions (which operate on data) and interfaces (which abstract over types).
+
+## Core Ideas
+
+### Basic Types
+
+Go provides a handful of fundamental types. Conversions between types must be explicit — no implicit numeric widening.
+
+\`\`\`go
+var b bool = true                    // Boolean: true or false
+var s string = "hello"               // String: immutable UTF-8
+var i int = 42                       // Platform-dependent size (32 or 64 bit)
+var f float64 = 3.14                 // 64-bit float
+var by byte = 'a'                    // byte = uint8
+var r rune = '\u2713'                // rune = int32, represents a Unicode code point
+
+converted := int(f)                  // Explicit conversion: float64 -> int
+\`\`\`
+
+### Arrays
+
+Arrays have a fixed length set at compile time. They are value types — assigning an array copies all elements.
+
+\`\`\`go
+var nums [3]int                      // Array of 3 ints, zero-valued: [0 0 0]
+nums[0] = 1                          // Set first element
+primes := [5]int{2, 3, 5, 7, 11}    // Array literal with 5 elements
+\`\`\`
+
+### Slices
+
+Slices are dynamic-length views over an underlying array. Use <code>make</code> to create a slice with a given length and capacity. <code>append</code> grows a slice.
+
+\`\`\`go
+s := make([]int, 3)                  // Slice of int, length 3, capacity 3: [0 0 0]
+s[0] = 10                            // Modify element
+s = append(s, 20)                    // Append element, length becomes 4
+
+letters := []string{"a", "b", "c"}   // Slice literal
+subset := letters[1:3]               // Slice of slice: ["b", "c"]
+\`\`\`
+
+### Maps
+
+Maps are unordered key-value pairs. Use <code>make</code> to create one, then read and write with bracket syntax.
+
+\`\`\`go
+ages := make(map[string]int)         // Create map: string keys, int values
+ages["Alice"] = 30                   // Set key "Alice" to 30
+age := ages["Alice"]                 // Read: age = 30
+delete(ages, "Alice")                // Remove key "Alice"
+
+scores := map[string]int{            // Map literal
+    "Alice": 95,
+    "Bob":   87,
+}
+\`\`\`
+
+### Structs
+
+A struct groups named fields into a single value. Fields are accessed with dot notation.
+
+\`\`\`go
+type Person struct {                 // Define struct type
+    Name string
+    Age  int
+}
+
+p := Person{Name: "Alice", Age: 30}  // Create instance
+fmt.Println(p.Name)                  // Access field: Alice
+\`\`\`
+
+### If / Else
+
+<code>if</code> supports an optional initialiser statement before the condition. The condition must be a boolean expression — no truthy/falsy coercion.
+
+\`\`\`go
+if age := 30; age > 18 {            // Initialiser + condition
+    fmt.Println("Adult")
+} else {
+    fmt.Println("Minor")
+}
+\`\`\`
+
+### Switch
+
+<code>switch</code> evaluates cases top-to-bottom and stops at the first match (no fallthrough by default). It works with any type.
+
+\`\`\`go
+day := "Tuesday"
+switch day {
+case "Monday":
+    fmt.Println("Start of week")
+case "Tuesday", "Wednesday":         // Comma means OR
+    fmt.Println("Midweek")
+default:
+    fmt.Println("Other day")
+}
+\`\`\`
+
+### For (the only loop)
+
+<code>for</code> has three forms: classic (init; cond; post), condition-only (like while), and range (iterate over collections).
+
+\`\`\`go
+for i := 0; i < 3; i++ {            // Classic for loop
+    fmt.Println(i)                   // 0, 1, 2
+}
+
+sum := 1
+for sum < 100 {                      // Condition-only — like a while loop
+    sum += sum
+}
+
+nums := []int{10, 20, 30}
+for i, v := range nums {            // Range: index and value
+    fmt.Printf("nums[%d]=%d\n", i, v)
+}
+\`\`\`
+
+### Defer
+
+<code>defer</code> schedules a call to run when the enclosing function returns. Arguments are evaluated immediately, but the call runs at the end. Deferred calls are LIFO (last-in, first-out).
+
+\`\`\`go
+func readFile() {
+    f, err := os.Open("data.txt")    // Open a file
+    if err != nil {
+        return
+    }
+    defer f.Close()                  // Close runs when readFile returns
+    // ... read from f ...
+}
+\`\`\`
+
+## Wiring It Together
+
+A program that reads student data into a struct, stores entries in a slice, indexes them by ID in a map, and prints the results — demonstrating structs, slices, maps, for range, and deferred cleanup.
+
+\`\`\`go
+package main
+
+import "fmt"
+
+type Student struct {
+    ID    int
+    Name  string
+    Score float64
+}
+
+func main() {
+    students := []Student{                        // Slice of structs
+        {ID: 1, Name: "Alice", Score: 95.5},
+        {ID: 2, Name: "Bob", Score: 87.0},
+        {ID: 3, Name: "Carol", Score: 92.3},
+    }
+
+    byID := make(map[int]Student)                 // Map ID -> Student
+    for _, s := range students {                  // Range over slice
+        byID[s.ID] = s                            // Populate map
+    }
+
+    for i, s := range students {                  // Range again for output
+        fmt.Printf("students[%d] = %s (%.1f)\n", i, s.Name, s.Score)
+    }
+
+    fmt.Printf("Student 2: %s\n", byID[2].Name)   // Map lookup by ID
+}
+\`\`\`
+
+Output:
+\`\`\`
+students[0] = Alice (95.5)
+students[1] = Bob (87.0)
+students[2] = Carol (92.3)
+Student 2: Bob
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-functions",
+            title: "Functions & Methods",
+            shortDesc: "Multiple return values, variadic functions, methods, and function values.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+              "Functions use func keyword with typed parameters and return values — optionally multiple returns",
+              "Multiple return values allow idiomatic error handling (value, error pairs)",
+              "Variadic functions accept a variable number of arguments using ... syntax",
+              "Methods are functions with a receiver parameter, attaching behaviour to types",
+              "Functions are first-class values: they can be assigned to variables, passed as arguments, and returned",
+            ],
+            tags: ["go", "functions", "methods"],
+            content: `## What's This?
+
+Functions in Go are declared with <code>func</code>, take typed parameters, and return typed results — including multiple return values. Go uses multiple returns for the common pattern of returning a result and an error together. Variadic functions (like <code>fmt.Println</code>) accept any number of trailing arguments. Methods are functions attached to a type via a receiver parameter, letting you define behaviour on your own types. Functions are first-class: they can be stored in variables, passed to other functions, and returned.
+
+Think of a function as a coffee machine: you put in ingredients (parameters), it does work, and you get a product (return value). Multiple returns are like getting both your coffee and a receipt. A method is a coffee machine with a brand label — the behaviour belongs to that specific machine.
+
+## The Big Picture
+
+Functions are the building blocks of Go programs. Multiple returns enable Go's explicit error-handling style. Methods bridge functions to types, which leads directly to interfaces. Function values enable callbacks, middleware, and higher-order patterns used throughout the standard library.
+
+## Core Ideas
+
+### Function Declaration
+
+A function takes zero or more typed parameters and returns zero or more typed results.
+
+\`\`\`go
+func add(a int, b int) int {         // Two int params, one int return
+    return a + b
+}
+
+func greet(name string) {            // One param, no return value
+    fmt.Println("Hello,", name)
+}
+
+result := add(3, 4)                  // Call: result = 7
+\`\`\`
+
+### Multiple Return Values
+
+A function can return multiple values. The most common pattern is <code>(value, error)</code>.
+
+\`\`\`go
+func divide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("division by zero")
+    }
+    return a / b, nil                  // nil error means success
+}
+
+result, err := divide(10, 2)           // result = 5, err = nil
+if err != nil {
+    fmt.Println("Error:", err)
+}
+\`\`\`
+
+### Named Return Values
+
+Return parameters can be named. They are automatically declared as local variables and zero-initialised. A bare <code>return</code> returns their current values.
+
+\`\`\`go
+func split(sum int) (x, y int) {       // Named returns x and y
+    x = sum * 4 / 9
+    y = sum - x
+    return                              // Bare return: returns x, y
+}
+
+a, b := split(18)                      // a = 8, b = 10
+\`\`\`
+
+### Variadic Functions
+
+A variadic function accepts any number of arguments for its last parameter. The parameter becomes a slice inside the function.
+
+\`\`\`go
+func sum(nums ...int) int {            // ...int means zero or more ints
+    total := 0
+    for _, n := range nums {
+        total += n
+    }
+    return total
+}
+
+fmt.Println(sum(1, 2, 3))              // 6
+fmt.Println(sum())                     // 0 (empty call is valid)
+
+vals := []int{1, 2, 3}
+fmt.Println(sum(vals...))              // Spread slice into variadic call
+\`\`\`
+
+### Methods
+
+A method is a function with a <code>receiver</code> parameter that binds it to a type. Methods can have pointer receivers to modify the value.
+
+\`\`\`go
+type Rectangle struct {
+    Width, Height float64
+}
+
+func (r Rectangle) Area() float64 {     // Value receiver: read-only
+    return r.Width * r.Height
+}
+
+func (r *Rectangle) Scale(factor float64) {  // Pointer receiver: can mutate
+    r.Width *= factor
+    r.Height *= factor
+}
+
+rect := Rectangle{Width: 10, Height: 5}
+area := rect.Area()                    // 50
+rect.Scale(2)                          // Width=20, Height=10
+\`\`\`
+
+### Function Values
+
+Functions are values. They can be assigned to variables, passed as arguments, and returned from other functions — enabling higher-order patterns like callbacks.
+
+\`\`\`go
+var fn func(int, int) int              // Declare function variable
+fn = add                               // Assign function add to fn
+fmt.Println(fn(3, 4))                  // Call fn: 7
+
+// Higher-order function: returns a function
+func makeMultiplier(factor float64) func(float64) float64 {
+    return func(x float64) float64 {
+        return x * factor              // Closure over factor
+    }
+}
+
+double := makeMultiplier(2)            // double is a function
+fmt.Println(double(5))                 // 10
+\`\`\`
+
+## Wiring It Together
+
+A geometry program that defines a Rectangle type with methods, uses a variadic function to compute total area, and demonstrates multiple returns for safe division — all connected in main.
+
+\`\`\`go
+package main
+
+import "fmt"
+
+type Rectangle struct {
+    Width, Height float64
+}
+
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func totalArea(rects ...Rectangle) float64 {
+    total := 0.0
+    for _, r := range rects {
+        total += r.Area()
+    }
+    return total
+}
+
+func safeDivide(a, b float64) (float64, error) {
+    if b == 0 {
+        return 0, fmt.Errorf("cannot divide by zero")
+    }
+    return a / b, nil
+}
+
+func main() {
+    r1 := Rectangle{Width: 10, Height: 5}
+    r2 := Rectangle{Width: 3, Height: 4}
+
+    fmt.Println("Total area:", totalArea(r1, r2))
+
+    ratio, err := safeDivide(r1.Area(), r2.Area())
+    if err != nil {
+        fmt.Println("Error:", err)
+    } else {
+        fmt.Printf("Area ratio: %.2f\n", ratio)
+    }
+}
+\`\`\`
+
+Output:
+\`\`\`
+Total area: 62
+Area ratio: 4.17
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-interfaces",
+            title: "Interfaces & Embedding",
+            shortDesc: "Interface satisfaction, empty interface, type assertions, struct embedding, and composition.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "Interfaces define behaviour as a set of method signatures — satisfaction is implicit",
+              "The empty interface (any) accepts any type and requires a type assertion to extract the concrete value",
+              "Type assertions and type switches recover the concrete type from an interface value",
+              "Struct embedding promotes fields and methods from one struct into another without inheritance",
+              "Go favours composition over inheritance: small interfaces composed into larger behaviours",
+            ],
+            tags: ["go", "interfaces", "embedding", "composition"],
+            content: `## What's This?
+
+An interface in Go is a type that defines a set of method signatures. Any type whose method set includes all the interface methods implicitly satisfies the interface — no explicit "implements" declaration needed. The empty interface (<code>interface{}</code> or its alias <code>any</code>) matches every type. Type assertions and type switches extract the concrete type from an interface value. Struct embedding lets one struct include another struct's fields and methods directly, promoting composition over inheritance.
+
+Think of an interface as a job posting: if you can do the work (implement the methods), you're hired — no paperwork needed. Struct embedding is like a Swiss Army knife: instead of building a complex tool from scratch, you embed a blade, a corkscrew, and scissors, and all their capabilities become yours.
+
+## The Big Picture
+
+Interfaces are the backbone of Go's type abstraction. The standard library uses small interfaces like <code>io.Reader</code> (one method: Read) and <code>io.Writer</code> (one method: Write) to compose powerful streaming abstractions. Understanding interfaces is essential for error handling, the standard library, and writing testable code. Embedding is Go's alternative to inheritance — it enables code reuse through composition.
+
+## Core Ideas
+
+### Defining and Satisfying Interfaces
+
+An interface declares method signatures. Any type that has those methods satisfies the interface implicitly.
+
+\`\`\`go
+type Speaker interface {              // Interface with one method
+    Speak() string
+}
+
+type Dog struct{ Name string }
+
+func (d Dog) Speak() string {          // Dog satisfies Speaker
+    return d.Name + " says woof"
+}
+
+type Cat struct{ Name string }
+
+func (c Cat) Speak() string {          // Cat also satisfies Speaker
+    return c.Name + " says meow"
+}
+
+var s Speaker = Dog{Name: "Rex"}        // Assign Dog to Speaker variable
+fmt.Println(s.Speak())                  // Rex says woof
+
+s = Cat{Name: "Luna"}                   // Assign Cat to same variable
+fmt.Println(s.Speak())                  // Luna says meow
+\`\`\`
+
+### The Empty Interface (any)
+
+<code>interface{}</code> (or its alias <code>any</code>) has zero methods, so every type satisfies it. Use it when you need to hold a value of unknown type.
+
+\`\`\`go
+var v any = 42                         // any = interface{}
+v = "hello"
+v = 3.14
+
+fmt.Println(v)                         // 3.14 (printed via reflection)
+\`\`\`
+
+### Type Assertions
+
+A type assertion extracts the concrete value from an interface. The two-value form avoids panics by returning a boolean instead.
+
+\`\`\`go
+var v any = "hello"
+
+s := v.(string)                        // Assert v holds a string
+fmt.Println(s)                         // hello
+
+n, ok := v.(int)                       // Two-value form: ok = false
+if !ok {
+    fmt.Println("v is not an int")
+}
+\`\`\`
+
+### Type Switches
+
+A type switch runs a switch statement on the concrete type held by an interface value.
+
+\`\`\`go
+func describe(v any) {
+    switch t := v.(type) {             // Type switch keyword
+    case string:
+        fmt.Println("string:", t)
+    case int:
+        fmt.Println("int:", t)
+    default:
+        fmt.Printf("unknown: %T\n", t)
+    }
+}
+
+describe(42)                           // int: 42
+describe("hi")                         // string: hi
+\`\`\`
+
+### Struct Embedding
+
+One struct can embed another — the embedded struct's fields and methods are promoted to the outer struct.
+
+\`\`\`go
+type Address struct {
+    City  string
+    State string
+}
+
+type Person struct {
+    Name    string
+    Address                          // Embedded — no field name
+}
+
+p := Person{
+    Name: "Alice",
+    Address: Address{City: "NYC", State: "NY"},
+}
+
+fmt.Println(p.City)                  // Promoted: NYC (p.Address.City also works)
+fmt.Println(p.State)                 // Promoted: NY
+\`\`\`
+
+### Composition Over Inheritance
+
+Small, focused interfaces are composed to build larger behaviours. This is Go's idiomatic design pattern.
+
+\`\`\`go
+type Reader interface {
+    Read(p []byte) (n int, err error)
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error)
+}
+
+type ReadWriter interface {
+    Reader                            // Embed Reader interface
+    Writer                            // Embed Writer interface
+}
+\`\`\`
+
+A type that implements both Read and Write automatically satisfies ReadWriter.
+
+## Wiring It Together
+
+A program that defines a Shape interface, implements it with Circle and Rectangle, uses a type switch to handle each shape, and embeds a Position struct.
+
+\`\`\`go
+package main
+
+import (
+    "fmt"
+    "math"
+)
+
+type Position struct {
+    X, Y float64
+}
+
+type Shape interface {
+    Area() float64
+}
+
+type Circle struct {
+    Position                         // Embedded — promotes X, Y
+    Radius float64
+}
+
+func (c Circle) Area() float64 {
+    return math.Pi * c.Radius * c.Radius
+}
+
+type Rectangle struct {
+    Position                         // Embedded
+    Width, Height float64
+}
+
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func describe(s Shape) {
+    switch v := s.(type) {           // Type switch
+    case Circle:
+        fmt.Printf("Circle at (%.0f,%.0f) radius %.0f area %.1f\n",
+            v.X, v.Y, v.Radius, v.Area())
+    case Rectangle:
+        fmt.Printf("Rectangle at (%.0f,%.0f) %.0fx%.0f area %.1f\n",
+            v.X, v.Y, v.Width, v.Height, v.Area())
+    default:
+        fmt.Printf("Unknown shape, area %.1f\n", v.Area())
+    }
+}
+
+func main() {
+    shapes := []Shape{
+        Circle{Position{0, 0}, 5},
+        Rectangle{Position{1, 2}, 4, 6},
+    }
+
+    for _, s := range shapes {
+        describe(s)
+    }
+}
+\`\`\`
+
+Output:
+\`\`\`
+Circle at (0,0) radius 5 area 78.5
+Rectangle at (1,2) 4x6 area 24.0
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-concurrency",
+            title: "Concurrency (Goroutines & Channels)",
+            shortDesc: "Goroutines, channels, select, sync primitives (Mutex, WaitGroup), and the actor model.",
+            difficulty: "advanced",
+            readTimeMin: 18,
+            keyPoints: [
+              "Goroutines are lightweight threads started with the go keyword, multiplexed onto OS threads",
+              "Channels are typed conduits for communication between goroutines (chan T)",
+              "select waits on multiple channel operations, picking the first ready one",
+              "sync.Mutex serialises access to shared state; sync.WaitGroup waits for goroutine completion",
+              "The actor model isolates state within a goroutine and communicates via channels, avoiding shared memory",
+            ],
+            tags: ["go", "concurrency", "goroutines", "channels"],
+            content: `## What's This?
+
+Go's concurrency model is built on goroutines (lightweight, multiplexed execution threads started with the <code>go</code> keyword) and channels (typed pipes that connect goroutines). Goroutines share the same address space but idiomatic Go avoids shared memory — instead, goroutines communicate by sending values over channels. The <code>select</code> statement lets a goroutine wait on multiple channel operations simultaneously. The <code>sync</code> package provides traditional primitives (Mutex for mutual exclusion, WaitGroup for completion tracking). The actor model patterns emerge naturally from goroutines communicating exclusively via channels.
+
+Think of goroutines as postal workers in a sorting office: each worker sorts mail independently (runs concurrently), and they pass parcels through labelled chutes (channels). The select statement is a supervisor watching multiple chutes at once, grabbing the first parcel that arrives. A Mutex is a single-stall restroom — only one person inside at a time. WaitGroup is a clipboard checklist that the supervisor marks off as each worker finishes.
+
+## The Big Picture
+
+Concurrency is central to Go's identity. The runtime manages goroutine scheduling efficiently — thousands of goroutines can run on a handful of OS threads. Channels and select enable elegant producer-consumer, fan-out/fan-in, and pipeline patterns. The sync package covers the remaining shared-memory cases. Mastering these primitives leads to building scalable network services, parallel data processors, and resilient distributed systems.
+
+## Core Ideas
+
+### Goroutines
+
+A goroutine is a function call prefixed with <code>go</code>. It runs concurrently with the calling function. The main function exits when it returns, not when goroutines finish — use a WaitGroup or channel to coordinate.
+
+\`\`\`go
+func say(msg string) {
+    for i := 0; i < 3; i++ {
+        fmt.Println(msg)
+        time.Sleep(100 * time.Millisecond)
+    }
+}
+
+func main() {
+    go say("hello")                  // Start goroutine — runs concurrently
+    say("world")                     // Runs in main goroutine
+}                                     // Program exits when main returns
+// (output interleaves "hello" and "world" in random order)
+\`\`\`
+
+### Channels
+
+A channel is a typed conduit. Use <code>make(chan T)</code> to create, <code>ch <- v</code> to send, <code>v := <-ch</code> to receive. Channels block until both sender and receiver are ready. An unbuffered channel synchronises — the sender blocks until someone receives.
+
+\`\`\`go
+ch := make(chan int)                 // Unbuffered channel of ints
+
+go func() {
+    ch <- 42                        // Send — blocks until main receives
+}()
+
+val := <-ch                          // Receive — blocks until goroutine sends
+fmt.Println(val)                     // 42
+\`\`\`
+
+Buffered channels have a capacity and don't block until the buffer is full.
+
+\`\`\`go
+ch := make(chan string, 2)           // Buffered channel, capacity 2
+ch <- "a"                            // Does not block
+ch <- "b"                            // Does not block
+// ch <- "c"                          // Would block (buffer full)
+fmt.Println(<-ch)                    // "a"
+fmt.Println(<-ch)                    // "b"
+\`\`\`
+
+### Range and Close
+
+The sender can <code>close</code> a channel to signal that no more values will be sent. The receiver can range over the channel to receive values until it is closed.
+
+\`\`\`go
+func produce(out chan<- int) {
+    for i := 0; i < 5; i++ {
+        out <- i                     // Send 0, 1, 2, 3, 4
+    }
+    close(out)                       // Signal done
+}
+
+ch := make(chan int)
+go produce(ch)
+
+for v := range ch {                  // Receive until channel closed
+    fmt.Println(v)                   // 0, 1, 2, 3, 4
+}
+\`\`\`
+
+### Select
+
+<code>select</code> waits on multiple channel operations. It picks the first one that becomes ready. If multiple are ready, it picks randomly. A <code>default</code> case makes it non-blocking.
+
+\`\`\`go
+func main() {
+    ch1 := make(chan string)
+    ch2 := make(chan string)
+
+    go func() {
+        time.Sleep(100 * time.Millisecond)
+        ch1 <- "one"
+    }()
+    go func() {
+        time.Sleep(200 * time.Millisecond)
+        ch2 <- "two"
+    }()
+
+    select {
+    case msg := <-ch1:
+        fmt.Println("Received from ch1:", msg)
+    case msg := <-ch2:
+        fmt.Println("Received from ch2:", msg)
+    case <-time.After(50 * time.Millisecond):
+        fmt.Println("Timeout — no message within 50ms")
+    }
+}
+\`\`\`
+
+### sync.Mutex
+
+A mutex serialises access to shared data. Always call <code>Lock</code> before reading or writing, and <code>Unlock</code> when done, typically via <code>defer</code>.
+
+\`\`\`go
+type Counter struct {
+    mu    sync.Mutex
+    value int
+}
+
+func (c *Counter) Increment() {
+    c.mu.Lock()                      // Acquire exclusive lock
+    defer c.mu.Unlock()              // Release when done
+    c.value++                        // Safely increment
+}
+
+func (c *Counter) Value() int {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    return c.value
+}
+\`\`\`
+
+### sync.WaitGroup
+
+A WaitGroup waits for a collection of goroutines to finish. Call <code>Add</code> before starting each, <code>Done</code> when each finishes, and <code>Wait</code> to block until all complete.
+
+\`\`\`go
+func worker(id int, wg *sync.WaitGroup) {
+    defer wg.Done()                  // Decrement counter when done
+    fmt.Printf("Worker %d starting\n", id)
+    time.Sleep(time.Second)
+    fmt.Printf("Worker %d done\n", id)
+}
+
+func main() {
+    var wg sync.WaitGroup
+
+    for i := 1; i <= 3; i++ {
+        wg.Add(1)                    // Increment counter
+        go worker(i, &wg)            // Start worker goroutine
+    }
+
+    wg.Wait()                        // Block until all workers finish
+    fmt.Println("All workers done")
+}
+\`\`\`
+
+### Actor Model Pattern
+
+The actor model encapsulates state inside a goroutine that communicates only via channels. No other code can access the state directly — eliminating data races by design.
+
+\`\`\`go
+// actor is a goroutine that owns the counter state
+func counterActor() chan<- int {
+    ch := make(chan int)
+    go func() {
+        count := 0
+        for delta := range ch {       // Receive increments from channel
+            count += delta
+            fmt.Println("Count:", count)
+        }
+    }()
+    return ch                         // Return send-only channel
+}
+
+func main() {
+    counter := counterActor()         // Start actor, get send channel
+    counter <- 1                      // Send increments
+    counter <- 5
+    counter <- -2
+    close(counter)                    // Stop the actor
+    time.Sleep(10 * time.Millisecond)  // Wait for final print
+}
+\`\`\`
+
+## Wiring It Together
+
+A concurrent pipeline that fans out work to multiple workers, collects results via a channel, and uses a WaitGroup to coordinate shutdown — demonstrating goroutines, channels, select, and WaitGroup together.
+
+\`\`\`go
+package main
+
+import (
+    "fmt"
+    "sync"
+    "time"
+)
+
+func worker(id int, jobs <-chan int, results chan<- int, wg *sync.WaitGroup) {
+    defer wg.Done()                   // Signal completion when worker exits
+    for j := range jobs {             // Receive jobs until channel closed
+        fmt.Printf("Worker %d processing job %d\n", id, j)
+        time.Sleep(100 * time.Millisecond)  // Simulate work
+        results <- j * 2              // Send result back
+    }
+}
+
+func main() {
+    const numJobs = 5
+    const numWorkers = 3
+
+    jobs := make(chan int, numJobs)
+    results := make(chan int, numJobs)
+    var wg sync.WaitGroup
+
+    for w := 1; w <= numWorkers; w++ {
+        wg.Add(1)
+        go worker(w, jobs, results, &wg)
+    }
+
+    for j := 1; j <= numJobs; j++ {
+        jobs <- j                     // Send jobs
+    }
+    close(jobs)                       // No more jobs — workers will exit
+
+    go func() {
+        wg.Wait()                     // Wait for all workers to finish
+        close(results)                // Then close results channel
+    }()
+
+    for r := range results {          // Collect all results
+        fmt.Println("Result:", r)
+    }
+}
+\`\`\`
+
+Output (order varies):
+\`\`\`
+Worker 3 processing job 1
+Worker 1 processing job 2
+Worker 2 processing job 3
+Worker 1 processing job 4
+Worker 3 processing job 5
+Result: 2
+Result: 4
+Result: 6
+Result: 8
+Result: 10
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-errors",
+            title: "Error Handling",
+            shortDesc: "Error interface, sentinel errors, wrapping (%w), As/Is, and panic/recover.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "Go errors are values satisfying the error interface — a single Error() string method",
+              "Sentinel errors are predefined package-level values compared with errors.Is",
+              "fmt.Errorf with %w wraps an error, preserving the chain for unwrapping",
+              "errors.Is matches sentinels by value; errors.As matches custom types by type",
+              "panic/recover is for programmer mistakes, never routine error handling",
+              "Every error must be checked — unhandled errors are a Go design principle",
+            ],
+            tags: ["go", "errors", "error-handling"],
+            content: `## What's This?
+
+Error handling in Go is built on the <code>error</code> interface, a contract of a single method: <code>Error() string</code>. Functions that can fail return an error as their last value; callers check it before using the result. Unlike try/catch exceptions, Go errors are ordinary values — you assign, compare, and pass them through functions like any other data. This keeps every error path visible in the code.
+
+## The Big Picture
+
+Error handling touches every Go function. The <code>errors</code> package provides primitives (create, wrap, inspect) that compose like any other value. Mastering errors-as-values leads into robust patterns: sentinels like <code>io.EOF</code>, custom types for structured validation, and wrapping for production diagnostics. It all builds on Go's philosophy of explicitness — nothing is hidden.
+
+## Core Ideas
+
+### The Error Interface
+
+Every error value must satisfy the <code>error</code> interface.
+
+\`\`\`go
+type error interface {
+    Error() string  // Returns a human-readable message
+}
+\`\`\`
+
+The simplest way to create an error is <code>errors.New</code>.
+
+\`\`\`go
+err := errors.New("disk full")  // Create error from a string
+fmt.Println(err)                // Prints: disk full
+\`\`\`
+
+### Sentinel Errors
+
+A sentinel error is a package-level value used as a comparison target. Callers check against it with <code>errors.Is</code> to determine the failure reason.
+
+\`\`\`go
+var ErrNotFound = errors.New("item not found")  // Sentinel error
+
+func GetUser(id int) (*User, error) {
+    if id <= 0 {
+        return nil, ErrNotFound                  // Return sentinel on bad input
+    }
+    return &User{ID: id}, nil                    // nil error means success
+}
+\`\`\`
+
+Common stdlib sentinels: <code>io.EOF</code> (end of input), <code>sql.ErrNoRows</code> (empty result).
+
+### Custom Error Types
+
+When you need structured error data (field name, HTTP status, line number), define a type implementing <code>error</code>.
+
+\`\`\`go
+type ValidationError struct {                // Holds structured error context
+    Field string                             // Which field failed
+    Value any                                // The invalid value
+}
+
+func (e ValidationError) Error() string {    // Satisfies the error interface
+    return fmt.Sprintf("field %s: invalid %v", e.Field, e.Value)
+}
+
+func ValidateAge(age int) error {
+    if age < 0 || age > 150 {
+        return ValidationError{Field: "age", Value: age}  // Return typed error
+    }
+    return nil                               // nil means no problem
+}
+\`\`\`
+
+### Error Wrapping with %w
+
+Wrapping preserves the original error while adding context. The <code>%w</code> verb in <code>fmt.Errorf</code> creates a wrapped error with an <code>Unwrap() error</code> method.
+
+\`\`\`go
+func ReadConfig(path string) ([]byte, error) {
+    data, err := os.ReadFile(path)           // May return os.ErrNotExist etc.
+    if err != nil {
+        return nil, fmt.Errorf("read config: %w", err)  // Wrap with context
+    }
+    return data, nil
+}
+
+func main() {
+    data, err := ReadConfig("/etc/app.yaml")
+    if errors.Is(err, os.ErrNotExist) {      // Walk the chain to find sentinel
+        data = defaultConfig()               // Missing file is OK here
+    } else if err != nil {
+        log.Fatal(err)                        // Other errors are fatal
+    }
+}
+\`\`\`
+
+### errors.Is and errors.As
+
+<code>errors.Is</code> walks the error chain checking value equality. <code>errors.As</code> walks the chain checking type assignment.
+
+\`\`\`go
+var target *ValidationError                      // Pointer to target type for As
+
+// errors.Is checks value equality through the chain
+if errors.Is(err, ErrNotFound) {                 // True if any layer == ErrNotFound
+    fmt.Println("Creating default entry")
+}
+
+// errors.As checks type match through the chain
+if errors.As(err, &target) {                     // True if any layer is ValidationError
+    fmt.Printf("Bad input on %s\n", target.Field)
+}
+\`\`\`
+
+| Function | Checks For | Typical Use |
+|----------|-----------|-------------|
+| <code>errors.Is(err, target)</code> | Value equality (<code>==</code>) | Sentinel errors like <code>io.EOF</code> |
+| <code>errors.As(err, &target)</code> | Type assertion | Custom error types with fields |
+
+### Panic and Recover
+
+<code>panic</code> stops normal execution and unwinds the stack. <code>recover</code> in a deferred function regains control. Use only for programmer mistakes, not routine errors.
+
+\`\`\`go
+func MustParse(s string) *Expr {                 // Library func: panics on bad input
+    expr, err := parse(s)
+    if err != nil {
+        panic(err)                               // Caller should guarantee valid input
+    }
+    return expr
+}
+
+func SafeParse(s string) (expr *Expr, err error) { // Adapter: recover from panic
+    defer func() {
+        if r := recover(); r != nil {             // recover catches any panic
+            err = fmt.Errorf("parse panic: %v", r) // Convert panic to error value
+        }
+    }()
+    return MustParse(s), nil                      // If MustParse panics, defer runs first
+}
+\`\`\`
+
+## Wiring It Together
+
+A config loader combining sentinels, wrapping, and custom error types in one end-to-end flow.
+
+\`\`\`go
+// ConfigError carries structured validation context
+type ConfigError struct {
+    Line int
+    Msg  string
+}
+
+func (e ConfigError) Error() string {
+    return fmt.Sprintf("line %d: %s", e.Line, e.Msg)
+}
+
+// ErrConfigMissing signals absence — not fatal in this app
+var ErrConfigMissing = errors.New("config file does not exist")
+
+// LoadConfig reads and validates application configuration
+func LoadConfig(path string) (*Config, error) {
+    data, err := os.ReadFile(path)               // os.ReadFile returns ([]byte, error)
+    if err != nil {
+        if errors.Is(err, os.ErrNotExist) {      // File not found maps to our sentinel
+            return nil, ErrConfigMissing
+        }
+        return nil, fmt.Errorf("load %s: %w", path, err) // Other errors wrap with context
+    }
+
+    cfg, err := parseConfig(data)                // parseConfig returns ConfigError on bad input
+    if err != nil {
+        return nil, err                           // Pass through typed error unchanged
+    }
+    return cfg, nil
+}
+
+func main() {
+    cfg, err := LoadConfig("/etc/app.yaml")
+    if errors.Is(err, ErrConfigMissing) {
+        cfg = DefaultConfig()                     // Use defaults when config is absent
+    } else if err != nil {
+        var cerr ConfigError
+        if errors.As(err, &cerr) {                // Show exact line for parse errors
+            log.Fatalf("Error on line %d: %s", cerr.Line, cerr.Msg)
+        }
+        log.Fatalf("Fatal: %v", err)
+    }
+    runApp(cfg)
+}
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-packages",
+            title: "Packages & Modules",
+            shortDesc: "go mod, module structure, internal packages, vendoring, and workspace mode.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "A Go module is defined by a go.mod file — it declares the module path and dependencies",
+              "Packages are directories of .go files sharing the same package clause; internal/ restricts visibility",
+              "go mod init creates a module; go mod tidy syncs dependencies; go mod vendor copies them locally",
+              "Workspace mode (go.work) lets you develop multiple local modules simultaneously",
+              "Versioning follows semantic import versioning — major versions get different module paths",
+              "Vendoring commits dependency source into the repo for reproducible builds",
+            ],
+            tags: ["go", "packages", "modules"],
+            content: `## What's This?
+
+A Go module is a collection of Go packages versioned together, defined by a <code>go.mod</code> file at the project root. Every Go project starts with <code>go mod init</code>, which creates a <code>go.mod</code> declaring the module path and Go version. Packages within a module import each other using the module path prefix; external dependencies are fetched from remote repositories and recorded in <code>go.mod</code> and <code>go.sum</code>. The module system replaces the old GOPATH approach and is the standard for dependency management since Go 1.16.
+
+## The Big Picture
+
+Modules sit at the foundation of every Go project. <code>go mod</code> commands control the entire dependency lifecycle: <code>go mod init</code> starts a module, <code>go get</code> adds dependencies, <code>go mod tidy</code> cleans up, and <code>go mod vendor</code> freezes source for CI. The <code>internal/</code> package convention enforces encapsulation within a module. Workspace mode (<code>go.work</code>) extends this for multi-module development. Understanding modules is prerequisite to publishing libraries, using private repos, or navigating breaking changes via semantic import versioning.
+
+## Core Ideas
+
+### Module Initialization
+
+Every Go project begins with <code>go mod init</code>, which creates a <code>go.mod</code> file.
+
+\`\`\`bash
+mkdir myapp && cd myapp          # Create project directory
+go mod init github.com/user/myapp  # Creates go.mod with module path
+\`\`\`
+
+The <code>go.mod</code> file declares the module path (used as the import prefix) and the Go version.
+
+\`\`\`text
+module github.com/user/myapp
+
+go 1.22
+\`\`\`
+
+### Package Structure
+
+A package is a directory of <code>.go</code> files sharing the same <code>package</code> clause. Packages within the same module import each other using the module path as prefix.
+
+\`\`\`go
+// File: internal/db/db.go
+package db                              // Package db — directory name matches
+
+type Config struct {                    // Exported: capital letter
+    DSN string
+}
+
+func Connect(cfg Config) (*sql.DB, error) {  // Exported function
+    return sql.Open("postgres", cfg.DSN)
+}
+\`\`\`
+
+\`\`\`go
+// File: cmd/server/main.go
+package main                            // Package main is special — compiles to binary
+
+import "github.com/user/myapp/internal/db"  // Import sibling package
+
+func main() {
+    cfg := db.Config{DSN: "postgres://localhost/mydb"}  // Use exported type
+    conn, err := db.Connect(cfg)          // Call exported function
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+}
+\`\`\`
+
+### Adding Dependencies
+
+<code>go get</code> fetches a package and records it in <code>go.mod</code>. <code>go mod tidy</code> removes unused deps and adds missing ones.
+
+\`\`\`bash
+go get github.com/gorilla/mux@v1.8.0   # Adds dependency at specific version
+go mod tidy                              # Sync go.mod with actual imports
+\`\`\`
+
+After <code>go get</code>, <code>go.mod</code> gains a <code>require</code> block and <code>go.sum</code> records content hashes for verification.
+
+\`\`\`text
+require (
+    github.com/gorilla/mux v1.8.0
+)
+\`\`\`
+
+### Internal Packages
+
+A package under <code>internal/</code> is importable only by code rooted at the parent of <code>internal</code>. This enforces encapsulation within a module.
+
+\`\`\`text
+myapp/
+  internal/
+    db/                # Only importable by myapp/ and its subdirectories
+      db.go
+  cmd/
+    server/
+      main.go          # Can import myapp/internal/db
+  external/
+    consumer.go        # Can import myapp/internal/db
+\`\`\`
+
+\`\`\`go
+// external/consumer.go
+package external
+
+import "github.com/user/myapp/internal/db"  // Valid: same module
+
+func Use() {
+    db.Connect(...)  // Can call internal/db
+}
+\`\`\`
+
+Any code outside the <code>myapp</code> module gets a compile error importing <code>internal/</code>.
+
+### Semantic Import Versioning
+
+When a module reaches v2+, the module path includes the major version suffix. Go treats v2 as a distinct module, allowing two major versions as separate dependencies.
+
+\`\`\`bash
+go get github.com/user/lib/v2@v2.0.0    # v2 is a different module path
+\`\`\`
+
+\`\`\`go
+import "github.com/user/lib/v2"          // Import the v2 module
+import "github.com/user/lib"             // v1 can coexist — different module path
+\`\`\`
+
+### Vendoring
+
+<code>go mod vendor</code> copies all dependency source into a <code>vendor/</code> directory. Builds then use <code>-mod=vendor</code> to compile from local copies, ensuring reproducible builds.
+
+\`\`\`bash
+go mod vendor                             # Creates vendor/ with all deps
+go build -mod=vendor ./...                 # Build from vendor (no network)
+\`\`\`
+
+<code>vendor/modules.txt</code> records which module versions were vendored. Teams commit the <code>vendor/</code> directory for deterministic CI builds.
+
+### Workspace Mode
+
+A <code>go.work</code> file lets you develop multiple local modules as a single workspace, useful when making changes across interdependent modules.
+
+\`\`\`text
+// File: go.work
+go 1.22
+
+use (
+    ./myapp          # Local module
+    ./shared-lib     # Another local module
+)
+\`\`\`
+
+With a <code>go.work</code> file, <code>myapp</code> can import <code>shared-lib</code> using its module path directly, without publishing. The <code>go.work</code> overrides <code>go.mod</code> dependency directives.
+
+## Wiring It Together
+
+A complete multi-package module with dependencies, vendoring, and a workspace for local development.
+
+\`\`\`bash
+# Step 1: Create the main module
+mkdir myapp && cd myapp
+go mod init github.com/user/myapp
+
+# Step 2: Create internal package
+mkdir -p internal/db
+cat > internal/db/db.go << 'EOF'
+package db
+
+import "github.com/user/shared-lib/config"  // External dep
+
+func Open(cfg config.DBConfig) (*sql.DB, error) {
+    return sql.Open("postgres", cfg.DSN)
+}
+EOF
+
+# Step 3: Add external dependency
+go get github.com/user/shared-lib@v1.2.0
+
+# Step 4: Create main program
+mkdir -p cmd/server
+cat > cmd/server/main.go << 'EOF'
+package main
+
+import (
+    "github.com/user/myapp/internal/db"     // Internal package
+    "github.com/user/shared-lib/config"     // External dependency
+)
+
+func main() {
+    cfg := config.DBConfig{DSN: "postgres://localhost/mydb"}
+    conn, err := db.Open(cfg)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+}
+EOF
+
+# Step 5: Tidy and vendor
+go mod tidy                                  # Remove unused deps, add missing ones
+go mod vendor                                # Copy sources into vendor/
+
+# Step 6: Build using vendored deps (no network)
+go build -mod=vendor ./cmd/server/
+\`\`\`
+
+\`\`\`text
+// Step 7: For local multi-module dev, create go.work
+// File: go.work
+go 1.22
+
+use (
+    ./myapp
+    ../shared-lib      // Local checkout instead of published version
+)
+\`\`\`
+
+<code>go build</code> now resolves <code>shared-lib</code> from the local path rather than the version in <code>go.mod</code>.
+`,
+          },
+          {
+            id: "ns-go-stdlib",
+            title: "Standard Library",
+            shortDesc: "io, net/http, encoding/json, context, time, and testing packages.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "io.Reader and io.Writer are the universal interfaces for data flow — used by files, network, and compression",
+              "net/http provides a complete HTTP client and server with minimal boilerplate",
+              "encoding/json marshals Go values to/from JSON using struct tags for field mapping",
+              "context.Context carries deadlines, cancellation signals, and request-scoped values across API boundaries",
+              "time provides monotonic clock readings, duration arithmetic, and timezone-aware formatting",
+              "testing integrates with go test for benchmarks, subtests, and fuzzing without external frameworks",
+            ],
+            tags: ["go", "standard-library", "stdlib"],
+            content: `## What's This?
+
+Go's standard library is a collection of battle-tested packages that ship with every Go installation — no external dependencies needed. It covers HTTP servers and clients (<code>net/http</code>), JSON processing (<code>encoding/json</code>), I/O abstractions (<code>io</code>), deadlines and cancellation (<code>context</code>), time handling (<code>time</code>), and testing (<code>testing</code>). The philosophy is "batteries included but replaceable" — the stdlib handles most production needs while letting you swap in third-party packages when necessary.
+
+## The Big Picture
+
+The Go stdlib reflects the language's design priorities: simplicity, explicit errors, and composition via interfaces. Mastery of <code>io.Reader</code>/<code>io.Writer</code> unlocks every data source (files, network, in-memory buffers). <code>net/http</code> builds directly on <code>io</code> and <code>context</code>. <code>encoding/json</code> ties into struct tags and reflection. Together, these packages form a cohesive toolkit where each piece composes with the others through shared interfaces.
+
+## Core Ideas
+
+### io.Reader and io.Writer
+
+The <code>io.Reader</code> and <code>io.Writer</code> interfaces abstract all data sources and sinks.
+
+\`\`\`go
+type Reader interface {
+    Read(p []byte) (n int, err error)  // Fill p with data, return bytes read and any error
+}
+
+type Writer interface {
+    Write(p []byte) (n int, err error) // Write len(p) bytes from p, return bytes written
+}
+\`\`\`
+
+Any type implementing these three methods works with <code>io.Copy</code>, <code>io.ReadAll</code>, and chainable utilities.
+
+\`\`\`go
+// Read from a file, write to stdout — works because both implement io interfaces
+file, _ := os.Open("input.txt")       // *os.File implements io.Reader
+io.Copy(os.Stdout, file)              // io.Copy(src Writer, dst Reader) streams data between them
+\`\`\`
+
+### net/http Server
+
+Build an HTTP server in a few lines with the default mux.
+
+\`\`\`go
+func hello(w http.ResponseWriter, r *http.Request) {    // Handler signature
+    fmt.Fprintf(w, "Hello, %s!", r.URL.Path[1:])        // w implements io.Writer; r holds request data
+}
+
+func main() {
+    http.HandleFunc("/", hello)                          // Register handler for root path
+    log.Fatal(http.ListenAndServe(":8080", nil))         // Start server on port 8080
+}
+\`\`\`
+
+Server shutdown uses <code>context</code> for graceful termination.
+
+\`\`\`go
+srv := &http.Server{Addr: ":8080"}                      // Server with config
+
+go func() {
+    if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+        log.Fatal(err)                                    // Unexpected error
+    }
+}()
+
+// Graceful shutdown on SIGINT
+sigCh := make(chan os.Signal, 1)
+signal.Notify(sigCh, syscall.SIGINT)
+<-sigCh
+
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+srv.Shutdown(ctx)                                         // Wait up to 5s for active requests to finish
+\`\`\`
+
+### encoding/json
+
+Marshal (encode) and unmarshal (decode) Go values to and from JSON. Struct tags control field mapping.
+
+\`\`\`go
+type User struct {
+    ID    int    \`json:"id"\`        // Map to lowercase "id" in JSON
+    Name  string \`json:"name"\`      // Map to "name"
+    Email string \`json:"email,omitempty"\`  // Omit if zero value
+}
+
+// Marshal Go value to JSON bytes
+u := User{ID: 1, Name: "Alice", Email: "alice@example.com"}
+data, _ := json.Marshal(u)                              // data = []byte(\`{"id":1,"name":"Alice","email":"alice@example.com"}\`)
+
+// Unmarshal JSON bytes into Go struct
+var decoded User
+json.Unmarshal(data, &decoded)                           // decoded == u
+\`\`\`
+
+Stream JSON with <code>json.Decoder</code> for large payloads — it reads from an <code>io.Reader</code>.
+
+\`\`\`go
+// Decode multiple JSON objects from a file stream
+f, _ := os.Open("users.json")
+dec := json.NewDecoder(f)                                // Wraps the io.Reader
+
+var users []User
+for dec.More() {                                         // While there are more objects
+    var u User
+    dec.Decode(&u)                                       // Decode one object
+    users = append(users, u)
+}
+\`\`\`
+
+### context.Context
+
+<code>context.Context</code> carries deadlines, cancellation, and request-scoped values across API boundaries. It is the first argument in most server, database, and HTTP APIs.
+
+\`\`\`go
+http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()                                   // Get request context
+
+    // Timeout after 2 seconds
+    ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+    defer cancel()                                       // Clean up resources
+
+    results, err := searchDatabase(ctx, r.URL.Query().Get("q"))
+    // searchDatabase checks ctx.Err() to abort when deadline passes
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+    json.NewEncoder(w).Encode(results)
+})
+
+func searchDatabase(ctx context.Context, query string) ([]Result, error) {
+    // Check context before each expensive operation
+    select {
+    case <-ctx.Done():
+        return nil, ctx.Err()                             // Return DeadlineExceeded or Canceled
+    default:
+    }
+    // ... expensive query ...
+}
+\`\`\`
+
+### time
+
+The <code>time</code> package provides type-safe duration arithmetic, formatting, and timezone conversion.
+
+\`\`\`go
+// Type-safe durations — not just integers
+time.Sleep(100 * time.Millisecond)                       // 100 milliseconds
+time.Sleep(2 * time.Second)                              // 2 seconds
+
+// Formatting uses a reference time: Mon Jan 2 15:04:05 MST 2006
+now := time.Now()
+fmt.Println(now.Format("2006-01-02 15:04:05"))            // Format: 2025-03-15 14:30:00
+
+// Parse from string
+t, _ := time.Parse("2006-01-02", "2025-03-15")           // Parse date string
+fmt.Println(t.Unix())                                     // Unix timestamp
+
+// Duration arithmetic
+later := now.Add(30 * time.Minute)                        // 30 minutes from now
+diff := later.Sub(now)                                    // 30m0s
+\`\`\`
+
+### testing
+
+The <code>testing</code> package integrates with <code>go test</code> for unit tests, benchmarks, and fuzzing.
+
+\`\`\`go
+// File: math_test.go
+package math
+
+import "testing"
+
+// Test function — signature is func(t *testing.T)
+func TestAdd(t *testing.T) {
+    got := Add(2, 3)
+    want := 5
+    if got != want {
+        t.Errorf("Add(2,3) = %d; want %d", got, want)    // Report failure
+    }
+}
+
+// Benchmark function — signature is func(b *testing.B)
+func BenchmarkAdd(b *testing.B) {
+    for i := 0; i < b.N; i++ {                            // b.N is set by the framework
+        Add(2, 3)
+    }
+}
+\`\`\`
+
+Run with <code>go test -bench .</code> to execute tests and benchmarks.
+
+## Wiring It Together
+
+An HTTP server that reads JSON from a request, calls a database, and writes JSON back — using <code>io</code>, <code>net/http</code>, <code>encoding/json</code>, <code>context</code>, and <code>time</code>.
+
+\`\`\`go
+package main
+
+import (
+    "context"
+    "encoding/json"
+    "io"
+    "log"
+    "net/http"
+    "time"
+)
+
+// User represents a database record
+type User struct {
+    ID    int    \`json:"id"\`
+    Name  string \`json:"name"\`
+    Email string \`json:"email,omitempty"\`
+}
+
+// createUser handles POST /users
+func createUser(w http.ResponseWriter, r *http.Request) {
+    ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)  // 3s timeout
+    defer cancel()
+
+    var u User
+    body, _ := io.ReadAll(r.Body)                               // Read entire body via io.Reader
+    r.Body.Close()
+
+    if err := json.Unmarshal(body, &u); err != nil {             // Decode JSON body
+        http.Error(w, "invalid JSON", http.StatusBadRequest)
+        return
+    }
+
+    saved, err := saveToDB(ctx, u)                               // ctx carries deadline
+    if err != nil {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(saved)                             // Encode reply as JSON
+}
+
+func saveToDB(ctx context.Context, u User) (*User, error) {
+    select {
+    case <-ctx.Done():                                           // Context cancelled/timed out
+        return nil, ctx.Err()
+    case <-time.After(100 * time.Millisecond):                   // Simulate DB write
+        u.ID = 42
+        return &u, nil
+    }
+}
+
+func main() {
+    mux := http.NewServeMux()
+    mux.HandleFunc("POST /users", createUser)                   // Go 1.22+ method routing
+
+    srv := &http.Server{Addr: ":8080", Handler: mux}
+    log.Printf("Starting server on :8080")
+    log.Fatal(srv.ListenAndServe())
+}
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-web",
+            title: "Web Frameworks (Gin, Echo, Chi)",
+            shortDesc: "Routing, middleware, request binding, validation, and building REST APIs.",
+            difficulty: "advanced",
+            readTimeMin: 18,
+            keyPoints: [
+              "Web frameworks provide routing, middleware chaining, request binding, and response helpers on top of net/http",
+              "Gin uses a radix tree router for high performance; Chi sticks to the standard http.Handler interface",
+              "Middleware is a function that wraps an http.Handler — frameworks chain them for logging, auth, recovery",
+              "Request binding maps query params, form values, and JSON bodies to structs with validation tags",
+              "Context objects (gin.Context, echo.Context) carry request state, parsed input, and response writing helpers",
+              "The Go 1.22 net/http enhancements (method routing, path params) reduce the need for third-party routers",
+            ],
+            tags: ["go", "gin", "echo", "chi", "web-frameworks"],
+            content: `## What's This?
+
+Go web frameworks — Gin, Echo, and Chi — abstract the boilerplate of building HTTP servers on top of <code>net/http</code>. They provide fast routers (Gin's radix tree, Chi's prefix tree), middleware chains (logging, auth, recovery), request binding (JSON/form/query to structs), input validation, and structured response helpers. While Go's standard library <code>net/http</code> is production-ready, these frameworks reduce repetitive code and add conventions for larger applications — Gin emphasizes raw speed, Echo provides a batteries-included DX, and Chi stays minimal while respecting standard interfaces.
+
+## The Big Picture
+
+Web frameworks build directly on <code>net/http</code>. All three implement <code>http.Handler</code> under the hood, meaning they compose with standard middleware and tools. The core pattern is the same: register routes, attach middleware, bind input, return output. Choosing one depends on philosophy — Gin if you need maximum throughput, Echo if you want batteries included, Chi if you prefer stdlib compatibility. Go 1.22's enhanced <code>http.ServeMux</code> (method-based routing, path parameters) reduces the gap, but frameworks still add binding, validation, and middleware ecosystems.
+
+## Core Ideas
+
+### Routing
+
+Frameworks provide parameterized routes (dynamic path segments) and method matching.
+
+\`\`\`go
+// Gin — radix-tree router known for speed
+r := gin.Default()                                        // Includes Logger and Recovery middleware
+r.GET("/users/:id", func(c *gin.Context) {                // :id captures path segment
+    id := c.Param("id")                                   // Extract path parameter
+    c.JSON(200, gin.H{"id": id})                          // JSON response
+})
+
+// Echo — explicit path params, built-in binding
+e := echo.New()
+e.GET("/users/:id", func(c echo.Context) error {
+    id := c.Param("id")                                   // Same param extraction
+    return c.JSON(200, map[string]string{"id": id})
+})
+
+// Chi — uses stdlib context for params
+r := chi.NewRouter()
+r.Get("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+    id := chi.URLParam(r, "id")                           // Extracted from context
+    json.NewEncoder(w).Encode(map[string]string{"id": id})
+})
+\`\`\`
+
+### Middleware
+
+Middleware wraps a handler to run logic before or after the request is processed. Frameworks chain them declaratively.
+
+\`\`\`go
+// Custom middleware: log each request
+func loggerMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
+        next.ServeHTTP(w, r)                               // Pass to next handler
+        log.Printf("%s %s %s", r.Method, r.URL.Path, time.Since(start))
+    })
+}
+
+// Gin middleware
+r := gin.New()
+r.Use(gin.Logger(), gin.Recovery())                        // Global middleware chain
+r.GET("/ping", func(c *gin.Context) {
+    c.String(200, "pong")
+})
+
+// Chi middleware — compatible with stdlib
+r := chi.NewRouter()
+r.Use(middleware.Logger, middleware.Recoverer)               // From chi/middleware
+r.Use(loggerMiddleware)                                      // Custom stdlib middleware works
+
+// Echo middleware
+e := echo.New()
+e.Use(middleware.Logger(), middleware.Recover())             // Echo's middleware package
+\`\`\`
+
+### Request Binding
+
+Binding maps request data (JSON, form, query) to a struct with validation. This replaces manual <code>json.Unmarshal</code> calls.
+
+\`\`\`go
+type CreateUserRequest struct {
+    Name  string \`json:"name" form:"name" query:"name" validate:"required"\`  // Multiple sources
+    Email string \`json:"email" form:"email" query:"email" validate:"required,email"\`
+    Age   int    \`json:"age" form:"age" query:"age" validate:"gte=0,lte=150"\`
+}
+
+// Gin — BindJSON for JSON, ShouldBind for auto-detection
+func createUser(c *gin.Context) {
+    var req CreateUserRequest
+    if err := c.ShouldBindJSON(&req); err != nil {          // Parse JSON body into struct
+        c.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
+    // req is populated and validated
+}
+
+// Echo — Bind reads Content-Type header to choose decoder
+func createUser(c echo.Context) error {
+    var req CreateUserRequest
+    if err := c.Bind(&req); err != nil {                    // Auto-detects JSON/form/query
+        return c.JSON(400, map[string]string{"error": err.Error()})
+    }
+    if err := c.Validate(&req); err != nil {                // Explicit validation step
+        return c.JSON(400, err)
+    }
+    return c.JSON(201, req)
+}
+
+// Chi — manual, since Chi itself doesn't include binding (use go-playground/validator)
+func createUser(w http.ResponseWriter, r *http.Request) {
+    var req CreateUserRequest
+    if err := json.NewDecoder(r.Body).Decode(&req); err != nil {  // Manual JSON decode
+        http.Error(w, "invalid JSON", http.StatusBadRequest)
+        return
+    }
+    // Validate manually or with validator package
+}
+\`\`\`
+
+### Validation
+
+Validation tags enforce constraints on bound struct fields. All three frameworks integrate with <code>go-playground/validator</code>.
+
+\`\`\`go
+type Product struct {
+    Name  string \`validate:"required,min=3,max=100"\`      // Required, 3-100 chars
+    Price float64 \`validate:"gte=0"\`                       // Must be >= 0
+    Tags  []string \`validate:"max=5,dive,required"\`        // Max 5 tags, each required
+}
+
+// Gin uses binding tags — can add validate tags and register validator
+if err := c.ShouldBindJSON(&req); err != nil {             // Built-in binding
+    // err contains validation details
+}
+
+// Echo needs a registered validator
+e.Validator = &CustomValidator{validator: v}               // Register at app level
+if err := c.Validate(&req); err != nil {                   // validate: runs all tags
+    return c.JSON(400, err)
+}
+\`\`\`
+
+### REST API Structure
+
+Build a full CRUD API with grouped routes and status code helpers.
+
+\`\`\`go
+// Gin — route groups, status constants, JSON helper
+api := r.Group("/api/v1")
+{
+    api.GET("/users", listUsers)                             // GET   /api/v1/users
+    api.GET("/users/:id", getUser)                           // GET   /api/v1/users/42
+    api.POST("/users", createUser)                           // POST  /api/v1/users
+    api.PUT("/users/:id", updateUser)                        // PUT   /api/v1/users/42
+    api.DELETE("/users/:id", deleteUser)                     // DELETE /api/v1/users/42
+}
+
+func getUser(c *gin.Context) {
+    id := c.Param("id")
+    user, err := db.FindUser(id)
+    if err != nil {
+        c.JSON(404, gin.H{"error": "user not found"})       // 404 with JSON body
+        return
+    }
+    c.JSON(200, user)                                        // 200 with auto-marshalled JSON
+}
+\`\`\`
+
+| Feature | Gin | Echo | Chi |
+|---------|-----|------|-----|
+| Router | Radix tree, very fast | Radix tree | Prefix tree, stdlib-compatible |
+| Context | <code>gin.Context</code> | <code>echo.Context</code> | Uses <code>http.Request</code> context |
+| Binding | Built-in <code>ShouldBind</code> | Built-in <code>Bind</code> | Manual or external |
+| Validation | Via <code>go-playground/validator</code> | Requires registration | Via external lib |
+| Middleware | <code>gin.HandlerFunc</code> chain | <code>echo.MiddlewareFunc</code> chain | Stdlib <code>http.Handler</code> |
+| Performance | Highest measured throughput | High | Close to stdlib |
+| Stdlib compat | Wraps <code>http.Handler</code> | Wraps <code>http.Handler</code> | Direct <code>http.Handler</code> |
+
+## Wiring It Together
+
+A complete REST API for managing books, using Chi for routing, middleware, and JSON responses with manual binding.
+
+\`\`\`go
+package main
+
+import (
+    "encoding/json"
+    "log"
+    "net/http"
+    "strconv"
+    "sync"
+    "time"
+
+    "github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5/middleware"
+)
+
+// Book is our domain model
+type Book struct {
+    ID     int       \`json:"id"\`
+    Title  string    \`json:"title"\`
+    Author string    \`json:"author"\`
+    Year   int       \`json:"year"\`
+}
+
+// In-memory store — safe for concurrent access
+var (
+    books   = make(map[int]Book)
+    nextID  = 1
+    mu      sync.RWMutex
+)
+
+func main() {
+    r := chi.NewRouter()
+
+    // Global middleware
+    r.Use(middleware.Logger)                                // Log every request
+    r.Use(middleware.Recoverer)                              // Recover from panics
+    r.Use(middleware.Timeout(10 * time.Second))              // 10s per-request timeout
+
+    // REST routes
+    r.Route("/api/books", func(r chi.Router) {
+        r.Get("/", listBooks)                               // GET    /api/books
+        r.Post("/", createBook)                             // POST   /api/books
+        r.Get("/{id}", getBook)                             // GET    /api/books/42
+        r.Put("/{id}", updateBook)                          // PUT    /api/books/42
+        r.Delete("/{id}", deleteBook)                       // DELETE /api/books/42
+    })
+
+    log.Println("Server starting on :8080")
+    http.ListenAndServe(":8080", r)
+}
+
+func listBooks(w http.ResponseWriter, r *http.Request) {
+    mu.RLock()                                              // Read lock
+    list := make([]Book, 0, len(books))
+    for _, b := range books {
+        list = append(list, b)
+    }
+    mu.RUnlock()
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(list)                          // Send JSON array
+}
+
+func createBook(w http.ResponseWriter, r *http.Request) {
+    var b Book
+    if err := json.NewDecoder(r.Body).Decode(&b); err != nil {  // Bind JSON body
+        http.Error(w, \`{"error":"invalid JSON"}\`, http.StatusBadRequest)
+        return
+    }
+    r.Body.Close()
+
+    mu.Lock()
+    b.ID = nextID                                            // Assign new ID
+    nextID++
+    books[b.ID] = b
+    mu.Unlock()
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(b)                             // Return created book
+}
+
+func getBook(w http.ResponseWriter, r *http.Request) {
+    id, _ := strconv.Atoi(chi.URLParam(r, "id"))            // Extract path param
+
+    mu.RLock()
+    b, ok := books[id]
+    mu.RUnlock()
+
+    if !ok {
+        http.Error(w, \`{"error":"not found"}\`, http.StatusNotFound)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(b)
+}
+
+func updateBook(w http.ResponseWriter, r *http.Request) {
+    id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+    var b Book
+    if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
+        http.Error(w, \`{"error":"invalid JSON"}\`, http.StatusBadRequest)
+        return
+    }
+    r.Body.Close()
+
+    mu.Lock()
+    if _, exists := books[id]; !exists {
+        mu.Unlock()
+        http.Error(w, \`{"error":"not found"}\`, http.StatusNotFound)
+        return
+    }
+    b.ID = id
+    books[id] = b
+    mu.Unlock()
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(b)
+}
+
+func deleteBook(w http.ResponseWriter, r *http.Request) {
+    id, _ := strconv.Atoi(chi.URLParam(r, "id"))
+
+    mu.Lock()
+    delete(books, id)
+    mu.Unlock()
+
+    w.WriteHeader(http.StatusNoContent)                     // 204 — no body
+}
+\`\`\`
+`,
+          },
+          {
+            id: "ns-go-testing",
+            title: "Testing & Benchmarking",
+            shortDesc: "go test, table-driven tests, subtests, benchmarks, fuzzing, and testify.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "go test discovers and runs functions with the TestXxx signature in *_test.go files",
+              "Table-driven tests use a slice of test cases with input/output pairs — the standard Go testing idiom",
+              "Subtests (t.Run) enable hierarchical test organization and selective execution with -run",
+              "Benchmarks (BenchmarkXxx) measure execution time and allocation count with b.N iterations",
+              "Fuzzing (FuzzXxx) generates random inputs to find edge cases automatically",
+              "Testify provides assert/require helpers and a mock package for interface stubbing",
+            ],
+            tags: ["go", "testing", "benchmarks", "fuzzing"],
+            content: `## What's This?
+
+Testing in Go is built into the toolchain — <code>go test</code> discovers and runs test functions in files ending with <code>_test.go</code>. The <code>testing</code> package provides the framework: <code>*testing.T</code> for tests, <code>*testing.B</code> for benchmarks, and <code>*testing.F</code> for fuzzing. Go conventions favour table-driven tests (a slice of input/expected pairs iterated in a loop), subtrees with <code>t.Run</code>, and the <code>testify</code> library for richer assertions and mocking.
+
+## The Big Picture
+
+Testing is the primary quality tool in the Go ecosystem — there is no built-in concept of "test runners" or "spec frameworks." The <code>testing</code> package parallels Go's design philosophy: explicit, minimal, and composable. Table-driven tests replace nested describe/it blocks with data. Benchmarks measure real performance under <code>go test -bench</code>. Fuzzing (added in Go 1.18) automates edge-case discovery. Testify's <code>assert</code>/<code>require</code> and <code>mock</code> are the de facto standard additions, but the core remains stdlib-only.
+
+## Core Ideas
+
+### go test
+
+<code>go test ./...</code> finds all <code>*_test.go</code> files, compiles a test binary, and runs every function <code>TestXxx(t *testing.T)</code>. No test runner configuration needed.
+
+\`\`\`go
+// File: math.go
+package math
+
+func Add(a, b int) int { return a + b }
+
+// File: math_test.go
+package math
+
+import "testing"
+
+func TestAdd(t *testing.T) {               // Test function — must start with Test
+    got := Add(2, 3)
+    want := 5
+    if got != want {
+        t.Errorf("Add(2,3) = %d; want %d", got, want)  // Reports failure but continues
+    }
+}
+\`\`\`
+
+\`\`\`bash
+go test -v ./...                             # Run all tests recursively, verbose output
+\`\`\`
+
+### Table-Driven Tests
+
+The idiomatic Go pattern: define a slice of structs with input and expected output, then iterate.
+
+\`\`\`go
+func TestDivide(t *testing.T) {
+    tests := []struct {                      // Anonymous struct per test case
+        name      string                     // Name for subtest identification
+        a, b      int
+        expected  int
+        expectErr bool
+    }{
+        {name: "positive", a: 10, b: 2, expected: 5, expectErr: false},
+        {name: "by zero", a: 10, b: 0, expected: 0, expectErr: true},
+        {name: "negative", a: -6, b: 3, expected: -2, expectErr: false},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {  // Subtest — run independently
+            got, err := Divide(tt.a, tt.b)
+            if tt.expectErr && err == nil {  // Expected error but got none
+                t.Error("expected error, got nil")
+            }
+            if !tt.expectErr && got != tt.expected {
+                t.Errorf("Divide(%d,%d) = %d; want %d", tt.a, tt.b, got, tt.expected)
+            }
+        })
+    }
+}
+\`\`\`
+
+### Subtests
+
+<code>t.Run</code> creates a subtest that runs as a separate test within the parent. Each subtest gets its own pass/fail status and can be run selectively.
+
+\`\`\`go
+func TestUserService(t *testing.T) {
+    svc := NewUserService()
+
+    t.Run("create user", func(t *testing.T) {
+        u, err := svc.Create("alice@example.com")
+        if err != nil {
+            t.Fatal(err)                     // t.Fatal stops this subtest immediately
+        }
+        if u.Email != "alice@example.com" {
+            t.Errorf("email = %s; want alice@example.com", u.Email)
+        }
+    })
+
+    t.Run("duplicate email", func(t *testing.T) {
+        _, err := svc.Create("alice@example.com")
+        if err != ErrDuplicateEmail {
+            t.Errorf("got %v; want ErrDuplicateEmail", err)
+        }
+    })
+
+    t.Run("not found", func(t *testing.T) {
+        _, err := svc.FindByID(999)
+        if err != ErrNotFound {
+            t.Errorf("got %v; want ErrNotFound", err)
+        }
+    })
+}
+\`\`\`
+
+\`\`\`bash
+go test -v -run "TestUserService/not_found"  # Run only the "not found" subtest
+\`\`\`
+
+### Benchmarks
+
+Benchmarks measure performance. The framework sets <code>b.N</code> to a value that produces stable timing.
+
+\`\`\`go
+func BenchmarkAdd(b *testing.B) {
+    for i := 0; i < b.N; i++ {              // b.N determined by framework
+        Add(2, 3)
+    }
+}
+
+func BenchmarkParallelAdd(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {     // Run in parallel with b.N iterations total
+        for pb.Next() {
+            Add(2, 3)
+        }
+    })
+}
+\`\`\`
+
+\`\`\`bash
+go test -bench=. -benchmem                  # Run benchmarks; show allocations
+# Output:
+# BenchmarkAdd-8          1000000000    0.23 ns/op    0 B/op    0 allocs/op
+\`\`\`
+
+### Fuzzing
+
+Fuzzing (Go 1.18+) automatically generates random inputs to find panics, crashes, or assertion failures. The function accepts a <code>*testing.F</code> and calls <code>f.Add</code> to seed the corpus.
+
+\`\`\`go
+func FuzzParseDate(f *testing.F) {
+    f.Add("2025-03-15")                     // Seed corpus — valid input
+    f.Add("not-a-date")                     // Seed — boundary case
+
+    f.Fuzz(func(t *testing.T, s string) {    // Fuzz target — receives random strings
+        d, err := ParseDate(s)
+        if err != nil {
+            return                           // Expected failure — not interesting
+        }
+        // If ParseDate succeeded, round-trip must produce the same string
+        if d.String() != s {
+            t.Errorf("round-trip: got %s from input %s", d.String(), s)
+        }
+    })
+}
+\`\`\`
+
+\`\`\`bash
+go test -fuzz=FuzzParseDate -fuzztime=10s   # Fuzz for 10 seconds
+\`\`\`
+
+### Testify
+
+Testify provides <code>assert</code> (non-fatal) and <code>require</code> (fatal) helpers plus <code>mock</code> for stubbing.
+
+\`\`\`go
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+    "github.com/stretchr/testify/mock"
+)
+
+func TestWithAssert(t *testing.T) {
+    result := Add(2, 3)
+    assert.Equal(t, 5, result)               // Non-fatal — continues on failure
+    assert.NotNil(t, result)
+    assert.True(t, result > 0)
+}
+
+func TestWithRequire(t *testing.T) {
+    data, err := LoadConfig("/etc/app.yaml")
+    require.NoError(t, err)                   // Fatal — stops test if err != nil
+    require.NotEmpty(t, data)
+}
+
+// Mocking with testify/mock
+type MockDB struct {
+    mock.Mock                               // Embed mock.Mock for stub/mock methods
+}
+
+func (m *MockDB) GetUser(id int) (*User, error) {
+    args := m.Called(id)                     // Record the call and return configured values
+    return args.Get(0).(*User), args.Error(1)
+}
+
+func TestGetUser(t *testing.T) {
+    db := new(MockDB)
+    db.On("GetUser", 42).Return(&User{ID: 42, Name: "Alice"}, nil)  // Set up expectation
+
+    svc := NewUserService(db)
+    user, err := svc.Get(42)                 // svc calls db.GetUser internally
+    assert.NoError(t, err)
+    assert.Equal(t, "Alice", user.Name)
+    db.AssertExpectations(t)                 // Verify all expected calls were made
+}
+\`\`\`
+
+## Wiring It Together
+
+Full test suite for a calculator package with table-driven tests, subtests, benchmarks, and fuzzing.
+
+\`\`\`go
+// calculator.go
+package calculator
+
+import (
+    "errors"
+    "fmt"
+)
+
+var ErrDivideByZero = errors.New("division by zero")
+
+func Add(a, b int) int { return a + b }
+
+func Divide(a, b int) (int, error) {
+    if b == 0 {
+        return 0, ErrDivideByZero
+    }
+    return a / b, nil
+}
+
+func ParseOp(s string) (int, error) {
+    var n int
+    _, err := fmt.Sscanf(s, "%d", &n)
+    return n, err
+}
+\`\`\`
+
+\`\`\`go
+// calculator_test.go
+package calculator
+
+import (
+    "testing"
+    "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
+)
+
+// Table-driven test with subtests
+func TestDivide(t *testing.T) {
+    tests := []struct {
+        name   string
+        a, b   int
+        want   int
+        wantErr error
+    }}{
+        {name: "simple", a: 10, b: 2, want: 5, wantErr: nil},
+        {name: "negative", a: -9, b: 3, want: -3, wantErr: nil},
+        {name: "by zero", a: 5, b: 0, want: 0, wantErr: ErrDivideByZero},
+    }
+
+    for _, tt := range tests {
+        t.Run(tt.name, func(t *testing.T) {
+            got, err := Divide(tt.a, tt.b)
+            assert.ErrorIs(t, err, tt.wantErr)            // Verify specific error
+            assert.Equal(t, tt.want, got)
+        })
+    }
+}
+
+// Fuzz test for ParseOp
+func FuzzParseOp(f *testing.F) {
+    f.Add("42")
+    f.Add("-1")
+    f.Add("abc")
+
+    f.Fuzz(func(t *testing.T, s string) {
+        n, err := ParseOp(s)
+        if err != nil {
+            return                                          // Expected fail — skip
+        }
+        // If successful, the string must contain the parsed number
+        require.GreaterOrEqual(t, n, 0)
+    })
+}
+
+// Benchmark for Add
+func BenchmarkAdd(b *testing.B) {
+    for i := 0; i < b.N; i++ {
+        Add(i, i+1)
+    }
+}
+\`\`\`
+
+\`\`\`bash
+go test -v -run TestDivide                       # Run table-driven tests
+go test -fuzz FuzzParseOp -fuzztime=5s           # Fuzz ParseOp for 5 seconds
+go test -bench=. -benchmem                       # Run benchmarks with memory stats
+\`\`\`
+`,
+          },
         ],
       },
       // ── Rust ────────────────────────────────────────────────────────────
