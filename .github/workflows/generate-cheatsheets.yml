@@ -2,8 +2,12 @@ name: Generate Cheat Sheets
 on:
   workflow_dispatch:
 jobs:
-  generate-cheats:
+  generate:
+    strategy:
+      matrix:
+        module: [frontend, backend, mobile, ai]
     runs-on: ubuntu-latest
+    timeout-minutes: 240
     permissions:
       id-token: write
       contents: write
@@ -14,7 +18,7 @@ jobs:
         run: |
           git config user.name "farang-dev"
           git config user.email "farang-dev@users.noreply.github.com"
-      - name: Run OpenCode - generate all cheat sheets
+      - name: Run OpenCode - generate ${{ matrix.module }} cheat sheets
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -23,92 +27,27 @@ jobs:
           model: opencode/big-pickle
           use_github_token: true
           prompt: |
-            You are an expert software engineering educator. Your task is to generate comprehensive cheat sheets for ALL 50 topics in the CHEAT domain in src/data/curriculum.ts.
+            You are an expert software engineering educator. Your task is to generate cheat sheets for ONLY the cheat-${{ matrix.module }} module in src/data/curriculum.ts. Do NOT touch any other module or domain.
 
             ## Context
-            The CHEAT domain starts around line 31603 with domain id "cheat". It has 4 modules:
-            - cheat-frontend (15 topics) — lines starting around 31618
-            - cheat-backend (15 topics)
-            - cheat-mobile (7 topics)
-            - cheat-ai (14 topics)
+            The module id is "cheat-${{ matrix.module }}". It contains ${{ matrix.module == 'frontend' && '15' || matrix.module == 'backend' && '15' || matrix.module == 'mobile' && '7' || '14' }} topics. Every topic currently has content: "// Content coming soon". Replace each one with a complete, exhaustive cheat sheet.
 
-            Every topic currently has content: "// Content coming soon". Replace that placeholder with a complete, exhaustive cheat sheet.
+            ## Structure for EVERY topic (MUST follow):
+            - ## Quick Reference (3-5 line summary)
+            - ## Language Fundamentals (if a language is covered): Types & Values table, Variables, Control Flow, Functions, Types/Generics, Concurrency/Async, Module System, Standard Library highlights
+            - ## Framework by Framework Reference: For EACH framework — Setup, Core Concepts, Common Patterns
+            - ## Comparison Tables: frameworks side by side
+            - ## Common Pitfalls & Anti-patterns (at least 10)
+            - ## Complete API Reference (comprehensive table)
+            - ## Practice Questions (at least 8)
 
-            ## CRITICAL: For EVERY topic, find its content field (which says "// Content coming soon") and replace it with a COMPLETE CHEAT SHEET covering:
-
-            ### Structure for every cheat sheet (MUST follow this EXACTLY):
-
-            Each cheat sheet must be a complete reference, not a tutorial. Use the following structure:
-
-            ## Quick Reference
-
-            A 3-5 line summary of what this cheat sheet covers. List every language/framework/tool included.
-
-            ## Language Fundamentals (if this topic covers a language)
-
-            ### Types & Values
-            Table of every data type with syntax examples.
-
-            ### Variables & Declarations
-            All declaration forms (const, let, var, val, etc.) with scoping rules.
-
-            ### Control Flow
-            Conditionals, loops, pattern matching, and error handling.
-
-            ### Functions
-            All function syntaxes (named, anonymous, arrow, lambda, closures, generators).
-
-            ### Types & Generics (if applicable)
-            Type annotations, interfaces, generics, type aliases, enums.
-
-            ### Concurrency / Async
-            Async/await, threads, goroutines, promises, channels, etc.
-
-            ### Module System
-            Import/export syntax, module resolution.
-
-            ### Standard Library Highlights
-            Key built-in modules/packages with common usage.
-
-            ## Framework by Framework Reference
-
-            For EACH framework listed in the topic title (AND any additional related frameworks):
-
-            ### [Framework Name] — Setup & Installation
-            CLI commands, package.json deps, etc.
-
-            ### [Framework Name] — Core Concepts
-            Router, middleware, DI, configuration.
-
-            ### [Framework Name] — Common Patterns
-            CRUD, auth, error handling, testing.
-
-            ## Comparison Tables
-
-            Compare frameworks side by side (performance, ecosystem, learning curve, use cases).
-
-            ## Common Pitfalls & Anti-patterns
-
-            At least 10 real-world mistakes with examples of wrong vs right code.
-
-            ## Complete API Reference
-
-            A comprehensive table of every significant API, method, or function with signature and description.
-
-            ## Practice Questions
-
-            At least 8 questions with answers — covering syntax gotchas, framework behavior, and best practices.
-
-            ## RULES (ABSOLUTELY MUST FOLLOW):
-            1. Cover EVERYTHING — this is a cheat sheet, not an overview. Zero omissions.
-            2. Use tables heavily for syntax reference, API signatures, comparison matrices.
-            3. Every code block must have comments explaining each line.
-            4. Use `<code>` tags for inline code (NOT backticks).
+            ## RULES
+            1. Zero omissions — complete reference, not an overview.
+            2. Heavy use of tables.
+            3. Every code block must have line-by-line comments.
+            4. Use <code> tags for inline code (NOT backticks).
             5. Escape dollar-brace as backslash-dollar-brace inside template literals.
-            6. Preserve the topic's id, title, shortDesc, difficulty, readTimeMin, keyPoints, tags — ONLY replace the content field.
-            7. Order matters: process cheat-frontend first, then cheat-backend, then cheat-mobile, then cheat-ai.
-            8. After ALL edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any TypeScript errors.
-            9. Do NOT create any new files — only edit curriculum.ts.
-            10. Write in English, no emojis.
-            11. readTimeMin must stay at 5 (leave it unchanged).
-            12. Keep keyPoints as empty arrays.
+            6. Preserve id, title, shortDesc, difficulty, readTimeMin, keyPoints, tags — ONLY replace content.
+            7. After ALL edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
+            8. Write in English, no emojis.
+            9. readTimeMin must stay at 5.
