@@ -73025,16 +73025,1959 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "Rust",
         description: "Rust from syntax to systems programming — ownership, traits, error handling, async, and production frameworks.",
         topics: [
-          { id: "ns-rs-syntax", title: "Syntax & Basics", shortDesc: "Variables, mutability, data types, functions, comments, and cargo (new/build/run).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-ownership", title: "Ownership & Borrowing", shortDesc: "Ownership rules, references (&T, &mut T), slices, and the borrow checker.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-structs", title: "Structs, Enums & Pattern Matching", shortDesc: "Defining structs, enums, Option/Result, match arms, if let, and destructuring.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-traits", title: "Traits & Generics", shortDesc: "Trait definition and implementation, generics, trait bounds, associated types, and dyn dispatch.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-lifetimes", title: "Lifetimes", shortDesc: "Lifetime annotations, elision rules, lifetimes in structs, and the 'static lifetime.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-errors", title: "Error Handling", shortDesc: "Result<T, E>, the ? operator, mapping errors, anyhow, and thiserror crates.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-concurrency", title: "Concurrency (Fearless)", shortDesc: "Send/Sync traits, threads, channels (mpsc), Mutex/Arc, and async/await with tokio.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-unsafe", title: "Unsafe Rust & FFI", shortDesc: "Raw pointers, unsafe blocks, calling C via FFI (extern), and the #[no_mangle] attribute.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-frameworks", title: "Web Frameworks (Axum, Actix, Rocket)", shortDesc: "Routing, middlewares, extractors, state management, and WebSocket support.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rs-testing", title: "Testing & Tooling", shortDesc: "Unit/integration tests, doc tests, cargo test, clippy, rustfmt, and benchmarking (criterion).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-syntax", title: "Syntax & Basics", shortDesc: "Variables, mutability, data types, functions, comments, and cargo (new/build/run).", difficulty: "foundational", readTimeMin: 12, keyPoints: ["Rust uses let for immutable bindings and let mut for mutable variables — immutability is the default.", "Scalar types: i32, u64, f64, bool, char. Compound types: tuples and arrays with fixed lengths.", "Functions are declared with fn, return type with ->, and the last expression is implicitly returned.", "The ! suffix marks macros (println!, assert_eq!); they generate code at compile time.", "Cargo is Rust's build system and package manager: cargo new, cargo build, cargo run, cargo check.", "Rust uses snake_case for variables/functions and SCREAMING_CASE for constants."], content: `## What's This?
+
+Rust syntax is the set of rules that defines how to write Rust programs — how to declare variables, define functions, work with data types, and structure your code. Rust is a systems programming language focused on safety, speed, and concurrency. Its syntax feels familiar to C/C++ developers but introduces several unique concepts from the start. Think of Rust syntax as the alphabet and grammar of the language: once you learn the basic shapes, you can read and write any Rust program.
+
+## The Big Picture
+
+Rust syntax builds on the C tradition (curly braces, semicolons, function declarations) but modernizes it with type inference, pattern matching, and an ownership system that runs at compile time. Before you can understand ownership, lifetimes, or traits — Rust's headline features — you need to be comfortable with how variables, functions, and basic types work. The <code>cargo</code> tool handles building, running, testing, and documenting your project. Every Rust project starts with <code>cargo new</code>, which creates a standard directory structure with a <code>Cargo.toml</code> manifest and a <code>src/main.rs</code> entry point.
+
+## Core Ideas
+
+### Variables and Mutability
+
+Variables in Rust are immutable by default. Once a value is bound to a name, it cannot change. This is a deliberate design choice that makes code easier to reason about. If you need mutability, add the <code>mut</code> keyword. Constants use <code>const</code> and must have an explicit type annotation.
+
+\`\`\`rust
+let x = 5;          // immutable binding — x is always 5
+let mut y = 10;     // mutable binding — y can change later
+y += 1;             // OK: y is now 11
+const MAX: u32 = 100; // typed constant, available everywhere
+\`\`\`
+
+### Scalar and Compound Types
+
+Rust has four scalar types: integers (<code>i8</code>, <code>u8</code>, <code>i16</code>, <code>u16</code>, <code>i32</code>, <code>u32</code>, <code>i64</code>, <code>u64</code>, <code>isize</code>, <code>usize</code>), floating-point (<code>f32</code>, <code>f64</code>), Boolean (<code>bool</code>), and character (<code>char</code>, 4 bytes, Unicode). Compound types group multiple values: tuples (fixed-size, heterogeneous) and arrays (fixed-size, homogeneous). The compiler infers types from usage when possible.
+
+\`\`\`rust
+let guess: u32 = "42".parse().expect("not a number"); // explicit type
+let pi = 3.1415;         // f64 by default
+let tup: (i32, f64, char) = (42, 3.14, 'R'); // tuple
+let first = tup.0;       // access by index (1-based for tuples)
+let arr: [i32; 3] = [10, 20, 30]; // array of 3 i32s
+\`\`\`
+
+### Functions and Expressions
+
+Functions use <code>fn</code>, parameters have annotated types, and the return type follows <code>-></code>. Everything in Rust is an expression (it produces a value) or a statement (it performs an action and does not produce a value). The last expression in a block is automatically its return value — no semicolon needed. The <code>return</code> keyword exists for early returns.
+
+\`\`\`rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b   // expression — no semicolon, this is the return value
+}
+fn greet(name: &str) {
+    println!("Hello, {name}!"); // statement — semicolon, no value
+}
+fn main() {
+    let sum = add(5, 3);
+    println!("Sum: {sum}");
+}
+\`\`\`
+
+### Macros and Printing
+
+The <code>!</code> suffix indicates a macro call. Macros are functions that generate code at compile time. <code>println!</code> and <code>format!</code> are macros, not functions. They support template-style interpolation with <code>{}</code> (Display) and <code>{:?}</code> (Debug). The <code>assert_eq!</code> macro panics if two values are not equal.
+
+\`\`\`rust
+let name = "World";
+println!("Hello, {name}!");              // direct interpolation
+println!("x = {x}, y = {y}");           // inline variables
+assert_eq!(2 + 2, 4, "math works");     // test with custom message
+\`\`\`
+
+### Cargo — The Build System
+
+Cargo is Rust's build system and package manager. Every Rust project has a <code>Cargo.toml</code> manifest that specifies metadata and dependencies. <code>cargo new</code> creates a new project, <code>cargo build</code> compiles it, <code>cargo run</code> builds and runs it, and <code>cargo check</code> verifies compilation without producing an executable. <code>cargo test</code> runs tests, and <code>cargo doc</code> generates documentation.
+
+\`\`\`rust
+// src/main.rs — created by cargo new my_project
+fn main() {
+    println!("Hello, world!");
+}
+// Cargo.toml — project manifest
+// [package]
+// name = "my_project"
+// version = "0.1.0"
+// edition = "2021"
+//
+// [dependencies]
+// serde = { version = "1", features = ["derive"] }
+\`\`\`
+
+### Comments and Documentation
+
+Rust supports three comment styles. Regular comments (<code>//</code> and <code>/* */</code>) are ignored by the compiler. Doc comments (<code>///</code> on items, <code>//!</code> on crates/modules) generate HTML documentation via <code>cargo doc</code> and support Markdown.
+
+\`\`\`rust
+// This is a regular comment
+let x = 5; // inline comment
+/// Adds two numbers — this generates documentation
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+//! This comment documents the entire crate (usually at the top of lib.rs)
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`rust
+// main.rs — a complete Rust program that reads two numbers and adds them
+use std::io;  // bring the standard input/output library into scope
+
+/// Reads an integer from stdin, panics if input is invalid
+fn read_number() -> i32 {
+    let mut input = String::new();      // mutable String on the heap
+    io::stdin().read_line(&mut input)   // read a line from stdin
+        .expect("failed to read line"); // unwrap the Result or crash
+    input.trim().parse()                // remove whitespace, parse as i32
+        .expect("not a valid number")   // crash if parse fails
+}
+
+fn main() {
+    println!("Enter two numbers:");     // macro: print with newline
+    // read_number returns i32, stored in immutable binding
+    let a = read_number();
+    let b = read_number();
+    // expressions in curly braces are evaluated and formatted
+    println!("Sum: {} + {} = {}", a, b, a + b);
+}
+\`\`\``, tags: ["Rust", "Syntax", "Cargo"] },
+          { id: "ns-rs-ownership", title: "Ownership & Borrowing", shortDesc: "Ownership rules, references (&T, &mut T), slices, and the borrow checker.", difficulty: "foundational", readTimeMin: 14, keyPoints: ["Each value in Rust has exactly one owner at a time — when the owner goes out of scope, the value is dropped.", "References (&T) let you borrow a value without taking ownership — multiple shared readers allowed.", "Mutable references (&mut T) give exclusive write access — only one at a time, no other references.", "The borrow checker enforces these rules at compile time, preventing dangling pointers and data races.", "Slices (&[T] for arrays, &str for strings) are fat pointers with a length — they borrow a contiguous sequence.", "The ! construct (never type) signals that a function never returns, like loop or panic!."], content: `## What's This?
+
+Ownership is Rust's most distinctive feature: a set of rules the compiler enforces at compile time that governs how memory is managed without a garbage collector. Every value in Rust has a single owner, and when the owner goes out of scope, Rust automatically frees the memory. Borrowing allows code to temporarily use a value without taking ownership, using references (<code>&T</code> for shared access, <code>&mut T</code> for exclusive mutable access). Think of ownership like a library book: one person checks it out (owns it), others can read it in the library (borrow immutably), but only one person can have it at their desk with a pen (borrow mutably).
+
+## The Big Picture
+
+Ownership is the foundation that makes Rust's safety guarantees possible. It eliminates entire categories of bugs: dangling pointers, double-free errors, use-after-free, and data races — all caught at compile time. The borrow checker, the part of the compiler that enforces ownership rules, is the reason Rust can achieve C-level performance without a garbage collector. After mastering ownership, the next concepts (lifetimes, traits, concurrency) all build on this mental model: <code>Send</code> and <code>Sync</code> traits are about ownership across threads.
+
+## Core Ideas
+
+### The Three Ownership Rules
+
+Rust's ownership has exactly three rules. Everything else is a consequence of these rules:
+
+\`\`\`rust
+// Rule 1: Each value has exactly one owner
+let s1 = String::from("hello");
+let s2 = s1;           // ownership MOVES from s1 to s2
+// println!("{s1}");   // ERROR: s1 no longer owns the value — use after move
+
+// Rule 2: When the owner goes out of scope, the value is dropped
+{
+    let s3 = String::from("inner");
+    // s3 is alive here
+}  // s3 goes out of scope — drop() is called, memory freed
+
+// Rule 3: Ownership can be transferred (moved) or borrowed
+\`\`\`
+
+### Move Semantics
+
+Assignment and function calls transfer ownership (a "move") for types that do not implement the <code>Copy</code> trait. Simple scalars like <code>i32</code> implement <code>Copy</code> and are automatically copied instead. Heap-allocated types like <code>String</code> or <code>Vec</code> are moved. After a move, the original variable is invalidated — the compiler prevents further use.
+
+\`\`\`rust
+fn take_ownership(s: String) {  // s takes ownership of the string
+    println!("{s}");
+}  // s is dropped, memory freed
+
+fn main() {
+    let name = String::from("Alice");
+    take_ownership(name);        // ownership moves into the function
+    // println!("{name}");       // ERROR: name no longer valid
+}
+\`\`\`
+
+### Borrowing with References
+
+A reference (<code>&T</code>) lets you use a value without taking ownership. The original owner keeps ownership. References are guaranteed to always point to a valid value — Rust prevents dangling references at compile time.
+
+\`\`\`rust
+fn borrow(s: &String) {  // borrow (does not take ownership)
+    println!("{s}");
+}  // s is a reference — nothing is dropped
+
+fn main() {
+    let name = String::from("Bob");
+    borrow(&name);         // pass a reference, not the value
+    println!("{name}");    // OK: name still owns the value
+}
+\`\`\`
+
+### Mutable References
+
+A mutable reference (<code>&mut T</code>) gives exclusive write access. The borrow checker enforces two strict rules: only one mutable reference to a value at a time, and you cannot have a mutable reference while any immutable references exist. This prevents data races at compile time.
+
+\`\`\`rust
+fn append_world(s: &mut String) {
+    s.push_str(", world");
+}
+
+fn main() {
+    let mut msg = String::from("Hello");
+    // let r1 = &msg;        // ERROR: cannot borrow as immutable
+    // because msg is also borrowed as mutable below
+    append_world(&mut msg);  // only one mutable borrow
+    println!("{msg}");        // "Hello, world"
+}
+\`\`\`
+
+### The Borrow Checker Rules
+
+| Situation | Allowed? | Reason |
+|-----------|----------|--------|
+| Multiple <code>&T</code> references | Yes | Shared read access is safe |
+| One <code>&mut T</code> reference | Yes | Exclusive write access |
+| <code>&T</code> + <code>&mut T</code> simultaneously | No | Could read while writing |
+| Two <code>&mut T</code> simultaneously | No | Two writers would race |
+| Reference outlives its owner | No | Would be a dangling pointer |
+
+### Slices
+
+A slice is a view into a contiguous sequence of elements — an array, a vector, or a string. Slices are fat pointers: they store a pointer to the start and a length. String slices (<code>&str</code>) borrow a part of a <code>String</code>. Array slices (<code>&[i32]</code>) borrow a part of an array or <code>Vec</code>.
+
+\`\`\`rust
+fn first_word(s: &str) -> &str {  // &str is a string slice
+    let bytes = s.as_bytes();
+    for (i, &byte) in bytes.iter().enumerate() {
+        if byte == b' ' {
+            return &s[..i];       // slice up to the space
+        }
+    }
+    &s[..]                         // no space found, return whole string
+}
+
+fn main() {
+    let s = String::from("hello world");
+    let hello = first_word(&s);    // &str borrowing from s
+    println!("{hello}");            // "hello"
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`rust
+/// A program that reads a line, prints each word separately, and capitalizes
+use std::io;
+
+/// Extracts the i-th word from a string slice, or None if out of bounds
+fn nth_word(s: &str, n: usize) -> Option<&str> {
+    let words: Vec<&str> = s.split_whitespace().collect();
+    if n < words.len() {
+        Some(words[n])
+    } else {
+        None
+    }
+}
+
+/// Converts a mutable String reference to uppercase in place
+fn shout(s: &mut String) {
+    *s = s.to_uppercase();  // dereference to modify the original String
+}
+
+fn main() {
+    let mut input = String::new();    // mutable owner on heap
+    io::stdin().read_line(&mut input) // borrow mutably for reading
+        .expect("read failed");
+    let trimmed = input.trim();       // immutable borrow — &str slice
+    let first = nth_word(trimmed, 0)  // borrows trimmed
+        .unwrap_or("(empty)");
+    println!("First word: {first}");   // OK: nth_word returned a borrow
+    shout(&mut input);                 // exclusive mutable borrow
+    println!("Shouted: {input}");      // input is uppercased now
+}
+\`\`\``, tags: ["Rust", "Ownership", "Borrowing"] },
+          { id: "ns-rs-structs", title: "Structs, Enums & Pattern Matching", shortDesc: "Defining structs, enums, Option/Result, match arms, if let, and destructuring.", difficulty: "foundational", readTimeMin: 14, keyPoints: ["Structs group related data: named fields (struct), tuple structs, and unit-like structs.", "Enums define a type that can be one of several variants — each variant can hold data.", "match is exhaustive: every possible value must be covered; _ is the catch-all pattern.", "Option<T> encodes optionality (Some(T) or None) — no null pointers in Rust.", "Result<T, E> encodes fallibility (Ok(T) or Err(E)) — the foundation of error handling.", "if let and while let provide concise pattern matching for single-arm cases."], content: `## What's This?
+
+Structs and enums are Rust's primary tools for defining custom data types. A struct bundles related values together under one name (like a record or a row). An enum defines a type that can be one of several variants (like a tagged union or a sum type). Pattern matching with <code>match</code> is Rust's way of inspecting and destructuring these types safely and exhaustively. Together, they let you model any domain precisely. Think of structs as <code>AND</code> types ("a Person has a name AND an age") and enums as <code>OR</code> types ("a WebEvent is a Click OR a KeyPress OR a PageLoad").
+
+## The Big Picture
+
+Structs and enums (along with pattern matching) replace two error-prone C patterns: raw structs without method support and error-code enums without type safety. Rust's <code>Option&lt;T&gt;</code> and <code>Result&lt;T, E&gt;</code> are just enums from the standard library — they are not special syntax. This means every function that can fail or return nothing signals this in its type signature. The compiler forces you to handle every case. After this topic, traits and generics let you write code that works across many struct and enum types.
+
+## Core Ideas
+
+### Defining Structs
+
+A struct definition creates a custom type with named fields. Access fields with dot notation. You can create a new instance with a struct expression. Rust supports three kinds of structs: classic structs (named fields), tuple structs (fields by position), and unit-like structs (no fields, behaves as a marker type).
+
+\`\`\`rust
+// Classic struct — fields have names
+struct User {
+    username: String,
+    email: String,
+    active: bool,
+}
+
+// Tuple struct — fields are positional
+struct Color(i32, i32, i32);
+let black = Color(0, 0, 0);
+
+// Unit struct — no fields, useful for marker types
+struct UnitStruct;
+
+fn main() {
+    let user = User {
+        username: String::from("alice"),
+        email: String::from("alice@example.com"),
+        active: true,
+    };
+    println!("{}", user.username); // dot access
+}
+\`\`\`
+
+### Methods and Associated Functions
+
+Methods are defined inside an <code>impl</code> block. The first parameter is always <code>self</code> (or <code>&self</code>, <code>&mut self</code>). Associated functions (no <code>self</code>) are called with <code>::</code> syntax — constructors like <code>String::from</code> are associated functions.
+
+\`\`\`rust
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    // associated function — no self, used as constructor
+    fn square(size: u32) -> Self {
+        Self { width: size, height: size }
+    }
+    // method — takes &self (immutable borrow)
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+    // method — takes &mut self (mutable borrow)
+    fn scale(&mut self, factor: u32) {
+        self.width *= factor;
+        self.height *= factor;
+    }
+}
+
+fn main() {
+    let mut r = Rectangle::square(5); // associated function call
+    println!("area: {}", r.area());     // method call: 25
+    r.scale(2);
+    println!("area: {}", r.area());     // 100
+}
+\`\`\`
+
+### Enums
+
+An enum type can be one of several variants. Each variant can optionally hold data of different types and amounts. Enums are exhaustively checked by the compiler — if you handle every variant in a <code>match</code>, you never miss a case.
+
+\`\`\`rust
+enum WebEvent {
+    PageLoad,
+    KeyPress(char),           // tuple variant with data
+    Click { x: i32, y: i32 }, // struct variant with named fields
+}
+
+fn inspect(event: &WebEvent) {
+    match event {
+        WebEvent::PageLoad => println!("page loaded"),
+        WebEvent::KeyPress(c) => println!("pressed '{c}'"),
+        WebEvent::Click { x, y } => println!("clicked at ({x}, {y})"),
+    }
+}
+\`\`\`
+
+### Option&lt;T&gt; and Result&lt;T, E&gt;
+
+These two enums are used everywhere in Rust. <code>Option&lt;T&gt;</code> represents a value that may or may not exist (replacing null). <code>Result&lt;T, E&gt;</code> represents an operation that may succeed or fail (replacing exceptions). The compiler forces you to handle both variants.
+
+\`\`\`rust
+// Option<T> — defined in std:
+// enum Option<T> { Some(T), None }
+fn divide(n: f64, d: f64) -> Option<f64> {
+    if d == 0.0 { None } else { Some(n / d) }
+}
+
+// Result<T, E> — defined in std:
+// enum Result<T, E> { Ok(T), Err(E) }
+fn parse_int(s: &str) -> Result<i32, std::num::ParseIntError> {
+    s.parse()
+}
+
+fn main() {
+    match divide(10.0, 2.0) {
+        Some(v) => println!("Result: {v}"),
+        None => println!("Division by zero"),
+    }
+    match parse_int("42") {
+        Ok(n) => println!("Number: {n}"),
+        Err(e) => println!("Parse error: {e}"),
+    }
+}
+\`\`\`
+
+### Pattern Matching with match
+
+The <code>match</code> expression compares a value against a series of patterns. Patterns can match literals, destructure structs/enums/tuples, bind variables, and use guards (<code>if</code> conditions). Every possible value must be covered — the compiler rejects non-exhaustive matches.
+
+\`\`\`rust
+fn describe(n: i32) -> &'static str {
+    match n {
+        0 => "zero",
+        1 | 2 => "one or two",         // multiple patterns with |
+        3..=10 => "three through ten", // inclusive range
+        n if n < 0 => "negative",       // guard condition
+        _ => "other",                   // catch-all (must come last)
+    }
+}
+\`\`\`
+
+### if let and while let
+
+When you only care about one pattern, <code>if let</code> provides concise syntax. <code>while let</code> loops while a pattern matches. These are sugar over <code>match</code> with a single arm.
+
+\`\`\`rust
+fn main() {
+    let config_max = Some(3u8);
+    // verbose match:
+    match config_max {
+        Some(max) => println!("Max: {max}"),
+        _ => (), // annoying unit arm
+    }
+    // concise if let:
+    if let Some(max) = config_max {
+        println!("Max: {max}");
+    }
+
+    let mut numbers = vec![1, 2, 3].into_iter();
+    while let Some(n) = numbers.next() {
+        println!("{n}");
+    }
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`rust
+use std::fmt;
+
+/// Represents a parsed HTTP-like status
+#[derive(Debug)]
+enum Status {
+    Ok,
+    NotFound,
+    Custom(u16, String),
+}
+
+struct Response {
+    status: Status,
+    body: String,
+}
+
+impl Response {
+    fn ok(body: &str) -> Self {
+        Self { status: Status::Ok, body: body.to_string() }
+    }
+    fn not_found() -> Self {
+        Self { status: Status::NotFound, body: String::from("Not found") }
+    }
+    fn custom(code: u16, msg: &str) -> Self {
+        Self { status: Status::Custom(code, msg.into()), body: String::new() }
+    }
+    fn status_line(&self) -> String {
+        match &self.status {
+            Status::Ok => String::from("200 OK"),
+            Status::NotFound => String::from("404 Not Found"),
+            Status::Custom(c, m) => format!("{c} {m}"),
+        }
+    }
+}
+
+impl fmt::Display for Response {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{} {}", self.status_line(), self.body)
+    }
+}
+
+fn main() {
+    let responses = vec![
+        Response::ok("Hello"),
+        Response::not_found(),
+        Response::custom(418, "I'm a teapot"),
+    ];
+    for r in &responses {
+        println!("{}", r.status_line());
+    }
+}
+\`\`\``, tags: ["Rust", "Enums", "Pattern Matching"] },
+          { id: "ns-rs-traits", title: "Traits & Generics", shortDesc: "Trait definition and implementation, generics, trait bounds, associated types, and dyn dispatch.", difficulty: "intermediate", readTimeMin: 15, keyPoints: ["Traits define shared behavior across types — similar to interfaces in other languages.", "Generics let functions and structs work with many types without sacrificing performance (monomorphization).", "Trait bounds (T: SomeTrait) constrain generic types to those that implement a specific trait.", "Associated types let traits declare placeholder types that implementors specify — used heavily in Iterator.", "dyn Trait enables dynamic dispatch (runtime polymorphism) — use when types vary at runtime.", "Blanket implementations let you implement a trait for every type that satisfies a bound."], content: `## What's This?
+
+Traits are Rust's way of defining shared behavior across different types — similar to interfaces in Java or protocols in Swift. A trait declares a set of method signatures, and types implement the trait by providing method bodies. Generics let you write functions and data structures that can operate on many different types without duplicating code. Combined, traits and generics give Rust a powerful abstraction system that is resolved at compile time (zero-cost abstractions). Think of a trait as a contract: "if you implement <code>Display</code>, I can call <code>.to_string()</code> on your type."
+
+## The Big Picture
+
+Traits and generics are the backbone of Rust's standard library and ecosystem. Almost every method call on a generic type is a trait call: <code>.iter()</code> requires <code>IntoIterator</code>, <code>.clone()</code> requires <code>Clone</code>, <code>.collect()</code> requires <code>FromIterator</code>. Understanding traits unlocks the standard library, error handling with <code>?</code> (which uses <code>From</code>), and async programming (which uses <code>Future</code>). After this, lifetimes add the third dimension: generic over lifetimes.
+
+## Core Ideas
+
+### Defining and Implementing Traits
+
+A trait declaration lists method signatures. An implementation provides bodies for those methods on a specific type. Any type can implement any trait as long as either the type or the trait is local to your crate (the orphan rule).
+
+\`\`\`rust
+// Define a trait
+trait Greet {
+    fn greet(&self) -> String;
+    fn farewell(&self) -> String {
+        // default implementation — implementors can override
+        String::from("Goodbye!")
+    }
+}
+
+struct Person { name: String }
+struct Robot { id: u32 }
+
+// Implement Greet for Person
+impl Greet for Person {
+    fn greet(&self) -> String {
+        format!("Hi, I'm {}", self.name)
+    }
+}
+
+impl Greet for Robot {
+    fn greet(&self) -> String {
+        format!("Beep boop, ID: {}", self.id)
+    }
+    // farewell() uses the default — no need to implement
+}
+
+let p = Person { name: "Alice".into() };
+let r = Robot { id: 42 };
+println!("{}", p.greet());  // "Hi, I'm Alice"
+println!("{}", r.greet());  // "Beep boop, ID: 42"
+println!("{}", r.farewell()); // "Goodbye!" (default)
+\`\`\`
+
+### Generics
+
+Generics allow functions and structs to be parameterized over types. At compile time, Rust generates separate monomorphized copies for each concrete type — no runtime cost.
+
+\`\`\`rust
+// Generic function — works with any type T
+fn first<T>(list: &[T]) -> &T {
+    &list[0]  // returns reference to first element
+}
+
+// Generic struct
+struct Pair<T, U> {
+    x: T,
+    y: U,
+}
+
+impl<T, U> Pair<T, U> {
+    fn new(x: T, y: U) -> Self {
+        Self { x, y }
+    }
+}
+
+fn main() {
+    // compiler infers T = i32, U = f64
+    let p = Pair::new(42, 3.14);
+    let nums = vec![10, 20, 30];
+    println!("first: {}", first(&nums)); // 10
+}
+\`\`\`
+
+### Trait Bounds
+
+Trait bounds constrain generic type parameters. <code>T: Display</code> means "T must implement Display." You can specify multiple bounds and use <code>where</code> clauses for readability.
+
+\`\`\`rust
+use std::fmt::Display;
+
+// T must implement Display (bound on the generic)
+fn print_item<T: Display>(item: T) {
+    println!("{item}");
+}
+
+// Multiple bounds with +
+fn compare_and_print<T: Display + PartialOrd>(a: T, b: T) {
+    println!("{a} vs {b}: winner is {}", if a >= b { a } else { b });
+}
+
+// where clause for readable bounds
+fn complex<T, U>(t: T, u: U)
+where
+    T: Display + Clone,
+    U: Display + Clone + PartialEq,
+{
+    println!("{t} {u}");
+}
+
+fn main() {
+    print_item(42);        // works: i32 implements Display
+    compare_and_print(3, 5); // works: i32 is Display + PartialOrd
+}
+\`\`\`
+
+### Associated Types
+
+An associated type is a placeholder within a trait that implementors fill in. The <code>Iterator</code> trait uses this — each iterator implementation specifies its own <code>Item</code> type.
+
+\`\`\`rust
+trait MyIterator {
+    type Item;  // associated type — filled in by each implementation
+    fn next(&mut self) -> Option<Self::Item>;
+}
+
+struct Counter {
+    count: u32,
+}
+
+impl MyIterator for Counter {
+    type Item = u32;  // Counter yields u32 values
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+        if self.count <= 5 {
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+
+fn main() {
+    let mut c = Counter { count: 0 };
+    println!("{:?}", c.next()); // Some(1)
+    println!("{:?}", c.next()); // Some(2)
+}
+\`\`\`
+
+### Trait Objects and dyn Dispatch
+
+When types vary at runtime (e.g., a vector of different types that all implement the same trait), use <code>dyn Trait</code> for dynamic dispatch. The <code>dyn</code> keyword indicates the trait is used as a type, not as a bound. Method calls go through a vtable (a table of function pointers) instead of being monomorphized.
+
+\`\`\`rust
+trait Animal {
+    fn sound(&self) -> String;
+}
+
+struct Dog;
+struct Cat;
+
+impl Animal for Dog {
+    fn sound(&self) -> String { "woof".into() }
+}
+impl Animal for Cat {
+    fn sound(&self) -> String { "meow".into() }
+}
+
+fn main() {
+    let animals: Vec<Box<dyn Animal>> = vec![
+        Box::new(Dog),
+        Box::new(Cat),
+    ];
+    for a in &animals {
+        // dynamic dispatch — resolved at runtime via vtable
+        println!("{}", a.sound());
+    }
+}
+\`\`\`
+
+### Common Standard Library Traits
+
+| Trait | Purpose | Example | Auto-derivable? |
+|-------|---------|---------|-----------------|
+| <code>Clone</code> | Create a deep copy via <code>.clone()</code> | <code>s.clone()</code> | Yes |
+| <code>Copy</code> | Simple bitwise copy (trivial, cheap) | <code>let y = x;</code> for i32 | Yes |
+| <code>Debug</code> | Format with <code>{:?}</code> for debugging | <code>println!("{x:?}")</code> | Yes |
+| <code>PartialEq</code> | Equality comparisons (<code>==</code>, <code>!=</code>) | <code>a == b</code> | Yes |
+| <code>Default</code> | Create a default value via <code>::default()</code> | <code>Vec::default()</code> | Yes |
+| <code>Display</code> | User-facing format with <code>{}</code> | <code>println!("{x}")</code> | No (must implement) |
+
+## Wiring It Together
+
+\`\`\`rust
+use std::fmt::Display;
+
+/// A summary trait — types that can produce a short summary string
+trait Summary {
+    fn summarize(&self) -> String;
+    fn summarize_author(&self) -> String;
+    fn summary_tagline(&self) -> String {
+        // default implementation using the other methods
+        format!("By {}: {}", self.summarize_author(), self.summarize())
+    }
+}
+
+struct Article {
+    title: String,
+    author: String,
+    body: String,
+}
+
+impl Summary for Article {
+    fn summarize(&self) -> String {
+        format!("{}: {}...", self.title, &self.body[..20.min(self.body.len())])
+    }
+    fn summarize_author(&self) -> String {
+        self.author.clone()
+    }
+}
+
+struct Tweet {
+    username: String,
+    content: String,
+}
+
+impl Summary for Tweet {
+    fn summarize(&self) -> String {
+        format!("@{}: {}", self.username, &self.content[..50.min(self.content.len())])
+    }
+    fn summarize_author(&self) -> String {
+        format!("@{}", self.username)
+    }
+}
+
+// Generic function with trait bound — works with any Summary type
+fn display_summary<T: Summary + Display>(item: T) {
+    println!("--- {} ---", item.summary_tagline());
+}
+
+fn main() {
+    let article = Article {
+        title: "Rust Traits".into(),
+        author: "Alice".into(),
+        body: "Traits are Rust's interface mechanism...".into(),
+    };
+    let tweet = Tweet {
+        username: "bob".into(),
+        content: "Just learned Rust traits!".into(),
+    };
+    // static dispatch (monomorphized) — different code for each type
+    println!("{}", article.summary_tagline());
+    println!("{}", tweet.summary_tagline());
+    // dynamic dispatch — via &dyn Summary
+    let items: Vec<&dyn Summary> = vec![&article, &tweet];
+    for item in items {
+        println!("{}", item.summarize());
+    }
+}
+\`\`\``, tags: ["Rust", "Traits", "Generics"] },
+          { id: "ns-rs-lifetimes", title: "Lifetimes", shortDesc: "Lifetime annotations, elision rules, lifetimes in structs, and the 'static lifetime.", difficulty: "advanced", readTimeMin: 16, keyPoints: ["Lifetimes ensure references are always valid — the compiler tracks how long each reference lives.", "Lifetime annotations ('a, 'b) connect the lifetimes of parameters and return values — they don't change lifetimes, they describe relationships.", "The elision rules let you omit lifetimes in common patterns: one input maps to output, or &self maps to output.", "Structs containing references need lifetime annotations — the struct cannot outlive the borrowed data.", "'static means the reference lives for the entire program — string literals (&str) are 'static.", "Lifetime bounds (T: 'a) ensure that T contains no references shorter than 'a."], content: `## What's This?
+
+Lifetimes are Rust's mechanism for ensuring that every reference is always valid — that it points to data that hasn't been freed. A lifetime annotation (<code>'a</code>, <code>'b</code>) is a label that describes how long a reference is expected to live. Lifetimes don't change how long data lives; they just connect the lifetimes of different references so the borrow checker can verify safety. Think of them as named scopes: "the reference returned by this function lives as long as the input parameter named <code>'a</code>."
+
+## The Big Picture
+
+Lifetimes complete the ownership picture. Ownership handles who has a value; borrowing handles temporary access; lifetimes handle how long a borrowed value stays valid. Most of the time, Rust's elision rules let you write functions without explicit lifetime annotations. When you need them — function signatures with multiple references, structs holding references, or complex return relationships — they become essential. Lifetimes are also the foundation of Rust's <code>Send</code>/<code>Sync</code> traits and the <code>'static</code> bound that appears throughout async code.
+
+## Core Ideas
+
+### Why Lifetimes Exist
+
+Every reference in Rust has a lifetime — the scope for which that reference is valid. The borrow checker verifies that no reference outlives the data it points to. Without lifetimes (in C), a function can return a pointer to a stack variable, creating a dangling pointer. Lifetimes prevent this at compile time.
+
+\`\`\`rust
+fn main() {
+    let r;                // ------------ 'a starts here
+    {                     // ---
+        let x = 5;        // | 'b starts here
+        r = &x;           // | ERROR: 'b does not outlive 'a
+    }                     // | 'b ends here
+    println!("{r}");       // r (reference) would be dangling
+}
+\`\`\`
+
+### Lifetime Annotation Syntax
+
+Lifetime annotations use an apostrophe followed by a name (<code>'a</code>). They appear in angle brackets after function names. The annotations don't change lifetimes; they just document relationships between lifetimes.
+
+\`\`\`rust
+// &i32        — a reference (lifetime implicitly elided)
+// &'a i32     — a reference with explicit lifetime 'a
+// &'a mut i32 — a mutable reference with lifetime 'a
+
+// longest returns a reference that lives as long as BOTH inputs
+// The output's lifetime is the intersection of x's and y's lifetimes
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() >= y.len() { x } else { y }
+}
+
+fn main() {
+    let s1 = String::from("long");
+    let result;
+    {
+        let s2 = String::from("short");
+        result = longest(&s1, &s2); // OK: result lives as long as s2
+    }
+    // println!("{result}"); // ERROR: s2 dropped, result dangling
+}
+\`\`\`
+
+### Lifetime Elision Rules
+
+Rust's compiler can infer lifetimes in three common patterns (the elision rules), so you rarely need to write them:
+
+| Rule | Applies To | What It Does |
+|------|-----------|--------------|
+| 1 | Each input reference | Gets its own lifetime parameter |
+| 2 | Exactly one input lifetime | Assigns that lifetime to all output references |
+| 3 | <code>&self</code> or <code>&mut self</code> | Assigns <code>&self</code>'s lifetime to all output references |
+
+\`\`\`rust
+// Elided (what you write):
+fn first_word(s: &str) -> &str { /* ... */ }
+// Desugared (what the compiler sees):
+fn first_word<'a>(s: &'a str) -> &'a str { /* ... */ }
+
+// Elided:
+fn is_longer(s1: &str, s2: &str) -> bool { s1.len() > s2.len() }
+// Desugared: no output references, each input gets its own lifetime
+fn is_longer<'a, 'b>(s1: &'a str, s2: &'b str) -> bool { /* ... */ }
+
+// Elided (self rule):
+impl MyStruct { fn get(&self) -> &str { /* ... */ } }
+// Desugared:
+impl MyStruct { fn get<'a>(&'a self) -> &'a str { /* ... */ } }
+\`\`\`
+
+### Lifetime Annotations in Structs
+
+When a struct holds references, every reference field needs a lifetime annotation. The struct cannot outlive the data its references point to.
+
+\`\`\`rust
+struct Excerpt<'a> {
+    part: &'a str,  // Excerpt cannot outlive the string 'part' borrows from
+    // problem: structs with references need lifetimes
+}
+
+fn main() {
+    let novel = String::from("Call me Ishmael. Some years ago...");
+    let first_sentence = novel.split('.').next().expect("no sentence");
+    let excerpt = Excerpt { part: first_sentence };
+    println!("{excerpt}");
+    // excerpt borrows from novel — OK as long as novel lives longer
+}
+\`\`\`
+
+### The 'static Lifetime
+
+<code>'static</code> is a special lifetime that means the reference is valid for the entire program. String literals (<code>"hello"</code>) are <code>&'static str</code> because they are embedded in the binary. A <code>'static</code> bound on a generic type means "this type contains no non-static references."
+
+\`\`\`rust
+// string literals are 'static
+let s: &'static str = "I live forever";
+
+// 'static as a trait bound — T must not contain short-lived references
+fn print_it<T: Debug + 'static>(item: T) {
+    // T must be owned or contain only 'static references
+    println!("{:?}", item);
+}
+
+// Common pattern: return static string slices for error messages
+fn error_msg(code: u32) -> &'static str {
+    match code {
+        404 => "Not Found",
+        500 => "Internal Server Error",
+        _ => "Unknown",
+    }
+}
+\`\`\`
+
+### Lifetime Bounds on Generics
+
+A lifetime bound on a generic parameter (<code>T: 'a</code>) means "T must live at least as long as <code>'a</code>." This is useful when storing a generic value alongside a reference.
+
+\`\`\`rust
+struct Container<'a, T: 'a> {
+    // T must not contain references shorter than 'a
+    reference: &'a T,
+}
+
+// For owned types (like i32), 'a bound is always satisfied
+fn main() {
+    let value = 42;
+    let c = Container { reference: &value };
+    // works: i32: 'static satisfies any 'a
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`rust
+/// A parser that finds the longest common prefix of two strings
+struct PrefixFinder<'a> {
+    text: &'a str,  // struct borrows from outside
+}
+
+impl<'a> PrefixFinder<'a> {
+    /// Returns the longest prefix common to both stored text and another string
+    fn longest_common_prefix<'b>(&self, other: &'b str) -> &'a str {
+        let limit = self.text.len().min(other.len());
+        let self_bytes = self.text.as_bytes();
+        let other_bytes = other.as_bytes();
+        let mut i = 0;
+        while i < limit && self_bytes[i] == other_bytes[i] {
+            i += 1;
+        }
+        &self.text[..i]  // returns a borrow from self.text (lifetime 'a)
+    }
+}
+
+/// Concatenates &str slices, returning the result (owned, no lifetime issues)
+fn concat<'a>(parts: &[&'a str], separator: &'a str) -> String {
+    let mut result = String::new();
+    for (i, part) in parts.iter().enumerate() {
+        if i > 0 { result.push_str(separator); }
+        result.push_str(part);
+    }
+    result
+}
+
+fn main() {
+    let sentence = String::from("Rust ownership ensures memory safety.");
+    let pf = PrefixFinder { text: &sentence };
+    let prefix = pf.longest_common_prefix("Rust ownership is great!");
+    println!("Common prefix: '{prefix}'");  // "Rust ownership "
+    let joined = concat(&["a", "b", "c"], ", ");
+    println!("{joined}");  // "a, b, c"
+}
+\`\`\``, tags: ["Rust", "Lifetimes", "Borrow Checker"] },
+          { id: "ns-rs-errors", title: "Error Handling", shortDesc: "Result<T, E>, the ? operator, mapping errors, anyhow, and thiserror crates.", difficulty: "intermediate", readTimeMin: 13, keyPoints: ["Result<T, E> is the standard enum for fallible operations — Ok(T) on success, Err(E) on failure.", "The ? operator unwraps Ok or returns Err early from the calling function — it uses the From trait for automatic error conversion.", "Pattern matching with match gives full control over error handling — use it when you need to handle each error case differently.", "Combinators like .map(), .and_then(), and .unwrap_or() transform Results without match statements.", "anyhow::Error provides a dynamic error type for application code — easy to create with anyhow! and context().", "thiserror derives Display and From impls for custom error enums — best for library code with well-defined error types."], content: `## What's This?
+
+Error handling in Rust is done without exceptions. Instead, functions that can fail return the <code>Result&lt;T, E&gt;</code> enum — <code>Ok(T)</code> on success, <code>Err(E)</code> on failure. The <code>?</code> operator propagates errors up the call stack (replacing <code>try</code>/<code>catch</code>). For application code, the <code>anyhow</code> crate provides flexible dynamic errors. For library code, <code>thiserror</code> derives boilerplate for custom error types. Think of <code>Result</code> as a contract: the type signature tells you the function can fail and what kind of error to expect — nothing is hidden.
+
+## The Big Picture
+
+Rust's error handling is part of the type system — there is no <code>throws</code> keyword or unchecked exception. Every function that can fail declares this in its return type. The <code>?</code> operator makes error propagation as ergonomic as exceptions while maintaining type safety. The <code>anyhow</code> and <code>thiserror</code> crates (from the ecosystem, not the standard library) are the de facto standard patterns for real-world code. After this, you can write robust I/O and network code with confidence.
+
+## Core Ideas
+
+### Result&lt;T, E&gt;
+
+<code>Result</code> is an enum defined in the standard library with two variants: <code>Ok(T)</code> and <code>Err(E)</code>. The <code>Result</code> type is the return type for any function that can fail. The compiler forces you to handle both variants — you cannot silently ignore an error.
+
+\`\`\`rust
+use std::fs::File;
+use std::io::Read;
+
+fn read_username(path: &str) -> Result<String, std::io::Error> {
+    let mut file = File::open(path)?; // ? propagates the error
+    let mut username = String::new();
+    file.read_to_string(&mut username)?;
+    Ok(username.trim().to_string())
+}
+
+fn main() {
+    match read_username("user.txt") {
+        Ok(name) => println!("User: {name}"),
+        Err(e) => eprintln!("Failed: {e}"),
+    }
+}
+\`\`\`
+
+### The ? Operator
+
+The <code>?</code> operator is syntactic sugar for a match that unwraps <code>Ok</code> or returns <code>Err</code> early. It calls <code>From::from</code> on the error to convert it to the function's error type, enabling automatic error type conversion.
+
+\`\`\`rust
+use std::num::ParseIntError;
+
+// Manual match:
+fn parse_manual(s: &str) -> Result<i32, ParseIntError> {
+    match s.parse::<i32>() {
+        Ok(n) => Ok(n),
+        Err(e) => Err(e),
+    }
+}
+
+// With ? — equivalent to above:
+fn parse_question(s: &str) -> Result<i32, ParseIntError> {
+    Ok(s.parse::<i32>()?)  // ? propagates ParseIntError
+}
+
+// ? works with Option too:
+fn first_number(s: &str) -> Option<i32> {
+    s.split_whitespace()
+        .find(|w| w.parse::<i32>().is_ok())?
+        .parse().ok()
+}
+\`\`\`
+
+### Combinators
+
+Result offers combinator methods that transform values without explicit match. Common ones include: <code>.map()</code> (transform Ok value), <code>.map_err()</code> (transform Err value), <code>.and_then()</code> (chain fallible operations), <code>.unwrap_or()</code> (provide fallback), and <code>.ok()</code> (convert Result to Option).
+
+\`\`\`rust
+use std::num::ParseIntError;
+
+fn multiply(a: &str, b: &str) -> Result<i32, ParseIntError> {
+    // and_then chains fallible operations
+    a.parse::<i32>()
+        .and_then(|a| b.parse::<i32>().map(|b| a * b))
+}
+
+fn main() {
+    // map_err: convert error type
+    let result = multiply("6", "7")
+        .map_err(|e| format!("Parse error: {e}"));
+    // unwrap_or: provide default on failure
+    let fallback = multiply("six", "7")
+        .unwrap_or(0);
+    println!("{:?}, {}", result, fallback); // Ok(42), 0
+}
+\`\`\`
+
+### anyhow — Application Error Handling
+
+The <code>anyhow</code> crate provides a dynamic error type (<code>anyhow::Error</code>) that can wrap any error that implements <code>std::error::Error</code>. Use <code>anyhow!</code> to create ad-hoc errors and <code>.context()</code> to add contextual information to errors.
+
+\`\`\`rust
+use anyhow::{anyhow, Context, Result};
+
+fn read_file(path: &str) -> Result<String> {
+    std::fs::read_to_string(path)
+        // Adds context: "Failed to read file"
+        .with_context(|| format!("Failed to read file {path}"))
+}
+
+fn parse_age(s: &str) -> Result<u32> {
+    s.parse::<u32>()
+        .map_err(|_| anyhow!("'{s}' is not a valid age"))
+}
+
+fn get_age(path: &str) -> Result<u32> {
+    let data = read_file(path)?;       // anyhow converts io::Error automatically
+    let age = parse_age(data.trim())?;  // ? works with anyhow::Error
+    Ok(age)
+}
+
+fn main() -> Result<()> {
+    let age = get_age("age.txt")?;
+    println!("Age: {age}");
+    Ok(())
+}
+\`\`\`
+
+### thiserror — Library Error Types
+
+The <code>thiserror</code> crate derives the <code>Display</code>, <code>Debug</code>, and <code>From</code> implementations for custom error enums. Use it to define a fixed set of error variants that callers can match on.
+
+\`\`\`rust
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum DataError {
+    #[error("not found: {0}")]
+    NotFound(String),
+    #[error("invalid format: {0}")]
+    InvalidFormat(String),
+    #[error("I/O error: {0}")]
+    Io(#[from] std::io::Error),  // auto-converts io::Error
+}
+
+fn load_config(path: &str) -> Result<String, DataError> {
+    let data = std::fs::read_to_string(path)?;  // io::Error converted to DataError::Io
+    if data.is_empty() {
+        return Err(DataError::InvalidFormat(path.into()));
+    }
+    Ok(data)
+}
+
+fn main() -> Result<(), DataError> {
+    match load_config("config.toml") {
+        Ok(c) => println!("Config: {c}"),
+        Err(DataError::NotFound(p)) => eprintln!("Missing: {p}"),
+        Err(e) => eprintln!("Error: {e}"),
+    }
+    Ok(())
+}
+\`\`\`
+
+### Error Handling Strategy
+
+| Context | Approach | Why |
+|---------|----------|-----|
+| Library with known error types | Custom enum + <code>thiserror</code> | Callers can match on specific errors |
+| Application / CLI tool | <code>anyhow::Result</code> | Flexible, easy context, no verbose types |
+| Prototypes / internal code | <code>.unwrap()</code> or <code>.expect()</code> | Crash fast during development — replace before production |
+| Irrecoverable state | <code>panic!</code> | Program cannot continue (array out of bounds, assertion failure) |
+
+## Wiring It Together
+
+\`\`\`rust
+use anyhow::{Context, Result};
+use std::path::Path;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("missing key: {0}")]
+    MissingKey(String),
+    #[error("invalid value for {key}: expected {expected}")]
+    InvalidValue { key: String, expected: String },
+}
+
+/// Reads a config file and returns key-value pairs
+fn read_config(path: &Path) -> Result<Vec<(String, String)>> {
+    let content = std::fs::read_to_string(path)
+        .with_context(|| format!("reading config from {}", path.display()))?;
+    let mut pairs = Vec::new();
+    for (i, line) in content.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;  // skip blank lines and comments
+        }
+        let (key, value) = trimmed.split_once('=')
+            .ok_or_else(|| anyhow::anyhow!("line {}: no '=' found", i + 1))?;
+        pairs.push((key.trim().to_string(), value.trim().to_string()));
+    }
+    Ok(pairs)
+}
+
+/// Gets a value by key, returning a typed ConfigError
+fn get_value<'a>(pairs: &'a [(String, String)], key: &str) -> Result<&'a str, ConfigError> {
+    pairs.iter()
+        .find(|(k, _)| k == key)
+        .map(|(_, v)| v.as_str())
+        .ok_or_else(|| ConfigError::MissingKey(key.into()))
+}
+
+fn main() -> Result<()> {
+    let pairs = read_config(Path::new("app.conf"))?;
+    let host = get_value(&pairs, "host")?;
+    let port: u16 = get_value(&pairs, "port")?
+        .parse()
+        .map_err(|_| ConfigError::InvalidValue {
+            key: "port".into(),
+            expected: "a valid u16".into(),
+        })?;
+    println!("Connecting to {host}:{port}");
+    Ok(())
+}
+\`\`\``, tags: ["Rust", "Error Handling", "anyhow", "thiserror"] },
+          { id: "ns-rs-concurrency", title: "Concurrency (Fearless)", shortDesc: "Send/Sync traits, threads, channels (mpsc), Mutex/Arc, and async/await with tokio.", difficulty: "advanced", readTimeMin: 17, keyPoints: ["Rust's type system guarantees thread safety at compile time via Send (ownership across threads) and Sync (shared access across threads).", "std::thread::spawn creates OS threads; move closures transfer ownership into the thread.", "mpsc channels provide multiple-producer, single-consumer message passing — the receiver blocks on recv().", "Arc<T> provides atomic reference counting for shared ownership across threads; paired with Mutex for mutation.", "async/await in Rust is lazy — futures do nothing until polled by a runtime like Tokio.", "Tokio is the de facto async runtime: async fn, tokio::spawn, mpsc channels, and select! macro."], content: `## What's This?
+
+Concurrency in Rust is about writing programs that do multiple things at once — running computations in parallel on different CPU cores, waiting on I/O without blocking, and safely sharing data between threads. Rust's "fearless concurrency" promise is that the compiler catches data races, deadlocks, and other thread-safety bugs at compile time, not at 3 AM in production. The <code>Send</code> and <code>Sync</code> traits encode thread safety in the type system. For asynchronous I/O, Rust uses the <code>async</code>/<code>await</code> syntax with a runtime (Tokio) instead of OS threads.
+
+## The Big Picture
+
+Concurrency builds directly on ownership and borrowing. The <code>Send</code> trait means "this type can be safely transferred to another thread" — ownership moves work across threads. The <code>Sync</code> trait means "this type can be safely shared via reference across threads" — borrowing works across threads. The borrow checker prevents data races. For I/O-heavy workloads (web servers, databases), async/await with Tokio provides efficient cooperative multitasking without the overhead of thousands of OS threads. After this topic, you can build networked services and parallel computation pipelines.
+
+## Core Ideas
+
+### Threads with std::thread
+
+OS threads are created with <code>std::thread::spawn</code>. The closure passed to <code>spawn</code> must have <code>'static</code> lifetime (owned data only). Use <code>move</code> closures to transfer ownership of captured variables into the thread. <code>.join()</code> waits for the thread to finish.
+
+\`\`\`rust
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    let handle = thread::spawn(|| {
+        for i in 1..10 {
+            println!("thread: {i}");
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+    for i in 1..5 {
+        println!("main: {i}");
+        thread::sleep(Duration::from_millis(1));
+    }
+    handle.join().unwrap();  // wait for the spawned thread
+}
+
+// Move ownership into a thread:
+let data = vec![1, 2, 3];
+let handle = thread::spawn(move || {
+    println!("{:?}", data);  // data moved into this thread
+});
+// println!("{:?}", data);  // ERROR: data was moved
+handle.join().unwrap();
+\`\`\`
+
+### Message Passing with Channels
+
+Channels are Rust's version of Go-like communication between threads. <code>std::sync::mpsc</code> (multi-producer, single-consumer) has <code>Sender</code> clones that can send from many threads, and one <code>Receiver</code>. <code>send()</code> returns <code>Result</code> (fails if receiver is dropped). <code>recv()</code> blocks until a message arrives.
+
+\`\`\`rust
+use std::sync::mpsc;
+use std::thread;
+
+fn main() {
+    let (tx, rx) = mpsc::channel();  // Sender, Receiver
+    let tx1 = tx.clone();            // clone the sender for another thread
+
+    thread::spawn(move || {
+        tx.send(String::from("from thread 1")).unwrap();
+    });
+    thread::spawn(move || {
+        tx1.send(String::from("from thread 2")).unwrap();
+    });
+
+    for received in rx {  // rx is an iterator — blocks until all senders drop
+        println!("Got: {received}");
+    }
+}
+\`\`\`
+
+### Shared State with Mutex and Arc
+
+<code>Mutex&lt;T&gt;</code> provides mutual exclusion — only one thread can access the inner data at a time. <code>Arc&lt;T&gt;</code> (atomic reference counting) enables shared ownership across threads. The pair <code>Arc&lt;Mutex&lt;T&gt;&gt;</code> is the standard pattern for shared mutable state.
+
+\`\`\`rust
+use std::sync::{Arc, Mutex};
+use std::thread;
+
+fn main() {
+    let counter = Arc::new(Mutex::new(0));
+    let mut handles = vec![];
+
+    for _ in 0..10 {
+        let c = Arc::clone(&counter);  // increment reference count
+        let handle = thread::spawn(move || {
+            let mut num = c.lock().unwrap(); // acquire lock, returns MutexGuard
+            *num += 1;                       // dereference to modify inside Mutex
+        });  // MutexGuard dropped here — lock released
+        handles.push(handle);
+    }
+
+    for h in handles {
+        h.join().unwrap();
+    }
+    println!("Result: {}", *counter.lock().unwrap()); // 10 — no data race!
+}
+\`\`\`
+
+### Send and Sync Traits
+
+<code>Send</code> means ownership can be transferred to another thread. <code>Sync</code> means a shared reference can be sent to another thread (i.e., <code>&T: Send</code>). Almost all Rust types are <code>Send + Sync</code> by default. Types like <code>Rc&lt;T&gt;</code> (non-atomic reference counting) are neither. The compiler checks these automatically.
+
+| Type | Send | Sync | Reason |
+|------|------|------|--------|
+| <code>i32</code>, <code>bool</code> | Yes | Yes | Trivial types |
+| <code>String</code>, <code>Vec&lt;T&gt;</code> | Yes if <code>T: Send</code> | Yes if <code>T: Sync</code> | Owned heap data |
+| <code>Arc&lt;T&gt;</code> | Yes if <code>T: Send + Sync</code> | Yes if <code>T: Send + Sync</code> | Atomic refcount |
+| <code>Rc&lt;T&gt;</code> | No | No | Non-atomic refcount — not thread safe |
+| <code>Mutex&lt;T&gt;</code> | Yes if <code>T: Send</code> | Yes if <code>T: Send</code> | Internal synchronization |
+| <code>*const T</code>, <code>*mut T</code> | No | No | Raw pointers — unsafe |
+
+\`\`\`rust
+// Generic function that only accepts Send + Sync types
+fn process<T: Send + Sync>(data: T) {
+    // T can be safely used across threads
+}
+\`\`\`
+
+### async/await with Tokio
+
+Rust's async system uses the <code>async fn</code> syntax to define futures — computations that complete later. Futures are lazy: they do nothing until awaited (polled). Tokio is the most popular async runtime, providing an event loop, I/O drivers, and async synchronization primitives.
+
+\`\`\`rust
+use tokio::time::{sleep, Duration};
+
+async fn do_work(id: u32) -> String {
+    sleep(Duration::from_millis(100)).await;  // non-blocking sleep
+    format!("Task {id} done")
+}
+
+#[tokio::main]  // macro that sets up the Tokio runtime
+async fn main() {
+    // Spawn concurrent tasks (not OS threads)
+    let handles: Vec<_> = (1..=5)
+        .map(|i| tokio::spawn(do_work(i)))
+        .collect();
+    for h in handles {
+        println!("{}", h.await.unwrap());
+    }
+}
+\`\`\`
+
+### Tokio Channels
+
+Tokio provides async channel types: <code>mpsc</code> (multi-producer, single-consumer) and <code>oneshot</code> (single-shot). These are similar to <code>std::sync::mpsc</code> but work with async send/receive.
+
+\`\`\`rust
+use tokio::sync::mpsc;
+
+#[tokio::main]
+async fn main() {
+    let (mut tx, mut rx) = mpsc::channel(32);  // buffer size 32
+    tokio::spawn(async move {
+        tx.send("ping".to_string()).await.unwrap();  // async send
+    });
+    if let Some(msg) = rx.recv().await {  // async receive
+        println!("Got: {msg}");
+    }
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`rust
+use anyhow::Result;
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::Mutex;  // Tokio's async-aware Mutex
+use tokio::time::sleep;
+
+/// Simulates fetching a URL — returns a string summary
+async fn fetch_url(url: &str) -> Result<String> {
+    sleep(Duration::from_millis(50)).await;  // pretend network delay
+    Ok(format!("fetched {url} (200 OK)"))
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let urls = vec![
+        "https://example.com",
+        "https://rust-lang.org",
+        "https://tokio.rs",
+    ];
+    // Shared counter protected by an async Mutex
+    let counter = Arc::new(Mutex::new(0u32));
+    let mut handles = vec![];
+
+    for url in urls {
+        let c = Arc::clone(&counter);
+        handles.push(tokio::spawn(async move {
+            let result = fetch_url(url).await.unwrap();
+            let mut count = c.lock().await;  // acquire async lock
+            *count += 1;
+            println!("[{}] {result}", count);
+        }));
+    }
+
+    // Wait for all tasks to complete
+    for h in handles {
+        h.await?;
+    }
+    println!("All {} fetches complete!", *counter.lock().await);
+    Ok(())
+}
+\`\`\``, tags: ["Rust", "Concurrency", "Tokio", "async"] },
+          { id: "ns-rs-unsafe", title: "Unsafe Rust & FFI", shortDesc: "Raw pointers, unsafe blocks, calling C via FFI (extern), and the #[no_mangle] attribute.", difficulty: "advanced", readTimeMin: 15, keyPoints: ["unsafe blocks unlock five superpowers: dereference raw pointers, call unsafe functions, access mutable statics, implement unsafe traits, and access union fields.", "Raw pointers (*const T, *mut T) are unmanaged pointers — no ownership, no borrowing, can be null.", "Unsafe does NOT disable the borrow checker — it lets you do specific operations the checker cannot verify.", "extern blocks declare functions from other languages (usually C) — the FFI bridge.", "#[no_mangle] prevents Rust from renaming symbol names so C code can link to them.", "FFI safety: use #[repr(C)] for struct layouts, extern \"C\" for calling convention, and unsafe for every cross-language call."], content: `## What's This?
+
+Unsafe Rust is Rust's escape hatch — a way to perform operations the compiler cannot guarantee are safe. The <code>unsafe</code> keyword does not disable all safety checks; it grants exactly five superpowers: dereferencing raw pointers, calling unsafe functions, accessing mutable static variables, implementing unsafe traits, and accessing fields of <code>union</code>s. FFI (Foreign Function Interface) is how Rust calls code written in other languages (typically C). Think of <code>unsafe</code> like a chainsaw: extremely powerful, but you must follow the rules yourself because the guard rails are off.
+
+## The Big Picture
+
+Unsafe Rust is necessary for systems programming: interacting with hardware, calling C libraries, implementing data structures with custom memory layouts (like <code>Vec</code> or <code>HashMap</code>), and embedding Rust in larger systems. The standard library itself uses unsafe internally for performance and platform-specific operations. The rule is: keep unsafe blocks as small as possible, wrap them in safe abstractions, and use tools like Miri or Loom to verify correctness. FFI is the most common reason to use unsafe.
+
+## Core Ideas
+
+### The Five Unsafe Superpowers
+
+Only these five operations require an <code>unsafe</code> block. The borrow checker, ownership rules, and type system still apply to everything else inside the block.
+
+\`\`\`rust
+fn main() {
+    let mut x = 42;
+
+    // 1. Dereference a raw pointer
+    let raw_mut = &mut x as *mut i32;  // create a mutable raw pointer
+    unsafe {
+        *raw_mut = 99;  // dereference — requires unsafe
+    }
+
+    // 2. Call an unsafe function
+    unsafe {
+        dangerous_function();  // caller must uphold the safety contract
+    }
+
+    // 3. Access or modify a mutable static variable
+    static mut COUNTER: u32 = 0;
+    unsafe {
+        COUNTER += 1;
+    }
+
+    // 4. Implement an unsafe trait
+    unsafe trait MyUnsafeTrait {}
+    unsafe impl MyUnsafeTrait for i32 {}
+
+    // 5. Access fields of a union
+    union IntOrFloat { i: i32, f: f32 }
+    let u = IntOrFloat { i: 42 };
+    unsafe {
+        println!("{}", u.i);  // union field access is always unsafe
+    }
+}
+
+unsafe fn dangerous_function() {
+    // This function has a safety contract the caller must uphold
+}
+\`\`\`
+
+### Raw Pointers
+
+Raw pointers (<code>*const T</code> and <code>*mut T</code>) are the Rust equivalent of C pointers. They have no ownership semantics, no lifetime tracking, and can be null. Creating a raw pointer is safe; dereferencing it requires <code>unsafe</code>.
+
+\`\`\`rust
+fn main() {
+    let x = 5;
+    let r1: *const i32 = &x as *const i32;  // creating is safe
+    let mut y = 10;
+    let r2: *mut i32 = &mut y as *mut i32;  // mutable raw pointer
+
+    unsafe {
+        println!("r1 points to: {}", *r1);  // dereference: unsafe
+        *r2 = 20;                            // write through raw pointer
+    }
+
+    // null pointer check
+    let null_ptr: *const i32 = std::ptr::null();
+    unsafe {
+        if !null_ptr.is_null() {
+            println!("{}", *null_ptr);  // would crash — null!
+        }
+    }
+}
+\`\`\`
+
+### Calling C with FFI (extern)
+
+Foreign Function Interface (FFI) lets Rust call functions from C libraries and vice versa. The <code>extern "C"</code> block declares external functions. The <code>extern "C"</code> keyword on a function makes it callable from C code.
+
+\`\`\`rust
+// Declare C functions from libc
+extern "C" {
+    fn strlen(s: *const u8) -> usize;              // C's strlen
+    fn puts(s: *const u8) -> i32;                  // C's puts
+    fn malloc(size: usize) -> *mut u8;             // C's malloc
+    fn free(ptr: *mut u8);                         // C's free
+}
+
+fn main() {
+    let msg = b"Hello from Rust!\0";  // null-terminated byte string
+    unsafe {
+        let len = strlen(msg.as_ptr());  // call C strlen
+        println!("Length: {len}");
+        puts(msg.as_ptr());              // call C puts — prints to stdout
+    }
+}
+
+// Export a Rust function callable from C
+#[no_mangle]  // prevents name mangling — symbol is just "add"
+pub extern "C" fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+\`\`\`
+
+### FFI Safety with repr(C)
+
+Rust structs have no guaranteed memory layout (the compiler can reorder fields for optimization). For FFI with C, you must use <code>#[repr(C)]</code> to force C-compatible layout.
+
+\`\`\`rust
+#[repr(C)]  // guarantees C-compatible memory layout
+struct Point {
+    x: f64,
+    y: f64,
+}
+
+// C equivalent:
+// struct Point { double x; double y; };
+
+extern "C" {
+    // Assume a C library has: void plot_point(struct Point pt);
+    fn plot_point(pt: Point);
+}
+
+fn main() {
+    let p = Point { x: 1.0, y: 2.0 };
+    unsafe {
+        plot_point(p);  // safe to pass — layout matches C
+    }
+}
+\`\`\`
+
+### Creating Safe Abstractions over Unsafe
+
+The idiomatic pattern is to wrap unsafe operations in a safe API. The <code>Vec</code> type is itself implemented using unsafe raw pointer operations internally but exposes a fully safe interface.
+
+\`\`\`rust
+/// A safe wrapper around a heap-allocated integer
+struct BoxedInt {
+    ptr: *mut i32,
+}
+
+impl BoxedInt {
+    fn new(value: i32) -> Self {
+        let ptr = unsafe { malloc(4) as *mut i32 };
+        if ptr.is_null() {
+            panic!("malloc failed");
+        }
+        unsafe { *ptr = value; }
+        BoxedInt { ptr }
+    }
+
+    fn get(&self) -> i32 {
+        unsafe { *self.ptr }  // safe because we control the allocation
+    }
+}
+
+impl Drop for BoxedInt {
+    fn drop(&mut self) {
+        unsafe { free(self.ptr as *mut u8); }  // clean up on drop
+    }
+}
+
+fn main() {
+    let bi = BoxedInt::new(42);
+    println!("{}", bi.get());  // safe API — unsafe is hidden
+}  // drop is called automatically — no memory leak
+\`\`\`
+
+### When to Use Unsafe
+
+| Scenario | Use Unsafe? | Alternative |
+|----------|-------------|-------------|
+| Calling C library (e.g., OpenSSL) | Yes — FFI requires it | Use <code>crates</code> that already wrap the library |
+| Implementing custom Vec/HashMap | Yes — raw pointer manipulation needed | Start with <code>Vec</code> or <code>HashMap</code> |
+| Optimization (SIMD, cache-line access) | Maybe — measure first | Use <code>std::simd</code> or <code>safe</code> intrinsics |
+| Safe code you cannot make compile | No — you are doing something wrong | Restructure your code, use <code>RefCell</code> or <code>Cell</code> |
+
+## Wiring It Together
+
+\`\`\`rust
+use std::ffi::CString;
+use std::mem;
+
+/// Safe wrapper for C's qsort function
+extern "C" {
+    fn qsort(
+        base: *mut c_void,
+        num: usize,
+        size: usize,
+        compar: Option<unsafe extern "C" fn(*const c_void, *const c_void) -> i32>,
+    );
+}
+
+// C comparison callback — must be extern "C" and unsafe
+unsafe extern "C" fn compare_ints(a: *const c_void, b: *const c_void) -> i32 {
+    let a = &*(a as *const i32);  // cast and dereference
+    let b = &*(b as *const i32);
+    a.cmp(b) as i32  // -1, 0, or 1
+}
+
+fn sort_i32_slice(slice: &mut [i32]) {
+    unsafe {
+        qsort(
+            slice.as_mut_ptr() as *mut c_void,
+            slice.len(),
+            mem::size_of::<i32>(),
+            Some(compare_ints),
+        );
+    }
+}
+
+fn main() {
+    let mut numbers = vec![42, 3, 15, 8, 1];
+    sort_i32_slice(&mut numbers);  // safe wrapper!
+    println!("Sorted: {:?}", numbers);  // [1, 3, 8, 15, 42]
+
+    // FFI safety: CString ensures null-termination for C functions
+    let msg = CString::new("Hello from Rust via FFI").unwrap();
+    extern "C" {
+        fn printf(format: *const u8) -> i32;
+    }
+    unsafe {
+        printf(msg.as_ptr());
+    }
+}
+\`\`\``, tags: ["Rust", "Unsafe", "FFI"] },
+          { id: "ns-rs-frameworks", title: "Web Frameworks (Axum, Actix, Rocket)", shortDesc: "Routing, middlewares, extractors, state management, and WebSocket support.", difficulty: "advanced", readTimeMin: 16, keyPoints: ["Axum is built on Tokio/Tower — uses extractors for request data, Tower middleware, and integrates with the wider tokio ecosystem.", "Actix-Web is an actor-based framework with excellent throughput — uses extractors, middleware, and App::route for routing.", "Rocket prioritizes developer experience with attribute-based routing (#[get], #[post]) and automatic request deserialization.", "All three frameworks support extractors (Json, Path, Query, State) for typed request handling.", "State is shared application data — Arc-based or cloned per request; middleware wraps request/response processing.", "WebSocket support exists in all three: axum::extract::ws, actix_web::web::Payload, and rocket::response::stream."], content: `## What's This?
+
+Web frameworks in Rust provide the tools to build HTTP servers — handling requests, routing to handlers, extracting data, managing state, and returning responses. Three frameworks dominate the ecosystem: Axum (built on Tokio/Tower, the current community favorite), Actix-Web (actor-based, historically the fastest), and Rocket (ergonomic with attribute macros). Think of a web framework as the scaffolding: you define endpoints, and the framework handles HTTP parsing, routing, concurrency, and response serialization.
+
+## The Big Picture
+
+Rust web frameworks are relatively young (post-2019) but have matured rapidly. All three frameworks are production-ready and power real services. Axum's advantage is its deep integration with the Tokio ecosystem and Tower middleware stack (shared with tonic, warp, and other Tower-based services). Actix-Web offers the highest raw throughput. Rocket offers the most ergonomic developer experience with compile-time URL checking. Choosing between them is often a matter of ecosystem fit and team preference. Before using any framework, you need async/await, basic Tokio familiarity, and serde for JSON serialization.
+
+## Core Ideas
+
+### Axum
+
+Axum is built on top of Tokio, Tower, and Hyper. It uses an extractor-based pattern where handler function parameters are automatically extracted from the request, and return types are automatically converted to responses. State is shared via <code>State</code> extractor with <code>Arc</code>-based cloning.
+
+\`\`\`rust
+use axum::{
+    Router,
+    extract::{Path, Query, State},
+    response::Json,
+    routing::get,
+};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+#[derive(Serialize)]
+struct User { id: u32, name: String }
+
+// State — shared via Arc
+struct AppState { db: HashMap<u32, String> }
+
+async fn get_user(
+    State(state): State<Arc<AppState>>,
+    Path(id): Path<u32>,
+) -> Json<User> {
+    let name = state.db.get(&id).cloned().unwrap_or_default();
+    Json(User { id, name })
+}
+
+#[tokio::main]
+async fn main() {
+    let state = Arc::new(AppState {
+        db: HashMap::from([(1, "Alice".into()), (2, "Bob".into())]),
+    });
+    let app = Router::new()
+        .route("/user/:id", get(get_user))
+        .with_state(state);
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+\`\`\`
+
+### Actix-Web
+
+Actix-Web uses an actor model internally but exposes a straightforward handler API. Extractors work similarly to Axum. Unique features include <code>web::scope</code> for route namespacing and <code>HttpServer::new</code> for multi-threaded workers.
+
+\`\`\`rust
+use actix_web::{get, web, App, HttpServer, Responder};
+
+#[derive(serde::Serialize)]
+struct User { id: u32, name: String }
+
+// Shared state
+struct AppState { db: std::collections::HashMap<u32, String> }
+
+#[get("/user/{id}")]
+async fn get_user(
+    state: web::Data<AppState>,  // shared state extractor
+    path: web::Path<u32>,
+) -> impl Responder {
+    let id = path.into_inner();
+    let name = state.db.get(&id).cloned().unwrap_or_default();
+    web::Json(User { id, name })
+}
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+    let state = web::Data::new(AppState {
+        db: std::collections::HashMap::from([(1, "Alice".into())]),
+    });
+    HttpServer::new(move || {
+        App::new()
+            .app_data(state.clone())  // inject state
+            .service(get_user)        // register handler
+    })
+    .bind(("0.0.0.0", 3000))?
+    .run()
+    .await
+}
+\`\`\`
+
+### Rocket
+
+Rocket emphasizes ergonomics with attribute-based routing and automatic request deserialization. It uses <code>#[launch]</code> instead of a manual runtime. <code>FromForm</code> derives for query/form parsing, <code>rocket_db_pools</code> for database integration.
+
+\`\`\`rust
+#[macro_use] extern crate rocket;
+
+use rocket::serde::json::Json;
+use rocket::State;
+
+#[derive(serde::Serialize)]
+struct User { id: u32, name: String }
+
+struct AppState { db: std::collections::HashMap<u32, String> }
+
+#[get("/user/<id>")]
+fn get_user(id: u32, state: &State<AppState>) -> Json<User> {
+    let name = state.db.get(&id).cloned().unwrap_or_default();
+    Json(User { id, name })
+}
+
+#[launch]  // sets up the Rocket runtime
+fn rocket() -> _ {
+    rocket::build()
+        .manage(AppState {
+            db: std::collections::HashMap::from([(1, "Alice".into())]),
+        })
+        .mount("/", routes![get_user])
+}
+\`\`\`
+
+### Middleware
+
+All three frameworks support middleware — code that runs before or after every request. Axum uses Tower middleware layers. Actix-Web uses <code>wrap</code> / <code>wrap_fn</code>. Rocket uses fairings.
+
+\`\`\`rust
+// Axum middleware pattern with Tower
+use axum::Router;
+use tower_http::cors::CorsLayer;
+use tower_http::timeout::TimeoutLayer;
+use tower_http::trace::TraceLayer;
+use std::time::Duration;
+
+let app = Router::new()
+    .route("/", get(handler))
+    .layer(TraceLayer::new_for_http())       // request logging
+    .layer(CorsLayer::permissive())           // CORS
+    .layer(TimeoutLayer::new(Duration::from_secs(30))); // timeout
+\`\`\`
+
+### Framework Comparison
+
+| Feature | Axum | Actix-Web | Rocket |
+|---------|------|-----------|--------|
+| Runtime | Tokio | Tokio | Custom (Tokio-based) |
+| Middleware | Tower | Custom middleware | Fairings |
+| Extractors | Function params | <code>web::</code> types | Function params |
+| Routing | <code>Router::route</code> | Attribute + <code>App::service</code> | Attribute (<code>#[get]</code>) |
+| State | <code>State</code> extractor | <code>web::Data</code> | <code>State</code> guard |
+| WebSocket | <code>axum::extract::ws</code> | <code>actix_web::HttpResponse</code> | <code>rocket_ws</code> |
+
+## Wiring It Together
+
+\`\`\`rust
+use axum::{
+    Router,
+    extract::{Path, State},
+    http::StatusCode,
+    response::Json,
+    routing::{get, post},
+};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::Arc;
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Todo { id: u32, title: String, completed: bool }
+
+#[derive(Deserialize)]
+struct CreateTodo { title: String }
+
+type Db = Arc<tokio::sync::Mutex<HashMap<u32, Todo>>>;
+
+async fn list_todos(State(db): State<Db>) -> Json<Vec<Todo>> {
+    let map = db.lock().await;
+    Json(map.values().cloned().collect())
+}
+
+async fn create_todo(
+    State(db): State<Db>,
+    Json(payload): Json<CreateTodo>,
+) -> (StatusCode, Json<Todo>) {
+    let mut map = db.lock().await;
+    let id = map.len() as u32 + 1;
+    let todo = Todo { id, title: payload.title, completed: false };
+    map.insert(id, todo.clone());
+    (StatusCode::CREATED, Json(todo))
+}
+
+#[tokio::main]
+async fn main() {
+    let db: Db = Arc::new(tokio::sync::Mutex::new(HashMap::new()));
+    let app = Router::new()
+        .route("/todos", get(list_todos).post(create_todo))
+        .with_state(db);
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+\`\`\``, tags: ["Rust", "Axum", "Actix", "Web Frameworks"] },
+          { id: "ns-rs-testing", title: "Testing & Tooling", shortDesc: "Unit/integration tests, doc tests, cargo test, clippy, rustfmt, and benchmarking (criterion).", difficulty: "intermediate", readTimeMin: 12, keyPoints: ["Unit tests go in the same file, inside a #[cfg(test)] module — cargo test runs them all.", "Integration tests live in tests/ directory, one file per test scenario; they test your crate as an external caller.", "Doc tests (``` in doc comments) ensure your examples compile and produce correct output.", "cargo clippy catches common mistakes and enforces idiomatic Rust style — run it as part of CI.", "rustfmt (cargo fmt) auto-formats code according to standard Rust style — eliminates formatting debates.", "Criterion (cargo bench) measures performance with statistical analysis — detects regressions across code changes."], content: `## What's This?
+
+Testing and tooling in Rust refers to the built-in testing framework and the ecosystem of developer tools that help you write correct, idiomatic, and fast Rust code. The standard library provides a test harness (<code>#[test]</code>, <code>cargo test</code>) with support for unit tests, integration tests, and documentation tests. Developer tools include <code>rustfmt</code> (formatting), <code>clippy</code> (lints), and <code>criterion</code> (benchmarking). Think of these as the workshop: testing verifies your code does what you think it does; tooling keeps your code consistent and high-quality.
+
+## The Big Picture
+
+Rust's testing infrastructure is part of the language, not an afterthought. The <code>cargo test</code> command runs everything: unit tests, integration tests, doc tests, and benchmark tests. This unified approach means there is no excuse not to test. Clippy and rustfmt are installed with Rust and give you production-grade linting and formatting without configuration. Before deploying Rust code to production, you should have tests passing, clippy clean, and rustfmt applied — all enforced in CI.
+
+## Core Ideas
+
+### Unit Tests
+
+Unit tests go in the same file as the code, inside a <code>#[cfg(test)]</code> module. The attribute ensures the module is only compiled during testing (not in release builds). Test functions are annotated with <code>#[test]</code> and use assertion macros like <code>assert!</code>, <code>assert_eq!</code>, and <code>assert_ne!</code>.
+
+\`\`\`rust
+fn add(a: i32, b: i32) -> i32 { a + b }
+fn divide(a: f64, b: f64) -> Result<f64, String> {
+    if b == 0.0 { Err("division by zero".into()) } else { Ok(a / b) }
+}
+
+#[cfg(test)]  // only compiled when running tests
+mod tests {
+    use super::*;  // bring parent module items into scope
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(2, 2), 4);
+    }
+
+    #[test]
+    fn test_divide_ok() {
+        assert_eq!(divide(10.0, 2.0).unwrap(), 5.0);
+    }
+
+    #[test]
+    fn test_divide_by_zero() {
+        assert!(divide(1.0, 0.0).is_err());
+    }
+
+    #[test]
+    #[should_panic(expected = "index out of bounds")]
+    fn test_panic() {
+        let v = vec![1, 2, 3];
+        v[99];  // this should panic
+    }
+}
+\`\`\`
+
+### Integration Tests
+
+Integration tests are in a <code>tests/</code> directory at the crate root. Each file in <code>tests/</code> is compiled as a separate crate — they test your public API as external consumers would use it. Integration tests cannot use <code>super::*</code>; they import your crate by name.
+
+\`\`\`rust
+// tests/integration_test.rs — tests/my_crate integration
+use my_crate;  // import your library crate
+
+#[test]
+fn test_public_api() {
+    let result = my_crate::public_function();
+    assert!(result.is_ok());
+}
+\`\`\`
+
+Common test infrastructure goes in <code>tests/common/mod.rs</code> (not <code>tests/common.rs</code>) to avoid being compiled as a separate test file. Other test files import it with <code>mod common;</code>.
+
+### Doc Tests
+
+Documentation comments with code blocks are automatically compiled and run as tests. Any <code>\`\`\`</code> block in a doc comment is a doc test. Use <code>\`\`\`rust,ignore</code> to skip, <code>\`\`\`rust,no_run</code> to compile but not run, or <code>\`\`\`rust,should_panic</code> for code that must panic.
+
+\`\`\`rust
+/// Adds two numbers.
+///
+/// # Examples
+///
+/// \`\`\`
+/// let result = add(2, 3);
+/// assert_eq!(result, 5);
+/// \`\`\`
+fn add(a: i32, b: i32) -> i32 { a + b }
+
+/// Divides two numbers. Returns None on division by zero.
+///
+/// \`\`\`
+/// assert_eq!(div(10.0, 2.0), Some(5.0));
+/// assert_eq!(div(1.0, 0.0), None);
+/// \`\`\`
+fn div(a: f64, b: f64) -> Option<f64> {
+    if b == 0.0 { None } else { Some(a / b) }
+}
+\`\`\`
+
+### Running Tests
+
+<code>cargo test</code> runs all tests and shows results. Filter tests by name: <code>cargo test add</code> runs only tests containing "add" in their name. Use <code>-- --nocapture</code> to see print output, <code>-- --test-threads=1</code> for sequential execution.
+
+| Command | What It Does |
+|---------|-------------|
+| <code>cargo test</code> | Run all tests (unit, integration, doc) |
+| <code>cargo test -- --ignored</code> | Run only ignored tests (<code>#[ignore]</code>) |
+| <code>cargo test my_test</code> | Run tests matching "my_test" |
+| <code>cargo test --test integration_test</code> | Run only a specific integration test file |
+| <code>cargo test --doc</code> | Run only doc tests |
+
+### Clippy and Rustfmt
+
+Clippy is Rust's linter — it catches common mistakes like unnecessary clones, incorrect iterator usage, and performance pitfalls. Rustfmt auto-formats code according to the standard Rust style guide.
+
+\`\`\`bash
+cargo clippy              # run lints on the whole project
+cargo clippy -- -W clippy::pedantic  # stricter linting
+cargo fmt                  # format all Rust files
+cargo fmt --check          # check formatting without modifying (CI use)
+\`\`\`
+
+\`\`\`rust
+// clippy would catch this:
+let mut vec = Vec::new();
+vec.push(1);
+vec.push(2);
+if vec.len() == 0 {  // clippy says: use .is_empty() instead
+    println!("empty");
+}
+\`\`\`
+
+### Benchmarking with Criterion
+
+Criterion is the standard benchmarking library. It measures execution time with statistical rigor and can detect performance regressions by comparing against previous runs.
+
+\`\`\`rust
+// benches/my_bench.rs
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+
+fn fibonacci(n: u64) -> u64 {
+    match n { 0 => 0, 1 => 1, _ => fibonacci(n - 1) + fibonacci(n - 2) }
+}
+
+fn bench_fib(c: &mut Criterion) {
+    c.bench_function("fib 20", |b| {
+        b.iter(|| fibonacci(black_box(20)))  // black_box prevents optimization
+    });
+}
+
+criterion_group!(benches, bench_fib);
+criterion_main!(benches);
+\`\`\`
+
+Run with <code>cargo bench</code> — produces an HTML report in <code>target/criterion/</code>.
+
+## Wiring It Together
+
+\`\`\`rust
+/// A simple string utility library
+pub fn reverse(s: &str) -> String {
+    s.chars().rev().collect()
+}
+
+pub fn capitalize(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(first) => first.to_uppercase().to_string() + chars.as_str(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_reverse() {
+        assert_eq!(reverse("hello"), "olleh");
+        assert_eq!(reverse(""), "");
+        assert_eq!(reverse("a"), "a");
+    }
+
+    #[test]
+    fn test_capitalize() {
+        assert_eq!(capitalize("hello"), "Hello");
+        assert_eq!(capitalize(""), "");
+        assert_eq!(capitalize("already"), "Already");
+    }
+
+    #[test]
+    fn test_reverse_twice_is_identity() {
+        let s = "test string";
+        assert_eq!(reverse(&reverse(s)), s);
+    }
+}
+\`\`\`
+
+\`\`\`bash
+# Expected test output:
+# running 3 tests
+# test tests::test_reverse ... ok
+# test tests::test_capitalize ... ok
+# test tests::test_reverse_twice_is_identity ... ok
+# test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured
+\`\`\``, tags: ["Rust", "Testing", "Tooling"] },
         ],
       },
       // ── Java ────────────────────────────────────────────────────────────
@@ -73043,16 +74986,2141 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "Java",
         description: "Java from the ground up — syntax, OOP, collections, streams, concurrency, build tools, and Spring Boot.",
         topics: [
-          { id: "ns-java-syntax", title: "Syntax & Basics", shortDesc: "Classes, main method, variables, primitive types, operators, and the Java compilation pipeline.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-control-flow", title: "Control Flow & Arrays", shortDesc: "if/else, switch, for/while loops, arrays, varargs, and the enhanced for loop.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-oop", title: "Object-Oriented Programming", shortDesc: "Constructors, this/super, inheritance, polymorphism, abstract classes, interfaces, and records.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-exceptions", title: "Exception Handling", shortDesc: "Checked vs unchecked, try/catch/finally, try-with-resources, and custom exceptions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-collections", title: "Collections Framework", shortDesc: "List, Set, Map, Queue, Deque, equals/hashCode, Comparable/Comparator, and Collections utility class.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-generics", title: "Generics & Annotations", shortDesc: "Generic classes/methods, wildcards, type erasure, and built-in/custom annotations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-streams", title: "Streams & Lambdas", shortDesc: "Lambda expressions, functional interfaces, stream pipeline (map/filter/reduce), and Optional.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-concurrency", title: "Concurrency", shortDesc: "Thread, Runnable, Callable, ExecutorService, synchronized, volatile, Locks, and CompletableFuture.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-build", title: "Build Tools (Maven, Gradle)", shortDesc: "Project structure, dependency management, lifecycle plugins, and multi-module projects.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-java-spring", title: "Spring Boot Framework", shortDesc: "DI/IoC, REST controllers, JPA/Hibernate, security (Spring Security), and testing with Mockito.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-syntax", title: "Syntax & Basics", shortDesc: "Classes, main method, variables, primitive types, operators, and the Java compilation pipeline.", difficulty: "foundational", readTimeMin: 12, keyPoints: ["Java is statically typed: every variable's type is known at compile time — primitive types and reference types.", "All code lives inside a class — the main method (public static void main(String[] args)) is the entry point.", "Primitive types: byte, short, int, long, float, double, boolean, char. Strings are objects (java.lang.String).", "Java compiles to bytecode (.class files) which runs on the JVM — write once, run anywhere.", "Package declarations organize code into namespaces; import statements bring in types from other packages.", "Java uses final for constants (like const in C), static for class-level members, and public/private for access control."], content: `## What's This?
+
+Java is a statically-typed, class-based, object-oriented programming language designed to "write once, run anywhere" via the Java Virtual Machine (JVM). Java syntax is C-family — curly braces, semicolons, and blocks — but with an explicit class structure where everything belongs to a class or interface. Think of Java as a well-organized workshop: every tool has a labeled drawer (class), you must declare what you are picking up (type), and the JVM ensures your program runs the same way on Windows, Linux, or a mainframe.
+
+## The Big Picture
+
+Java's syntax is the foundation for everything else: control flow, OOP, exceptions, collections, and streams. The compilation pipeline — source (<code>.java</code>) to bytecode (<code>.class</code>) to JVM execution — is the key concept: Java is not compiled to native machine code but to an intermediate representation that the JVM interprets or JIT-compiles at runtime. Before you can write Spring Boot controllers or use Java streams, you need to be comfortable with classes, methods, variables, types, and the difference between primitives and objects.
+
+## Core Ideas
+
+### Classes and the Main Method
+
+Every Java application needs at least one class. The entry point is the <code>main</code> method with the exact signature <code>public static void main(String[] args)</code>. The class name must match the filename.
+
+\`\`\`java
+// HelloWorld.java
+public class HelloWorld {
+    public static void main(String[] args) {
+        // args contains command-line arguments
+        System.out.println("Hello, World!");
+    }
+}
+\`\`\`
+
+### Variables and Types
+
+Java is statically typed: every variable has a declared type that is checked at compile time. Variables can be primitives (stored directly on the stack) or references (pointers to heap objects). Local variables must be initialized before use.
+
+\`\`\`java
+public class TypesDemo {
+    public static void main(String[] args) {
+        // primitive types
+        byte b = 127;             // 8-bit, range -128 to 127
+        short s = 32_000;         // 16-bit
+        int count = 1_000_000;    // 32-bit (default for integers)
+        long big = 9_000_000_000L; // 64-bit, needs L suffix
+        float pi = 3.1415f;       // 32-bit, needs f suffix
+        double e = 2.71828;       // 64-bit (default for decimals)
+        boolean flag = true;      // true or false only
+        char letter = 'A';        // 16-bit Unicode character
+        // reference type — String is a class
+        String name = "Alice";    // immutable, heap-allocated
+        // type inference with var (Java 10+)
+        var message = "Hello";    // compiler infers String
+    }
+}
+\`\`\`
+
+### Operators
+
+Java provides the standard C-family operators. Unusual ones include <code>instanceof</code> (type check), <code>-></code> (lambda, Java 8+), and <code>::</code> (method reference, Java 8+).
+
+\`\`\`java
+int a = 10, b = 3;
+int sum = a + b;          // 13 — arithmetic
+int mod = a % b;           // 1 — modulo
+boolean eq = (a == b);     // false — equality
+boolean notEq = (a != b);  // true — inequality
+boolean and = (a > 0 && b > 0); // true — logical AND
+boolean or = (a > 0 || b == 0); // true — logical OR
+int ternary = (a > b) ? a : b;  // 10 — ternary conditional
+String type = (a instanceof Integer) ? "integer" : "other"; // false (a is int)
+\`\`\`
+
+### String and StringBuilder
+
+Strings are immutable objects. Every concatenation creates a new String object. For repeated concatenation, use <code>StringBuilder</code> (mutable, efficient).
+
+\`\`\`java
+String s1 = "Hello";
+String s2 = "World";
+String s3 = s1 + " " + s2;  // creates new String objects
+// For loops, use StringBuilder:
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 100; i++) {
+    sb.append(i).append(", ");  // modifies in place — no new objects
+}
+String result = sb.toString();  // "0, 1, 2, ..., 99, "
+\`\`\`
+
+### Packages and Imports
+
+Packages organize classes into namespaces (mirrored as directory structure). <code>import</code> statements bring types into scope. <code>import static</code> brings static members. The <code>java.lang</code> package is imported automatically.
+
+\`\`\`java
+// File: com/mycompany/utils/MathHelper.java
+package com.mycompany.utils;  // must match directory structure
+
+import java.util.List;        // imports List
+import java.util.*;           // wildcard — imports all types in java.util
+import static java.lang.Math.*; // static import — use sin(), cos() directly
+
+public class MathHelper {
+    public static double distance(double x, double y) {
+        return sqrt(x * x + y * y);  // no Math. prefix needed (static import)
+    }
+}
+\`\`\`
+
+### Compilation Pipeline
+
+Java source is compiled to bytecode, which runs on the JVM. The JVM interprets bytecode initially and JIT-compiles hot methods to native code. The classpath tells the JVM where to find <code>.class</code> files and libraries.
+
+\`\`\`bash
+# Step 1: Compile .java to .class (bytecode)
+javac MyProgram.java        # produces MyProgram.class
+# Step 2: Run bytecode on JVM
+java MyProgram               # JVM loads, verifies, and executes
+# Step 3: Package into JAR
+jar cf myapp.jar *.class     # creates a Java ARchive
+# Step 4: Run JAR
+java -jar myapp.jar
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.greeter;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+
+/**
+ * A simple greeter that prints a time-aware greeting.
+ */
+public class Greeter {
+    private final String name;  // final = immutable field
+
+    public Greeter(String name) {
+        this.name = name;
+    }
+
+    public String greet() {
+        int hour = LocalTime.now().getHour();
+        String timeOfDay;
+        if (hour < 12) {
+            timeOfDay = "morning";
+        } else if (hour < 18) {
+            timeOfDay = "afternoon";
+        } else {
+            timeOfDay = "evening";
+        }
+        return String.format("Good %s, %s!", timeOfDay, name);
+    }
+
+    public static void main(String[] args) {
+        var greeter = new Greeter("Alice");    // var infers Greeter
+        String message = greeter.greet();       // calls instance method
+        System.out.println(message);
+        // Example output: "Good afternoon, Alice!"
+    }
+}
+\`\`\``, tags: ["Java", "Syntax", "JVM"] },
+          { id: "ns-java-control-flow", title: "Control Flow & Arrays", shortDesc: "if/else, switch, for/while loops, arrays, varargs, and the enhanced for loop.", difficulty: "foundational", readTimeMin: 11, keyPoints: ["if/else if/else evaluates boolean conditions; Java has no truthy/falsy — conditions must be boolean.", "switch supports int, String, enum, and (Java 14+) pattern matching with arrow syntax and yield.", "Arrays are fixed-size, zero-indexed, and have a .length field. Use Arrays.toString() for printing.", "The enhanced for loop (for (T item : iterable)) works on arrays and Iterable collections.", "Varargs (Type... name) let methods accept zero or more arguments; the parameter is treated as an array.", "break exits loops early; continue skips to the next iteration; labeled breaks exit nested loops."], content: `## What's This?
+
+Control flow statements determine the order in which code executes — making decisions (<code>if</code>/<code>switch</code>), repeating work (<code>for</code>/<code>while</code>), and processing collections (enhanced for-loop). Arrays are fixed-length sequences of elements of the same type. Varargs allow methods to accept a variable number of arguments. Think of control flow as the routing system of your program: <code>if</code> is a fork in the road, <code>for</code> is a conveyor belt, and arrays are the boxes on the belt.
+
+## The Big Picture
+
+Control flow is the skeleton of every program. In Java, the <code>switch</code> statement evolved significantly: from the classic fall-through style (pre-Java 14) to expression-based switch with <code>-></code> and <code>yield</code> (Java 14+). Arrays are the simplest data structure — they are used everywhere (command-line args, varargs, byte buffers). The enhanced for-loop is the bridge between arrays and the Collections Framework (which you learn next). Understanding when to use each loop type — indexed for, enhanced for, forEach with lambdas — is essential for writing idiomatic Java.
+
+## Core Ideas
+
+### if/else if/else
+
+Conditions must be <code>boolean</code> expressions — Java does not treat integers or objects as truthy/falsy. The <code>else if</code> chain checks conditions in order and executes the first true branch.
+
+\`\`\`java
+int score = 85;
+String grade;
+if (score >= 90) {
+    grade = "A";
+} else if (score >= 80) {
+    grade = "B";
+} else if (score >= 70) {
+    grade = "C";
+} else {
+    grade = "F";
+}
+System.out.println(grade);  // "B"
+\`\`\`
+
+### switch Statement and Expression
+
+The classic switch falls through cases unless you use <code>break</code>. Java 14+ introduced switch expressions with arrow syntax (<code>-></code>) and <code>yield</code> for returning values.
+
+\`\`\`java
+String day = "TUESDAY";
+// classic switch (fall-through):
+switch (day) {
+    case "MONDAY":
+    case "TUESDAY":
+        System.out.println("Weekday");
+        break;
+    default:
+        System.out.println("Other");
+}
+// switch expression (Java 14+):
+int numLetters = switch (day) {
+    case "MONDAY", "FRIDAY", "SUNDAY" -> 6;
+    case "TUESDAY"                -> 7;
+    case "THURSDAY", "SATURDAY"   -> 8;
+    case "WEDNESDAY"              -> 9;
+    default -> 0;
+};
+System.out.println(numLetters);  // 7
+\`\`\`
+
+### Arrays
+
+Arrays are objects with a fixed length set at creation. <code>int[]</code> is an array of ints. The <code>.length</code> field (not a method) gives the size. Arrays are zero-indexed. The <code>java.util.Arrays</code> utility class provides sorting, searching, copying, and printing.
+
+\`\`\`java
+int[] numbers = new int[3];      // [0, 0, 0] — all default values
+numbers[0] = 10;
+numbers[1] = 20;
+int[] literal = {1, 2, 3, 4};     // inline initialization
+int first = literal[0];            // 1
+int len = literal.length;          // 4
+
+// printing arrays:
+System.out.println(literal);       // [I@1a2b3c — hash, not contents
+System.out.println(Arrays.toString(literal));  // [1, 2, 3, 4]
+Arrays.sort(literal);              // sorts in place
+\`\`\`
+
+### Loops: for, while, do-while
+
+<code>for</code> loops use init-condition-update. <code>while</code> checks before executing. <code>do-while</code> executes at least once. <code>break</code> exits the loop; <code>continue</code> jumps to the next iteration. Use labeled breaks to exit nested loops.
+
+\`\`\`java
+// for loop:
+for (int i = 0; i < 5; i++) {
+    System.out.println(i);  // 0, 1, 2, 3, 4
+}
+// while loop:
+int j = 0;
+while (j < 5) {
+    System.out.println(j++);
+}
+// do-while (runs at least once):
+int k = 0;
+do {
+    System.out.println(k++);
+} while (k < 5);
+// labeled break:
+outer: for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+        if (i == 1 && j == 1) break outer;  // exits both loops
+        System.out.println(i + "," + j);
+    }
+}
+\`\`\`
+
+### Enhanced for Loop
+
+The enhanced for-loop (also called for-each) iterates over arrays and any object that implements <code>Iterable</code> (all Collection types). It is simpler and safer than an indexed loop when you do not need the index.
+
+\`\`\`java
+int[] scores = {85, 92, 78, 90};
+int sum = 0;
+for (int score : scores) {
+    sum += score;  // no index variable needed
+}
+double avg = (double) sum / scores.length;
+System.out.printf("Average: %.1f%n", avg);
+
+// Works with List, Set, etc.
+List<String> names = List.of("Alice", "Bob");
+for (String name : names) {
+    System.out.println(name);
+}
+\`\`\`
+
+### Varargs
+
+Varargs (<code>Type... name</code>) let a method accept zero or more arguments. The parameter is treated as an array inside the method. Varargs must be the last parameter.
+
+\`\`\`java
+public static int sum(int... numbers) {
+    int total = 0;
+    for (int n : numbers) {
+        total += n;
+    }
+    return total;
+}
+
+public static void main(String[] args) {
+    System.out.println(sum(1, 2, 3));   // 6
+    System.out.println(sum(10, 20));    // 30
+    System.out.println(sum());           // 0 (empty array)
+    // passing an array directly:
+    int[] vals = {5, 5, 5};
+    System.out.println(sum(vals));      // 15
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.stats;
+
+import java.util.Arrays;
+
+/**
+ * Computes basic statistics from command-line numbers.
+ */
+public class StatsCalculator {
+    public static double average(int... values) {
+        if (values.length == 0) {
+            return 0.0;
+        }
+        int sum = 0;
+        for (int v : values) {       // enhanced for — no index needed
+            sum += v;
+        }
+        return (double) sum / values.length;
+    }
+
+    public static int[] filterPositive(int... values) {
+        int count = 0;
+        for (int v : values) {
+            if (v > 0) count++;
+        }
+        int[] result = new int[count];
+        int i = 0;
+        for (int v : values) {
+            if (v > 0) result[i++] = v;
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        // parse command-line arguments
+        int[] numbers = new int[args.length];
+        for (int i = 0; i < args.length; i++) {
+            numbers[i] = Integer.parseInt(args[i]);
+        }
+        double avg = average(numbers);
+        int[] positive = filterPositive(numbers);
+        System.out.printf("Numbers: %s%n", Arrays.toString(numbers));
+        System.out.printf("Average: %.2f%n", avg);
+        System.out.printf("Positive: %s%n", Arrays.toString(positive));
+    }
+}
+\`\`\`
+
+\`\`\`bash
+# Run with: java StatsCalculator 3 -1 5 -2 8
+# Output:
+# Numbers: [3, -1, 5, -2, 8]
+# Average: 2.60
+# Positive: [3, 5, 8]
+\`\`\``, tags: ["Java", "Control Flow", "Arrays"] },
+          { id: "ns-java-oop", title: "Object-Oriented Programming", shortDesc: "Constructors, this/super, inheritance, polymorphism, abstract classes, interfaces, and records.", difficulty: "foundational", readTimeMin: 15, keyPoints: ["Java classes have constructors, fields, and methods; this refers to the current instance, super refers to the parent.", "Inheritance uses extends (single inheritance only); all classes inherit from Object.", "Polymorphism: a parent reference can hold a child object; method calls are dispatched dynamically (virtual dispatch).", "Abstract classes (abstract) cannot be instantiated — they define partial implementation that subclasses complete.", "Interfaces (interface) declare contracts; classes can implement multiple interfaces — Java's answer to multiple inheritance.", "Records (Java 16+) are transparent data carriers — compiler generates constructor, accessors, equals, hashCode, toString."], content: `## What's This?
+
+Object-Oriented Programming (OOP) in Java is a paradigm where you model real-world entities as objects — bundles of data (fields) and behavior (methods). Classes are the blueprints; objects are the instances. Java implements the four pillars of OOP: encapsulation (hiding data), inheritance (code reuse), polymorphism (one interface, many implementations), and abstraction (hiding complexity). Records (Java 16+) are a concise way to create immutable data carriers. Think of a class as a cookie cutter and objects as the cookies — the cutter defines the shape, each cookie is a separate instance.
+
+## The Big Picture
+
+Java is fundamentally an OOP language — everything is an object (except primitives). The entire standard library is designed around OOP principles: <code>List</code>, <code>Set</code>, <code>Map</code> are interfaces with multiple implementations. Spring Boot, the dominant Java framework, uses OOP extensively with dependency injection. Before using streams, lambdas, or concurrency, you need a solid grasp of classes, inheritance, and polymorphism. Records simplify the boilerplate of data-holding classes (no more writing getters, equals, hashCode by hand).
+
+## Core Ideas
+
+### Classes, Constructors, and this/super
+
+A class defines fields (state) and methods (behavior). Constructors initialize new instances. <code>this</code> refers to the current instance. <code>super</code> refers to the parent class constructor or method.
+
+\`\`\`java
+public class Person {
+    private String name;     // private — encapsulated field
+    private int age;
+
+    // constructor
+    public Person(String name, int age) {
+        this.name = name;    // this.name = parameter name
+        this.age = age;
+    }
+
+    // method
+    public String introduce() {
+        return String.format("Hi, I'm %s, age %d", name, age);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Person p = new Person("Alice", 30);  // calls constructor
+        System.out.println(p.introduce());   // "Hi, I'm Alice, age 30"
+    }
+}
+\`\`\`
+
+### Inheritance
+
+<code>extends</code> creates a parent-child relationship. The child inherits all non-private members and can override methods. Java has single inheritance — a class can have only one direct parent. Every class implicitly extends <code>Object</code>.
+
+\`\`\`java
+public class Animal {
+    protected String name;  // accessible in subclasses
+    public Animal(String name) {
+        this.name = name;
+    }
+    public String speak() { return "..."; }
+}
+
+public class Dog extends Animal {
+    public Dog(String name) {
+        super(name);  // call parent constructor
+    }
+    @Override
+    public String speak() {
+        return "Woof!";
+    }
+}
+
+public static void main(String[] args) {
+    Dog d = new Dog("Rex");
+    System.out.println(d.speak());  // "Woof!" — calls overridden method
+}
+\`\`\`
+
+### Polymorphism
+
+A parent-type reference can hold a child-type object. Method calls are dispatched based on the actual runtime type (dynamic dispatch), not the compile-time type.
+
+\`\`\`java
+Animal a1 = new Dog("Rex");
+Animal a2 = new Cat("Whiskers");  // Cat also extends Animal
+// compile-time type is Animal, but runtime calls the overridden method
+System.out.println(a1.speak());  // "Woof!"
+System.out.println(a2.speak());  // "Meow"
+// a1.eat() // ERROR: Animal type doesn't have eat() even if Dog does
+\`\`\`
+
+### Abstract Classes
+
+<code>abstract</code> classes cannot be instantiated. They can have constructors, fields, and concrete methods. Abstract methods have no body and must be implemented by the first concrete subclass.
+
+\`\`\`java
+public abstract class Shape {
+    protected String color;
+    public Shape(String color) { this.color = color; }
+    public abstract double area();        // no body — subclasses must implement
+    public String getColor() { return color; }  // concrete method
+}
+
+public class Circle extends Shape {
+    private double radius;
+    public Circle(String color, double radius) {
+        super(color);
+        this.radius = radius;
+    }
+    @Override
+    public double area() { return Math.PI * radius * radius; }
+}
+\`\`\`
+
+### Interfaces
+
+Interfaces define contracts (method signatures) that implementing classes must fulfill. A class can implement multiple interfaces — this is Java's solution to multiple inheritance. Interfaces can have default methods (Java 8+) and static methods.
+
+\`\`\`java
+public interface Flyable {
+    void fly();  // public abstract by default
+}
+public interface Swimmable {
+    void swim();
+}
+// A class can implement multiple interfaces:
+public class Duck implements Flyable, Swimmable {
+    @Override
+    public void fly() { System.out.println("Flying"); }
+    @Override
+    public void swim() { System.out.println("Swimming"); }
+}
+
+// default method in interface (Java 8+):
+public interface Greeter {
+    void sayHello(String name);  // must be implemented
+    default void sayGoodbye(String name) {  // optional override
+        System.out.println("Goodbye, " + name);
+    }
+}
+\`\`\`
+
+### Records (Java 16+)
+
+Records are transparent, immutable data carriers. The compiler automatically generates the constructor, accessor methods (same name as components), <code>equals()</code>, <code>hashCode()</code>, and <code>toString()</code>. Records cannot be extended and cannot extend other classes.
+
+\`\`\`java
+public record Point(int x, int y) { }
+// Equivalent to ~50 lines of boilerplate code
+
+public static void main(String[] args) {
+    var p1 = new Point(3, 4);
+    var p2 = new Point(3, 4);
+    System.out.println(p1.x());         // 3 — accessor (not getX())
+    System.out.println(p1);             // "Point[x=3, y=4]"
+    System.out.println(p1.equals(p2));  // true — structural equality
+}
+\`\`\`
+
+### Access Modifiers
+
+| Modifier | Same Class | Same Package | Subclass (any pkg) | Any Class |
+|----------|-----------|-------------|-------------------|-----------|
+| <code>private</code> | Yes | No | No | No |
+| (default) | Yes | Yes | No | No |
+| <code>protected</code> | Yes | Yes | Yes | No |
+| <code>public</code> | Yes | Yes | Yes | Yes |
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.media;
+
+public interface Playable {
+    void play();
+    default void stop() { System.out.println("Stopped"); }
+}
+
+public abstract class Media {
+    protected String title;
+    public Media(String title) { this.title = title; }
+    public abstract String getInfo();
+}
+
+public record Song(String title, String artist, int duration)
+    implements Playable {
+
+    public Song {
+        // compact constructor — validation only
+        if (duration <= 0) throw new IllegalArgumentException("invalid duration");
+    }
+
+    @Override
+    public void play() {
+        System.out.println("Playing song: " + title + " by " + artist);
+    }
+}
+
+public class Podcast extends Media implements Playable {
+    private final String host;
+    public Podcast(String title, String host) {
+        super(title);
+        this.host = host;
+    }
+    @Override
+    public void play() {
+        System.out.println("Playing podcast: " + title);
+    }
+    @Override
+    public String getInfo() {
+        return title + " hosted by " + host;
+    }
+}
+
+public static void main(String[] args) {
+    var playlist = java.util.List.of(
+        new Song("Bohemian Rhapsody", "Queen", 354),
+        new Podcast("Tech Talk", "Alice")
+    );
+    for (Playable p : playlist) {
+        p.play();    // polymorphic — different behavior per type
+    }
+}
+\`\`\``, tags: ["Java", "OOP", "Classes", "Records"] },
+          { id: "ns-java-exceptions", title: "Exception Handling", shortDesc: "Checked vs unchecked, try/catch/finally, try-with-resources, and custom exceptions.", difficulty: "foundational", readTimeMin: 12, keyPoints: ["Checked exceptions (IOException, SQLException) must be declared in throws or caught — compiler enforces it.", "Unchecked exceptions (NullPointerException, IllegalArgumentException) extend RuntimeException — not required in throws.", "try/catch/finally: catch handles exceptions; finally always runs (cleanup) — even if try has a return statement.", "try-with-resources (Java 7+) auto-closes AutoCloseable resources — no need for finally blocks with close().", "Multi-catch (catch (A | B e)) handles multiple exception types in one block (Java 7+).", "Custom exceptions extend Exception (checked) or RuntimeException (unchecked) — include useful constructors."], content: `## What's This?
+
+Exception handling in Java is the mechanism for dealing with errors and unexpected conditions without crashing the program. When something goes wrong (file not found, network timeout, invalid input), Java throws an exception — an object that travels up the call stack until something catches it. Java divides exceptions into checked (must be handled) and unchecked (may be ignored). The <code>try-with-resources</code> statement ensures resources like files and sockets are closed automatically. Think of exceptions as fire alarms: the alarm goes off (<code>throw</code>), someone responds (<code>catch</code>), and someone calls the fire department (<code>finally</code> cleanup).
+
+## The Big Picture
+
+Exception handling is essential for robust I/O, network, and database code. Checked exceptions make error handling explicit — the compiler forces you to deal with failure modes. The <code>try-with-resources</code> pattern eliminated a whole class of resource-leak bugs (files not closed, connections not returned to pools). Before collections, streams, or Spring Boot, you need to understand how exceptions propagate, when to use checked vs unchecked, and how to create meaningful custom exceptions.
+
+## Core Ideas
+
+### Checked vs Unchecked Exceptions
+
+Checked exceptions are checked at compile time: the compiler verifies that code either catches them or declares them in its <code>throws</code> clause (pro tip: most Java style guides say throw/catch, not throw/catch — but both are acceptable). Unchecked exceptions (subclasses of <code>RuntimeException</code>) can be ignored by the caller.
+
+\`\`\`java
+import java.io.*;
+
+public class ExceptionDemo {
+    // Checked: must handle or declare
+    public static String readFile(String path) throws IOException {
+        // throws IOException is required — checked exception
+        byte[] data = Files.readAllBytes(Path.of(path));
+        return new String(data);
+    }
+
+    // Unchecked: no throws needed
+    public static int divide(int a, int b) {
+        if (b == 0) {
+            throw new IllegalArgumentException("Division by zero");
+        }
+        return a / b;
+    }
+
+    public static void main(String[] args) {
+        try {
+            String content = readFile("test.txt");
+            System.out.println(content);
+        } catch (IOException e) {
+            System.err.println("IO error: " + e.getMessage());
+        }
+        // unchecked can be caught but doesn't have to be:
+        // divide(10, 0);  // would crash with IllegalArgumentException
+    }
+}
+\`\`\`
+
+### try/catch/finally
+
+<code>try</code> contains the code that might throw. <code>catch</code> handles the exception. <code>finally</code> always executes (even if <code>try</code> or <code>catch</code> has a return statement) — used for cleanup like closing streams.
+
+\`\`\`java
+BufferedReader reader = null;
+try {
+    reader = new BufferedReader(new FileReader("file.txt"));
+    String line = reader.readLine();
+    System.out.println(line);
+} catch (IOException e) {
+    System.err.println("Error reading: " + e.getMessage());
+} finally {
+    // always runs — even if try or catch returns
+    if (reader != null) {
+        try { reader.close(); } catch (IOException e) { }
+    }
+}
+\`\`\`
+
+### try-with-resources (Java 7+)
+
+Any class implementing <code>AutoCloseable</code> (or <code>Closeable</code>) can be used in a try-with-resources. The resource is closed automatically at the end of the try block, even if an exception occurs.
+
+\`\`\`java
+// Before Java 7: messy finally blocks
+// After Java 7: try-with-resources
+try (var reader = new BufferedReader(new FileReader("file.txt"));
+     var writer = new BufferedWriter(new FileWriter("out.txt"))) {
+    String line;
+    while ((line = reader.readLine()) != null) {
+        writer.write(line);
+        writer.newLine();
+    }
+} catch (IOException e) {
+    e.printStackTrace();
+}
+// reader and writer are auto-closed — no finally needed
+\`\`\`
+
+### Multi-catch and Rethrowing
+
+Java 7+ allows catching multiple exception types in a single <code>catch</code> block with the pipe operator. Java 7+ also improved rethrowing: the compiler knows the rethrown exception is more precise.
+
+\`\`\`java
+try {
+    // code that might throw different exceptions
+    int result = riskyOperation();
+} catch (IOException | SQLException e) {
+    // handle both types the same way
+    System.err.println("I/O or DB error: " + e.getMessage());
+}
+\`\`\`
+
+### Custom Exceptions
+
+Extend <code>Exception</code> for checked, <code>RuntimeException</code> for unchecked. Include constructors that pass meaningful messages and causes to the parent.
+
+\`\`\`java
+// Checked custom exception
+public class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String accountId, double balance, double amount) {
+        super(String.format("Account %s: balance %.2f < %.2f",
+              accountId, balance, amount));
+    }
+}
+// Unchecked custom exception
+public class ValidationException extends RuntimeException {
+    public ValidationException(String field, String reason) {
+        super("Validation failed for " + field + ": " + reason);
+    }
+}
+\`\`\`
+
+### Best Practices
+
+| Practice | Why |
+|----------|-----|
+| Catch most specific exception first | More general catch blocks would catch it first |
+| Do not swallow exceptions | Empty catch blocks hide bugs |
+| Use specific exception types | <code>throws IOException</code> is better than <code>throws Exception</code> |
+| Add context when rethrowing | <code>throw new MyException("context", originalCause)</code> |
+| Prefer unchecked for programming errors | <code>IllegalArgumentException</code>, <code>NullPointerException</code> |
+| Use try-with-resources for all closeable resources | Eliminates resource leaks |
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.banking;
+
+import java.io.*;
+import java.nio.file.*;
+
+public class AccountService {
+    public static class InsufficientFundsException extends Exception {
+        public InsufficientFundsException(double balance, double amount) {
+            super(String.format("Balance %.2f insufficient for %.2f", balance, amount));
+        }
+    }
+
+    private final Path dbPath;
+
+    public AccountService(Path dbPath) { this.dbPath = dbPath; }
+
+    public double getBalance(String accountId) throws IOException {
+        // try-with-resources — auto-closes the reader
+        try (var reader = Files.newBufferedReader(dbPath)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts[0].equals(accountId)) {
+                    return Double.parseDouble(parts[1]);
+                }
+            }
+        }
+        throw new IllegalArgumentException("Account not found: " + accountId);
+    }
+
+    public void withdraw(String accountId, double amount)
+            throws IOException, InsufficientFundsException {
+        double balance = getBalance(accountId);
+        if (balance < amount) {
+            throw new InsufficientFundsException(balance, amount);
+        }
+        double newBalance = balance - amount;
+        updateBalance(accountId, newBalance);
+    }
+
+    private void updateBalance(String accountId, double newBalance) throws IOException {
+        Path tempFile = dbPath.resolveSibling(dbPath.getFileName() + ".tmp");
+        try (var reader = Files.newBufferedReader(dbPath);
+             var writer = Files.newBufferedWriter(tempFile)) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith(accountId + ",")) {
+                    writer.write(accountId + "," + newBalance);
+                } else {
+                    writer.write(line);
+                }
+                writer.newLine();
+            }
+        }
+        Files.move(tempFile, dbPath, StandardCopyOption.REPLACE_EXISTING);
+    }
+}
+\`\`\``, tags: ["Java", "Exceptions", "Error Handling"] },
+          { id: "ns-java-collections", title: "Collections Framework", shortDesc: "List, Set, Map, Queue, Deque, equals/hashCode, Comparable/Comparator, and Collections utility class.", difficulty: "intermediate", readTimeMin: 14, keyPoints: ["The Collection interface is the root: List (ordered, indexed), Set (no duplicates), Queue (FIFO processing).", "Map<K,V> is NOT a Collection — it's a separate hierarchy for key-value pairs.", "equals() and hashCode() must be consistent: equal objects must have equal hash codes — used by HashSet and HashMap.", "Comparable<T> defines natural ordering (compareTo); Comparator<T> defines custom ordering (compare).", "The Collections utility class provides sorting, searching, synchronization, and unmodifiable wrappers.", "Factory methods (List.of, Set.of, Map.of) create immutable collections — prefer them over manual construction."], content: `## What's This?
+
+The Java Collections Framework (JCF) is a unified architecture for storing, retrieving, and manipulating groups of objects. It provides interfaces (<code>List</code>, <code>Set</code>, <code>Queue</code>, <code>Map</code>), implementations (<code>ArrayList</code>, <code>HashSet</code>, <code>HashMap</code>, etc.), and utility algorithms (<code>Collections.sort</code>, <code>Collections.binarySearch</code>). Think of it as a toolbox of data structure containers: a list for ordered items, a set for unique items, a map for lookups by key, a queue for processing order.
+
+## The Big Picture
+
+The Collections Framework is the most used part of the Java standard library. Every Java developer works with lists, maps, and sets daily. The framework is designed around interfaces: you code to <code>List&lt;String&gt;</code> (the interface), not <code>ArrayList&lt;String&gt;</code> (the implementation), so you can swap implementations without changing the code that uses them. Understanding <code>equals()</code>/<code>hashCode()</code> is critical because <code>HashSet</code> and <code>HashMap</code> depend on them. After this, streams (next topic) add functional operations over collections.
+
+## Core Ideas
+
+### List — Ordered, Indexed, Allows Duplicates
+
+<code>List</code> maintains insertion order and allows duplicates. <code>ArrayList</code> (backed by a resizable array) is the most common implementation. <code>LinkedList</code> (doubly-linked list) is good for frequent insertions/deletions in the middle.
+
+\`\`\`java
+import java.util.*;
+
+public class ListDemo {
+    public static void main(String[] args) {
+        List<String> names = new ArrayList<>();  // diamond operator <>
+        names.add("Alice");
+        names.add("Bob");
+        names.add("Alice");  // duplicates allowed
+        names.add(1, "Charlie");  // insert at index 1
+        System.out.println(names);              // [Alice, Charlie, Bob, Alice]
+        String first = names.get(0);            // Alice
+        names.remove(0);                        // removes Alice at index 0
+        names.remove("Bob");                    // removes by object
+        // factory method — immutable list (Java 9+)
+        List<Integer> immutable = List.of(1, 2, 3);
+        // immutable.add(4); // UnsupportedOperationException
+    }
+}
+\`\`\`
+
+### Set — No Duplicates, Unordered
+
+<code>Set</code> does not allow duplicates. <code>HashSet</code> (hash table, O(1) operations) is the default. <code>TreeSet</code> (red-black tree, sorted) maintains ordering. <code>LinkedHashSet</code> preserves insertion order.
+
+\`\`\`java
+Set<String> uniqueNames = new HashSet<>();
+uniqueNames.add("Alice");
+uniqueNames.add("Bob");
+uniqueNames.add("Alice");  // ignored — already present
+System.out.println(uniqueNames);          // [Bob, Alice] (no specific order)
+boolean hasBob = uniqueNames.contains("Bob"); // true — O(1)
+
+// TreeSet — sorted order (uses Comparable or Comparator)
+Set<Integer> sorted = new TreeSet<>();
+sorted.addAll(Set.of(5, 3, 1, 4, 2));
+System.out.println(sorted);  // [1, 2, 3, 4, 5]
+\`\`\`
+
+### Map — Key-Value Pairs
+
+<code>Map&lt;K,V&gt;</code> stores key-value pairs. Each key maps to at most one value. <code>HashMap</code> (hash table) is the default. <code>TreeMap</code> (sorted by key). <code>LinkedHashMap</code> (insertion-order or access-order).
+
+\`\`\`java
+Map<String, Integer> ages = new HashMap<>();
+ages.put("Alice", 30);
+ages.put("Bob", 25);
+ages.put("Alice", 31);       // overwrites previous value
+int age = ages.get("Alice"); // 31
+ages.getOrDefault("Charlie", 0); // 0 — safe default
+ages.forEach((name, a) -> System.out.println(name + " is " + a));
+
+// iterate over entries:
+for (Map.Entry<String, Integer> entry : ages.entrySet()) {
+    System.out.println(entry.getKey() + " -> " + entry.getValue());
+}
+// factory (Java 9+):
+Map<String, Integer> config = Map.of("port", 8080, "host", "localhost");
+\`\`\`
+
+### Queue and Deque
+
+<code>Queue</code> processes elements in FIFO order (typically <code>LinkedList</code> or <code>PriorityQueue</code>). <code>Deque</code> supports insertion/removal at both ends — use <code>ArrayDeque</code> as a stack or queue.
+
+\`\`\`java
+// Queue — FIFO
+Queue<String> queue = new LinkedList<>();
+queue.offer("first");     // add — returns false if full
+queue.offer("second");
+String head = queue.poll();   // "first" — retrieve and remove
+String peek = queue.peek();   // "second" — retrieve without removing
+
+// Deque — can be used as stack or queue
+Deque<String> stack = new ArrayDeque<>();
+stack.push("bottom");    // adds at front
+stack.push("top");
+String item = stack.pop();    // "top" — LIFO
+
+// PriorityQueue — ordered by natural order or Comparator
+Queue<Integer> priorityQueue = new PriorityQueue<>();
+priorityQueue.offer(5);
+priorityQueue.offer(1);
+priorityQueue.offer(3);
+System.out.println(priorityQueue.poll());  // 1 (smallest first)
+\`\`\`
+
+### equals() and hashCode()
+
+<code>HashSet</code> and <code>HashMap</code> rely on <code>equals()</code> and <code>hashCode()</code>. The contract: if <code>a.equals(b)</code>, then <code>a.hashCode() == b.hashCode()</code>. Always override both or neither. Use <code>Objects.equals()</code> and <code>Objects.hash()</code> for safe implementations.
+
+\`\`\`java
+public record Person(String name, int age) {
+    // records auto-generate equals() and hashCode() — no manual work!
+}
+
+// Manual implementation (before records):
+public class PersonManual {
+    String name;
+    int age;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PersonManual)) return false;
+        PersonManual p = (PersonManual) o;
+        return age == p.age && Objects.equals(name, p.name);
+    }
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age);
+    }
+}
+\`\`\`
+
+### Comparable vs Comparator
+
+<code>Comparable&lt;T&gt;</code> defines the natural ordering (e.g., <code>String</code> compares alphabetically, <code>Integer</code> compares numerically). <code>Comparator&lt;T&gt;</code> defines an external ordering — useful for sorting the same type in multiple ways.
+
+\`\`\`java
+// Comparable — natural ordering
+public record Product(String name, double price) implements Comparable<Product> {
+    @Override
+    public int compareTo(Product other) {
+        return Double.compare(this.price, other.price); // sort by price
+    }
+}
+
+// Comparator — custom ordering
+Comparator<Product> byName = Comparator.comparing(Product::name);
+Comparator<Product> byNameDesc = Comparator.comparing(Product::name).reversed();
+Comparator<Product> byPriceThenName = Comparator
+    .comparing(Product::price)
+    .thenComparing(Product::name);
+
+var products = List.of(new Product("Chair", 50.0), new Product("Table", 150.0));
+var sorted = new TreeSet<>(byName);
+sorted.addAll(products);
+\`\`\`
+
+### Collections Utility Class
+
+<code>java.util.Collections</code> provides static methods for common operations on collections.
+
+\`\`\`java
+List<String> list = new ArrayList<>(List.of("c", "a", "b"));
+Collections.sort(list);                 // [a, b, c]
+int idx = Collections.binarySearch(list, "b"); // 1
+Collections.reverse(list);              // [c, b, a]
+Collections.shuffle(list);              // random order
+List<String> unmodifiable = Collections.unmodifiableList(list);
+// unmodifiable.add("x"); // UnsupportedOperationException
+
+List<String> singleton = Collections.singletonList("only");
+List<String> empty = Collections.emptyList();
+
+// synchronized wrappers for thread safety:
+List<String> syncList = Collections.synchronizedList(new ArrayList<>());
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.inventory;
+
+import java.util.*;
+
+public record Product(String sku, String name, double price)
+    implements Comparable<Product> {
+    @Override
+    public int compareTo(Product o) { return this.sku.compareTo(o.sku); }
+}
+
+public class Inventory {
+    private final Map<String, Product> bySku = new HashMap<>();
+    private final Set<Product> products = new TreeSet<>();
+    private final Queue<Product> restockQueue = new PriorityQueue<>(
+        Comparator.comparing(Product::price).reversed()
+    );
+
+    public void addProduct(Product p) {
+        bySku.put(p.sku(), p);
+        products.add(p);
+        restockQueue.offer(p);
+    }
+
+    public Product findBySku(String sku) {
+        return bySku.get(sku);
+    }
+
+    public Product nextRestock() {
+        return restockQueue.poll();  // most expensive first
+    }
+
+    public List<Product> sortedByName() {
+        var list = new ArrayList<>(products);
+        list.sort(Comparator.comparing(Product::name));
+        return Collections.unmodifiableList(list);
+    }
+
+    public static void main(String[] args) {
+        var inv = new Inventory();
+        inv.addProduct(new Product("A100", "Widget", 9.99));
+        inv.addProduct(new Product("B200", "Gadget", 24.99));
+        inv.addProduct(new Product("C300", "Thingamajig", 5.99));
+
+        System.out.println(inv.findBySku("B200"));      // Product[sku=B200, ...]
+        System.out.println(inv.nextRestock());           // Gadget (most expensive)
+        System.out.println(inv.sortedByName());          // [Gadget, Thingamajig, Widget]
+    }
+}
+\`\`\``, tags: ["Java", "Collections", "Data Structures"] },
+          { id: "ns-java-generics", title: "Generics & Annotations", shortDesc: "Generic classes/methods, wildcards, type erasure, and built-in/custom annotations.", difficulty: "intermediate", readTimeMin: 14, keyPoints: ["Generics enable type-safe code: the compiler checks types at compile time, eliminating casts from collections.", "Generic classes/methods use type parameters <T, E, K, V> — T is a placeholder for the actual type.", "Type erasure: the compiler removes generic type info at runtime — List<String> becomes just List.", "Wildcards (? extends T / ? super T) provide flexibility: ? extends for reading, ? super for writing.", "Annotations (@Override, @Deprecated) add metadata to code — they don't change behavior but tools/frameworks act on them.", "Custom annotations are defined with @interface and can be retained SOURCE, CLASS, or RUNTIME (for reflection)."], content: `## What's This?
+
+Generics let you write classes, interfaces, and methods that work with any type while preserving compile-time type safety. Instead of writing a separate <code>StringList</code> and <code>IntegerList</code>, you write one <code>List&lt;T&gt;</code>. Annotations are metadata tags (<code>@Override</code>, <code>@Deprecated</code>) attached to code elements — they don't change program behavior directly but give information to the compiler, tools, and frameworks. Think of generics as a template for types and annotations as sticky notes for the compiler and runtime.
+
+## The Big Picture
+
+Generics were introduced in Java 5 to solve the problem of unsafe collections — before generics, you could put a <code>Cat</code> into a <code>List&lt;Dog&gt;</code> without errors until runtime. Generics moved this check to compile time. Annotations enable the framework ecosystem: Spring Boot uses <code>@RestController</code>, <code>@Autowired</code>, <code>@RequestMapping</code>; JPA uses <code>@Entity</code>, <code>@Column</code>; JUnit uses <code>@Test</code>. Understanding generics is essential for using the Collections Framework and streams effectively.
+
+## Core Ideas
+
+### Generic Classes
+
+A generic class is declared with a type parameter in angle brackets. The type parameter is a placeholder for the actual type, specified at instantiation.
+
+\`\`\`java
+public class Box<T> {
+    private T value;
+    public void set(T value) { this.value = value; }
+    public T get() { return value; }
+}
+
+Box<String> stringBox = new Box<>();  // diamond operator (Java 7+)
+stringBox.set("Hello");
+String str = stringBox.get();    // no cast needed — compiler knows it's String
+
+Box<Integer> intBox = new Box<>();
+intBox.set(42);
+int val = intBox.get();          // automatically unboxed to int
+
+// multiple type parameters:
+public class Pair<K, V> {
+    private K key;
+    private V value;
+    public Pair(K key, V value) { this.key = key; this.value = value; }
+    public K getKey() { return key; }
+    public V getValue() { return value; }
+}
+\`\`\`
+
+### Generic Methods
+
+Methods can have their own type parameters, independent of the class type parameter. The type parameter is placed before the return type.
+
+\`\`\`java
+public class Utils {
+    public static <T> T getMiddle(T... array) {
+        return array[array.length / 2];
+    }
+
+    public static <T extends Comparable<T>> T max(T a, T b) {
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+}
+
+String mid = Utils.getMiddle("a", "b", "c");   // "b"
+Integer max = Utils.max(10, 20);               // 20
+Double maxD = Utils.max(3.14, 2.71);            // 3.14
+\`\`\`
+
+### Bounded Type Parameters
+
+Limit type parameters to those that extend a specific class or implement a specific interface.
+
+\`\`\`java
+public class NumberProcessor<T extends Number> {
+    private T value;
+    public NumberProcessor(T value) { this.value = value; }
+    public double doubleValue() {
+        return value.doubleValue();  // can call Number methods
+    }
+}
+
+NumberProcessor<Integer> ip = new NumberProcessor<>(42);
+NumberProcessor<Double> dp = new NumberProcessor<>(3.14);
+// NumberProcessor<String> sp; // ERROR: String does not extend Number
+\`\`\`
+
+### Wildcards
+
+Wildcards (<code>?</code>) provide flexibility when you don't know or don't need to specify the exact type. Use <code>? extends T</code> for reading (producer), <code>? super T</code> for writing (consumer) — the PECS rule (Producer Extends, Consumer Super).
+
+\`\`\`java
+// ? extends — can read (it produces values), cannot write (type unknown)
+public static double sumOfList(List<? extends Number> list) {
+    double sum = 0;
+    for (Number n : list) sum += n.doubleValue();
+    return sum;
+}
+List<Integer> ints = List.of(1, 2, 3);
+sumOfList(ints);  // works — ? extends Number accepts Integer, Double, etc.
+
+// ? super — can write (it consumes values), can read as Object
+public static void addNumbers(List<? super Integer> list) {
+    list.add(1);
+    list.add(2);
+    // can write Integer (or subtypes), read as Object
+}
+List<Number> nums = new ArrayList<>();
+addNumbers(nums);  // works — Number is a supertype of Integer
+
+// unbounded wildcard — any type
+public static void printList(List<?> list) {
+    for (Object elem : list) System.out.println(elem);
+}
+\`\`\`
+
+### Type Erasure
+
+Generics are a compile-time feature. The compiler erases type parameters and inserts casts where needed. At runtime, <code>List&lt;String&gt;</code> is just <code>List</code>. This is why:
+- You cannot create instances of type parameters (<code>new T()</code>)
+- You cannot check generic types at runtime (<code>list instanceof List&lt;String&gt;</code>)
+- You cannot create arrays of parameterized types (<code>new List&lt;String&gt;[10]</code>)
+
+\`\`\`java
+public class ErasureDemo {
+    // Compiles to:
+    public static <T> T identity(T value) {
+        return value;
+    }
+    // After erasure (T -> Object when unbounded):
+    // public static Object identity(Object value) { return value; }
+
+    // With bound (T -> Comparable after erasure):
+    public static <T extends Comparable<T>> T max(T a, T b) {
+        return a.compareTo(b) >= 0 ? a : b;
+    }
+}
+\`\`\`
+
+### Built-in Annotations
+
+| Annotation | Purpose |
+|------------|---------|
+| <code>@Override</code> | Compiler checks that the method actually overrides a parent method |
+| <code>@Deprecated</code> | Marks code that should not be used — compiler warns on use |
+| <code>@SuppressWarnings</code> | Suppresses compiler warnings (e.g., <code>"unchecked"</code>) |
+| <code>@FunctionalInterface</code> | Marks an interface as a SAM (single abstract method) type — used with lambdas |
+| <code>@SafeVarargs</code> | Suppresses heap pollution warning on varargs with generics |
+
+\`\`\`java
+@SuppressWarnings("unchecked")  // suppress warnings for the method
+public <T> T unsafeCast(Object obj) {
+    return (T) obj;  // unchecked cast warning suppressed
+}
+@SafeVarargs
+public static <T> List<T> asList(T... elements) {
+    // safe because we don't modify the array
+    return Arrays.asList(elements);
+}
+\`\`\`
+
+### Custom Annotations
+
+Define with <code>@interface</code>. Meta-annotations specify target and retention. Process at runtime with reflection by checking <code>isAnnotationPresent()</code> on <code>Class</code>, <code>Method</code>, or <code>Field</code>.
+
+\`\`\`java
+import java.lang.annotation.*;
+
+@Target({ElementType.METHOD, ElementType.FIELD})  // where it can go
+@Retention(RetentionPolicy.RUNTIME)               // available at runtime
+public @interface JsonField {
+    String name() default "";      // element with default
+    boolean required() default true;
+}
+
+// Usage:
+public class User {
+    @JsonField(name = "user_name")
+    private String username;
+    @JsonField(required = false)
+    private String nickname;
+
+    @JsonField
+    public String getUsername() { return username; }
+}
+
+// Processing at runtime:
+for (Field f : User.class.getDeclaredFields()) {
+    if (f.isAnnotationPresent(JsonField.class)) {
+        JsonField ann = f.getAnnotation(JsonField.class);
+        System.out.println(f.getName() + " -> " + ann.name());
+    }
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.serializer;
+
+import java.lang.annotation.*;
+import java.lang.reflect.*;
+import java.util.stream.Collectors;
+import java.util.*;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+@interface Serialize {
+    String name() default "";
+}
+
+public class JsonSerializer {
+    public static <T> String toJson(T obj) throws Exception {
+        Class<?> clazz = obj.getClass();
+        var fields = new ArrayList<String>();
+        for (Field f : clazz.getDeclaredFields()) {
+            if (f.isAnnotationPresent(Serialize.class)) {
+                f.setAccessible(true);
+                Serialize ann = f.getAnnotation(Serialize.class);
+                String key = ann.name().isEmpty() ? f.getName() : ann.name();
+                Object value = f.get(obj);
+                fields.add(String.format("\"%s\":\"%s\"", key, value));
+            }
+        }
+        return "{" + String.join(", ", fields) + "}";
+    }
+
+    public static <T extends Number> double sum(List<? extends T> numbers) {
+        return numbers.stream().mapToDouble(Number::doubleValue).sum();
+    }
+}
+
+class Person {
+    @Serialize(name = "full_name")
+    private String name;
+    @Serialize
+    private int age;
+    public Person(String name, int age) { this.name = name; this.age = age; }
+}
+
+public static void main(String[] args) throws Exception {
+    var p = new Person("Alice", 30);
+    System.out.println(JsonSerializer.toJson(p));
+    // {"full_name":"Alice","age":"30"}
+
+    System.out.println(JsonSerializer.sum(List.of(1, 2, 3)));  // 6.0
+}
+\`\`\``, tags: ["Java", "Generics", "Annotations"] },
+          { id: "ns-java-streams", title: "Streams & Lambdas", shortDesc: "Lambda expressions, functional interfaces, stream pipeline (map/filter/reduce), and Optional.", difficulty: "intermediate", readTimeMin: 14, keyPoints: ["Lambdas (args -> expr) are anonymous functions — they implement a functional interface (single abstract method).", "Functional interfaces: Predicate<T> (test), Function<T,R> (apply), Consumer<T> (accept), Supplier<T> (get).", "Streams process sequences of data with a pipeline: source -> intermediate ops (filter, map) -> terminal op (collect, reduce).", "Intermediate ops are lazy — they don't execute until a terminal op is called; they return a new stream.", "Collectors (Collectors.toList, groupingBy, joining) accumulate stream results into collections.", "Optional<T> is a container for a potentially absent value — prefer orElse()/orElseGet() over get()."], content: `## What's This?
+
+Lambda expressions and streams introduced functional programming to Java in Java 8. A lambda is a compact anonymous function — <code>(parameters) -> expression</code> — that can be passed around like data. A stream is a sequence of elements supporting functional-style operations: you <code>filter</code>, <code>map</code>, <code>reduce</code>, and <code>collect</code> data without explicit loops. <code>Optional&lt;T&gt;</code> is a box that may or may not contain a value — replacing <code>null</code>-prone return types. Think of streams as a data pipeline: raw materials in, transformations in the middle, finished product out.
+
+## The Big Picture
+
+Lambdas and streams transformed Java from a purely imperative/OOP language to one with strong functional capabilities. Before Java 8, iterating over a list meant a <code>for</code> loop with a mutable index. With streams, you describe what you want (filter, map, collect) not how to do it. This leads to more readable, less error-prone code. The entire Collections Framework works with streams (<code>Collection.stream()</code>). Spring Boot, JPA, and most modern Java libraries support functional patterns.
+
+## Core Ideas
+
+### Lambda Expressions
+
+A lambda is syntactic sugar for a functional interface (an interface with exactly one abstract method). The compiler infers the types of parameters.
+
+\`\`\`java
+// Before lambda: anonymous inner class
+Comparator<String> byLengthOld = new Comparator<>() {
+    @Override
+    public int compare(String a, String b) {
+        return Integer.compare(a.length(), b.length());
+    }
+};
+
+// With lambda:
+Comparator<String> byLength = (a, b) -> Integer.compare(a.length(), b.length());
+
+// Multiple statements need braces and return:
+Comparator<String> byLengthMulti = (a, b) -> {
+    int lenDiff = Integer.compare(a.length(), b.length());
+    return lenDiff != 0 ? lenDiff : a.compareTo(b);
+};
+
+// Common patterns:
+Runnable task = () -> System.out.println("Running");
+list.forEach(item -> System.out.println(item));
+list.sort((a, b) -> a.compareToIgnoreCase(b));
+\`\`\`
+
+### Functional Interfaces
+
+Java provides built-in functional interfaces in <code>java.util.function</code>:
+
+| Interface | Method | Purpose | Example |
+|-----------|--------|---------|---------|
+| <code>Predicate&lt;T&gt;</code> | <code>boolean test(T)</code> | Test a condition | <code>s -> s.length() > 5</code> |
+| <code>Function&lt;T,R&gt;</code> | <code>R apply(T)</code> | Transform T to R | <code>s -> s.length()</code> |
+| <code>Consumer&lt;T&gt;</code> | <code>void accept(T)</code> | Perform an action | <code>s -> System.out.println(s)</code> |
+| <code>Supplier&lt;T&gt;</code> | <code>T get()</code> | Provide a value | <code>() -> new Random().nextInt()</code> |
+| <code>UnaryOperator&lt;T&gt;</code> | <code>T apply(T)</code> | Transform T to T | <code>x -> x * 2</code> |
+| <code>BinaryOperator&lt;T&gt;</code> | <code>T apply(T,T)</code> | Combine two Ts | <code>(a, b) -> a + b</code> |
+
+\`\`\`java
+Predicate<String> isEmpty = String::isEmpty;           // method reference
+Function<String, Integer> lengthFunc = String::length;
+Consumer<String> printer = System.out::println;
+Supplier<Double> random = Math::random;
+
+// Method references: ClassName::methodName
+list.stream()
+    .filter(isEmpty.negate())         // non-empty strings
+    .map(String::trim)                // trim whitespace
+    .forEach(printer);                // print each
+\`\`\`
+
+### Stream Pipeline
+
+A stream pipeline has three parts: a source (collection, array, generator), zero or more intermediate operations (lazy), and one terminal operation (eager). Intermediate ops return a new stream and are only executed when a terminal op is called.
+
+\`\`\`java
+import java.util.stream.*;
+
+List<String> names = List.of("Alice", "Bob", "Charlie", "David");
+
+// Pipeline: source -> filter -> map -> collect
+List<String> result = names.stream()                    // source
+    .filter(name -> name.length() > 3)                  // intermediate: keep names > 3 chars
+    .map(String::toUpperCase)                           // intermediate: transform to uppercase
+    .sorted()                                           // intermediate: sort alphabetically
+    .collect(Collectors.toList());                      // terminal: produce List
+
+System.out.println(result);  // [ALICE, CHARLIE, DAVID]
+\`\`\`
+
+### Common Stream Operations
+
+| Intermediate | Description | Terminal | Description |
+|-------------|-------------|----------|-------------|
+| <code>filter</code> | Keep elements matching predicate | <code>collect</code> | Accumulate into collection |
+| <code>map</code> | Transform each element | <code>toList</code> | Java 16+ — collect to List |
+| <code>flatMap</code> | Flatten nested streams | <code>forEach</code> | Perform action on each |
+| <code>distinct</code> | Remove duplicates | <code>count</code> | Count elements |
+| <code>sorted</code> | Sort elements | <code>anyMatch</code>/<code>allMatch</code> | Test predicates |
+| <code>limit</code>/<code>skip</code> | Truncate stream | <code>findFirst</code>/<code>findAny</code> | Get first/any element |
+| <code>peek</code> | Debug (perform action, pass through) | <code>reduce</code> | Combine to single result |
+
+\`\`\`java
+// flatMap — flatten nested lists
+List<List<Integer>> nested = List.of(List.of(1, 2), List.of(3, 4));
+List<Integer> flat = nested.stream()
+    .flatMap(Collection::stream)  // merges [1,2] and [3,4] into [1,2,3,4]
+    .collect(Collectors.toList());
+
+// reduce — combine to single value
+int sum = Stream.of(1, 2, 3, 4, 5)
+    .reduce(0, Integer::sum);  // 0 + 1 + 2 + 3 + 4 + 5 = 15
+
+// groupingBy — partition into groups
+Map<Integer, List<String>> byLength = names.stream()
+    .collect(Collectors.groupingBy(String::length));
+// {3=[Bob], 5=[Alice, David], 7=[Charlie]}
+
+// joining — concatenate strings
+String joined = names.stream()
+    .collect(Collectors.joining(", ", "[", "]"));
+// "[Alice, Bob, Charlie, David]"
+\`\`\`
+
+### Optional&lt;T&gt;
+
+<code>Optional</code> is a container that may hold a value (<code>Optional.of(value)</code>) or not (<code>Optional.empty()</code>). Prefer it over <code>null</code> returns. Use <code>orElse()</code>, <code>orElseGet()</code>, <code>map()</code>, <code>flatMap()</code>, <code>filter()</code> — avoid <code>get()</code> without <code>isPresent()</code> check.
+
+\`\`\`java
+Optional<String> maybeName = findUser(42);  // might be empty
+
+// Good: provide default
+String name = maybeName.orElse("Guest");
+
+// Better: provide default lazily (no computation if value present)
+String nameLazy = maybeName.orElseGet(() -> expensiveDefault());
+
+// Transform if present, return Optional
+Optional<Integer> len = maybeName.map(String::length);
+
+// Chain with flatMap — for Optional-returning methods
+Optional<String> city = findUser(42)
+    .flatMap(user -> findAddress(user))
+    .flatMap(addr -> Optional.ofNullable(addr.getCity()));
+
+// Throw if absent
+String mustExist = maybeName.orElseThrow(() -> new NoSuchElementException("User not found"));
+
+// Stream of Optional — filter to present values (Java 9+)
+Stream.of(Optional.of("a"), Optional.empty(), Optional.of("b"))
+    .flatMap(Optional::stream)
+    .collect(Collectors.toList());  // [a, b]
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.analytics;
+
+import java.util.*;
+import java.util.stream.*;
+
+public record Sale(String product, String category, double amount, int quantity) {}
+
+public class SalesAnalyzer {
+    public static Map<String, Double> revenueByCategory(List<Sale> sales) {
+        return sales.stream()
+            .collect(Collectors.groupingBy(
+                Sale::category,
+                Collectors.summingDouble(s -> s.amount() * s.quantity())
+            ));
+    }
+
+    public static Optional<String> topProduct(List<Sale> sales) {
+        return sales.stream()
+            .collect(Collectors.groupingBy(Sale::product,
+                     Collectors.summingDouble(s -> s.amount() * s.quantity())))
+            .entrySet().stream()
+            .max(Map.Entry.comparingByValue())
+            .map(Map.Entry::getKey);
+    }
+
+    public static String summaryReport(List<Sale> sales) {
+        return sales.stream()
+            .filter(s -> s.quantity() > 0)
+            .collect(Collectors.collectingAndThen(
+                Collectors.toList(),
+                list -> String.format(
+                    "Total sales: %d transactions, %.2f total revenue, top: %s",
+                    list.size(),
+                    list.stream().mapToDouble(s -> s.amount() * s.quantity()).sum(),
+                    topProduct(list).orElse("N/A")
+                )
+            ));
+    }
+
+    public static void main(String[] args) {
+        var sales = List.of(
+            new Sale("Widget", "Tools", 10.0, 5),
+            new Sale("Gadget", "Electronics", 50.0, 2),
+            new Sale("Widget", "Tools", 10.0, 3)
+        );
+        System.out.println(revenueByCategory(sales));
+        // {Electronics=100.0, Tools=80.0}
+        System.out.println(topProduct(sales));
+        // Optional[Widget]
+    }
+}
+\`\`\``, tags: ["Java", "Streams", "Lambdas"] },
+          { id: "ns-java-concurrency", title: "Concurrency", shortDesc: "Thread, Runnable, Callable, ExecutorService, synchronized, volatile, Locks, and CompletableFuture.", difficulty: "advanced", readTimeMin: 17, keyPoints: ["Threads are created by extending Thread or implementing Runnable — prefer Runnable/Callable with ExecutorService.", "ExecutorService manages thread pools — submit(Callable) returns Future<T> for async results.", "synchronized blocks/methods provide mutual exclusion — every Java object has an intrinsic lock (monitor).", "volatile ensures visibility across threads — reads/writes go directly to main memory, bypassing CPU cache.", "Lock (ReentrantLock) offers advanced features: tryLock with timeout, fair ordering, separate read/write locks.", "CompletableFuture chains async operations declaratively — supplyAsync -> thenApply -> thenAccept -> join."], content: `## What's This?
+
+Concurrency in Java is the ability to run multiple tasks in overlapping time periods, either on different CPU cores (parallelism) or by interleaving on a single core (concurrency). Java provides low-level primitives (<code>Thread</code>, <code>synchronized</code>, <code>volatile</code>) and high-level abstractions (<code>ExecutorService</code>, <code>CompletableFuture</code>, <code>Lock</code>). Think of concurrency as a kitchen with multiple chefs: <code>synchronized</code> is a "one chef at the fridge" rule, <code>ExecutorService</code> is the sous-chef assigning tasks, and <code>CompletableFuture</code> is "start chopping, tell me when done."
+
+## The Big Picture
+
+Java was designed with concurrency from the beginning (Java 1.0 had <code>Thread</code>). The <code>java.util.concurrent</code> package (Java 5) added thread pools, concurrent collections, and locks. <code>CompletableFuture</code> (Java 8) brought composable asynchronous programming. Modern Java applications — especially Spring Boot web servers — handle hundreds of concurrent requests using thread pools. Understanding concurrency is essential for building scalable, responsive applications. Before this, you should understand basic Java syntax and exception handling.
+
+## Core Ideas
+
+### Threads and Runnable
+
+A <code>Thread</code> executes code concurrently. The simplest way is to implement <code>Runnable</code> (a single <code>run()</code> method) and pass it to a <code>Thread</code>. <code>Thread.sleep()</code> pauses the current thread. <code>.join()</code> waits for a thread to finish.
+
+\`\`\`java
+public class ThreadDemo {
+    public static void main(String[] args) throws InterruptedException {
+        // Create a thread with a Runnable
+        Thread worker = new Thread(() -> {
+            for (int i = 0; i < 5; i++) {
+                System.out.println("Worker: " + i);
+                try { Thread.sleep(100); } catch (InterruptedException e) { }
+            }
+        });
+        worker.start();  // starts the thread — calls run() concurrently
+        System.out.println("Main: waiting...");
+        worker.join();   // main waits for worker to finish
+        System.out.println("Main: done");
+    }
+}
+\`\`\`
+
+### ExecutorService and Callable
+
+<code>ExecutorService</code> manages a pool of threads. Submit <code>Runnable</code> (no return) or <code>Callable&lt;T&gt;</code> (returns a value). <code>Future&lt;T&gt;</code> represents the pending result — <code>get()</code> blocks until done.
+
+\`\`\`java
+import java.util.concurrent.*;
+
+public class ExecutorDemo {
+    public static void main(String[] args) throws Exception {
+        // Thread pool with 4 threads
+        ExecutorService executor = Executors.newFixedThreadPool(4);
+
+        // Submit Callable — returns a Future
+        Future<Integer> future = executor.submit(() -> {
+            Thread.sleep(1000);  // simulate work
+            return 42;
+        });
+
+        System.out.println("Waiting...");
+        Integer result = future.get();  // blocks until done
+        System.out.println("Result: " + result);  // 42
+
+        // Submit multiple tasks
+        var futures = new java.util.ArrayList<Future<Integer>>();
+        for (int i = 0; i < 10; i++) {
+            int taskId = i;
+            futures.add(executor.submit(() -> taskId * 2));
+        }
+        for (var f : futures) {
+            System.out.println(f.get());
+        }
+
+        executor.shutdown();  // must shut down — otherwise JVM won't exit
+    }
+}
+\`\`\`
+
+### synchronized
+
+The <code>synchronized</code> keyword ensures that only one thread executes a block or method at a time. Every Java object has an intrinsic lock (monitor). <code>synchronized</code> on a method locks <code>this</code>; synchronized on a static method locks the class.
+
+\`\`\`java
+public class Counter {
+    private int count = 0;
+
+    // Only one thread at a time can execute this method
+    public synchronized void increment() {
+        count++;
+    }
+
+    // Equivalent: synchronized block on this
+    public void incrementBlock() {
+        synchronized (this) {
+            count++;
+        }
+    }
+
+    // For static methods, lock is on Class object
+    private static int staticCount = 0;
+    public static synchronized void incrementStatic() {
+        staticCount++;
+    }
+
+    public synchronized int getCount() { return count; }
+}
+\`\`\`
+
+### volatile and Atomic Classes
+
+<code>volatile</code> guarantees visibility: writes from one thread are immediately visible to other threads. It does NOT provide atomicity — use <code>AtomicInteger</code>, <code>AtomicLong</code>, <code>AtomicReference</code> for atomic read-modify-write operations.
+
+\`\`\`java
+import java.util.concurrent.atomic.*;
+
+public class VolatileDemo {
+    private volatile boolean running = true;  // visible across threads
+
+    public void stop() { running = false; }
+    public void run() {
+        while (running) { /* work */ }
+    }
+}
+
+public class AtomicDemo {
+    private AtomicInteger counter = new AtomicInteger(0);
+    public void increment() {
+        counter.incrementAndGet();  // atomic — no synchronized needed
+    }
+    public int get() { return counter.get(); }
+}
+\`\`\`
+
+### ReentrantLock
+
+<code>ReentrantLock</code> is an alternative to <code>synchronized</code> with more flexibility: try-lock with timeout, interruptible locking, fair ordering, and <code>Condition</code> objects for wait/notify.
+
+\`\`\`java
+import java.util.concurrent.locks.*;
+
+public class LockDemo {
+    private final Lock lock = new ReentrantLock();
+    private int count = 0;
+
+    public void increment() {
+        lock.lock();  // acquire lock (blocks if held by another thread)
+        try {
+            count++;
+        } finally {
+            lock.unlock();  // must release in finally!
+        }
+    }
+
+    public boolean tryIncrement(long timeout, TimeUnit unit) throws InterruptedException {
+        if (lock.tryLock(timeout, unit)) {  // attempt with timeout
+            try {
+                count++;
+                return true;
+            } finally {
+                lock.unlock();
+            }
+        }
+        return false;  // could not acquire lock in time
+    }
+}
+\`\`\`
+
+### CompletableFuture
+
+<code>CompletableFuture&lt;T&gt;</code> represents an async computation that can be composed with other futures. Use factory methods (<code>supplyAsync</code>, <code>runAsync</code>) and combinators (<code>thenApply</code>, <code>thenCompose</code>, <code>thenAccept</code>, <code>allOf</code>, <code>anyOf</code>).
+
+\`\`\`java
+import java.util.concurrent.*;
+
+public class CompletableFutureDemo {
+    public static void main(String[] args) throws Exception {
+        // Run async task
+        CompletableFuture<String> future = CompletableFuture
+            .supplyAsync(() -> {          // runs on ForkJoinPool.commonPool()
+                sleep(500);
+                return "Hello";
+            })
+            .thenApply(s -> s + " World")  // transform result (same thread or pool)
+            .thenApply(String::toUpperCase);
+
+        System.out.println(future.get());  // "HELLO WORLD"
+
+        // Combine two independent futures
+        CompletableFuture<Integer> f1 = CompletableFuture.supplyAsync(() -> 10);
+        CompletableFuture<Integer> f2 = CompletableFuture.supplyAsync(() -> 20);
+        int sum = f1.thenCombine(f2, Integer::sum).get();  // 30
+
+        // Wait for all to complete
+        var futures = java.util.List.of(
+            CompletableFuture.supplyAsync(() -> "a"),
+            CompletableFuture.supplyAsync(() -> "b")
+        );
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+            .thenRun(() -> System.out.println("All done"))
+            .get();
+
+        // Handle errors
+        CompletableFuture.supplyAsync(() -> {
+            if (Math.random() > 0.5) throw new RuntimeException("failed");
+            return "ok";
+        })
+        .exceptionally(ex -> "fallback: " + ex.getMessage())
+        .thenAccept(System.out::println);
+    }
+
+    static void sleep(int ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) { }
+    }
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+package com.example.webcrawler;
+
+import java.util.concurrent.*;
+import java.util.*;
+
+public class WebCrawler {
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final Set<String> visited = ConcurrentHashMap.newKeySet();
+
+    public CompletableFuture<String> fetchPage(String url) {
+        return CompletableFuture.supplyAsync(() -> {
+            if (!visited.add(url)) return "CACHED: " + url;  // already visited
+            System.out.println("Fetching: " + url + " on " + Thread.currentThread());
+            try { Thread.sleep(200); } catch (InterruptedException e) { }
+            return "CONTENT: " + url;
+        }, executor);
+    }
+
+    public CompletableFuture<List<String>> crawl(String... urls) {
+        var futures = Arrays.stream(urls)
+            .map(this::fetchPage)
+            .toList();
+        return CompletableFuture
+            .allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                .map(f -> f.join())  // get results (already done)
+                .toList());
+    }
+
+    public void shutdown() { executor.shutdown(); }
+
+    public static void main(String[] args) throws Exception {
+        var crawler = new WebCrawler();
+        var results = crawler
+            .crawl("https://a.com", "https://b.com", "https://c.com")
+            .get(5, TimeUnit.SECONDS);
+        results.forEach(System.out::println);
+        crawler.shutdown();
+    }
+}
+\`\`\``, tags: ["Java", "Concurrency", "Threads"] },
+          { id: "ns-java-build", title: "Build Tools (Maven, Gradle)", shortDesc: "Project structure, dependency management, lifecycle plugins, and multi-module projects.", difficulty: "intermediate", readTimeMin: 12, keyPoints: ["Maven uses pom.xml with a fixed lifecycle (compile, test, package, install, deploy) and convention-over-configuration.", "Gradle uses build.gradle (Groovy) or build.gradle.kts (Kotlin DSL) with a task-based, incremental build system.", "Both tools manage dependencies from Maven Central — declare groupId, artifactId, version in the build file.", "Plugins extend the build lifecycle: maven-compiler-plugin sets Java version, maven-surefire-plugin runs tests.", "Multi-module projects share a parent POM (Maven) or settings.gradle (Gradle) — modules depend on each other.", "Maven's dependency scope (compile, provided, runtime, test, system) controls which classpath a dependency appears on."], content: `## What's This?
+
+Build tools automate the process of compiling Java source code, running tests, packaging JARs, managing dependencies, and deploying artifacts. Maven and Gradle are the two dominant Java build tools. Maven uses an XML file (<code>pom.xml</code>) with a convention-over-configuration philosophy. Gradle uses a Groovy or Kotlin DSL with a flexible, incremental task graph. Think of a build tool as a factory foreman: you tell it what parts you need (dependencies), what to build (compile, test, package), and it handles the assembly line.
+
+## The Big Picture
+
+Real Java projects are never a single file — they depend on dozens of libraries (Spring Boot, Jackson, Hibernate, etc.). Build tools automate fetching those dependencies from repositories like Maven Central, compiling in the right order, running tests, packaging artifacts, and deploying to servers. Both Maven and Gradle support multi-module projects (separate modules for API, domain, infrastructure). Gradle is the default for Android and newer Spring Boot projects; Maven is still dominant in enterprise.
+
+## Core Ideas
+
+### Maven Project Structure
+
+Maven follows a strict convention: <code>src/main/java</code> for source, <code>src/main/resources</code> for config, <code>src/test/java</code> for tests. The <code>pom.xml</code> (Project Object Model) is the build configuration.
+
+\`\`\`xml
+<!-- pom.xml — Maven project descriptor -->
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>        <!-- company/org identifier -->
+    <artifactId>my-app</artifactId>        <!-- project name -->
+    <version>1.0.0</version>               <!-- version number -->
+    <packaging>jar</packaging>            <!-- jar, war, pom -->
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>  <!-- only on test classpath -->
+        </dependency>
+    </dependencies>
+</project>
+\`\`\`
+
+### Maven Lifecycle
+
+Maven has three built-in lifecycles: <code>default</code> (build), <code>clean</code>, and <code>site</code>. The default lifecycle phases execute in order:
+
+| Command | Phases Executed | What Happens |
+|---------|----------------|-------------|
+| <code>mvn compile</code> | validate, initialize, generate-sources, process-sources, compile | Compiles <code>src/main/java</code> to <code>target/classes</code> |
+| <code>mvn test</code> | ... + process-classes, test-compile, test | Runs tests (defaults to Surefire plugin) |
+| <code>mvn package</code> | ... + prepare-package, package | Creates JAR/WAR in <code>target/</code> |
+| <code>mvn install</code> | ... + install | Copies artifact to local repository (<code>~/.m2</code>) |
+| <code>mvn clean</code> | clean | Deletes <code>target/</code> directory |
+| <code>mvn clean install</code> | clean + install | Full rebuild from scratch |
+
+\`\`\`bash
+# Typical Maven workflow:
+mvn clean test            # clean, compile, run tests
+mvn package -DskipTests   # package without running tests
+mvn install               # install to local repo (for local dependencies)
+mvn dependency:tree       # print dependency tree (debug conflicts)
+\`\`\`
+
+### Gradle Build Script
+
+Gradle uses a DSL (Groovy or Kotlin). The build is a graph of tasks with explicit dependencies — Gradle only rebuilds what changed (incremental build).
+
+\`\`\`kotlin
+// build.gradle.kts — Kotlin DSL
+plugins {
+    java                                // Java plugin: compile, test, jar tasks
+    application                         // application plugin: run, distZip
+}
+
+group = "com.example"
+version = "1.0.0"
+
+repositories {
+    mavenCentral()                      // where to find dependencies
+}
+
+dependencies {
+    implementation("com.google.guava:guava:33.0.0-jre")  // available at compile + runtime
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")  // only for tests
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+application {
+    mainClass = "com.example.Main"
+}
+
+tasks.test {
+    useJUnitPlatform()                  // use JUnit 5
+}
+\`\`\`
+
+\`\`\`bash
+# Typical Gradle commands:
+gradle build               # compile, test, and package
+gradle clean build          # clean then full build
+gradle test --info          # run tests with info logging
+gradle dependencies         # show dependency tree
+gradle run                  # run the application (with application plugin)
+gradle bootRun              # Spring Boot plugin shortcut
+\`\`\`
+
+### Dependency Management
+
+Both Maven and Gradle fetch dependencies from repositories. Maven Central is the default. Dependencies can have transitive dependencies — Maven resolves them with nearest-wins strategy; Gradle offers more flexibility.
+
+\`\`\`xml
+<!-- Maven: dependency scope -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <version>3.2.0</version>
+    <!-- scope defaults to 'compile' — available everywhere -->
+</dependency>
+<!-- Other scopes: provided (servlet API on deployment), runtime (JDBC driver), test (JUnit), system (local JAR) -->
+\`\`\`
+
+\`\`\`kotlin
+// Gradle: dependency configurations
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.0")
+    compileOnly("org.projectlombok:lombok:1.18.30")    // only at compile time
+    annotationProcessor("org.projectlombok:lombok:1.18.30")  // for annotation processing
+    testImplementation("org.springframework.boot:spring-boot-starter-test:3.2.0")
+}
+\`\`\`
+
+### Multi-Module Projects
+
+| Maven | Gradle |
+|-------|--------|
+| Parent POM with <code>&lt;modules&gt;</code> | <code>settings.gradle.kts</code> with <code>include()</code> |
+| Each module has its own <code>pom.xml</code> | Each module has its own <code>build.gradle.kts</code> |
+| Parent manages shared dependency versions | Root project manages shared config |
+
+\`\`\`xml
+<!-- Maven parent pom.xml -->
+<project>
+    <groupId>com.example</groupId>
+    <artifactId>parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <modules>
+        <module>core</module>
+        <module>api</module>
+        <module>app</module>
+    </modules>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.2.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
+\`\`\`
+
+\`\`\`kotlin
+// Gradle settings.gradle.kts
+rootProject.name = "parent"
+include("core", "api", "app")
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`xml
+<!-- pom.xml — complete Maven project -->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>hello-service</artifactId>
+    <version>1.0.0</version>
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.example.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+\`\`\`
+
+\`\`\`java
+// src/main/java/com/example/Main.java
+package com.example;
+import com.google.gson.Gson;
+public record Message(String text) {}
+public class Main {
+    public static void main(String[] args) {
+        var msg = new Message("Hello from Maven!");
+        System.out.println(new Gson().toJson(msg));
+    }
+}
+
+// Run: mvn clean package && java -jar target/hello-service-1.0.0.jar
+// Output: {"text":"Hello from Maven!"}
+\`\`\``, tags: ["Java", "Maven", "Gradle", "Build Tools"] },
+          { id: "ns-java-spring", title: "Spring Boot Framework", shortDesc: "DI/IoC, REST controllers, JPA/Hibernate, security (Spring Security), and testing with Mockito.", difficulty: "advanced", readTimeMin: 18, keyPoints: ["Spring Boot auto-configures an application — embedded Tomcat, sensible defaults, starter dependencies.", "@RestController + @RequestMapping define REST endpoints; @RequestBody, @PathVariable, @RequestParam extract data.", "Dependency Injection (DI) / IoC: @Component, @Service, @Repository, @Autowired wire beans together.", "Spring Data JPA (@Entity, @Repository interface) provides automatic CRUD — no boilerplate DAO implementation.", "Spring Security (@EnableWebSecurity, SecurityFilterChain) handles authentication and authorization.", "Testing: @SpringBootTest loads the full context; @WebMvcTest tests controllers; Mockito mocks dependencies."], content: `## What's This?
+
+Spring Boot is a framework that makes it easy to create stand-alone, production-grade Spring-based applications. It embeds Tomcat (no separate server needed), auto-configures Spring based on dependencies on the classpath, and provides starter dependencies that bundle compatible library versions. Spring itself is a dependency injection framework built around Inversion of Control (IoC): instead of objects creating their dependencies, the Spring container creates and wires them. Think of Spring Boot as a fully furnished apartment: you move in (add a starter dependency) and everything works — plumbing (database), electricity (web server), and security (authentication).
+
+## The Big Picture
+
+Spring Boot dominates the Java enterprise landscape. It powers REST APIs, microservices, batch processing, and reactive applications. The framework is organized into modules: Spring Core (DI/IoC), Spring MVC (web), Spring Data (database access), Spring Security (authentication/authorization), and Spring Test (testing support). Spring Boot eliminates the boilerplate configuration that made earlier Spring applications verbose. Before using Spring Boot, you need solid Java OOP skills and familiarity with Maven/Gradle.
+
+## Core Ideas
+
+### Dependency Injection and IoC
+
+Inversion of Control means the framework controls object creation and wiring. Annotate classes with <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, or <code>@Controller</code>. Spring scans the classpath, creates instances (beans), and injects dependencies where annotated with <code>@Autowired</code> or via constructor injection.
+
+\`\`\`java
+import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Service  // marks this as a Spring-managed bean
+public class GreetingService {
+    public String greet(String name) {
+        return "Hello, " + name + "!";
+    }
+}
+
+@RestController  // stereotype: @Controller + @ResponseBody
+public class GreetingController {
+    private final GreetingService service;
+
+    // Constructor injection — preferred over @Autowired on fields
+    public GreetingController(GreetingService service) {
+        this.service = service;
+    }
+
+    @GetMapping("/hello/{name}")
+    public String hello(@PathVariable String name) {
+        return service.greet(name);
+    }
+}
+\`\`\`
+
+### REST Controllers
+
+<code>@RestController</code> combines <code>@Controller</code> and <code>@ResponseBody</code>. Use <code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PutMapping</code>, <code>@DeleteMapping</code>, or generic <code>@RequestMapping</code>. Extract data from requests via <code>@PathVariable</code>, <code>@RequestParam</code>, <code>@RequestBody</code>, and <code>@RequestHeader</code>.
+
+\`\`\`java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
+
+    @GetMapping
+    public List<User> getAll() { /* ... */ }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) { /* ... */ }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@RequestBody @Valid User user) { /* ... */ }
+
+    @PutMapping("/{id}")
+    public User update(@PathVariable Long id, @RequestBody User user) { /* ... */ }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) { /* ... */ }
+}
+\`\`\`
+
+### Spring Data JPA
+
+Spring Data JPA provides automatic CRUD repositories. Define an <code>@Entity</code> class (maps to a database table) and an interface extending <code>JpaRepository&lt;T, ID&gt;</code>. Spring generates the implementation at runtime — no SQL or DAO boilerplate needed.
+
+\`\`\`java
+import jakarta.persistence.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(unique = true)
+    private String email;
+
+    // getters and setters (or use @Data from Lombok)
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+}
+
+// Repository — Spring generates the implementation:
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Query methods derived from method name:
+    List<User> findByName(String name);
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
+    // Custom query with JPQL:
+    @Query("SELECT u FROM User u WHERE u.name LIKE %:keyword%")
+    List<User> searchByName(@Param("keyword") String keyword);
+}
+\`\`\`
+
+### Spring Security
+
+Spring Security handles authentication and authorization. The modern approach (Spring Security 6+) uses a <code>SecurityFilterChain</code> bean. <code>@EnableWebSecurity</code> enables security configuration. For JWT-based APIs, configure a stateless session and JWT authentication filter.
+
+\`\`\`java
+import org.springframework.context.annotation.*;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.*;
+import org.springframework.security.web.SecurityFilterChain;
+import static org.springframework.security.config.Customizer.withDefaults;
+
+@Configuration
+@EnableWebSecurity
+public class SecurityConfig {
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .httpBasic(withDefaults())   // HTTP Basic auth
+            .csrf(csrf -> csrf.disable()); // disable CSRF for REST API
+        return http.build();
+    }
+}
+\`\`\`
+
+### Testing with Mockito and Spring Boot Test
+
+<code>@SpringBootTest</code> loads the full application context — realistic but slower. <code>@WebMvcTest</code> loads only web layer — faster, mocks services. <code>@DataJpaTest</code> loads only JPA layer. <code>Mockito</code> creates mock objects for dependencies.
+
+\`\`\`java
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.bean.MockBean;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(UserController.class)  // only web layer
+class UserControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private UserService userService;  // mock the service dependency
+
+    @Test
+    void getUserById_shouldReturnUser() throws Exception {
+        when(userService.findById(1L)).thenReturn(new User("Alice", "alice@test.com"));
+
+        mockMvc.perform(get("/api/users/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Alice"));
+    }
+}
+\`\`\`
+
+## Wiring It Together
+
+\`\`\`java
+// Application.java — entry point
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+
+// application.properties
+// server.port=8080
+// spring.datasource.url=jdbc:h2:mem:testdb
+// spring.jpa.hibernate.ddl-auto=create-drop
+
+// Todo.java — entity
+@Entity
+record Todo(@Id @GeneratedValue Long id, String title, boolean completed) {}
+
+// TodoRepository.java
+interface TodoRepository extends JpaRepository<Todo, Long> {
+    List<Todo> findByCompletedFalse();
+}
+
+// TodoController.java
+@RestController
+@RequestMapping("/api/todos")
+class TodoController {
+    private final TodoRepository repo;
+    TodoController(TodoRepository repo) { this.repo = repo; }
+
+    @GetMapping
+    List<Todo> getAll() { return repo.findAll(); }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    Todo create(@RequestBody Todo todo) { return repo.save(todo); }
+
+    @PutMapping("/{id}")
+    Todo update(@PathVariable Long id, @RequestBody Todo todo) {
+        return repo.findById(id).map(existing -> {
+            var updated = new Todo(id, todo.title(), todo.completed());
+            return repo.save(updated);
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void delete(@PathVariable Long id) { repo.deleteById(id); }
+}
+\`\`\`
+
+\`\`\`bash
+# Build and run:
+# ./mvnw spring-boot:run                    # Maven
+# ./gradlew bootRun                         # Gradle
+# Test: curl http://localhost:8080/api/todos
+\`\`\``, tags: ["Java", "Spring Boot", "Spring", "REST"] },
         ],
       },
       // ── HTML / CSS ───────────────────────────────────────────────────────
