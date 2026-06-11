@@ -1,0 +1,34 @@
+name: Generate JavaScript Nutshell Content
+on:
+  workflow_dispatch:
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Generate JavaScript Nutshell content
+        run: python3 .github/scripts/generate-js-content.py
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: generate/js-content
+          title: "feat: generate JavaScript Nutshell content"
+          commit-message: "feat: generate JavaScript Nutshell content for all 13 topics"
+          body: |
+            Generates full Nutshell-style educational content for all 13
+            empty JavaScript topics in `curriculum.ts` (ns-js-syntax
+            through ns-js-testing).
+
+            Each topic now includes:
+            - `content` — complete 4-section guide (What's This, Big Picture, Core Ideas, Wiring It Together)
+            - `keyPoints` — 4-6 essential learning points
+            - `tags` — 2-4 relevant tags
+            - `readTimeMin` — appropriate read time (5-25 minutes)
+          delete-branch: true
