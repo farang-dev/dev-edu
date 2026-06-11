@@ -73169,16 +73169,2285 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "Terminal / Shell",
         description: "Cross-platform command-line essentials — bash/zsh (macOS/Linux), PowerShell/cmd (Windows), file system, text processing, package managers, scripting, and modern CLI tools.",
         topics: [
-          { id: "ns-term-basics", title: "Shell Basics & Navigation", shortDesc: "Terminal emulators, shell types (bash/zsh/fish, PowerShell/cmd), prompt, pwd, ls, cd, and tab completion.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-files", title: "File & Directory Operations", shortDesc: "cp, mv, rm, mkdir, touch, ln (symlinks), find, and cross-platform gotchas (case sensitivity, path separators).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-permissions", title: "Permissions & Users", shortDesc: "chmod, chown, umask, sudo, su, file ownership (Unix), and ACLs (Windows icacls).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-text", title: "Text Processing & Pipelines", shortDesc: "grep, sed, awk, cut, sort, uniq, wc, diff, pipe (|), redirection (>, >>, 2>), and here-documents.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-process", title: "Process Management", shortDesc: "ps, top/htop, kill, jobs, fg/bg, nohup, disown, Task Manager (Windows), and WSL interop.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-networking", title: "Networking Commands", shortDesc: "ping, curl, wget, netstat/ss, ifconfig/ip, ssh, scp, rsync, and Windows equivalents (netsh, tracert).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-package", title: "Package Managers", shortDesc: "Homebrew (macOS), apt/dnf/pacman (Linux), winget/choco/scoop (Windows), and npm/pip as global tools.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-scripting", title: "Shell Scripting", shortDesc: "Variables, conditionals, loops, functions, exit codes, shebang, and debugging with set -x.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-env", title: "Environment & Dotfiles", shortDesc: "PATH, env vars, .bashrc/.zshrc/.profile, aliases, functions in dotfiles, and managing config with dotbot/chezmoi.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-term-modern", title: "Modern CLI Tools", shortDesc: "fzf, bat, ripgrep, fd, jq, yq, httpie, tmux, zoxide, starship, and lazygit.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-term-basics",
+            title: "Shell Basics & Navigation",
+            shortDesc: "Terminal emulators, shell types (bash/zsh/fish, PowerShell/cmd), prompt, pwd, ls, cd, and tab completion.",
+            difficulty: "foundational",
+            readTimeMin: 12,
+            keyPoints: [
+              "A shell is a program that interprets typed commands and communicates with the operating system",
+              "Terminal emulators provide the graphical window; the shell runs inside it",
+              "pwd, ls, and cd are the three essential navigation commands",
+              "Tab completion auto-completes file paths, commands, and options to save keystrokes",
+              "Different shells (bash, zsh, fish, PowerShell) share core concepts but differ in syntax and features",
+              "The prompt shows your username, hostname, current directory, and privilege level"
+            ],
+            tags: ["shell", "terminal", "navigation", "command-line"],
+            content: `
+## What's This?
+
+The terminal (or command line) is a text-based interface to your computer's operating system. Instead of clicking icons and menus, you type commands. The shell is the program that reads your typed commands and translates them into system calls. Think of the shell as a translator: you speak commands like <code>ls</code> or <code>cd</code>, and the shell converts them into instructions your computer's kernel understands. The terminal emulator is the window application (like Terminal.app, iTerm2, Windows Terminal, or GNOME Terminal) that hosts the shell. This text-based interface exists because it is faster, more scriptable, and more powerful than GUIs for many operations -- one command can do what would take dozens of mouse clicks.
+
+## The Big Picture
+
+The shell is your command center for the entire operating system. Everything you can do with a GUI (browse files, launch programs, manage processes, configure networks) you can do from the shell, often with finer control. The shell builds on two OS concepts: the file system (a tree of directories and files) and processes (running programs). Navigation commands (<code>pwd</code>, <code>ls</code>, <code>cd</code>) let you move through the file system tree. Once you master navigation, every other shell skill (file operations, text processing, scripting, networking) becomes accessible because all of them require moving to the right location and understanding where you are.
+
+## Core Ideas
+
+### The Prompt
+
+The prompt is the text the shell displays to tell you it is ready for input. It usually contains your username, the computer name, and your current directory. A <code>$</code> means a normal user; a <code>#</code> means the root (administrator) user.
+
+<code>user@macbook ~ % ls</code>
+
+- <code>user</code>: your username
+- <code>macbook</code>: the computer's hostname
+- <code>~</code>: shorthand for your home directory (<code>/Users/user</code> on macOS, <code>/home/user</code> on Linux)
+- <code>%</code>: the prompt character (zsh uses <code>%</code>, bash uses <code>$</code>)
+- <code>ls</code>: the command you typed
+
+### Where Am I? -- <code>pwd</code>
+
+<code>pwd</code> stands for "print working directory." It shows the full path to your current location in the file system.
+
+<code>$ pwd
+/Users/alice/projects</code>
+
+The output <code>/Users/alice/projects</code> tells you that you are inside <code>projects</code>, which is inside <code>alice</code>, which is inside <code>Users</code>, which is at the root (<code>/</code>).
+
+### What Is Here? -- <code>ls</code>
+
+<code>ls</code> lists directory contents. Without arguments it lists the current directory. With a path argument it lists that directory.
+
+<code>$ ls
+Desktop  Documents  Downloads  Movies  Music  Pictures
+
+$ ls -l
+drwx------  3 alice  staff   96  Mar 12 10:30  Desktop
+
+$ ls -a
+.bashrc  .config  Desktop  Documents
+
+$ ls -lh
+drwxr-xr-x  6 alice  staff   192B  Mar 12 10:30  projects
+-rw-r--r--  1 alice  staff   1.2K  Mar 12 10:30  notes.txt</code>
+
+- <code>-l</code>: long format (permissions, owner, size, date)
+- <code>-a</code>: show all files, including hidden ones (names starting with <code>.</code>)
+- <code>-h</code>: human-readable sizes (KB, MB instead of bytes)
+
+### Move Around -- <code>cd</code>
+
+<code>cd</code> changes the current directory. It accepts an absolute path (starting with <code>/</code>) or a relative path (starting from where you stand).
+
+<code>$ cd /Users/alice/projects   # absolute path
+$ pwd
+/Users/alice/projects
+
+$ cd src                     # relative path (into src/)
+/Users/alice/projects/src
+
+$ cd ..                      # go up one directory (parent)
+/Users/alice/projects
+
+$ cd ~                       # go to home directory
+/Users/alice
+
+$ cd -                       # go to previous directory</code>
+
+### Tab Completion
+
+Press <code>Tab</code> to auto-complete commands, file paths, and arguments. If multiple matches exist, press <code>Tab</code> twice to see all options. This saves keystrokes and prevents typos.
+
+<code>$ cd /Us[Tab]            expands to /Users/
+$ cd ~/Doc[Tab]              expands to ~/Documents/
+$ git che[Tab][Tab]          shows: checkout  cherry-pick  commit</code>
+
+### Shell Types Comparison
+
+| Shell | Default On | Prompt | Script Syntax | Key Strength |
+|-------|-----------|--------|---------------|--------------|
+| Bash | Most Linux, older macOS | <code>bash-3.2$</code> | POSIX | Universal, runs almost everywhere |
+| Zsh | macOS (since Catalina), many Linux | <code>user@host %</code> | POSIX + extras | Better completion, theming (oh-my-zsh) |
+| Fish | Install manually | <code>user@host ~></code> | Unique | Auto-suggestions, web-based config |
+| PowerShell | Windows (modern) | <code>PS C:\\Users\\user></code> | .NET-based | Objects instead of text, Windows-native |
+| cmd | Windows (legacy) | <code>C:\\Users\\user></code> | Batch | Built-in, backwards compatible |
+
+## Wiring It Together
+
+Here is a realistic session: open a terminal, find a project, and inspect its structure.
+
+<code>$ pwd                                  # Where am I?
+/Users/alice
+
+$ ls                                   # What is in my home directory?
+Desktop  Documents  Downloads  Music  Pictures  projects
+
+$ cd projects                          # Move into the projects folder
+
+$ pwd                                  # Confirm the new location
+/Users/alice/projects
+
+$ ls -lh                               # List contents with details
+total 8
+drwxr-xr-x  15 alice  staff   480B Mar 12 10:30 my-app
+-rw-r--r--   1 alice  staff    57B Mar 12 10:30 README.md
+
+$ cd my-app/src                        # Jump into src/ in one step
+
+$ ls                                   # What is inside?
+components  index.js  styles  utils
+
+$ cd ../..                             # Go back two levels (to projects)
+
+$ pwd                                  # Verify
+/Users/alice/projects</code>
+`,
+          },
+          {
+            id: "ns-term-files",
+            title: "File & Directory Operations",
+            shortDesc: "cp, mv, rm, mkdir, touch, ln (symlinks), find, and cross-platform gotchas (case sensitivity, path separators).",
+            difficulty: "foundational",
+            readTimeMin: 14,
+            keyPoints: [
+              "cp copies files and directories; mv moves or renames them; rm deletes permanently",
+              "mkdir creates directories; touch creates empty files or updates timestamps",
+              "ln creates hard links and symbolic links (symlinks) to the same file data",
+              "find locates files by name, type, size, or modification time recursively",
+              "Cross-platform differences: case sensitivity (macOS/Linux vs Windows), path separators (/ vs \\)",
+              "CLI file operations are destructive and irreversible -- there is no trash bin"
+            ],
+            tags: ["file-management", "filesystem", "command-line"],
+            content: `
+## What's This?
+
+File and directory operations are the commands you use to create, copy, move, rename, delete, and locate files and directories from the command line. In a GUI you would drag icons, right-click, or use menus; on the command line you use <code>cp</code>, <code>mv</code>, <code>rm</code>, <code>mkdir</code>, and related tools. These commands are the building blocks of every file-management task in the shell. They exist because text commands are precise, repeatable, and scriptable -- you can automate moving a thousand files in one line that would take hours of clicking.
+
+## The Big Picture
+
+File operations are the second skill you learn after navigation because they are what you do once you arrive somewhere. They build directly on the file system concepts from Shell Basics: paths (absolute and relative), the directory tree, and hidden files. These commands also reveal important OS differences. Linux and macOS use a case-sensitive file system by default (so <code>File.txt</code> and <code>file.txt</code> are different), while macOS is case-insensitive (they are the same) and Windows is case-insensitive with backslash separators. Understanding these differences prevents bugs when you write scripts or share projects across platforms.
+
+## Core Ideas
+
+### Copy -- <code>cp</code>
+
+<code>cp</code> copies files or directories from a source to a destination. The basic form is <code>cp source destination</code>.
+
+<code>$ cp notes.txt backup.txt                  # copy a single file
+$ cp -r projects/ projects-backup/            # -r: copy directory recursively
+$ cp *.html ../archive/                       # copy all .html files to parent's archive/
+$ cp -i important.txt /backup/                # -i: ask before overwriting</code>
+
+- <code>cp file1 file2</code>: copy <code>file1</code> to <code>file2</code> in the same directory
+- <code>cp -r dir1 dir2</code>: copy directory <code>dir1</code> (and everything inside it) to <code>dir2</code>
+- <code>cp -i</code>: interactive mode, prompts before overwriting an existing file
+- <code>cp -v</code>: verbose mode, prints each file as it is copied
+
+### Move / Rename -- <code>mv</code>
+
+<code>mv</code> moves a file to a new location, or renames it if the destination is the same directory.
+
+<code>$ mv notes.txt /tmp/                        # move notes.txt to /tmp/
+$ mv report.pdf final-report.pdf              # rename report.pdf in the same directory
+$ mv ~/Downloads/*.jpg ~/Pictures/            # move all JPEGs from Downloads to Pictures
+$ mv -i data.csv /backup/                     # -i: ask before overwriting</code>
+
+- <code>mv old new</code>: if <code>new</code> is a directory, move <code>old</code> inside it; otherwise rename
+- <code>mv</code> is the same command for both moving and renaming because renaming IS moving to a new name in the same directory
+
+### Delete -- <code>rm</code>
+
+<code>rm</code> permanently deletes files and directories. There is NO trash bin -- once removed, the data is gone unless you have backups.
+
+<code>$ rm temp.txt                               # delete a single file
+$ rm -rf tempdir/                             # -r: recursive, -f: force (no confirmation)
+$ rm *.log                                    # delete all .log files in current directory
+$ rm -i oldfile.txt                           # -i: ask before deleting</code>
+
+- <code>rm file</code>: delete <code>file</code> permanently
+- <code>rm -r dir</code>: recursively delete <code>dir</code> and everything inside it
+- <code>rm -f</code>: force deletion without prompting, even if the file is write-protected
+- WARNING: <code>rm -rf</code> is the most dangerous command -- double-check before pressing Enter
+
+### Create Directories -- <code>mkdir</code>
+
+<code>mkdir</code> creates new directories.
+
+<code>$ mkdir newproject                         # create a single directory
+$ mkdir -p a/b/c/d                            # -p: create parent directories as needed
+$ mkdir -p src/{components,utils,hooks}       # create three directories at once (brace expansion)</code>
+
+- <code>mkdir dir</code>: create <code>dir</code> in the current location
+- <code>mkdir -p path/to/dir</code>: create the full path, including any missing parent directories
+- Brace expansion <code>{a,b,c}</code>: the shell expands this into three separate arguments
+
+### Create Empty Files -- <code>touch</code>
+
+<code>touch</code> creates an empty file if it does not exist, or updates the modification timestamp if it does.
+
+<code>$ touch index.html                         # create an empty file
+$ touch main.go utils.go auth.go             # create several files at once
+$ touch -t 202503121030 oldfile.txt           # set modification time to March 12, 2025 10:30</code>
+
+- <code>touch filename</code>: create <code>filename</code> if it does not exist
+- Used frequently to create placeholder files or update timestamps for build tools
+
+### Links -- <code>ln</code>
+
+<code>ln</code> creates links to files. A hard link is an additional directory entry pointing to the same data on disk. A symbolic link (symlink) is a special file that points to another file by path -- like a shortcut or alias.
+
+<code>$ ln original.txt hardlink.txt              # hard link: same data, different name
+$ ln -s /usr/local/bin/node node-link         # symbolic link: points to /usr/local/bin/node
+$ ls -l                                       # symlinks show an arrow ->
+lrwxr-xr-x  1 alice  staff  18 Mar 12 10:30 node-link -> /usr/local/bin/node</code>
+
+- Hard links share the same inode (data block); deleting the original leaves the data accessible through the link
+- Symlinks can point across file systems and to directories; they break if the target is moved or deleted
+- Use <code>ln -s</code> for almost all practical purposes (symlinks are more flexible)
+
+### Find Files -- <code>find</code>
+
+<code>find</code> searches for files and directories recursively by name, type, size, or modification time.
+
+<code>$ find . -name "*.ts"                       # find all TypeScript files from current directory
+$ find /tmp -type f -size +10M               # find files in /tmp larger than 10 MB
+$ find ~ -name "*.config" -mtime -7          # files modified in the last 7 days
+$ find . -type d -empty                       # find empty directories
+$ find . -name "*.log" -delete               # find and delete all .log files</code>
+
+- <code>find path -name "pattern"</code>: find files matching a name pattern
+- <code>-type f</code>: files only; <code>-type d</code>: directories only
+- <code>-size +10M</code>: files larger than 10 megabytes
+- <code>-mtime -7</code>: files modified within the last 7 days
+- <code>-delete</code>: delete matched files (use with caution)
+
+### Cross-Platform Gotchas
+
+| Aspect | macOS / Linux | Windows |
+|--------|--------------|---------|
+| Path separator | <code>/</code> (forward slash) | <code>\\</code> (backslash), but PowerShell and Git Bash accept <code>/</code> |
+| Case sensitivity | macOS: insensitive by default; Linux: sensitive | Insensitive (FILE.txt = file.txt) |
+| Home directory | <code>/Users/name</code> or <code>/home/name</code> | <code>C:\\Users\\name</code> |
+| Hidden files | Names starting with <code>.</code> | Uses file attribute (hidden) |
+| Drive letters | None (single root <code>/</code>) | <code>C:</code>, <code>D:</code>, etc. |
+
+## Wiring It Together
+
+A realistic scenario: set up a new project directory structure and organize some files.
+
+<code>$ mkdir -p my-project/src my-project/tests my-project/docs   # create project skeleton
+
+$ cd my-project
+
+$ touch src/index.js src/utils.js tests/test-main.js README.md  # create placeholder files
+
+$ cp ~/templates/license-mit.txt LICENSE                        # copy a license template
+
+$ mv README.md docs/                                            # move README into the docs folder
+
+$ ln -s src/index.js entry-point                                # create a symlink for convenience
+
+$ find . -name "*.js"                                           # verify all JS files are in place
+./src/index.js
+./src/utils.js
+./tests/test-main.js
+
+$ rm -rf tests                                                  # oops, remove the tests to start fresh
+
+$ mkdir -p tests/unit tests/integration                        # recreate with subdivisions
+
+$ ls -lhR                                                       # inspect the full tree
+total 0
+drwxr-xr-x  3 alice  staff   96B Mar 12 10:30 src
+drwxr-xr-x  4 alice  staff  128B Mar 12 10:30 tests
+lrwxr-xr-x  1 alice  staff   12B Mar 12 10:30 entry-point -> src/index.js</code>
+`,
+          },
+          {
+            id: "ns-term-permissions",
+            title: "Permissions & Users",
+            shortDesc: "chmod, chown, umask, sudo, su, file ownership (Unix), and ACLs (Windows icacls).",
+            difficulty: "foundational",
+            readTimeMin: 16,
+            keyPoints: [
+              "Every file and directory has an owner, a group, and three permission triples (read/write/execute)",
+              "chmod changes permissions using octal (755) or symbolic (u+x) notation",
+              "chown changes file ownership; chgrp changes group ownership",
+              "sudo runs a command as the superuser (root); su switches the entire user session",
+              "umask sets default permissions for newly created files and directories",
+              "Windows uses ACLs managed with icacls, a different permission model from Unix"
+            ],
+            tags: ["permissions", "users", "security", "unix"],
+            content: `
+## What's This?
+
+File permissions are the operating system's security system that controls who can read, write, or execute a file. Every file and directory belongs to a user (the owner) and a group. Permissions are defined for three categories: the owner, the group, and everyone else (others). Think of it like an apartment building: each file is a room, the owner has a key (full access), the group shares a floor key (limited access), and the public can only enter the lobby (restricted access). These permissions exist to protect files from unauthorized access and to enable multi-user systems where many people share the same computer or server.
+
+## The Big Picture
+
+Permissions are fundamental to Unix-based systems (Linux, macOS) and are the backbone of system security. They build on the file system concepts from File Operations: every file operation requires appropriate permissions. Understanding permissions is essential before you can administer a server, configure a development environment, or debug "Permission denied" errors. The permission model connects to user management (who is on the system) and process management (what user a program runs as). On Windows, the model is different -- Windows uses Access Control Lists (ACLs) that are more granular but also more complex.
+
+## Core Ideas
+
+### Reading Permissions
+
+When you run <code>ls -l</code>, the first column shows permissions as a 10-character string.
+
+<code>$ ls -l
+-rwxr-xr--  1 alice  developers  1024 Mar 12 10:30 script.sh
+drwxr-x---  2 alice  developers    64 Mar 12 10:30 secrets</code>
+
+The 10 characters break down as:
+
+| Position | Meaning |
+|----------|---------|
+| 1 | File type (<code>-</code> = file, <code>d</code> = directory, <code>l</code> = symlink) |
+| 2-4 | Owner permissions (r/w/x) |
+| 5-7 | Group permissions (r/w/x) |
+| 8-10 | Others permissions (r/w/x) |
+
+- <code>r</code> = read (view file contents, list directory)
+- <code>w</code> = write (modify file, create/delete files in directory)
+- <code>x</code> = execute (run file as program, enter directory)
+- <code>-</code> = permission denied
+
+For <code>-rwxr-xr--</code>: owner alice can read/write/execute, group developers can read/execute, and everyone else can only read.
+
+### Changing Permissions -- <code>chmod</code>
+
+<code>chmod</code> changes permissions. You can use symbolic notation (letters and symbols) or octal notation (numbers).
+
+**Symbolic notation:**
+
+<code>$ chmod u+x script.sh          # add execute for user (owner)
+$ chmod g-w script.sh          # remove write for group
+$ chmod o+r script.sh          # add read for others
+$ chmod u=rw,go=r script.sh   # set user to rw, group and others to read-only
+$ chmod -R u+rwx scripts/     # -R: recursive, apply to all files in directory</code>
+
+- <code>u</code>: user (owner), <code>g</code>: group, <code>o</code>: others, <code>a</code>: all
+- <code>+</code>: add permission, <code>-</code>: remove permission, <code>=</code>: set exactly
+
+**Octal notation:** Each permission is a digit: read = 4, write = 2, execute = 1. Sum them for each category.
+
+<code>#  rwx  r-x  r--
+#  421  42-  4--
+#  ---  ---  ---
+#   7    5    4
+$ chmod 754 script.sh          # owner: rwx, group: r-x, others: r--</code>
+
+| Octal | Binary | Permissions |
+|-------|--------|-------------|
+| 0 | 000 | <code>---</code> |
+| 1 | 001 | <code>--x</code> |
+| 2 | 010 | <code>-w-</code> |
+| 3 | 011 | <code>-wx</code> |
+| 4 | 100 | <code>r--</code> |
+| 5 | 101 | <code>r-x</code> |
+| 6 | 110 | <code>rw-</code> |
+| 7 | 111 | <code>rwx</code> |
+
+Common modes: <code>644</code> (normal files: rw-r--r--), <code>755</code> (executables/directories: rwxr-xr-x), <code>600</code> (private files: rw-------).
+
+### Changing Ownership -- <code>chown</code> and <code>chgrp</code>
+
+<code>chown</code> changes the owner (and optionally group) of a file. <code>chgrp</code> changes only the group.
+
+<code>$ chown bob report.pdf                    # change owner to bob
+$ chown bob:developers report.pdf           # change owner to bob and group to developers
+$ chown :developers report.pdf              # change group only
+$ chown -R bob /home/bob/projects           # -R: recursive
+$ sudo chown root:root /etc/config.conf     # usually requires sudo</code>
+
+- Only the root user can change ownership of files they do not own
+- <code>chown user:group file</code> changes both owner and group in one command
+
+### Superuser -- <code>sudo</code> and <code>su</code>
+
+<code>sudo</code> (superuser do) runs a single command with root privileges. <code>su</code> (switch user) starts a new shell as another user.
+
+<code>$ sudo apt update                          # run apt update as root
+$ sudo -u www-data ls /var/www              # run ls as user www-data
+$ sudo -s                                    # start a root shell (exit to return)
+$ su - bob                                   # switch to bob's account (login shell)
+$ su -                                       # switch to root login shell</code>
+
+- <code>sudo</code> requires your password (not root's); <code>su</code> requires the target user's password
+- <code>/etc/sudoers</code> controls which users can run which commands with sudo
+- Only trusted users should have sudo access -- it gives full system control
+
+### Default Permissions -- <code>umask</code>
+
+<code>umask</code> sets the default permissions for newly created files and directories. It specifies which permissions to REMOVE from the maximum (666 for files, 777 for directories).
+
+<code>$ umask                                   # show current umask value
+022
+
+$ touch newfile; ls -l newfile              # 666 - 022 = 644 (rw-r--r--)
+-rw-r--r--  1 alice  staff  0 Mar 12 10:30 newfile
+
+$ mkdir newdir; ls -ld newdir               # 777 - 022 = 755 (rwxr-xr-x)
+drwxr-xr-x  2 alice  staff  64 Mar 12 10:30 newdir
+
+$ umask 077                                 # strict: only owner can read/write
+$ touch private; ls -l private              # 666 - 077 = 600 (rw-------)
+-rw-------  1 alice  staff  0 Mar 12 10:30 private</code>
+
+- Common umask values: <code>022</code> (broad access), <code>077</code> (private only), <code>002</code> (group-writable)
+- Set umask in your shell profile (<code>.bashrc</code> or <code>.zshrc</code>) for permanent effect
+
+### Windows ACLs -- <code>icacls</code>
+
+Windows uses Access Control Lists (ACLs) instead of Unix-style permissions. The <code>icacls</code> command manages them.
+
+<code>C:\\> icacls report.pdf                    # display permissions
+report.pdf BUILTIN\\Administrators:(F)
+           NT AUTHORITY\\SYSTEM:(F)
+           CREATOR OWNER:(M)
+           Users:(R)
+
+C:\\> icacls report.pdf /grant "alice:(R,W)"   # grant alice read and write
+C:\\> icacls report.pdf /remove "Users"         # remove Users group access</code>
+
+- <code>(F)</code>: Full control, <code>(M)</code>: Modify, <code>(R)</code>: Read, <code>(W)</code>: Write
+- Windows permissions are more granular but harder to read at a glance than Unix permissions
+
+## Wiring It Together
+
+A realistic scenario: set up a shared project directory where alice owns the files, the developers group can edit, and others can only read.
+
+<code>$ mkdir -p /srv/project                                    # create the project directory
+
+$ chown alice:developers /srv/project                         # set owner and group
+
+$ chmod 775 /srv/project                                      # rwxrwxr-x: owner and group can write, others read
+
+$ ls -ld /srv/project
+drwxrwxr-x  2 alice  developers  64 Mar 12 10:30 /srv/project
+
+$ touch /srv/project/README.md                                # alice creates a file
+
+$ ls -l /srv/project/README.md
+-rw-r--r--  1 alice  developers  0 Mar 12 10:30 /srv/project/README.md
+
+$ chmod 664 /srv/project/README.md                            # group gets write access too
+
+$ umask 002                                                   # ensure new files are group-writable by default
+
+$ touch /srv/project/data.csv                                 # new file inherits 664 with umask 002
+
+$ ls -l /srv/project/data.csv
+-rw-rw-r--  1 alice  developers  0 Mar 12 10:30 /srv/project/data.csv</code>
+`,
+          },
+          {
+            id: "ns-term-text",
+            title: "Text Processing & Pipelines",
+            shortDesc: "grep, sed, awk, cut, sort, uniq, wc, diff, pipe (|), redirection (>, >>, 2>), and here-documents.",
+            difficulty: "intermediate",
+            readTimeMin: 18,
+            keyPoints: [
+              "The pipe operator | sends the output of one command as input to the next command",
+              "Redirection operators (>, >>, 2>, <) control where command output and input go",
+              "grep searches for patterns in text using regular expressions",
+              "sed performs find-and-replace and text transformations in a stream",
+              "awk is a full programming language for field-based text processing",
+              "Small commands (cut, sort, uniq, wc) combine via pipes to build powerful data pipelines"
+            ],
+            tags: ["text-processing", "pipes", "grep", "sed", "awk"],
+            content: `
+## What's This?
+
+Text processing is the art of manipulating text data from the command line using small, focused tools connected together. The pipe operator (<code>|</code>) is the glue that makes this possible: it takes the output of one command and feeds it as input to the next. Redirection operators (<code>></code>, <code>>></code>, <code>2></code>) control where output goes -- to a file instead of the screen, or which stream (stdout vs stderr) to capture. Think of it like a factory assembly line: raw materials (text) enter at one end, pass through a series of specialized machines (commands), and a finished product emerges at the other end. These tools exist because the Unix philosophy is built on small, composable programs that do one thing well and cooperate through text streams.
+
+## The Big Picture
+
+Text processing is the heart of the Unix philosophy and the reason the command line remains powerful decades after its invention. It builds on file operations (every command reads or writes files) and shell basics (every command runs in a shell context). Understanding pipes and text tools transforms you from someone who types commands into someone who builds solutions. These skills connect directly to shell scripting (you use text processing inside scripts), system administration (log analysis), and even programming (many languages use similar regex patterns). The same pipeline you build interactively can become a script or a one-liner that runs daily.
+
+## Core Ideas
+
+### Pipe -- <code>|</code>
+
+The pipe sends the standard output of the left command into the standard input of the right command.
+
+<code>$ ls -l | wc -l                           # count files: ls output piped to wc (word count)
+$ cat server.log | grep "ERROR" | wc -l      # count ERROR lines in a log file
+$ history | grep "git"                       # search command history for git commands</code>
+
+- <code>|</code> connects commands so data flows left-to-right
+- Any command that writes to stdout can be piped into any command that reads from stdin
+- Pipelines can be arbitrarily long: <code>cmd1 | cmd2 | cmd3 | cmd4</code>
+
+### Redirection -- <code>></code>, <code>>></code>, <code>2></code>, <code><</code>
+
+Redirection sends output to files instead of the terminal, or reads input from files instead of the keyboard.
+
+<code>$ ls > filelist.txt                        # write directory listing to filelist.txt (overwrite)
+$ echo "new line" >> filelist.txt            # append to filelist.txt (don't overwrite)
+$ grep "foo" input.txt > results.txt         # search input.txt, save results to results.txt
+$ sort < unsorted.txt > sorted.txt           # read from unsorted.txt, write sorted to sorted.txt
+$ gcc program.c 2> errors.txt                # redirect error messages (stderr) to errors.txt
+$ command &> all_output.txt                  # redirect both stdout and stderr to the same file</code>
+
+- <code>></code>: redirect stdout to a file (overwrite)
+- <code>>></code>: redirect stdout to a file (append)
+- <code>2></code>: redirect stderr to a file
+- <code>&></code>: redirect both stdout and stderr
+- <code><</code>: read stdin from a file instead of the keyboard
+
+### Streams
+
+Every program has three standard streams:
+
+| Stream | Number | Default Destination | Purpose |
+|--------|--------|-------------------|---------|
+| stdin | 0 | Keyboard | Input data |
+| stdout | 1 | Terminal | Normal output |
+| stderr | 2 | Terminal | Error messages |
+
+<code>$ command > output.txt 2>&1                # redirect stderr (2) to the same place as stdout (1)
+$ command 2>/dev/null                         # discard errors (send them to /dev/null, the void)</code>
+
+### Search -- <code>grep</code>
+
+<code>grep</code> searches text for lines matching a pattern. It supports regular expressions for powerful pattern matching.
+
+<code>$ grep "error" server.log                  # find lines containing "error" (case-sensitive)
+$ grep -i "error" server.log                # -i: case-insensitive search
+$ grep -r "TODO" src/                        # -r: recursive search through a directory
+$ grep -l "main" *.py                         # -l: list only filenames that match (not the matching lines)
+$ grep -n "function" app.js                  # -n: show line numbers
+$ grep -c "ERROR" log.txt                    # -c: count matching lines
+$ grep -v "debug" log.txt                    # -v: invert match (lines NOT containing "debug")
+$ grep "^ERROR" log.txt                      # lines starting with "ERROR"
+$ grep "error\\|warning" log.txt              # lines containing either "error" or "warning"</code>
+
+- <code>grep pattern file</code>: search <code>file</code> for <code>pattern</code>
+- By default grep prints every matching line
+- <code>grep</code> is typically the first command in a pipeline, filtering down to relevant lines
+
+### Stream Editor -- <code>sed</code>
+
+<code>sed</code> (stream editor) performs text transformations on a stream. The most common use is find-and-replace.
+
+<code>$ sed 's/foo/bar/g' input.txt              # replace all "foo" with "bar" in input.txt
+$ sed 's/foo/bar/' input.txt                 # replace only the first "foo" per line
+$ sed -i 's/old/new/g' config.txt            # -i: edit the file in-place (no backup)
+$ sed -i.bak 's/old/new/g' config.txt        # in-place with .bak backup
+$ sed '/^#/d' config.txt                     # delete lines starting with # (comments)
+$ sed '3,10d' input.txt                      # delete lines 3 through 10</code>
+
+- <code>s/pattern/replacement/flags</code>: substitute command
+- <code>/g</code> flag: global (replace all occurrences per line, not just the first)
+- <code>-i</code>: edit file in place (BE CAREFUL: this modifies the original)
+- <code>/d</code>: delete matching lines
+
+### Text Processing Language -- <code>awk</code>
+
+<code>awk</code> is a full programming language designed for processing structured text, especially columns/fields.
+
+<code>$ awk '{print \$1}' data.txt                # print the first field of each line
+$ awk '{print \$1, \$3}' data.txt              # print fields 1 and 3
+$ awk -F: '{print \$1}' /etc/passwd           # -F: set field separator to colon
+$ awk '\$3 > 50 {print \$1}' scores.txt        # if 3rd field > 50, print 1st field
+$ awk '{sum += \$1} END {print sum}' nums.txt  # sum the first column and print total
+$ awk 'NR > 1 {print}' data.csv               # skip header row (NR = record number)</code>
+
+- <code>awk</code> splits each line into fields: <code>$1</code>, <code>$2</code>, <code>$3</code>, etc.; <code>$0</code> is the whole line
+- Default field separator is whitespace; use <code>-F</code> to specify a different one
+- <code>awk</code> can do arithmetic, conditionals, and loops -- it is a scripting language
+
+### Sort, Unique, Count -- <code>sort</code>, <code>uniq</code>, <code>wc</code>
+
+<code>$ sort names.txt                           # sort lines alphabetically
+$ sort -n scores.txt                         # -n: sort numerically
+$ sort -r names.txt                          # -r: reverse order
+$ sort -u names.txt                          # -u: sort and remove duplicates
+
+$ uniq names.txt                             # remove adjacent duplicate lines
+$ sort names.txt | uniq                      # sort first, THEN remove duplicates
+$ sort names.txt | uniq -c                   # -c: count occurrences of each line
+$ sort names.txt | uniq -d                   # -d: show only duplicates
+
+$ wc -l file.txt                             # -l: count lines
+$ wc -w file.txt                             # -w: count words
+$ wc -c file.txt                             # -c: count bytes/characters
+$ wc -l file.txt                             # count lines (most common use)</code>
+
+- <code>sort</code> alone removes duplicates only with <code>-u</code>
+- <code>uniq</code> only removes ADJACENT duplicates, so always pipe <code>sort</code> before <code>uniq</code>
+- <code>wc -l</code> is one of the most frequently used commands in pipelines to count results
+
+### Cutting Columns -- <code>cut</code>
+
+<code>cut</code> extracts specific columns or fields from each line.
+
+<code>$ cut -d, -f1,3 data.csv                    # -d: delimiter (comma), -f: fields 1 and 3
+$ cut -c1-10 input.txt                        # -c: characters 1 through 10
+$ cut -d: -f1 /etc/passwd                     # extract usernames from passwd file
+$ cat server.log | cut -d' ' -f1,4 | head    # extract first and fourth space-separated fields</code>
+
+- <code>cut -d delimiter -f fields</code>: split by delimiter, pick fields
+- For CSV files, <code>cut</code> is a quick alternative to loading a spreadsheet
+
+### Compare Files -- <code>diff</code>
+
+<code>diff</code> shows the differences between two files line by line.
+
+<code>$ diff file1.txt file2.txt                  # show differences between two files
+$ diff -u file1.txt file2.txt                # -u: unified format (compact, most readable)
+$ diff -r dir1/ dir2/                        # -r: recursive directory comparison</code>
+
+- Lines prefixed with <code><</code> come from the first file, <code>></code> from the second
+- Unified format (<code>-u</code>) is the standard for patches and code reviews
+
+### Here-Documents
+
+A here-document feeds a block of text as stdin to a command directly in the shell.
+
+<code>$ cat << EOF                              # cat reads stdin until "EOF" on its own line
+This is the content
+of the here-document.
+It can span multiple lines.
+EOF
+
+$ grep "error" << EOF                       # grep searches the literal text below
+line 1: all good
+line 2: error occurred
+line 3: finished
+EOF
+# Output: line 2: error occurred
+
+$ cat << 'EOF' > script.sh                  # quoted 'EOF' prevents variable expansion
+echo "Hello $USER"                          # $USER stays literal, not expanded
+EOF</code>
+
+- <code><< TOKEN</code>: start a here-document that ends at a line containing only <code>TOKEN</code>
+- Unquoted <code>EOF</code>: shell variables like <code>$HOME</code> are expanded
+- Quoted <code>'EOF'</code>: everything is literal (no expansion)
+
+## Wiring It Together
+
+A realistic scenario: analyze a web server access log to find the most frequent error types and count them.
+
+<code>$ cat access.log                           # raw log lines look like:
+192.168.1.1 - - [12/Mar/2025:10:30:15] "GET /api/users" 200 1234
+192.168.1.2 - - [12/Mar/2025:10:31:20] "POST /api/login" 401 56
+192.168.1.1 - - [12/Mar/2025:10:32:10] "GET /api/data" 500 0
+192.168.1.3 - - [12/Mar/2025:10:33:05] "POST /api/login" 401 78
+
+$ grep " 401 \\| 500 " access.log                # find lines with status 401 or 500
+192.168.1.2 - - [12/Mar/2025:10:31:20] "POST /api/login" 401 56
+192.168.1.1 - - [12/Mar/2025:10:32:10] "GET /api/data" 500 0
+192.168.1.3 - - [12/Mar/2025:10:33:05] "POST /api/login" 401 78
+
+$ grep -E " 401 | 500 " access.log               # same but with extended regex (-E)
+  | cut -d'"' -f2                                # extract the request part (between quotes)
+  | cut -d' ' -f1,2                              # get the HTTP method and path
+POST /api/login
+GET /api/data
+POST /api/login
+
+$ grep -E " 401 | 500 " access.log               # start from raw log again
+  | grep -oE " [0-9]{3} "                        # extract just the status codes
+  | sort                                         # sort them
+  | uniq -c                                      # count occurrences
+  2  401
+  1  500
+
+$ grep -E " 401 | 500 " access.log               # build the full pipeline:
+  | awk '{print \$9}'                            # extract the status code (9th space-separated field)
+  | sort                                         # sort the codes
+  | uniq -c                                      # count each code
+  | sort -rn                                     # sort by count, descending
+  2 401
+  1 500
+
+$ cat << 'REPORT' > summary.txt                  # save a summary report
+Error Analysis for access.log
+----------------------------
+REPORT
+
+$ grep -c " 401 " access.log >> summary.txt      # append counts to the report
+$ grep -c " 500 " access.log >> summary.txt</code>
+`,
+          },
+          {
+            id: "ns-term-process",
+            title: "Process Management",
+            shortDesc: "ps, top/htop, kill, jobs, fg/bg, nohup, disown, Task Manager (Windows), and WSL interop.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "A process is a running instance of a program with its own ID (PID), state, and resources",
+              "ps lists processes with details; top/htop provides real-time interactive process monitoring",
+              "kill sends signals to processes (SIGTERM to ask nicely, SIGKILL to force terminate)",
+              "Jobs, fg, bg manage multiple processes within a single shell session",
+              "nohup and disown keep processes running after you log out",
+              "Windows uses Task Manager (GUI), tasklist (CLI), and taskkill (CLI) for equivalent functionality"
+            ],
+            tags: ["processes", "jobs", "signals", "system-administration"],
+            content: `
+## What's This?
+
+A process is a running program. When you launch an application, run a command, or start a server, the operating system creates a process: a self-contained execution environment with its own memory space, file handles, and state. Process management is the set of tools you use to inspect, control, and interact with running processes. Think of processes like cars on a highway: the kernel (traffic controller) decides which gets CPU time (road access), what priority they have (lane assignment), and what happens when they crash (tow truck). These tools exist because you need to answer questions like "Is my server still running?", "Why is my laptop fan spinning?", and "How do I stop a frozen program?"
+
+## The Big Picture
+
+Process management connects to every other part of the system. Every command you run creates a process. Every file operation is performed by a process. Every network connection belongs to a process. Understanding processes helps you debug performance issues (which process is using 100% CPU?), manage long-running tasks (keeping a server alive after closing the terminal), and understand the OS itself. This topic builds on Shell Basics (you run processes every time you type a command) and connects to Permissions (processes run as a specific user with specific privileges).
+
+## Core Ideas
+
+### Listing Processes -- <code>ps</code>
+
+<code>ps</code> (process status) shows a snapshot of current processes. Without options it shows only processes in the current shell.
+
+<code>$ ps                                       # processes in current shell
+  PID TTY          TIME CMD
+ 5234 pts/0    00:00:00 bash
+ 5389 pts/0    00:00:00 ps
+
+$ ps aux                                    # all processes on the system (BSD style)
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+alice     5234  0.0  0.1  20428  4980 pts/0    Ss   10:30   0:00 -bash
+root         1  0.0  0.1 169824 13696 ?        Ss   10:29   0:02 /sbin/init
+alice     5390  0.5  2.1 523456 87212 ?        Sl   10:31   0:15 /Applications/Firefox.app
+
+$ ps -ef                                    # all processes (System V style)
+UID        PID  PPID  C STIME TTY          TIME CMD
+alice     5234  5232  0 10:30 pts/0    00:00:00 bash
+root         1     0  0 10:29 ?        00:00:02 /sbin/init
+
+$ ps aux --sort=-%mem | head                # processes sorted by memory usage</code>
+
+- <code>ps aux</code>: a = all users, u = user-readable format, x = include daemons (no terminal)
+- Key columns: <code>PID</code> (process ID), <code>%CPU</code>, <code>%MEM</code>, <code>STAT</code> (state), <code>COMMAND</code>
+- <code>STAT</code> codes: <code>S</code> (sleeping), <code>R</code> (running), <code>Z</code> (zombie), <code>T</code> (stopped)
+
+### Real-Time Monitoring -- <code>top</code> / <code>htop</code>
+
+<code>top</code> shows live-updating process information sorted by CPU usage. <code>htop</code> is an improved, interactive version.
+
+<code>$ top                                      # press q to quit
+top - 10:31:45 up 2 days, 1 user, load average: 0.45, 0.30, 0.25
+Tasks: 187 total,   1 running, 186 sleeping
+%Cpu(s):  8.5 us,  2.1 sy,  0.0 ni, 89.0 id,  0.4 wa
+MiB Mem :  16384.0 total,   8192.0 free,   4096.0 used,   4096.0 buff/cache
+MiB Swap:  2048.0 total,   2048.0 free,      0.0 used
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
+ 5390 alice     20   0  523456  87212  41256 S  12.5   2.1  15:30.12 Firefox
+ 5234 alice     20   0   20428   4980   3200 S   0.0   0.1   0:00.05 bash
+
+$ htop                                    # interactive: F3=search, F5=tree, F9=kill, F10=quit
+
+# In htop:
+# - Arrow keys to navigate
+# - F9 then select signal to kill a process
+# - F5 shows processes in a tree (parent/child relationships)</code>
+
+- <code>top</code> updates every few seconds; press <code>q</code> to quit, <code>k</code> to kill a process
+- Load average: 1/5/15 minute averages of processes waiting for CPU; value below number of CPU cores = healthy
+- <code>htop</code> is not installed by default on many systems; install with <code>apt install htop</code> or <code>brew install htop</code>
+
+### Sending Signals -- <code>kill</code>
+
+<code>kill</code> sends signals to processes. Despite the name, it can send many different signals, not just "kill."
+
+<code>$ kill 5234                                 # send SIGTERM (signal 15) -- ask process to terminate
+$ kill -9 5234                               # send SIGKILL (signal 9) -- force kill immediately
+$ kill -15 5234                              # same as kill 5234 (SIGTERM is default)
+$ kill -1 5234                               # send SIGHUP (signal 1) -- reload configuration
+$ kill -STOP 5234                            # suspend (pause) a process
+$ kill -CONT 5234                            # resume a suspended process
+$ killall firefox                            # kill all processes named "firefox"
+$ pkill node                                 # kill processes matching a pattern (name)</code>
+
+| Signal | Number | Meaning | Behavior |
+|--------|--------|---------|----------|
+| SIGHUP | 1 | Hang up | Reload config, or terminate if not handled |
+| SIGINT | 2 | Interrupt | Ctrl+C -- polite interrupt |
+| SIGTERM | 15 | Terminate | Default for <code>kill</code> -- ask nicely |
+| SIGKILL | 9 | Kill | Force kill -- cannot be caught or ignored |
+| SIGSTOP | 19 | Stop | Suspend -- cannot be caught |
+| SIGCONT | 18 | Continue | Resume a suspended process |
+
+- Always try <code>SIGTERM</code> first (just <code>kill PID</code>). Only use <code>SIGKILL</code> (<code>kill -9</code>) if the process ignores SIGTERM
+- <code>SIGKILL</code> does not let the process clean up (save files, close connections), so use it as a last resort
+
+### Foreground and Background -- <code>jobs</code>, <code>fg</code>, <code>bg</code>
+
+Within a single shell, you can run multiple processes by moving them between foreground (controls the terminal) and background (runs silently).
+
+<code>$ sleep 100                                # long-running command occupies the terminal
+^Z                                           # Ctrl+Z: suspend current foreground process
+[1]+  Stopped                 sleep 100
+
+$ jobs                                       # list all jobs for this shell
+[1]+  Stopped                 sleep 100
+
+$ bg                                         # resume job in the background
+[1]+ sleep 100 &
+
+$ jobs
+[1]+  Running                 sleep 100 &
+
+$ fg                                         # bring job back to foreground
+sleep 100
+
+$ command &                                  # start a command directly in the background
+[1] 5432
+
+$ jobs
+[1]+  Running                 command &</code>
+
+- <code>Ctrl+Z</code>: suspend the current foreground process
+- <code>jobs</code>: list all background/suspended jobs with their job numbers
+- <code>bg %1</code>: resume job 1 in the background; <code>bg</code> alone resumes the most recent job
+- <code>fg %1</code>: resume job 1 in the foreground
+- <code>command &</code>: start <code>command</code> directly in the background
+
+### Detaching Processes -- <code>nohup</code> and <code>disown</code>
+
+When you log out, the shell sends SIGHUP to all its child processes, which terminates them. <code>nohup</code> and <code>disown</code> prevent this.
+
+<code>$ nohup long-running-script.sh &           # ignore SIGHUP, run in background
+nohup: ignoring input and appending output to 'nohup.out'
+
+$ long-running-script.sh &                   # start in background
+$ disown                                      # remove job from shell's job table so it survives logout
+$ disown %1                                   # disown a specific job by number
+
+$ disown -h %1                               # mark job to ignore SIGHUP without removing from job table</code>
+
+- <code>nohup command &</code>: run <code>command</code> immune to hang-up signals, output goes to <code>nohup.out</code>
+- <code>disown</code>: remove a job from the shell's job control so it is not affected when the shell exits
+- For truly persistent processes (survive reboots), use systemd services or process managers like <code>pm2</code> or <code>supervisord</code>
+
+### Windows Process Management
+
+Windows uses different tools for the same tasks.
+
+<code>C:\\> tasklist                              # list all processes (like ps)
+Image Name                     PID Session Name        Mem Usage
+===============              ===== ==============     =========
+chrome.exe                    1234 Console             245 MB
+explorer.exe                  5678 Console              98 MB
+
+C:\\> taskkill /PID 1234                       # kill process by PID (like kill)
+C:\\> taskkill /IM chrome.exe /F              # force kill all chrome.exe processes
+C:\\> tasklist /FI "MEMUSAGE gt 100000"       # filter: processes using more than 100 MB
+
+# Task Manager GUI: Ctrl+Shift+Esc (or right-click taskbar)</code>
+
+- <code>tasklist</code>: list processes (equivalent to <code>ps aux</code>)
+- <code>taskkill /PID 1234</code>: terminate process (equivalent to <code>kill 1234</code>)
+- <code>/F</code>: force termination (equivalent to <code>kill -9</code>)
+- Windows Subsystem for Linux (WSL): Linux processes run inside a WSL instance and can be managed from Windows with <code>wsl --terminate</code>
+
+## Wiring It Together
+
+A realistic scenario: you start a development server, run it in the background, check on it, and stop it cleanly.
+
+<code>$ python -m http.server 8000 &              # start HTTP server in the background
+[1] 6123
+
+$ jobs                                        # confirm it is running in the background
+[1]+  Running                 python -m http.server 8000 &
+
+$ ps aux | grep python                        # find the process by name
+alice     6123  0.1  0.3  34500  8124 pts/0   S    10:35   0:00 python -m http.server 8000
+
+$ curl -s http://localhost:8000 | head -5      # test that the server is responding
+<!DOCTYPE html>
+<html>
+<head>
+
+$ kill 6123                                   # send SIGTERM to shut down gracefully
+
+$ jobs                                        # verify it stopped
+[1]+  Terminated              python -m http.server 8000
+
+$ ps aux | grep python                        # confirm no python process remains
+alice     6201  0.0  0.1  12345  4567 pts/0   S+   10:36   0:00 grep python</code>
+`,
+          },
+          {
+            id: "ns-term-networking",
+            title: "Networking Commands",
+            shortDesc: "ping, curl, wget, netstat/ss, ifconfig/ip, ssh, scp, rsync, and Windows equivalents (netsh, tracert).",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "ping tests whether a remote host is reachable and measures round-trip time",
+              "curl and wget transfer data over HTTP, HTTPS, FTP, and other protocols from the command line",
+              "netstat/ss show active network connections, listening ports, and routing tables",
+              "ifconfig/ip configure and display network interfaces and IP addresses",
+              "ssh creates an encrypted remote shell session; scp and rsync transfer files securely",
+              "Windows equivalents: ipconfig for interfaces, tracert for routing, netsh for configuration"
+            ],
+            tags: ["networking", "ssh", "curl", "remote-access"],
+            content: `
+## What's This?
+
+Networking commands let you inspect, test, and interact with computer networks directly from the terminal. They let you answer questions like "Is that server online?" (ping), "What does this API return?" (curl), "Who is listening on port 3000?" (netstat), and "How do I log into that remote machine?" (ssh). Think of the network as a postal system: ping is like sending a postcard to confirm an address exists, curl is like mailing a letter and getting a response, and ssh is like renting a remote office where you can work as if you were there. These commands exist because networks are invisible -- you cannot see packets flying through the air, so these tools make the invisible visible.
+
+## The Big Picture
+
+Networking commands are essential for developers, system administrators, and anyone who deploys or maintains software. They build on your understanding of processes (every network command creates a process that opens network connections) and connect to every layer of modern development: testing APIs (curl), deploying code (ssh, rsync), debugging connectivity (ping, netstat), and configuring servers (ip, ifconfig). Understanding these tools lets you diagnose "it doesn't work" into "port 443 is closed on the firewall" in minutes instead of hours.
+
+## Core Ideas
+
+### Reachability -- <code>ping</code>
+
+<code>ping</code> sends ICMP Echo Request packets to a host and waits for Echo Reply packets. It measures whether a host is reachable and how fast the network connection is.
+
+<code>$ ping google.com                            # ping until interrupted (Ctrl+C)
+PING google.com (142.250.80.46): 56 data bytes
+64 bytes from 142.250.80.46: icmp_seq=0 ttl=118 time=12.5 ms
+64 bytes from 142.250.80.46: icmp_seq=1 ttl=118 time=11.8 ms
+64 bytes from 142.250.80.46: icmp_seq=2 ttl=118 time=12.1 ms
+^C
+--- google.com ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2002ms
+
+$ ping -c 4 google.com                        # -c: send exactly 4 packets, then stop
+$ ping -i 2 google.com                        # -i: wait 2 seconds between packets (default is 1)
+
+$ ping localhost                              # test your own machine (should always respond)
+PING localhost (127.0.0.1): 56 data bytes
+64 bytes from 127.0.0.1: icmp_seq=0 ttl=64 time=0.035 ms</code>
+
+- <code>time</code>: round-trip time in milliseconds (lower is faster)
+- <code>packet loss</code>: percentage of packets that did not get a reply (0% is perfect)
+- <code>ttl</code>: Time To Live -- how many network hops the packet can survive (decreases by 1 per hop)
+- Some hosts block ICMP (ping), so no reply does not always mean the host is down
+
+### HTTP Requests -- <code>curl</code> and <code>wget</code>
+
+<code>curl</code> transfers data using various network protocols (HTTP, HTTPS, FTP, and more). <code>wget</code> is similar but specializes in downloading files.
+
+<code>$ curl https://api.github.com/users/octocat          # fetch a URL, display response body
+{
+  "login": "octocat",
+  "id": 1,
+  ...
+}
+
+$ curl -I https://google.com                            # -I: fetch only HTTP headers
+HTTP/2 200
+content-type: text/html; charset=UTF-8
+server: gws
+
+$ curl -o output.json https://api.example.com/data      # -o: save response to a file
+$ curl -O https://example.com/file.zip                   # -O: save file with its remote filename
+$ curl -X POST https://api.example.com/users             # -X: specify HTTP method (POST)
+$ curl -H "Authorization: Bearer TOKEN" https://api.example.com/me   # -H: add a header
+$ curl -d '{"name":"Alice"}' -H "Content-Type: application/json" \\   # -d: send data in body
+  https://api.example.com/users
+
+$ wget https://example.com/file.zip                     # download a file (simpler than curl)
+$ wget -c https://example.com/large-file.zip             # -c: resume interrupted download
+$ wget -r https://example.com/docs/                      # -r: recursive download (entire site)</code>
+
+- <code>curl</code> is the Swiss Army knife of HTTP: test APIs, download files, check headers, send POST data
+- <code>wget</code> is better for downloading files and recursive mirroring; <code>curl</code> is better for API testing
+- Common <code>curl</code> flags: <code>-I</code> (headers only), <code>-o</code> (output to file), <code>-X</code> (method), <code>-H</code> (header), <code>-d</code> (data)
+
+### Listening Ports -- <code>netstat</code> and <code>ss</code>
+
+<code>netstat</code> displays network connections, routing tables, interface statistics, and listening ports. <code>ss</code> is its modern replacement.
+
+<code>$ netstat -tlnp                              # -t: TCP, -l: listening, -n: numeric, -p: show program
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1234/sshd
+tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      5678/node
+
+$ netstat -an                                   # all connections with numeric addresses
+$ netstat -r                                     # display routing table
+
+$ ss -tlnp                                       # modern replacement (faster, less overhead)
+State    Recv-Q   Send-Q     Local Address:Port      Peer Address:Port   Process
+LISTEN   0        128              0.0.0.0:22             0.0.0.0:*     users:(("sshd",pid=1234))
+LISTEN   0        128            127.0.0.1:3000           0.0.0.0:*     users:(("node",pid=5678))
+
+$ ss -tup                                         # -u: UDP connections</code>
+
+- <code>netstat -tlnp</code>: find what is listening on which port and which program owns it
+- <code>0.0.0.0:22</code> on Local Address means sshd listens on all network interfaces on port 22
+- <code>127.0.0.1:3000</code> means a Node server listens only on localhost (not accessible from other machines)
+- <code>ss</code> is preferred over <code>netstat</code> on modern Linux (faster, more detailed)
+
+### Network Interfaces -- <code>ifconfig</code> and <code>ip</code>
+
+<code>ifconfig</code> displays and configures network interfaces. <code>ip</code> is its modern, more powerful replacement.
+
+<code>$ ifconfig                                   # show all active interfaces
+en0: flags=8863<UP,BROADCAST,SMART,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+    inet 192.168.1.100 netmask 0xffffff00 broadcast 192.168.1.255
+    inet6 fe80::1a2b:3c4d:5e6f:7a8b prefixlen 64 scopeid 0x4
+
+lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
+    inet 127.0.0.1 netmask 0xff000000
+    inet6 ::1 prefixlen 128
+
+$ ip addr                                      # ip address: modern way to show interfaces
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN
+    inet 127.0.0.1/8 scope host lo
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP
+    inet 192.168.1.100/24 brd 192.168.1.255 scope global eth0
+
+$ ip route                                     # show routing table (equivalent: netstat -r)
+default via 192.168.1.1 dev eth0
+192.168.1.0/24 dev eth0 proto kernel scope link src 192.168.1.100</code>
+
+- <code>en0</code> / <code>eth0</code>: physical or virtual network interface
+- <code>lo0</code> / <code>lo</code>: loopback interface (127.0.0.1) -- your own machine
+- <code>inet</code>: IPv4 address; <code>inet6</code>: IPv6 address
+- <code>ip</code> is the modern replacement; <code>ifconfig</code> is deprecated on Linux but still used on macOS
+
+### Remote Access -- <code>ssh</code>
+
+<code>ssh</code> (Secure Shell) creates an encrypted connection to a remote machine, giving you a command-line session as if you were sitting at that computer.
+
+<code>$ ssh alice@192.168.1.50                    # connect as user alice to IP 192.168.1.50
+alice@192.168.1.50's password:                # enter password (characters hidden)
+Welcome to Ubuntu 22.04 LTS
+alice@remote:~$                                # now you are on the remote machine
+$ exit                                         # close the ssh session
+
+$ ssh -p 2222 alice@server.example.com         # -p: connect on non-default port (not 22)
+$ ssh -i ~/.ssh/id_rsa alice@server.example.com # -i: use a specific identity file (key)
+$ ssh -v alice@server.example.com              # -v: verbose (debug connection issues)
+
+# SSH key setup (passwordless login):
+$ ssh-keygen -t ed25519 -C "alice@laptop"     # generate an SSH key pair
+$ ssh-copy-id alice@server.example.com         # copy public key to the server
+$ ssh alice@server.example.com                 # now connects without a password</code>
+
+- SSH uses port 22 by default; change with <code>-p</code> or configure in <code>~/.ssh/config</code>
+- Passwordless login with SSH keys is more secure and more convenient than passwords
+- <code>~/.ssh/config</code> can store hostnames, usernames, and keys for frequently accessed servers
+
+### File Transfer -- <code>scp</code> and <code>rsync</code>
+
+<code>scp</code> copies files over SSH. <code>rsync</code> synchronizes files and directories efficiently, transferring only the differences.
+
+<code>$ scp file.txt alice@server:/home/alice/                # copy file.txt to remote machine
+$ scp -r myproject/ alice@server:/home/alice/              # -r: copy directory recursively
+$ scp alice@server:/home/alice/data.csv ./                 # copy from remote to local
+
+$ rsync -av project/ alice@server:/home/alice/project/     # sync local to remote
+$ rsync -av alice@server:/home/alice/project/ ./project/   # sync remote to local
+$ rsync -av --delete project/ backup/                      # sync local directories, delete extras
+$ rsync -avz project/ alice@server:/home/alice/project/    # -z: compress during transfer (faster over slow links)</code>
+
+- <code>scp</code>: simple, encrypts data via SSH, good for one-time transfers
+- <code>rsync</code>: smarter -- only transfers changed parts of files, resumes interrupted transfers, preserves permissions and timestamps
+- <code>rsync -av</code>: archive mode (preserve everything) + verbose; the most common invocation
+- <code>/</code> on the source directory matters: <code>src/</code> copies contents, <code>src</code> copies the directory itself
+
+### Windows Networking Commands
+
+| Windows | Unix Equivalent | Purpose |
+|---------|----------------|---------|
+| <code>ipconfig</code> | <code>ifconfig</code> / <code>ip addr</code> | Show IP configuration |
+| <code>ping</code> | <code>ping</code> | Test reachability |
+| <code>tracert</code> | <code>traceroute</code> | Trace network path |
+| <code>netstat</code> | <code>netstat</code> / <code>ss</code> | Show connections and ports |
+| <code>nslookup</code> | <code>nslookup</code> / <code>dig</code> | DNS lookups |
+| <code>netsh</code> | <code>ip</code> / <code>ifconfig</code> | Advanced network configuration |
+| <code>curl</code> | <code>curl</code> | HTTP requests (built into Windows 10+) |
+| <code>ssh</code> | <code>ssh</code> | Remote shell (built into Windows 10+) |
+
+<code>C:\\> ipconfig                               # show all IP configurations
+C:\\> ipconfig /all                              # detailed information (MAC address, DHCP)
+C:\\> tracert google.com                         # trace the route packets take to google.com
+C:\\> nslookup example.com                       # look up IP address for a domain name
+C:\\> netsh interface ip show config             # show IP configuration via netsh</code>
+
+## Wiring It Together
+
+A realistic scenario: deploy a web application to a remote server, test it, and diagnose a port issue.
+
+<code>$ ssh alice@server.example.com                           # connect to the remote server
+alice@server:~$
+
+$ git clone https://github.com/alice/myapp.git               # clone the repository (on remote)
+$ cd myapp
+
+$ python -m http.server 8080 &                               # start a dev server on port 8080
+[1] 12345
+
+$ ss -tlnp | grep 8080                                       # verify the server is listening
+LISTEN   0   128   0.0.0.0:8080   0.0.0.0:*   users:(("python",pid=12345))
+
+$ curl -s http://localhost:8080 | head -3                    # test locally
+<!DOCTYPE html>
+<html>
+
+$ exit                                                        # disconnect from the remote
+
+$ ping server.example.com                                     # from your local machine, test reachability
+64 bytes from 203.0.113.50: icmp_seq=0 ttl=52 time=42.3 ms
+
+$ curl -s http://server.example.com:8080                      # try to access from browser via curl
+curl: (7) Failed to connect to server.example.com port 8080: Connection refused
+
+$ ssh alice@server.example.com                               # reconnect to investigate
+$ sudo netstat -tlnp | grep 8080                              # check with sudo (more accurate)
+tcp   0   0   127.0.0.1:8080   0.0.0.0:*   LISTEN   12345/python
+# The problem: server is listening only on 127.0.0.1 (localhost), not 0.0.0.0 (all interfaces)
+
+$ kill 12345                                                  # stop the server
+$ python -m http.server 0.0.0.0:8080 &                        # restart on all interfaces
+$ ss -tlnp | grep 8080
+LISTEN   0   128   0.0.0.0:8080   0.0.0.0:*   users:(("python",pid=12346))
+
+$ curl -s http://server.example.com:8080                      # now it works
+<!DOCTYPE html>
+
+$ rsync -av --delete dist/ alice@server:/var/www/html/       # deploy production build via rsync
+sending incremental file list
+./
+index.html
+bundle.js
+style.css
+
+sent 1.2M bytes  received 73 bytes  12.4K bytes/sec</code>
+`,
+          },
+          {
+            id: "ns-term-package",
+            title: "Package Managers",
+            shortDesc: "Homebrew (macOS), apt/dnf/pacman (Linux), winget/choco/scoop (Windows), and npm/pip as global tools.",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "Package managers automate installing, updating, and removing software from the command line",
+              "Linux distros use apt (Debian/Ubuntu), dnf (Fedora), or pacman (Arch) for system packages",
+              "Homebrew is the de facto package manager for macOS, installed separately",
+              "Windows has winget (built-in), Chocolatey, and Scoop as package managers",
+              "Language-specific tools (npm, pip, cargo) manage libraries for their ecosystems",
+              "Package managers handle dependencies automatically and verify software integrity via checksums"
+            ],
+            tags: ["package-managers", "homebrew", "apt", "npm"],
+            content: `
+## What's This?
+
+A package manager is a tool that automates installing, upgrading, configuring, and removing software. Instead of manually downloading an installer from a website, clicking through a wizard, and hoping it does not conflict with other software, you type a single command and the package manager handles everything: downloads the software, resolves dependencies (other software it needs), verifies integrity, and installs it to the correct location. Think of a package manager as an app store for the command line: you search for what you need, install it with one command, and the store keeps track of everything so you can update or remove it later.
+
+## The Big Picture
+
+Package managers are the gateway to the vast ecosystem of open-source software. Without them, you would spend hours manually compiling libraries and resolving dependency conflicts. They build on your understanding of the file system (they install files to standard locations) and permissions (many require root/sudo to install system-wide). There are two types: system package managers (apt, dnf, pacman, brew, winget) that install software for the entire OS, and language package managers (npm, pip, cargo, gem) that install libraries for a specific programming language. Knowing which tool to use for what task is an essential skill for every developer.
+
+## Core Ideas
+
+### Linux Package Managers
+
+Each Linux distribution has its own package manager. The commands are similar but the packages themselves are often incompatible between distributions.
+
+**apt (Debian, Ubuntu, Linux Mint, Pop!_OS)**
+
+<code>$ sudo apt update                           # refresh the list of available packages
+$ sudo apt install nginx                     # install nginx and its dependencies
+$ sudo apt remove nginx                      # remove nginx (keep config files)
+$ sudo apt purge nginx                       # remove nginx AND its configuration files
+$ sudo apt upgrade                           # upgrade all installed packages
+$ apt search "web server"                    # search for packages matching "web server"
+$ apt show nginx                             # show detailed information about a package</code>
+
+- <code>apt update</code> must be run before <code>apt install</code> to get the latest package list
+- <code>apt</code> replaced <code>apt-get</code> as the user-friendly frontend; both still work
+- Packages come from repositories listed in <code>/etc/apt/sources.list</code>
+
+**dnf (Fedora, RHEL, CentOS)**
+
+<code>$ sudo dnf install nginx                   # install a package
+$ sudo dnf remove nginx                      # remove a package
+$ sudo dnf update                            # upgrade all packages
+$ dnf search nginx                           # search for a package
+$ dnf info nginx                             # show package information</code>
+
+- <code>dnf</code> replaced <code>yum</code> as the default on Fedora and RHEL-based systems
+- Syntax is similar to <code>apt</code> but the package format is RPM instead of DEB
+
+**pacman (Arch Linux, Manjaro)**
+
+<code>$ sudo pacman -S nginx                      # -S: synchronize (install) a package
+$ sudo pacman -R nginx                       # -R: remove a package
+$ sudo pacman -Rns nginx                     # -Rns: remove + dependencies + config files
+$ sudo pacman -Syu                           # -Syu: synchronize + upgrade (full system update)
+$ pacman -Ss nginx                           # -Ss: search for packages matching "nginx"
+$ pacman -Qi nginx                           # -Qi: query package information</code>
+
+- <code>pacman</code> uses rolling releases: you install once, then <code>pacman -Syu</code> keeps everything current forever
+- Arch's package manager requires more manual involvement than apt or dnf
+
+### macOS: Homebrew
+
+Homebrew (brew) is the standard package manager for macOS. It is not preinstalled. Install it from <code>https://brew.sh</code> with a single command.
+
+<code>$ brew update                               # update brew itself and package list
+$ brew search nginx                          # search for a package (called a "formula")
+$ brew info nginx                            # show information about a formula
+$ brew install nginx                         # install a formula
+$ brew uninstall nginx                       # remove a formula
+$ brew upgrade                               # upgrade all installed formulae
+$ brew list                                  # list all installed formulae
+
+$ brew install --cask firefox                # install a GUI application (a "cask")
+$ brew search --casks                        # search for GUI applications
+$ brew list --cask                           # list installed casks
+
+$ brew doctor                                # diagnose common problems with your Homebrew setup</code>
+
+- Formulae: command-line tools and libraries (installed to <code>/usr/local</code> or <code>/opt/homebrew</code>)
+- Casks: GUI applications (installed to <code>/Applications</code>)
+- Homebrew does NOT require <code>sudo</code> -- it installs to a directory owned by your user
+
+### Windows Package Managers
+
+Windows has three main package managers, ranging from built-in to community-driven.
+
+**winget (built-in, Windows 10 1709+)**
+
+<code>C:\\> winget search nginx                   # search for a package
+C:\\> winget show nginx                      # show package details
+C:\\> winget install nginx                   # install a package
+C:\\> winget uninstall nginx                 # remove a package
+C:\\> winget upgrade --all                   # upgrade all installed packages</code>
+
+- Built into Windows, no installation needed
+- Packages come from the Microsoft Community Package Manifest Repository
+
+**Chocolatey**
+
+<code>C:\\> choco search nginx                    # search for a package
+C:\\> choco info nginx                       # show package information
+C:\\> choco install nginx                    # install a package (run as Administrator)
+C:\\> choco uninstall nginx                  # remove a package
+C:\\> choco upgrade all                      # upgrade all packages</code>
+
+- Requires installation: <code>Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))</code>
+- Packages are community-maintained; large ecosystem of Windows software
+
+**Scoop (user-friendly, no admin required)**
+
+<code>C:\\> scoop search nginx                    # search for a package (called a "bucket")
+C:\\> scoop install nginx                    # install to user directory (no admin needed)
+C:\\> scoop update *                         # update all installed packages
+C:\\> scoop bucket add extras                # add the "extras" bucket for more packages</code>
+
+- Installs to <code>C:\\Users\\USER\\scoop</code> -- no admin rights needed
+- Clean uninstall: no leftover registry entries or files
+- Smaller package selection than Chocolatey, but better curated for developer tools
+
+### Language-Specific Package Managers
+
+These install libraries for specific programming languages, not system software.
+
+<code>$ npm install -g typescript                # -g: install globally (available everywhere)
+$ npm install express                        # install locally to node_modules/ in current project
+
+$ pip install flask                          # install a Python package
+$ pip install --user pytest                  # --user: install for current user only (no sudo)
+$ pip install -r requirements.txt            # install all packages listed in a file
+
+$ cargo install ripgrep                      # install a Rust tool globally
+$ gem install jekyll                         # install a Ruby gem
+$ go install golang.org/x/tools/cmd/...      # install Go tools</code>
+
+- Global installs (<code>-g</code>, <code>--user</code>) make CLI tools available system-wide
+- Local installs add libraries to a specific project
+- Some language tools (like pip) may conflict with system packages; use virtual environments (<code>venv</code> for Python) or <code>nvm</code> for Node to isolate
+
+### Package Manager Comparison
+
+| Manager | OS | Admin Required | Install Command | Package Format |
+|---------|-----|---------------|----------------|----------------|
+| apt | Debian/Ubuntu | Yes (<code>sudo</code>) | <code>apt install</code> | .deb |
+| dnf | Fedora/RHEL | Yes (<code>sudo</code>) | <code>dnf install</code> | .rpm |
+| pacman | Arch | Yes (<code>sudo</code>) | <code>pacman -S</code> | .pkg.tar.zst |
+| brew | macOS | No | <code>brew install</code> | Source/HOMEBREW |
+| winget | Windows | Sometimes | <code>winget install</code> | Various (.exe, .msi) |
+| choco | Windows | Yes (Admin) | <code>choco install</code> | Various (.nupkg) |
+| scoop | Windows | No | <code>scoop install</code> | Portable (.exe) |
+
+## Wiring It Together
+
+A realistic scenario: set up a development environment on a freshly installed machine.
+
+<code># On macOS:
+$ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+$ brew update
+
+$ brew install git node python go             # install language runtimes and tools
+$ brew install --cask visual-studio-code      # install VS Code GUI app
+
+$ brew install ripgrep fd fzf bat             # install modern CLI tools
+
+$ node --version                              # verify installations
+v20.11.0
+
+$ npm install -g typescript eslint prettier   # install global Node.js tools
+
+$ pip install --user pytest black flake8      # install global Python tools
+
+$ brew list                                   # see everything installed
+autoconf  git  node  python  go  ripgrep  fd  fzf  bat
+
+$ brew update && brew upgrade                 # keep everything up to date</code>
+
+<code># On Ubuntu:
+$ sudo apt update
+
+$ sudo apt install -y build-essential git curl wget   # essential dev tools
+
+$ curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+$ sudo apt install -y nodejs
+
+$ sudo apt install -y python3 python3-pip
+
+$ sudo apt install -y nginx postgresql redis-server   # install services
+
+$ sudo apt upgrade                                     # update everything
+
+$ sudo apt autoremove                                  # clean up unused dependencies</code>
+
+<code># On Windows:
+C:\\> winget install Microsoft.VisualStudioCode
+C:\\> winget install OpenJS.NodeJS
+C:\\> winget install Git.Git
+C:\\> winget install Python.Python.3.12
+
+C:\\> winget upgrade --all                             # update all winget packages</code>
+`,
+          },
+          {
+            id: "ns-term-scripting",
+            title: "Shell Scripting",
+            shortDesc: "Variables, conditionals, loops, functions, exit codes, shebang, and debugging with set -x.",
+            difficulty: "intermediate",
+            readTimeMin: 18,
+            keyPoints: [
+              "A shell script is a text file containing shell commands, executed line by line by the shell",
+              "The shebang (#!/bin/bash) tells the system which interpreter to use to run the script",
+              "Variables store data, accessed with $ prefix; quotes determine how spaces and special chars are handled",
+              "Conditionals (if/elif/else) and loops (for, while) control the flow of script execution",
+              "Functions group commands for reuse; exit codes signal success (0) or failure (non-zero)",
+              "set -x prints every command before executing it, invaluable for debugging"
+            ],
+            tags: ["shell-scripting", "bash", "automation", "scripting"],
+            content: `
+## What's This?
+
+Shell scripting is writing a series of shell commands in a text file and executing them as a program. Instead of typing commands one by one, you write them all in a file, make the file executable, and run it. A shell script is like a recipe: a list of instructions that the shell follows step by step. Scripting exists because manual repetition is error-prone -- any task you do more than once (deploying code, backing up files, setting up environments) should be automated with a script.
+
+## The Big Picture
+
+Shell scripting is where you graduate from typing commands to writing programs. It builds on everything else in the terminal: navigation, file operations, text processing, pipes, and process management are the vocabulary, and scripting is how you write sentences, paragraphs, and stories with them. Shell scripts are the glue that connects other tools and languages. Understanding shell scripting makes you self-sufficient: you can automate your workflow, write deployment pipelines, and solve problems that no GUI tool exists for. It connects to environment configuration (scripts run in a specific environment), package managers (scripts install and configure software), and CI/CD systems (scripts define build and test steps).
+
+## Core Ideas
+
+### The Shebang
+
+The first line of a script starts with <code>#!</code> (shebang) followed by the path to the interpreter that should execute the script.
+
+<code>#!/bin/bash
+echo "Hello, World!"</code>
+
+- <code>#!/bin/bash</code>: use the Bash shell to execute this script
+- <code>#!/usr/bin/env python3</code>: use the Python interpreter found in the user's PATH
+- The script must be executable: <code>chmod +x script.sh</code>
+- Run it with <code>./script.sh</code> (the <code>./</code> tells the shell to look in the current directory)
+
+### Variables
+
+Variables store data. Assign with <code>=</code> (no spaces!), access with <code>$</code>.
+
+<code>#!/bin/bash
+NAME="Alice"                                 # assign a string variable
+echo "Hello, \$NAME"                          # access with $NAME (use quotes to handle spaces)
+echo "Hello, \${NAME}"                        # curly braces are optional but clarify boundaries
+
+COUNT=42                                     # assign a number (still stored as string)
+echo "The count is \$COUNT"
+
+# Quoting matters:
+echo \$NAME                                  # unquoted: splits on spaces
+echo "\$NAME"                                 # double-quoted: keeps as one word, expands variables
+echo '\$NAME'                                 # single-quoted: literal, no expansion
+
+# Command substitution:
+DATE=\$(date)                                # run date command and store output
+echo "Today is \$DATE"
+
+DATE=\`date\`                                  # old-style backtick syntax (avoid, harder to nest)
+
+# Arithmetic:
+echo \$((5 + 3))                               # $(( expr )) evaluates arithmetic
+TOTAL=\$((COUNT + 10))
+echo \$TOTAL</code>
+
+- Variable names are case-sensitive and conventionally uppercase for constants
+- Always quote variables (<code>"\$VAR"</code>) to prevent word splitting and glob expansion
+- <code>\$(command)</code> captures command output into a variable
+
+### Conditionals
+
+Conditionals control whether a block of code runs based on a test.
+
+<code>#!/bin/bash
+SCORE=85
+
+# if / elif / else / fi
+if [ "\$SCORE" -ge 90 ]; then                 # -ge: greater than or equal
+    echo "Grade: A"
+elif [ "\$SCORE" -ge 80 ]; then               # -ge: greater than or equal
+    echo "Grade: B"
+else
+    echo "Grade: C"
+fi
+
+# File tests:
+FILE="data.txt"
+if [ -f "\$FILE" ]; then                       # -f: file exists
+    echo "\$FILE exists"
+elif [ -d "\$FILE" ]; then                     # -d: is a directory
+    echo "\$FILE is a directory"
+fi
+
+# String comparison:
+if [ "\$NAME" = "Alice" ]; then                # =: string equality (POSIX)
+    echo "Hello Alice"
+fi
+
+# AND / OR:
+if [ -f "\$FILE" ] && [ -r "\$FILE" ]; then     # &&: logical AND
+    echo "File exists and is readable"
+fi
+
+# Modern double-bracket (Bash/Zsh only, NOT POSIX):
+if [[ "\$NAME" == "Alice" && \$COUNT -gt 0 ]]; then
+    echo "Alice has a positive count"
+fi</code>
+
+| Test | Meaning |
+|------|---------|
+| <code>[ -f file ]</code> | True if file exists and is a regular file |
+| <code>[ -d dir ]</code> | True if dir exists and is a directory |
+| <code>[ -x file ]</code> | True if file is executable |
+| <code>[ -z string ]</code> | True if string is empty |
+| <code>[ -n string ]</code> | True if string is non-empty |
+| <code>[ a = b ]</code> | String equality |
+| <code>[ a != b ]</code> | String inequality |
+| <code>[ n1 -eq n2 ]</code> | Numeric equality |
+| <code>[ n1 -lt n2 ]</code> | Numeric less than |
+| <code>[ n1 -gt n2 ]</code> | Numeric greater than |
+
+Note: Spaces around brackets are mandatory. <code>["text"]</code> is an error; <code>[ "text" ]</code> is correct.
+
+### Loops
+
+Loops repeat a block of code for each item in a list or while a condition is true.
+
+<code>#!/bin/bash
+
+# For loop over a list:
+for FRUIT in apple banana cherry; do
+    echo "I like \$FRUIT"
+done
+
+# For loop with brace expansion:
+for i in {1..5}; do
+    echo "Number \$i"
+done
+
+# For loop over command output:
+for FILE in *.txt; do
+    echo "Processing \$FILE"
+    wc -l "\$FILE"
+done
+
+# While loop (read a file line by line):
+while IFS= read -r LINE; do
+    echo "Line: \$LINE"
+done < input.txt
+
+# While loop with counter:
+COUNT=1
+while [ "\$COUNT" -le 5 ]; do
+    echo "Count: \$COUNT"
+    COUNT=\$((COUNT + 1))
+done
+
+# break and continue:
+for i in {1..10}; do
+    if [ "\$i" -eq 5 ]; then
+        break                                    # exit the loop completely
+    fi
+    if [ "\$i" -eq 3 ]; then
+        continue                                 # skip to next iteration
+    fi
+    echo "i = \$i"
+done</code>
+
+- <code>for VAR in LIST; do ... done</code>: iterate over items
+- <code>while CONDITION; do ... done</code>: repeat while condition is true
+- <code>break</code>: exit the loop; <code>continue</code>: skip to the next iteration
+
+### Functions
+
+Functions group commands under a name for reuse within a script.
+
+<code>#!/bin/bash
+
+# Define a function:
+greet() {
+    local NAME=\$1                              # $1: first argument to the function
+    echo "Hello, \$NAME!"
+}
+
+# Function with return value (exit code):
+is_even() {
+    local NUM=\$1
+    if [ \$((NUM % 2)) -eq 0 ]; then
+        return 0                                 # 0 = success (true)
+    else
+        return 1                                 # non-zero = failure (false)
+    fi
+}
+
+# Call functions:
+greet "Alice"                                    # Output: Hello, Alice!
+greet "Bob"                                      # Output: Hello, Bob!
+
+if is_even 42; then
+    echo "42 is even"
+fi
+
+# Function with output captured:
+get_date() {
+    echo "\$(date +%Y-%m-%d)"
+}
+TODAY=\$(get_date)
+echo "Today is \$TODAY"</code>
+
+- <code>local VAR</code>: declare a variable local to the function (does not pollute global scope)
+- <code>\$1</code>, <code>\$2</code>, etc.: positional arguments to the function
+- <code>\$@</code>: all arguments as separate words; <code>\$*</code>: all arguments as a single word
+- <code>return</code>: set the exit code (0 = success, any other = failure)
+- <code>echo</code> output from a function can be captured with <code>\$(func)</code>
+
+### Exit Codes
+
+Every command returns an exit code: 0 means success, any non-zero value means failure.
+
+<code>#!/bin/bash
+
+ls /existing/path
+echo \$?                                        # $? holds the exit code of the last command (0)
+
+ls /nonexistent/path
+echo \$?                                        # non-zero (typically 1 or 2)
+
+# Use exit codes in conditionals:
+if mkdir /tmp/testdir; then                    # if mkdir succeeds (exit 0)
+    echo "Directory created"
+else
+    echo "Failed to create directory"
+    exit 1                                      # exit the script with an error code
+fi
+
+# Set custom exit code for the script:
+if [ ! -f "config.txt" ]; then
+    echo "Error: config.txt not found" >&2     # >&2: write error message to stderr
+    exit 1
+fi
+
+echo "Config found"
+exit 0                                         # 0 = script succeeded</code>
+
+- <code>\$?</code>: exit code of the last executed command
+- <code>exit N</code>: exit the script with code N
+- Convention: 0 = success, 1 = general error, 2 = misuse, 127 = command not found
+
+### Debugging
+
+<code>set -x</code> prints every command and its arguments before executing it -- the most useful debugging tool.
+
+<code>#!/bin/bash
+set -x                                         # enable debug mode (print each command)
+
+NAME="Alice"
+echo "Hello, \$NAME"
+
+set +x                                         # disable debug mode
+
+echo "This line is not traced"</code>
+
+<code>$ ./script.sh                               # run normally
++ NAME="Alice"
++ echo "Hello, Alice"
+Hello, Alice
++ set +x
+This line is not traced</code>
+
+- <code>set -x</code>: print commands as they execute (prefix: <code>+</code>)
+- <code>set -e</code>: exit immediately if any command fails (non-zero exit code)
+- <code>set -u</code>: treat unset variables as an error
+- <code>set -o pipefail</code>: fail if ANY command in a pipeline fails
+- Common safety header: <code>set -euo pipefail</code> at the top of scripts
+
+## Wiring It Together
+
+A realistic scenario: a backup script that compresses a directory, checks for errors, and logs the result.
+
+<code>#!/bin/bash
+set -euo pipefail                               # safety: exit on error, undefined vars, pipe failures
+
+# Configuration
+SOURCE_DIR="/home/alice/projects"
+BACKUP_DIR="/home/alice/backups"
+TIMESTAMP=\$(date +%Y%m%d_%H%M%S)               # e.g., 20250312_103000
+BACKUP_FILE="project_backup_\${TIMESTAMP}.tar.gz"
+LOG_FILE="backup.log"
+
+# Function: log a message with a timestamp
+log() {
+    local MSG="\$1"
+    echo "\$(date '+%Y-%m-%d %H:%M:%S') - \$MSG" >> "\$LOG_FILE"
+}
+
+# Function: check exit code and log
+check_status() {
+    if [ "\$?" -eq 0 ]; then
+        log "SUCCESS: \$1"
+    else
+        log "ERROR: \$1"
+        exit 1
+    fi
+}
+
+# Main script
+log "Backup started"
+
+# Check source directory exists
+if [ ! -d "\$SOURCE_DIR" ]; then
+    log "ERROR: Source directory \$SOURCE_DIR does not exist"
+    exit 1
+fi
+
+# Create backup directory if it does not exist
+mkdir -p "\$BACKUP_DIR"
+check_status "Creating backup directory"
+
+# Create the compressed archive
+tar -czf "\${BACKUP_DIR}/\${BACKUP_FILE}" -C "\$(dirname "\$SOURCE_DIR")" "\$(basename "\$SOURCE_DIR")"
+check_status "Creating backup archive"
+
+# Verify the backup file exists and has content
+if [ -f "\${BACKUP_DIR}/\${BACKUP_FILE}" ] && [ -s "\${BACKUP_DIR}/\${BACKUP_FILE}" ]; then
+    FILE_SIZE=\$(stat -f%z "\${BACKUP_DIR}/\${BACKUP_FILE}" 2>/dev/null || stat -c%s "\${BACKUP_DIR}/\${BACKUP_FILE}" 2>/dev/null)
+    log "Backup file created: \${BACKUP_FILE} (\${FILE_SIZE} bytes)"
+else
+    log "ERROR: Backup file is missing or empty"
+    exit 1
+fi
+
+# Clean up old backups (keep last 7)
+log "Cleaning up backups older than 7 days"
+find "\$BACKUP_DIR" -name "project_backup_*.tar.gz" -type f -mtime +7 -delete
+check_status "Cleaning old backups"
+
+log "Backup completed successfully"
+echo "Backup complete: \${BACKUP_DIR}/\${BACKUP_FILE}"</code>
+`,
+          },
+          {
+            id: "ns-term-env",
+            title: "Environment & Dotfiles",
+            shortDesc: "PATH, env vars, .bashrc/.zshrc/.profile, aliases, functions in dotfiles, and managing config with dotbot/chezmoi.",
+            difficulty: "advanced",
+            readTimeMin: 14,
+            keyPoints: [
+              "Environment variables store configuration values that programs read at startup",
+              "PATH is the most important env var: it lists directories where the shell looks for executables",
+              "Dotfiles are configuration files (hidden, starting with .) that personalize shell behavior",
+              ".bashrc (bash) and .zshrc (zsh) run every time you open a new interactive shell",
+              "Aliases create shortcuts for commands; functions in dotfiles create reusable logic",
+              "Dotbot and chezmoi automate syncing dotfiles across multiple machines via Git"
+            ],
+            tags: ["environment", "dotfiles", "configuration", "shell-config"],
+            content: `
+## What's This?
+
+Environment variables are named values that store configuration information for programs and the shell itself. When you start a program, it inherits the environment from its parent process, so variables like <code>PATH</code>, <code>HOME</code>, and <code>EDITOR</code> are available to every program you run. Dotfiles are configuration files in your home directory whose names start with a dot (.), making them hidden by default. Think of environment variables as a bulletin board where programs post and read shared notes, and dotfiles as your personal preference menu for the shell -- they control how your prompt looks, what aliases you have, and what programs are available to run.
+
+## The Big Picture
+
+Environment and dotfiles define YOUR shell experience. Two developers can sit at the same computer and have completely different environments based on their dotfiles and env vars. These configs build on everything you have learned: aliases are shortcuts for commands, functions are scripts that live in your shell, PATH determines which programs are available (connecting to package managers that install them), and prompt customization (connecting to Shell Basics). Mastering your environment transforms the shell from a default, impersonal tool into a personalized power tool. Dotfile management tools connect to Git (version control your config) and scripting (automate setup on new machines).
+
+## Core Ideas
+
+### Environment Variables
+
+Environment variables are key-value pairs available to all processes started from the shell.
+
+<code>$ echo \$HOME                                # print the value of HOME
+/Users/alice
+
+$ echo \$SHELL                                # print the path to your shell
+/bin/zsh
+
+$ echo \$PATH                                  # print PATH (colon-separated directories)
+/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+$ printenv                                    # print ALL environment variables
+HOME=/Users/alice
+SHELL=/bin/zsh
+PATH=/usr/local/bin:/usr/bin:/bin:...
+USER=alice
+LANG=en_US.UTF-8
+
+# Set a variable (only affects current shell):
+MY_VAR="hello"
+export MY_VAR                                 # export makes it available to child processes
+
+# Set and export in one step:
+export MY_VAR="hello"
+
+# Unset a variable:
+unset MY_VAR
+
+# Use env vars in commands:
+echo "User: \$USER, Home: \$HOME"               # expand env vars with $ prefix
+export EDITOR=nano                             # tell programs (like git) what editor to use
+export LANG=en_US.UTF-8                        # set language and encoding</code>
+
+Common environment variables:
+
+| Variable | Purpose | Typical Value |
+|----------|---------|---------------|
+| <code>HOME</code> | Your home directory | <code>/Users/alice</code> |
+| <code>PATH</code> | Directories to search for executables | <code>/usr/local/bin:/usr/bin:/bin</code> |
+| <code>SHELL</code> | Your default shell | <code>/bin/zsh</code> |
+| <code>USER</code> | Your username | <code>alice</code> |
+| <code>PWD</code> | Current working directory | <code>/Users/alice/projects</code> |
+| <code>LANG</code> | Locale settings | <code>en_US.UTF-8</code> |
+| <code>EDITOR</code> | Default text editor | <code>vim</code> or <code>nano</code> |
+| <code>TERM</code> | Terminal type | <code>xterm-256color</code> |
+
+### PATH -- The Most Important Variable
+
+<code>PATH</code> lists directories (separated by <code>:</code>) where the shell looks when you type a command. When you type <code>node</code>, the shell checks each PATH directory in order and runs the first matching executable.
+
+<code>$ echo \$PATH
+/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+$ which node                                  # find which node executable is in PATH
+/usr/local/bin/node
+
+$ which -a node                               # show ALL node executables in PATH order
+/usr/local/bin/node
+/usr/bin/node
+
+# Add a directory to PATH temporarily:
+export PATH="/custom/bin:\$PATH"                # prepend: checked first
+export PATH="\$PATH:/custom/bin"                # append: checked last
+
+# Add to PATH permanently (in .bashrc or .zshrc):
+export PATH="\$HOME/.local/bin:\$PATH"</code>
+
+- Order matters: the first match in PATH wins
+- Prepend directories (add to front) to override system-installed tools with custom versions
+- Common directories to add: <code>~/.local/bin</code> (pip --user), <code>~/.cargo/bin</code> (Rust), <code>./node_modules/.bin</code> (Node.js)
+
+### Dotfiles
+
+Dotfiles are hidden configuration files in your home directory. They configure the shell and other programs.
+
+| File | Shell | When It Runs |
+|------|-------|-------------|
+| <code>~/.bashrc</code> | Bash | Every new interactive non-login shell |
+| <code>~/.bash_profile</code> | Bash | Login shell (first shell after login) |
+| <code>~/.profile</code> | Bash/Zsh | Login shell (fallback if bash_profile absent) |
+| <code>~/.zshrc</code> | Zsh | Every new interactive shell |
+| <code>~/.zshenv</code> | Zsh | Every Zsh invocation (even non-interactive) |
+| <code>~/.zprofile</code> | Zsh | Login shell |
+| <code>~/.config/fish/config.fish</code> | Fish | Every Fish shell start |
+| <code>~/.gitconfig</code> | Git | Every Git command |
+| <code>~/.ssh/config</code> | SSH | Every SSH connection |
+| <code>~/.vimrc</code> | Vim | Every Vim start |
+| <code>~/.tmux.conf</code> | Tmux | Every Tmux session |
+
+**Loading order for Bash login shell:** <code>~/.bash_profile</code> -> <code>~/.bashrc</code> (often sourced from within bash_profile) -> <code>~/.profile</code>
+
+**Loading order for Zsh:** <code>~/.zshenv</code> -> <code>~/.zshrc</code> (interactive) -> <code>~/.zprofile</code> (login)
+
+### Aliases
+
+Aliases are shortcuts for longer commands. Define them in your dotfiles.
+
+<code># Basic aliases:
+alias ll='ls -lh'                              # ll = ls -lh (long format, human-readable)
+alias la='ls -a'                               # la = ls -a (show hidden files)
+alias gs='git status'                          # gs = git status
+alias gc='git commit'                          # gc = git commit
+alias ..='cd ..'                                # .. = go up one directory
+alias ...='cd ../..'                            # ... = go up two directories
+
+# Override defaults with safety:
+alias cp='cp -i'                                # always prompt before overwriting
+alias mv='mv -i'                                # always prompt before overwriting
+alias rm='rm -i'                                # always prompt before deleting
+
+# View all defined aliases:
+alias
+
+# Use an alias with sudo (needs full expansion):
+sudo ls                                        # sudo does NOT expand aliases by default
+# Workaround: alias sudo='sudo ' (note the trailing space enables alias expansion after sudo)</code>
+
+### Functions in Dotfiles
+
+For logic more complex than a simple shortcut, define a function in your dotfiles.
+
+<code># ~/.zshrc or ~/.bashrc -- a function that creates a directory and enters it
+mkcd() {
+    mkdir -p "\$1" && cd "\$1"
+}
+
+# A function to extract any archive type:
+extract() {
+    if [ -f "\$1" ]; then
+        case "\$1" in
+            *.tar.gz) tar -xzf "\$1" ;;
+            *.zip)    unzip "\$1" ;;
+            *.rar)    unrar x "\$1" ;;
+            *)        echo "Unknown archive type" ;;
+        esac
+    else
+        echo "File not found: \$1"
+    fi
+}
+
+# A function that finds and replaces in multiple files:
+greplace() {
+    local SEARCH="\$1"
+    local REPLACE="\$2"
+    local FILES="\${3:-*.txt}"
+    sed -i "s/\$SEARCH/\$REPLACE/g" \$FILES
+}
+
+# Source (reload) dotfiles after editing:
+alias reload='source ~/.zshrc'                  # or source ~/.bashrc</code>
+
+### Managing Dotfiles With Tools
+
+Tracking dotfiles in Git lets you sync your configuration across machines. Two popular tools automate this:
+
+**chezmoi** -- manages dotfiles as a Git repo with advanced template support:
+
+<code>$ brew install chezmoi                        # install chezmoi
+$ chezmoi init --apply                         # create ~/.local/share/chezmoi and apply
+$ chezmoi add ~/.zshrc                          # add a dotfile to chezmoi management
+$ chezmoi edit ~/.zshrc                         # edit the managed version
+$ chezmoi diff                                  # show pending changes
+$ chezmoi apply                                 # apply changes to actual dotfiles
+$ chezmoi cd                                    # go to chezmoi source directory
+$ git remote add origin git@github.com:alice/dotfiles.git
+$ git push                                      # push to GitHub</code>
+
+**dotbot** -- YAML-based dotfile manager often paired with a Git repo:
+
+<code>$ git init ~/dotfiles                           # create a bare Git repo
+$ vim ~/dotfiles/install.conf.yaml              # configure what to link
+- defaults:
+    link:
+      relink: true
+      create: true
+- link:
+    ~/.zshrc: .zshrc
+    ~/.gitconfig: gitconfig
+    ~/.config/nvim: nvim
+- shell:
+    - [git submodule update --init, Installing submodules]
+
+$ ~/dotfiles/install                             # run the installer</code>
+
+## Wiring It Together
+
+A realistic scenario: create a personalized shell environment from scratch.
+
+<code># ~/.zshrc -- a well-organized zsh configuration file
+
+# ── Safety ──
+alias cp='cp -i'
+alias mv='mv -i'
+alias rm='rm -i'
+
+# ── Navigation ──
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ~='cd ~'
+
+mkcd() {
+    mkdir -p "\$1" && cd "\$1"
+}
+
+# ── PATH ──
+export PATH="\$HOME/.local/bin:\$PATH"               # pip --user installs
+export PATH="\$HOME/.cargo/bin:\$PATH"                # Rust/Cargo tools
+export PATH="\$HOME/go/bin:\$PATH"                    # Go tools
+export PATH="\$HOME/.npm-global/bin:\$PATH"           # npm global installs
+
+# ── Git shortcuts ──
+alias gs='git status'
+alias gc='git commit'
+alias gp='git push'
+alias gl='git log --oneline --graph --all'
+alias gd='git diff'
+
+# ── Development ──
+alias serve='python3 -m http.server 8000'            # quick HTTP server
+alias findport='lsof -i :'                            # usage: findport 3000
+
+# ── Environment ──
+export EDITOR="code --wait"                            # VS Code as default editor
+export LANG="en_US.UTF-8"
+export CLICOLOR=1                                      # enable colors in terminal
+export LS_COLORS="di=1;34:ln=36:so=32:pi=33:ex=31"    # customize ls colors
+
+# ── Prompt (minimal, with git branch) ──
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats '(%b) '
+PROMPT='%F{green}%n@%m%f %F{blue}%~%f \${vcs_info_msg_0_}%F{red}%#%f '
+
+# ── Plugins (Oh My Zsh) ──
+# If using oh-my-zsh, uncomment:
+# ZSH_THEME="robbyrussell"
+# plugins=(git docker node npm history)
+# source \$ZSH/oh-my-zsh.sh
+
+# ── Reload ──
+alias reload='exec zsh'                                # restart shell to apply changes</code>
+`,
+          },
+          {
+            id: "ns-term-modern",
+            title: "Modern CLI Tools",
+            shortDesc: "fzf, bat, ripgrep, fd, jq, yq, httpie, tmux, zoxide, starship, and lazygit.",
+            difficulty: "advanced",
+            readTimeMin: 16,
+            keyPoints: [
+              "Modern CLI tools replace classic Unix tools with faster, more user-friendly alternatives",
+              "bat (cat with syntax highlighting), ripgrep (fast grep), and fd (fast find) are written in Rust",
+              "fzf provides interactive fuzzy finding that can be piped into any command",
+              "jq and yq process JSON and YAML from the command line, essential for API and config work",
+              "tmux is a terminal multiplexer that manages multiple shells in one window with sessions",
+              "zoxide learns your most-used directories; starship provides a fast, customizable prompt"
+            ],
+            tags: ["modern-cli", "developer-tools", "productivity", "rust-tools"],
+            content: `
+## What's This?
+
+Modern CLI tools are newer, faster, and more feature-rich replacements for the classic Unix commands. Over the last decade, a renaissance in command-line tooling (largely driven by the Rust language) has produced drop-in replacements that are often 5-10x faster, have better defaults, and provide features (syntax highlighting, interactive search, JSON output) that the originals lack. Think of this as upgrading from a flip phone to a smartphone: the core function (making calls) is the same, but everything about the experience is better. These tools exist because the old tools were designed for 1970s terminals and hardware constraints; modern tools leverage today's multi-core CPUs, SSDs, and 24-bit color terminals.
+
+## The Big Picture
+
+Modern CLI tools make your terminal sessions faster, more pleasant, and more productive. They build on everything you have learned: they are replacements for commands you already know (cat, grep, find, cd, ls), but with dramatically better UX. They connect to scripting (you use them in pipelines and scripts just like the originals), environment configuration (tools like starship replace your prompt, zoxide replaces cd), and package managers (you install them all with brew, apt, cargo, or npm). Adopting these tools is one of the highest-leverage investments you can make in your terminal productivity.
+
+## Core Ideas
+
+### Better cat -- <code>bat</code>
+
+<code>bat</code> is a <code>cat</code> clone with syntax highlighting, Git integration, and line numbers.
+
+<code>$ bat script.py                              # display file with syntax highlighting
+$ bat --show-all script.py                    # -A: show non-printable characters (like cat -A)
+$ bat -n script.py                            # -n: show line numbers (default)
+$ bat README.md --paging=never                # disable pager (cat behavior)
+
+$ bat -l python script.py                     # force language for syntax highlighting
+$ bat --theme=Dracula script.py               # change color theme
+
+$ bat -A file.zip                             # show binary file as hex (cat cannot do this)
+$ bat diff.patch                              # syntax-highlighted diff output</code>
+
+- <code>bat</code> pipes to <code>less</code> by default for long files (quit with <code>q</code>)
+- Integrates with other tools: <code>bat | grep pattern</code> still works
+- Install: <code>brew install bat</code>, <code>apt install bat</code> (package may be named <code>batcat</code> on Debian)
+
+### Better grep -- <code>ripgrep</code> (rg)
+
+<code>ripgrep</code> recursively searches for patterns in files. It is faster than <code>grep -r</code> because it respects .gitignore, skips binary files, and uses parallel search.
+
+<code>$ rg "function" src/                         # search for "function" in all files under src/
+$ rg -i "error" --type js                     # -i: case-insensitive, --type: only .js files
+$ rg -c "TODO" src/                            # -c: count matches per file
+$ rg -l "main"                                 # -l: list only filenames with matches
+$ rg -n "class" lib/                           # -n: show line numbers (default)
+$ rg "console\\.log" --glob '!*.min.js'        # --glob: exclude minified files
+$ rg -r "FIXED" "FIXME"                        # -r: replace matches (like sed but faster)
+
+$ rg --files                                   # list all files in a directory (like find . -type f)
+$ rg --type-list                               # list all supported file types</code>
+
+- <code>rg</code> searches the current directory by default (no need for <code>-r</code>)
+- Automatically respects <code>.gitignore</code> -- only searches files you care about
+- Install: <code>brew install ripgrep</code>, <code>apt install ripgrep</code>
+
+### Better find -- <code>fd</code>
+
+<code>fd</code> is a faster, more intuitive replacement for <code>find</code> with sensible defaults.
+
+<code>$ fd "pattern"                              # find files/directories matching "pattern"
+$ fd ".ts$" src/                              # find all TypeScript files in src/
+$ fd -e py                                    # -e: filter by extension (.py files)
+$ fd -x wc -l                                 # -x: execute a command on each result
+$ fd -X vim                                   # -X: execute once with all results as args
+$ fd -H "secret"                              # -H: search hidden files and directories
+$ fd -t d "node_modules"                      # -t d: only directories
+$ fd -t f -s "main"                           # -t f: only files; -s: case-sensitive
+
+$ fd -e jpg -x convert {} {.}.png \;          # convert all jpg to png using imagemagick</code>
+
+- <code>fd</code> defaults to case-insensitive search and ignores hidden/gitignored files
+- Install: <code>brew install fd</code>, <code>apt install fd-find</code>
+
+### Fuzzy Finder -- <code>fzf</code>
+
+<code>fzf</code> is an interactive fuzzy finder that filters a list and lets you select items. It can pipe into any command.
+
+<code>$ cat filelist.txt | fzf                    # interactively filter and select from a list
+
+$ find . -type f | fzf                        # pick a file from the search results
+
+$ fzf --preview 'bat {}'                      # show preview of selected file
+
+# CTRL+T in shell: paste selected file/directory path (if fzf is sourced)
+# CTRL+R in shell: search command history interactively
+# ALT+C in shell: cd into selected directory
+
+# Integration examples:
+$ vim $(fzf)                                  # use fzf to pick a file to open in vim
+$ kill -9 $(ps aux | fzf | awk '{print \$2}') # fzf pick a process to kill
+$ cd $(find . -type d | fzf)                  # fzf pick a directory to enter
+
+# Git integration:
+$ git branch | fzf | xargs git checkout       # fuzzy switch git branches
+$ git log --oneline | fzf | awk '{print \$1}' | xargs git show  # pick a commit to view</code>
+
+- <code>fzf</code> is not a replacement for an existing command; it is a new interaction paradigm
+- Source <code>$(brew --prefix)/opt/fzf/shell/completion.zsh</code> in your .zshrc for key bindings
+- Install: <code>brew install fzf</code>, <code>apt install fzf</code>
+
+### JSON Processor -- <code>jq</code>
+
+<code>jq</code> is like <code>sed</code> for JSON: it filters, transforms, and extracts data from JSON structures.
+
+<code>$ curl -s https://api.github.com/users/octocat | jq '.'       # pretty-print JSON
+
+$ curl -s https://api.github.com/users/octocat | jq '.name'    # extract a field
+"The Octocat"
+
+$ curl -s https://api.github.com/users/octocat | jq '.id'      # extract numeric field
+1
+
+$ curl -s https://api.github.com/repos/octocat/Hello-World | jq '.owner.login'
+"octocat"
+
+$ cat data.json | jq '.items[] | {name: .name, price: .price}'  # transform: extract specific fields
+
+$ cat data.json | jq '[.items[] | select(.price > 10)]'         # filter: items with price > 10
+
+$ cat data.json | jq '.items | length'                          # count items
+
+$ jq -r '.name' file.json                                       # -r: raw output (no quotes)</code>
+
+- <code>jq</code> uses a powerful query language; <code>.</code> is the current object, <code>.field</code> accesses properties
+- <code>[]</code> iterates over arrays; <code>select()</code> filters; <code>{}</code> constructs new objects
+- Install: <code>brew install jq</code>, <code>apt install jq</code>
+
+### YAML Processor -- <code>yq</code>
+
+<code>yq</code> is <code>jq</code> for YAML files (also handles JSON, XML, CSV, TOML).
+
+<code>$ yq '.name' config.yaml                     # extract a field from YAML
+my-app
+
+$ yq '.dependencies' package.yaml              # extract a nested map
+
+$ yq eval '.version = "2.0.0"' -i config.yaml  # update a value in-place
+
+$ yq '.services.web.image' docker-compose.yml   # navigate nested YAML
+
+$ yq -o json config.yaml                       # convert YAML to JSON
+{"name": "my-app", "version": "2.0.0"}
+
+$ yq -p xml -o yaml data.xml                   # convert XML to YAML</code>
+
+- Install: <code>brew install yq</code>, or <code>pip install yq</code> (note: multiple yq implementations exist; the Go version by Mike Farah is most common)
+
+### HTTP Client -- <code>httpie</code>
+
+<code>httpie</code> is a user-friendly HTTP client with colored output, JSON support, and intuitive syntax.
+
+<code>$ http https://api.github.com/users/octocat              # GET request with colored JSON output
+
+$ http POST https://httpbin.org/post name=Alice age=29     # POST with form data
+
+$ http PUT https://httpbin.org/put name=Bob                # PUT request
+
+$ http DELETE https://httpbin.org/delete                   # DELETE request
+
+$ http https://api.example.com Authorization:"Bearer TOKEN"  # add a header
+
+$ http POST https://httpbin.org/post < data.json            # send file contents as body
+
+$ https -h https://google.com                              # -h: show only headers
+
+$ http http://localhost:3000/api/users                      # test local APIs</code>
+
+- Intuitive syntax: <code>http METHOD URL key=value</code>
+- Automatically formats JSON responses with syntax highlighting
+- Install: <code>brew install httpie</code>, <code>pip install httpie</code>
+
+### Terminal Multiplexer -- <code>tmux</code>
+
+<code>tmux</code> lets you run multiple terminal sessions in a single window, detach and reattach, and split panes.
+
+<code>$ tmux new -s mysession                      # create a new tmux session named "mysession"
+$ tmux attach -t mysession                    # reattach to an existing session
+$ tmux list-sessions                          # list all tmux sessions (or tmux ls)
+$ tmux kill-session -t mysession              # kill a session
+
+# Inside tmux, the prefix key is Ctrl+b by default:
+
+# Ctrl+b %       : split pane vertically
+# Ctrl+b "       : split pane horizontally
+# Ctrl+b arrow   : navigate between panes
+# Ctrl+b c       : create a new window
+# Ctrl+b n/p     : next/previous window
+# Ctrl+b d       : detach from session (processes keep running)
+# Ctrl+b [       : enter scroll mode (use arrows/PgUp/PgDn, q to quit)
+# Ctrl+b ,       : rename current window
+
+# Example workflow:
+$ tmux new -s dev                              # start a session
+# (inside tmux) run dev server in one pane
+# Ctrl+b % then run editor in the other pane
+# Ctrl+b d to detach, go home, come back tomorrow:
+$ tmux attach -t dev                           # everything is still running</code>
+
+- <code>tmux</code> is essential for remote work: start a session, start a long process, detach, close the SSH connection, reconnect later
+- Config file: <code>~/.tmux.conf</code>
+- Install: <code>brew install tmux</code>, <code>apt install tmux</code>
+
+### Smarter cd -- <code>zoxide</code>
+
+<code>zoxide</code> learns your most-used directories and lets you jump to them by typing a fragment of the name. It is a smarter replacement for <code>cd</code>.
+
+<code>$ z my-project                              # jump to /home/alice/projects/my-project
+$ zi                                         # interactive search (like fzf for directories)
+$ z my-proj                                   # partial name works too
+$ z ..                                        # can still use relative paths
+
+# After installation, source zoxide in .zshrc:
+# eval "$(zoxide init zsh)"
+# Then z replaces cd entirely (or use z alongside cd)</code>
+
+- <code>zoxide</code> uses a ranking algorithm: frequently accessed and recently accessed directories score higher
+- Install: <code>brew install zoxide</code>, <code>apt install zoxide</code>
+
+### Fast Prompt -- <code>starship</code>
+
+<code>starship</code> is a fast, customizable prompt that shows relevant context (Git branch, Node version, Python venv, command duration) only when needed.
+
+<code>$ starship init zsh                          # add this to .zshrc (eval "$(starship init zsh)")
+
+# starship prompt shows:
+# ~/projects/my-app on main via v20.11.0 took 2s
+# ❯
+
+# Configure in ~/.config/starship.toml:
+# [nodejs]
+# format = "via [\${version}](bold green) "
+# [git_branch]
+# format = "on [\${branch}](bold purple) "</code>
+
+- <code>starship</code> works with any shell (bash, zsh, fish, PowerShell)
+- It only shows information when relevant: shows Node version only if a <code>package.json</code> exists
+- Extremely fast (written in Rust, sub-millisecond prompt rendering)
+
+### Git TUI -- <code>lazygit</code>
+
+<code>lazygit</code> is a terminal UI for Git that makes staging, committing, branching, and merging visual and keyboard-friendly.
+
+<code>$ lazygit                                    # open the TUI in the current Git repository
+
+# Inside lazygit:
+# - 1-5: switch between panels (status, files, branches, commits, stash)
+# - space: stage/unstage a file
+# - c: commit
+# - p: push
+# - n: checkout new branch
+# - d: show diff
+# - q: quit</code>
+
+- <code>lazygit</code> is not a replacement for Git but a TUI wrapper that makes common operations much faster
+- Install: <code>brew install lazygit</code>, or <code>apt install lazygit</code>
+
+## Wiring It Together
+
+A realistic scenario: use modern CLI tools for a full development workflow.
+
+<code># Navigate to a project using zoxide:
+$ z my-app                                        # jumps to /home/alice/projects/my-app
+
+# Fuzzy search through files:
+$ nvim $(fd -e ts | fzf --preview 'bat {}')       # pick a .ts file with preview, open in nvim
+
+# Search for a pattern across the codebase:
+$ rg "TODO" --type ts                              # find all TODO comments in TypeScript files
+src/components/Header.tsx:15: // TODO: add dark mode support
+src/utils/api.ts:42: // TODO: handle rate limiting
+
+# Inspect a JSON API response:
+$ http https://api.github.com/repos/ripgrep/rg
+HTTP/1.1 200 OK
+{
+    "full_name": "BurntSushi/ripgrep",
+    "stargazers_count": 45678,
+    "description": "ripgrep is a line-oriented search tool..."
+}
+
+# Extract specific data with jq:
+$ http https://api.github.com/repos/ripgrep/rg | jq '{stars: .stargazers_count, url: .html_url}'
+{
+    "stars": 45678,
+    "url": "https://github.com/BurntSushi/ripgrep"
+}
+
+# Use fzf to search Git branches:
+$ git branch | fzf | xargs git checkout           # interactively switch branches
+
+# Preview file contents with bat while picking with fzf:
+$ git log --oneline | fzf --preview 'git show --stat {1}'  # pick a commit to inspect
+
+# Use tmux to manage the dev session:
+# Start a tmux session, split panes for server + editor + terminal
+
+# Everything at once:
+$ z my-app && rg "FIXME" --type ts | fzf --preview 'bat {1}'  # navigate, search, preview</code>
+`,
+          },
         ],
       },
     ],
