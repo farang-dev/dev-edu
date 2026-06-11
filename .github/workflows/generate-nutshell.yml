@@ -1,0 +1,255 @@
+name: Generate Nutshell Content
+on:
+  workflow_dispatch:
+jobs:
+  generate:
+    strategy:
+      matrix:
+        batch:
+          - name: python-js
+            modules: nutshell-python,nutshell-javascript
+            count: 24
+          - name: ts-go
+            modules: nutshell-typescript,nutshell-go
+            count: 20
+          - name: rust-java
+            modules: nutshell-rust,nutshell-java
+            count: 20
+          - name: html-sql
+            modules: nutshell-html-css,nutshell-sql
+            count: 20
+          - name: cpp-ruby
+            modules: nutshell-cpp,nutshell-ruby
+            count: 20
+          - name: php-swift
+            modules: nutshell-php,nutshell-swift
+            count: 20
+          - name: terminal
+            modules: nutshell-terminal
+            count: 10
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure git identity
+        run: |
+          git config user.name "farang-dev"
+          git config user.email "farang-dev@users.noreply.github.com"
+      - name: Run OpenCode - generate nutshell ${{ matrix.batch.name }}
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/big-pickle
+          use_github_token: true
+          prompt: |
+            You are an expert software engineering educator. Your task: fill in the content for ALL topics in these Nutshell modules in src/data/curriculum.ts. Do NOT touch any other module, domain, or file.
+
+            ## Target Modules (batch: ${{ matrix.batch.name }})
+            Module IDs: ${{ matrix.batch.modules }}
+            Total topics: ${{ matrix.batch.count }}
+
+            Every topic currently has content: "", keyPoints: [], tags: [], readTimeMin: 0. For each topic:
+            1. Write a comprehensive Nutshell-style article in the `content` field.
+            2. Fill `keyPoints` with 4-6 essential learning points.
+            3. Fill `tags` with 2-4 relevant tag strings.
+            4. Set `readTimeMin` to an appropriate value (5-25 depending on depth).
+
+            ## Nutshell Style Guide
+            Nutshell is **a beginner's complete map** — not a tutorial, not a reference, but a beautifully organized guide that builds understanding from zero. The name says it all: everything you need to know about this topic, in a nutshell.
+
+            Every topic MUST follow this exact structure:
+
+            ### 1. ## What's This?
+            One short paragraph. Define in plain language, give a real-world analogy, state why it exists. No more than 4-5 sentences.
+
+            ### 2. ## The Big Picture
+            Show how this topic fits into the broader language/ecosystem. What concepts does it build on? What comes next? Connect the dots so the reader sees the map, not just one dot.
+
+            ### 3. ## Core Ideas
+            Break into progressive ### subsections. For each idea:
+            - Explain it in plain language first (one paragraph)
+            - Show a short code snippet
+            - Explain what the code does (one line per comment in code, no separate prose explanation needed)
+            Use tables to compare variants or summarize.
+
+            ### 4. ## Wiring It Together
+            One complete, realistic example that connects all the core ideas. Every line commented. Show the "happy path" end-to-end.
+
+            ## RULES
+            1. Zero gaps — explain every term, every symbol, every concept from scratch. If the reader needs to know X to understand this topic, define X briefly.
+            2. Write for someone who has never seen this concept — analogies over jargon.
+            3. Dense but clear — every sentence carries information. No filler, no repetition.
+            4. Every concept gets a code snippet. Every code line gets a comment.
+            5. Use <code> tags for inline code (NOT backticks).
+            6. Escape dollar-brace as backslash-dollar-brace inside template literals.
+            7. Preserve id, title, shortDesc, difficulty — ONLY replace content, keyPoints, tags, readTimeMin.
+            8. After ALL edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
+            9. Write in English, no emojis.
+
+            ## Module-by-module topic list
+
+            ${{ matrix.batch.name == 'python-js' && '### nutshell-python (11 topics)
+            1. ns-py-syntax — Syntax & Basics
+            2. ns-py-data-types — Data Types & Structures
+            3. ns-py-control-flow — Control Flow & Functions
+            4. ns-py-modules — Modules & Packages
+            5. ns-py-file-io — File I/O & Exception Handling
+            6. ns-py-oop — Object-Oriented Programming
+            7. ns-py-stdlib — Standard Library Highlights
+            8. ns-py-testing — Testing with pytest
+            9. ns-py-async — Async Python
+            10. ns-py-web — Web Frameworks (Django, FastAPI, Flask)
+            11. ns-py-tooling — Tooling & Packaging
+
+            ### nutshell-javascript (13 topics)
+            1. ns-js-syntax — Syntax & Basics
+            2. ns-js-control-flow — Control Flow & Functions
+            3. ns-js-dom — DOM Manipulation & Events
+            4. ns-js-es6 — ES6+ Features
+            5. ns-js-async — Asynchronous JavaScript
+            6. ns-js-oop — Prototypes & Classes
+            7. ns-js-modules — Modules & Bundlers
+            8. ns-js-browser-apis — Browser APIs
+            9. ns-js-frameworks — Frontend Frameworks (React, Vue, Angular)
+            10. ns-js-node — Node.js & Runtimes
+            11. ns-js-meta-frameworks — Meta-Frameworks (Next.js, Nuxt)
+            12. ns-js-desktop — Desktop Frameworks (Electron, Tauri)
+            13. ns-js-testing — Testing JavaScript' || '' }}
+
+            ${{ matrix.batch.name == 'ts-go' && '### nutshell-typescript (10 topics)
+            1. ns-ts-basics — TypeScript Basics
+            2. ns-ts-interfaces — Interfaces & Type Aliases
+            3. ns-ts-unions — Unions, Intersections & Narrowing
+            4. ns-ts-generics — Generics
+            5. ns-ts-utility — Utility Types & Templates
+            6. ns-ts-modules — Modules & Declaration Files
+            7. ns-ts-react — TypeScript with React
+            8. ns-ts-node — TypeScript with Node.js
+            9. ns-ts-advanced — Advanced Type Patterns
+            10. ns-ts-compiler — Compiler Configuration & Tooling
+
+            ### nutshell-go (10 topics)
+            1. ns-go-syntax — Syntax & Basics
+            2. ns-go-data-types — Data Types & Control Flow
+            3. ns-go-functions — Functions & Methods
+            4. ns-go-interfaces — Interfaces & Embedding
+            5. ns-go-concurrency — Concurrency (Goroutines & Channels)
+            6. ns-go-errors — Error Handling
+            7. ns-go-packages — Packages & Modules
+            8. ns-go-stdlib — Standard Library
+            9. ns-go-web — Web Frameworks (Gin, Echo, Chi)
+            10. ns-go-testing — Testing & Benchmarking' || '' }}
+
+            ${{ matrix.batch.name == 'rust-java' && '### nutshell-rust (10 topics)
+            1. ns-rs-syntax — Syntax & Basics
+            2. ns-rs-ownership — Ownership & Borrowing
+            3. ns-rs-structs — Structs, Enums & Pattern Matching
+            4. ns-rs-traits — Traits & Generics
+            5. ns-rs-lifetimes — Lifetimes
+            6. ns-rs-errors — Error Handling
+            7. ns-rs-concurrency — Concurrency (Fearless)
+            8. ns-rs-unsafe — Unsafe Rust & FFI
+            9. ns-rs-frameworks — Web Frameworks (Axum, Actix, Rocket)
+            10. ns-rs-testing — Testing & Tooling
+
+            ### nutshell-java (10 topics)
+            1. ns-java-syntax — Syntax & Basics
+            2. ns-java-control-flow — Control Flow & Arrays
+            3. ns-java-oop — Object-Oriented Programming
+            4. ns-java-exceptions — Exception Handling
+            5. ns-java-collections — Collections Framework
+            6. ns-java-generics — Generics & Annotations
+            7. ns-java-streams — Streams & Lambdas
+            8. ns-java-concurrency — Concurrency
+            9. ns-java-build — Build Tools (Maven, Gradle)
+            10. ns-java-spring — Spring Boot Framework' || '' }}
+
+            ${{ matrix.batch.name == 'html-sql' && '### nutshell-html-css (10 topics)
+            1. ns-html-syntax — HTML Syntax & Semantics
+            2. ns-css-selectors — CSS Selectors & Specificity
+            3. ns-css-box-model — Box Model & Typography
+            4. ns-css-layout — Layout (Flexbox, Grid)
+            5. ns-css-responsive — Responsive Design
+            6. ns-css-animations — Animations & Transitions
+            7. ns-css-preprocessors — Preprocessors (Sass, PostCSS)
+            8. ns-html-forms — Forms & Validation
+            9. ns-css-frameworks — CSS Frameworks (Tailwind, Bootstrap)
+            10. ns-html-a11y — Accessibility & SEO
+
+            ### nutshell-sql (10 topics)
+            1. ns-sql-basics — SELECT & Basic Queries
+            2. ns-sql-filtering — Filtering, Sorting & Aggregation
+            3. ns-sql-joins — JOINs & Subqueries
+            4. ns-sql-ddl — DDL (CREATE, ALTER, DROP)
+            5. ns-sql-dml — DML (INSERT, UPDATE, DELETE)
+            6. ns-sql-indexes — Indexes & Performance
+            7. ns-sql-transactions — Transactions & ACID
+            8. ns-sql-window — Window Functions
+            9. ns-sql-design — Database Design & Normalization
+            10. ns-sql-tools — Tools & Clients' || '' }}
+
+            ${{ matrix.batch.name == 'cpp-ruby' && '### nutshell-cpp (10 topics)
+            1. ns-c-syntax — C Syntax & Basics
+            2. ns-c-pointers — Pointers & Memory Management
+            3. ns-c-stdlib — C Standard Library
+            4. ns-cpp-basics — C++ Basics & Classes
+            5. ns-cpp-oop — OOP in C++
+            6. ns-cpp-stl — STL (Containers, Algorithms, Iterators)
+            7. ns-cpp-raii — RAII & Smart Pointers
+            8. ns-cpp-modern — Modern C++ (C++11/14/17/20/23)
+            9. ns-cpp-build — Build Systems (CMake, Make)
+            10. ns-cpp-frameworks — Popular Frameworks (Qt, Boost, Unreal)
+
+            ### nutshell-ruby (10 topics)
+            1. ns-rb-syntax — Ruby Syntax & Basics
+            2. ns-rb-control-flow — Control Flow & Methods
+            3. ns-rb-oop — Objects & Classes
+            4. ns-rb-blocks — Blocks, Procs & Lambdas
+            5. ns-rb-enumerable — Enumerable & Collections
+            6. ns-rb-gems — Gems & Bundler
+            7. ns-rb-rails-mvc — Rails MVC Basics
+            8. ns-rb-activerecord — Active Record & Migrations
+            9. ns-rb-testing — Testing (RSpec, Minitest)
+            10. ns-rb-deploy — Deployment & Tooling' || '' }}
+
+            ${{ matrix.batch.name == 'php-swift' && '### nutshell-php (10 topics)
+            1. ns-php-syntax — PHP Syntax & Basics
+            2. ns-php-control-flow — Control Flow & Functions
+            3. ns-php-oop — OOP in PHP
+            4. ns-php-composer — Composer & Packages
+            5. ns-php-laravel-mvc — Laravel MVC
+            6. ns-php-eloquent — Eloquent ORM & Migrations
+            7. ns-php-middleware — Middleware & Auth
+            8. ns-php-testing — Testing (PHPUnit, Pest)
+            9. ns-php-wordpress — WordPress Plugin & Theme Dev
+            10. ns-php-deploy — Deployment & Tooling
+
+            ### nutshell-swift (10 topics)
+            1. ns-swift-syntax — Swift Syntax & Basics
+            2. ns-swift-optionals — Optionals & Type Safety
+            3. ns-swift-control-flow — Control Flow & Functions
+            4. ns-swift-structs-classes — Structs, Classes & Enums
+            5. ns-swift-protocols — Protocols & Extensions
+            6. ns-swift-concurrency — Concurrency (async/await)
+            7. ns-swift-swiftui — SwiftUI Basics
+            8. ns-swift-uikit — UIKit & Storyboards
+            9. ns-swift-networking — Networking & Data Persistence
+            10. ns-swift-tooling — App Distribution & Tooling' || '' }}
+
+            ${{ matrix.batch.name == 'terminal' && '### nutshell-terminal (10 topics)
+            1. ns-term-basics — Shell Basics & Navigation
+            2. ns-term-files — File & Directory Operations
+            3. ns-term-permissions — Permissions & Users
+            4. ns-term-text — Text Processing & Pipelines
+            5. ns-term-process — Process Management
+            6. ns-term-networking — Networking Commands
+            7. ns-term-package — Package Managers
+            8. ns-term-scripting — Shell Scripting
+            9. ns-term-env — Environment & Dotfiles
+            10. ns-term-modern — Modern CLI Tools' || '' }}
