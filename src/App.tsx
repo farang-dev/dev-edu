@@ -19,7 +19,8 @@ import {
   Clock,
   Award,
   Sun,
-  Moon
+  Moon,
+  Compass
 } from "lucide-react";
 
 export default function App() {
@@ -226,6 +227,7 @@ export default function App() {
       case "Server": return <Server className="h-5 w-5" />;
       case "Shield": return <Shield className="h-5 w-5" />;
       case "Cpu": return <Cpu className="h-5 w-5" />;
+      case "Compass": return <Compass className="h-5 w-5" />;
       default: return <BookOpen className="h-5 w-5" />;
     }
   };

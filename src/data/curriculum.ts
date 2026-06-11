@@ -24,7 +24,7 @@ export interface Module {
 }
 
 export interface Domain {
-  id: "frontend" | "backend" | "infrastructure" | "devops" | "cheat";
+  id: "frontend" | "backend" | "infrastructure" | "devops" | "cheat" | "nutshell";
   title: string;
   tagline: string;
   description: string;
@@ -33422,11 +33422,11 @@ Pitfalls:
     ],
   },
   // ──────────────────────────────────────────────────────────────────────────
-  // CHEAT SHEETS
+  // CHEET — quick references
   // ──────────────────────────────────────────────────────────────────────────
   {
     id: "cheat",
-    title: "Cheat Sheets",
+    title: "Cheet",
     tagline: "Quick reference for languages, frameworks, and tools",
     description: "Comprehensive cheat sheets covering every programming language and framework used across frontend, backend, mobile, and AI engineering.",
     color: "amber",
@@ -41555,7 +41555,7 @@ Python is a dynamically-typed, interpreted language with optional static type ch
 | Null | <code>None</code> | Singleton | <code>None</code> |
 | Bytes | <code>bytes</code>, <code>bytearray</code> | bytes immutable | <code>b"data"</code> |
 ### Variables & Scoping
-<code>python
+\`\`\`python
 # -- Variables are dynamically typed --
 name = "Alice"       # Variable 'name' is bound to a str object
 age = 30             # Re-binding to an int -- no type error
@@ -41572,8 +41572,9 @@ def outer():
 # -- Type hints (PEP 484) for static analysis only --
 def greet(name: str) -> str:
     return f"Hello, {name}"   # f-string expression
+\`\`\`
 ### Control Flow
-<code>python
+\`\`\`python
 # -- Conditionals --
 if x > 0:
     print("positive")
@@ -41595,8 +41596,9 @@ except FileNotFoundError:
     print("file not found")
 finally:
     print("always runs")
+\`\`\`
 ### Functions
-<code>python
+\`\`\`python
 # -- Positional, keyword, default, *args, **kwargs --
 def send_email(to: str, subject: str = "No Subject", *cc: str, **headers: str) -> bool:
     #    ^required    ^default               ^variable positional  ^variable keyword
@@ -41624,6 +41626,7 @@ def timer(func):
     return wrapper
 @timer
 def slow_function():
+\`\`\`
 ### Async / Concurrency
 | Mechanism | Model | Use Case |
 |-----------|-------|----------|
@@ -41631,7 +41634,7 @@ def slow_function():
 | <code>asyncio</code> | Cooperative (single thread) | I/O-bound, async libraries |
 | <code>multiprocessing</code> | OS processes | CPU-bound (no GIL contention) |
 | <code>concurrent.futures</code> | Thread/Process pool executors | Simple parallel mapping |
-<code>python
+\`\`\`python
 import asyncio
 import httpx
 async def fetch_data(url: str) -> dict:
@@ -41648,8 +41651,9 @@ async def main():
         fetch_data("https://api.example.com/posts"),
     print(results)
 asyncio.run(main())   # Entry point -- creates event loop, runs main(), closes loop
+\`\`\`
 ### Module System
-<code>python
+\`\`\`python
 # mypackage/__init__.py     # Package marker (can be empty for namespace packages)
 # mypackage/helpers.py      # Submodule
 # -- Import variants --
@@ -41663,6 +41667,7 @@ from ..parent import thing     # Relative import, one level up
 if __name__ == "__main__":
     # Only runs when file is executed directly (not imported)
     main()
+\`\`\`
 ### Standard Library Highlights
 | Module | Purpose | Key Functions/Classes |
 |--------|---------|----------------------|
@@ -41683,11 +41688,12 @@ if __name__ == "__main__":
 ### FastAPI (ASGI, async-native)
 FastAPI is a modern, fast web framework for building APIs with Python 3.8+ based on standard Python type hints. It uses Starlette under the hood and Pydantic for data validation.
 **Setup:**
-<code>bash
+\`\`\`bash
 pip install fastapi uvicorn        # Install framework + ASGI server
 uvicorn main:app --reload         # Run with auto-reload for development
 **Core Concepts:**
-<code>python
+\`\`\`
+\`\`\`python
 from fastapi import FastAPI, HTTPException, Depends, Query, Path
 app = FastAPI(title="My API", version="1.0.0")   # ASGI application instance
 # -- Pydantic model for request/response validation --
@@ -41717,6 +41723,7 @@ def get_db():
 async def get_user(db = Depends(get_db)):   # Dependency resolved automatically
     return db.query(User).all()
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Error handling | Raise <code>HTTPException(status_code=404, detail="Not found")</code> |
 | Background tasks | <code>from fastapi import BackgroundTasks</code> |
@@ -41726,14 +41733,15 @@ async def get_user(db = Depends(get_db)):   # Dependency resolved automatically
 | OpenAPI docs | Automatic at <code>/docs</code> (Swagger) and <code>/redoc</code> |
 ### Django (WSGI, batteries-included)
 **Setup:**
-<code>bash
+\`\`\`bash
 pip install django
 django-admin startproject mysite .
 python manage.py startapp myapp
 python manage.py migrate
 python manage.py runserver
 **Core Concepts:**
-<code>python
+\`\`\`
+\`\`\`python
 # -- Models (ORM) --  myapp/models.py
 class Author(models.Model):
     name = models.CharField(max_length=100)       # VARCHAR column
@@ -41760,6 +41768,7 @@ from . import views
 urlpatterns = [
     path("books/", views.BookListView.as_view(), name="book-list"),
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Admin panel | <code>python manage.py createsuperuser</code>, register models in <code>admin.py</code> |
 | Django REST Framework | <code>pip install djangorestframework</code> — <code>ModelViewSet</code>, <code>Serializer</code> |
@@ -41769,11 +41778,12 @@ urlpatterns = [
 | Management commands | Custom <code>python manage.py mycommand</code> via <code>management/commands/</code> |
 ### Flask (WSGI, minimal/micro)
 **Setup:**
-<code>bash
+\`\`\`bash
 pip install flask
 # Run with: flask --app main run
 **Core Concepts:**
-<code>python
+\`\`\`
+\`\`\`python
 from flask import Flask, request, jsonify, abort
 app = Flask(__name__)                               # WSGI application
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite3"
@@ -41794,6 +41804,7 @@ def login():
     return jsonify({"token": "..."})
 app.register_blueprint(auth_bp)                      # Mount blueprint at /auth/*
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Extensions | Flask-SQLAlchemy, Flask-Migrate, Flask-Login, Flask-CORS |
 | Error handlers | <code>@app.errorhandler(404)</code> — custom JSON error responses |
@@ -41946,7 +41957,7 @@ Node.js is a JavaScript runtime built on V8 with a single-threaded event loop (l
 | Object | <code>Promise</code> | <code>Promise.resolve(1)</code> | Future value container |
 | Object | <code>Buffer</code> | <code>Buffer.from("hi")</code> | Raw binary data (Node-specific) |
 ### Variables (ES6+)
-<code>javascript
+\`\`\`javascript
 // -- const: immutable binding (not immutable value) --
 const PORT = 3000;              // Cannot reassign PORT
 const CONFIG = { db: "pg" };    // CONFIG = {} -> TypeError, but CONFIG.db = "mysql" is allowed
@@ -41959,8 +41970,9 @@ var name = "old";               // Hoisted to top of function, no block scope
 // -- Destructuring assignment --
 const { host, port } = CONFIG;  // Extracts CONFIG.host and CONFIG.port into variables
 const [first, ...rest] = [1, 2, 3];  // first=1, rest=[2,3]
+\`\`\`
 ### Control Flow
-<code>javascript
+\`\`\`javascript
 // -- Conditionals --
 if (user) {
     console.log(user.name);
@@ -41979,8 +41991,9 @@ do { /* post-check */ } while (condition);
         console.error("Validation failed:", err.message);
         throw err;  // Re-throw unexpected errors
     cleanup();      // Always runs
+\`\`\`
 ### Functions
-<code>javascript
+\`\`\`javascript
 // -- Arrow function (lexical this, no arguments object) --
 const double = (x: number): number => x * 2;   // Implicit return (single expression)
 const log = (msg: string): void => {           // Explicit block
@@ -41995,6 +42008,7 @@ function sum(...nums: number[]): number {
 // -- async function (returns Promise) --
 async function fetchUser(id: string): Promise<User> {
     const res = await fetch(/*url*/);   // Pauses execution until Promise resolves
+\`\`\`
 ### Concurrency / Async
 | Mechanism | How It Works | Use Case |
 | Callback | Function passed to async operation | Legacy Node APIs (fs.readFile) |
@@ -42003,7 +42017,7 @@ async function fetchUser(id: string): Promise<User> {
 | EventEmitter | <code>.on()/.emit()</code> pattern | Streams, HTTP events |
 | Worker Threads | True OS threads (isolated V8 instances) | CPU-bound work |
 | Child Process | Separate OS process | Heavy computation, third-party CLIs |
-<code>javascript
+\`\`\`javascript
 // -- Promise chain --
 fetch("/api/users")
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -42020,8 +42034,9 @@ async function loadUsers(): Promise<User[]> {
 // -- Concurrent execution --
     fetchUsers(),
     fetchPosts(),
+\`\`\`
 ### Module System
-<code>javascript
+\`\`\`javascript
 // -- ESM (recommended) -- package.json: "type": "module"
 // math.js
 export const PI = 3.14159;
@@ -42034,6 +42049,7 @@ import Calculator, { PI, add as sum } from "./math.js";
 module.exports = { PI, add };
 module.exports.default = Calculator;
 const { PI, add } = require("./math");
+\`\`\`
 ### Standard Library Highlights
 | Module | Purpose | Key Functions |
 | <code>fs</code> | File system | <code>readFile</code>, <code>writeFile</code>, <code>createReadStream</code>, <code>watch</code> |
@@ -42051,13 +42067,14 @@ const { PI, add } = require("./math");
 ## Framework by Framework Reference
 ### Express (Minimal, unopinionated)
 **Setup:**
-<code>bash
+\`\`\`bash
 mkdir my-api && cd my-api
 npm init -y
 npm install express
 npm install -D typescript @types/express ts-node
 **Core Concepts:**
-<code>javascript
+\`\`\`
+\`\`\`javascript
 import express, { Request, Response, NextFunction, Router } from "express";
 const app = express();                          // Create Express application
 // -- Middleware: functions that run in sequence --
@@ -42085,6 +42102,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     res.status(500).json({ error: "Internal Server Error" });
 app.listen(3000, () => console.log("Server running on port 3000"));
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Auth middleware | Check JWT in <code>Authorization</code> header, attach <code>req.user</code> |
 | Rate limiting | <code>express-rate-limit</code> package |
@@ -42095,12 +42113,13 @@ app.listen(3000, () => console.log("Server running on port 3000"));
 | Async error catch | Wrap handlers: <code>const asyncHandler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next)</code> |
 ### Fastify (Schema-fast, low overhead)
 **Setup:**
-<code>bash
+\`\`\`bash
 npm init -y
 npm install fastify
 npm install -D typescript @types/node
 **Core Concepts:**
-<code>javascript
+\`\`\`
+\`\`\`javascript
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 const app: FastifyInstance = Fastify({          // Create Fastify instance
     logger: true,                               // Built-in pino logger
@@ -42132,6 +42151,7 @@ const start = async () => {
         app.log.error(err);
         process.exit(1);
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Validation | JSON Schema in route options (fast by default) |
 | Serialization | Response schema in route options |
@@ -42141,12 +42161,13 @@ const start = async () => {
 | Content type parser | <code>app.addContentTypeParser("application/json", ...)</code> |
 ### NestJS (Opinionated, modular)
 **Setup:**
-<code>bash
+\`\`\`bash
 npm install -g @nestjs/cli
 nest new project-name
 npm run start:dev
 **Core Concepts:**
-<code>javascript
+\`\`\`
+\`\`\`javascript
 // -- Module: organizes controllers and providers --
 import { Module } from "@nestjs/common";
 import { UsersController } from "./users.controller";
@@ -42184,6 +42205,7 @@ export class CreateUserDto {
     @IsEmail()
     email: string;
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Guards | <code>@Injectable()</code> class implementing <code>CanActivate</code> |
 | Interceptors | Transform responses or add logging |
@@ -42539,7 +42561,7 @@ Go is a statically-typed, compiled language with built-in concurrency primitives
 | Function | <code>func(T) R</code> | <code>nil</code> | <code>func(x int) int { return x }</code> |
 | Channel | <code>chan T</code> | <code>nil</code> | <code>make(chan int)</code> |
 ### Variables & Control Flow
-<code>go
+\`\`\`go
 import "fmt"
 // -- Package-level variable --
 var AppVersion = "1.0.0"              // Type inferred from literal
@@ -42571,8 +42593,9 @@ var AppVersion = "1.0.0"              // Type inferred from literal
     for {                               // Infinite loop
     for index, value := range []string{"a", "b"} {  // Iterate over collections
         fmt.Println(index, value)
+\`\`\`
 ### Functions
-<code>go
+\`\`\`go
 // -- Function with multiple return values --
 func divide(a, b float64) (float64, error) {
     if b == 0 {
@@ -42603,8 +42626,9 @@ func readFile(path string) error {
     if err != nil {
     defer f.Close()                                    // Runs even if function panics
     // ... read from f ...
+\`\`\`
 ### Types / Generics (Go 1.18+)
-<code>go
+\`\`\`go
 // -- Struct with methods --
 type User struct {
     ID        int64
@@ -42630,6 +42654,7 @@ func Map[T any, R any](input []T, transform func(T) R) []R {
         result[i] = transform(v)
 // Usage with inferred types
 doubled := Map([]int{1, 2, 3}, func(x int) int { return x * 2 })
+\`\`\`
 ### Concurrency / Goroutines
 | Pattern | Code | Description |
 |---------|------|-------------|
@@ -42639,7 +42664,7 @@ doubled := Map([]int{1, 2, 3}, func(x int) int { return x * 2 })
 | Select | <code>select { case <-ch1: ... }</code> | Wait on multiple channels |
 | WaitGroup | <code>wg.Add(1); defer wg.Done(); wg.Wait()</code> | Wait for goroutine completion |
 | Mutex | <code>sync.Mutex</code>: <code>mu.Lock()</code> / <code>mu.Unlock()</code> | Protect shared state |
-<code>go
+\`\`\`go
     "fmt"
     "sync"
     "time"
@@ -42666,13 +42691,15 @@ func worker(id int, jobs <-chan int, results chan<- int) {
     close(results)
     for r := range results {
         fmt.Println(r)
+\`\`\`
 ### Module System
-<code>bash
+\`\`\`bash
 go mod init example.com/myapi            # Creates go.mod
 go get github.com/gin-gonic/gin           # Add dependency
 go mod tidy                              # Clean up unused dependencies
 go mod vendor                            # Create vendor directory
-<code>go
+\`\`\`
+\`\`\`go
 // -- Package structure --
 // myapi/
 //   go.mod
@@ -42684,6 +42711,7 @@ go mod vendor                            # Create vendor directory
 // Import uses module path + subdirectory
     "example.com/myapi/handlers"
     "example.com/myapi/models"
+\`\`\`
 ### Standard Library Highlights
 | Package | Purpose | Key Functions/Types |
 |---------|---------|---------------------|
@@ -42704,11 +42732,12 @@ go mod vendor                            # Create vendor directory
 ## Framework by Framework Reference
 ### Gin (Fast router, most popular)
 **Setup:**
-<code>bash
+\`\`\`bash
 go mod init example.com/myapi
 go get github.com/gin-gonic/gin
 **Core Concepts:**
-<code>go
+\`\`\`
+\`\`\`go
     "net/http"
     "github.com/gin-gonic/gin"
     r := gin.Default()                         // Creates router with Logger + Recovery middleware
@@ -42733,6 +42762,7 @@ go get github.com/gin-gonic/gin
         c.JSON(http.StatusCreated, user)
     r.Run(":8080")                             // Default :8080
 **Common Patterns:**
+\`\`\`
 | Pattern | Code |
 | Custom middleware | <code>r.Use(func(c *gin.Context) { /* ... */ c.Next() })</code> |
 | Authentication | <code>c.GetHeader("Authorization")</code> |
@@ -42742,10 +42772,11 @@ go get github.com/gin-gonic/gin
 | HTML templates | <code>r.LoadHTMLGlob("templates/*")</code> |
 ### Echo (Lightweight, idiomatic middleware)
 **Setup:**
-<code>bash
+\`\`\`bash
 go get github.com/labstack/echo/v4
 **Core Concepts:**
-<code>go
+\`\`\`
+\`\`\`go
     "net/http"
     "github.com/labstack/echo/v4"
     "github.com/labstack/echo/v4/middleware"
@@ -42765,6 +42796,7 @@ go get github.com/labstack/echo/v4
         return c.JSON(http.StatusOK, map[string]string{"id": id})
     e.Logger.Fatal(e.Start(":8080"))
 **Common Patterns:**
+\`\`\`
 | Pattern | Code |
 | Custom middleware | <code>e.Use(func(next echo.HandlerFunc) echo.HandlerFunc { return func(c echo.Context) error { /* ... */ return next(c) } })</code> |
 | Data binding | <code>c.Bind(&user)</code> |
@@ -42773,10 +42805,11 @@ go get github.com/labstack/echo/v4
 | Templates | <code>e.Renderer = customRenderer</code> |
 ### Fiber (Express-like, fastest)
 **Setup:**
-<code>bash
+\`\`\`bash
 go get github.com/gofiber/fiber/v2
 **Core Concepts:**
-<code>go
+\`\`\`
+\`\`\`go
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/logger"
     app := fiber.New()                         // Create Fiber app
@@ -42794,6 +42827,7 @@ go get github.com/gofiber/fiber/v2
             return c.Status(400).JSON(fiber.Map{"error": err.Error()})
         return c.Status(201).JSON(user)
     app.Listen(":8080")
+\`\`\`
 ## Comparison Tables
 | Feature | Gin | Echo | Fiber | net/http (stdlib) |
 |---------|-----|------|-------|-------------------|
@@ -42931,13 +42965,13 @@ go get github.com/gofiber/fiber/v2
 ### Fiber (Express-like, fastest)
 
 **Setup:**
-<code>bash
+\`\`\`bash
 go get github.com/gofiber/fiber/v2
-</code>
+\`\`\`
 
 **Core Concepts:**
 
-<code>go
+\`\`\`go
 package main
 
 import (
@@ -42971,7 +43005,7 @@ func main() {
 
     app.Listen(":8080")
 }
-</code>
+\`\`\`
 
 ---
 
@@ -43169,7 +43203,7 @@ Java is a statically-typed, JIT-compiled, object-oriented language running on th
 | Reference | <code>sealed class</code> | <code>sealed class Shape permits Circle, Rect {}</code> | Restricted inheritance (Java 17+) |
 | Reference | <code>Optional<T></code> | <code>Optional.of("x")</code> | Null-safe container |
 ### Variables & Control Flow
-<code>java
+\`\`\`java
 // -- Variables --
 var name = "Alice";                    // Local variable type inference (Java 10+)
 int age = 30;                          // Explicit type
@@ -43202,8 +43236,9 @@ try (var reader = Files.newBufferedReader(path)) {  // Try-with-resources (auto-
     System.err.println("Error: " + e.getMessage());
     throw new RuntimeException(e);                  // Wrap checked exception
     cleanup();                                       // Always runs
+\`\`\`
 ### Functions / Lambdas
-<code>java
+\`\`\`java
 // -- Method declaration --
 public static int add(int a, int b) {
     // ^access ^modifier ^return ^name ^params
@@ -43224,8 +43259,9 @@ int sum = list.stream()
     .filter(n -> n > 0)                // Predicate
     .mapToInt(n -> n * 2)              // IntFunction
     .sum();                             // Terminal operation
+\`\`\`
 ### Generics & Collections
-<code>java
+\`\`\`java
 // -- Generic class --
 public class Box<T> {                   // T is type parameter
     private T value;
@@ -43242,8 +43278,9 @@ Set<String> set = new HashSet<>();       // No duplicates, O(1)
 Map<String, Integer> map = new HashMap<>();  // Key-value, O(1)
 Queue<String> queue = new LinkedList<>();    // FIFO
 Deque<String> stack = new ArrayDeque<>();    // LIFO (push/pop)
+\`\`\`
 ### Concurrency / Async
-<code>java
+\`\`\`java
 // -- Thread --
 Thread thread = new Thread(() -> {
     System.out.println("Running in: " + Thread.currentThread().getName());
@@ -43268,8 +43305,9 @@ CompletableFuture.supplyAsync(() -> fetchUser())
 try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
     executor.submit(() -> {
         System.out.println("Virtual thread: " + Thread.currentThread());
+\`\`\`
 ### Module System (JPMS, Java 9+)
-<code>java
+\`\`\`java
 // module-info.java
 module com.example.myapp {
     requires spring.boot;                // Module dependency
@@ -43277,6 +43315,7 @@ module com.example.myapp {
     requires transitive com.example.common;  // Transitive dependency
     exports com.example.myapp.controller;    // Packages visible to other modules
     opens com.example.myapp.model;           // Open for reflection (Spring, Hibernate)
+\`\`\`
 ### Standard Library Highlights
 | Package | Purpose | Key Classes |
 |---------|---------|-------------|
@@ -43293,7 +43332,7 @@ module com.example.myapp {
 ## Framework by Framework Reference
 ### Spring Boot (MVC, auto-configured)
 **Setup (start.spring.io):**
-<code>xml
+\`\`\`xml
 <!-- Maven: pom.xml -->
 <parent>
     <groupId>org.springframework.boot</groupId>
@@ -43311,7 +43350,8 @@ module com.example.myapp {
     </dependency>
 </dependencies>
 **Core Concepts:**
-<code>java
+\`\`\`
+\`\`\`java
 // -- Main entry point --
 @SpringBootApplication                         // Combines @Configuration @EnableAutoConfiguration @ComponentScan
 public class Application {
@@ -43378,15 +43418,17 @@ public class User {
     // JPA requires no-arg constructor (protected is fine)
     protected User() {}
     // Getters and setters (or use Lombok @Data / @Getter @Setter)
+\`\`\`
 ### Spring WebFlux (Reactive)
 **Setup:**
-<code>xml
+\`\`\`xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-webflux</artifactId>
 </dependency>
 **Core Concepts:**
-<code>java
+\`\`\`
+\`\`\`java
 @RestController
 @RequestMapping("/api/users")
 public class ReactiveUserController {
@@ -43409,8 +43451,9 @@ public class ReactiveUserController {
 // Reactive repository
 public interface ReactiveUserRepository extends ReactiveCrudRepository<User, String> {
     Flux<User> findByAgeGreaterThan(int age);
+\`\`\`
 ### Spring Security (Auth)
-<code>java
+\`\`\`java
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -43431,6 +43474,7 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();          // BCrypt hashing for passwords
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | Validation | <code>@Valid</code> + <code>jakarta.validation</code> annotations (<code>@NotBlank</code>, <code>@Email</code>) |
 | Global error handling | <code>@RestControllerAdvice</code> + <code>@ExceptionHandler</code> |
@@ -43527,7 +43571,7 @@ public class SecurityConfig {
      **A:** Implement <code>OncePerRequestFilter</code> and register as a <code>@Component</code>. Use a token bucket algorithm with Bucket4j library. Extract client IP or API key, check rate limit, and return 429 Too Many Requests if exceeded. Add the filter to the <code>SecurityFilterChain</code> or register via <code>FilterRegistrationBean</code>.\`,
 ### Spring Security (Auth)
 
-<code>java
+\`\`\`java
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -43553,7 +43597,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();          // BCrypt hashing for passwords
     }
 }
-</code>
+\`\`\`
 
 **Common Patterns:**
 
@@ -43735,7 +43779,7 @@ Rust is a systems language with zero-cost abstractions, guaranteed memory safety
 | Reference | <code>&T, &mut T</code> | <code>&x</code> | Borrowed (immutable/mutable) |
 | Slice | <code>&[T]</code> | <code>&vec[..]</code> | View into contiguous sequence |
 ### Variables & Ownership
-<code>rust
+\`\`\`rust
 // -- Variables are immutable by default --
 let x = 5;                               // Immutable binding
 // x = 6;                                // Compile error!
@@ -43753,8 +43797,9 @@ let s2 = s1;                              // s1 is MOVED to s2 -- s1 is no longe
 // -- Clone for deep copy --
 let s3 = s2.clone();                      // Heap data is copied (expensive)
 println!("{}", s2);                       // s2 still valid (clone copies, not moves)
+\`\`\`
 ### Borrowing & References
-<code>rust
+\`\`\`rust
 // -- Borrowing rules --
 // 1. At any time: one mutable reference OR any number of immutable references
 // 2. References must always be valid (no dangling pointers)
@@ -43768,8 +43813,9 @@ let r2 = &s;                                 // Multiple immutable borrows OK
 println!("{}, {}", r1, r2);                  // Immutable references used here
 let r3 = &mut s;                             // OK: no immutable references active
 r3.push_str("!");
+\`\`\`
 ### Control Flow
-<code>rust
+\`\`\`rust
 // -- if/else (expression, not statement) --
 let status = if age >= 18 { "adult" } else { "minor" };
 // -- match (exhaustive pattern matching) --
@@ -43791,8 +43837,9 @@ while let Some(top) = stack.pop() {
 // -- if let (convenient single-pattern match) --
 if let Some(value) = optional {
     println!("Got: {value}");
+\`\`\`
 ### Functions & Generics
-<code>rust
+\`\`\`rust
 // -- Function declaration --
 fn add(x: i32, y: i32) -> i32 {               // x, y are parameters
     x + y                                       // Expression (no semicolon = return)
@@ -43809,8 +43856,9 @@ let result = double(21);                       // 42
 // Closure with move (takes ownership of captured variables)
 let name = String::from("Alice");
 let print_name = move || println!("{name}");   // name moved into closure
+\`\`\`
 ### Traits (Interfaces)
-<code>rust
+\`\`\`rust
 // -- Trait definition --
 trait Describable {
     fn describe(&self) -> String;               // Method signature
@@ -43834,8 +43882,9 @@ fn print_description2<T: Describable>(item: &T) {
 struct Product {
     id: u64,
     name: String,
+\`\`\`
 ### Async / Await
-<code>rust
+\`\`\`rust
 use tokio;                                      // De-facto async runtime
 // -- Async function (returns impl Future) --
 async fn fetch_user(id: u64) -> Result<User, Error> {
@@ -43856,8 +43905,9 @@ async fn run_parallel() {
 // -- Spawn background task --
 tokio::spawn(async move {                       // Spawn on tokio runtime
     process_long_running_task().await;
+\`\`\`
 ### Module System
-<code>rust
+\`\`\`rust
 // src/main.rs (or src/lib.rs)
 mod handlers;                                   // Declares submodule from handlers.rs
 mod models;                                     // or handlers/mod.rs
@@ -43869,6 +43919,7 @@ pub mod user_handlers {                         // Nested module
 use crate::handlers::user_handlers::get_user;
 use std::collections::HashMap;                  // Standard library
 use serde::{Serialize, Deserialize};            // External crate (Cargo.toml)
+\`\`\`
 ### Standard Library Highlights
 | Module | Purpose | Key Types/Functions |
 |--------|---------|---------------------|
@@ -43885,7 +43936,7 @@ use serde::{Serialize, Deserialize};            // External crate (Cargo.toml)
 ## Framework by Framework Reference
 ### Axum (Tokio-native, modular, tower-based)
 **Setup (Cargo.toml):**
-<code>toml
+\`\`\`toml
 [dependencies]
 axum = "0.8"
 tokio = { version = "1", features = ["full"] }
@@ -43893,7 +43944,8 @@ serde = { version = "1", features = ["derive"] }
 sqlx = { version = "0.8", features = ["runtime-tokio", "postgres"] }
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 **Core Concepts:**
-<code>rust
+\`\`\`
+\`\`\`rust
     Router,                                          // HTTP router
     routing::{get, post},                            // Method-specific routing
     extract::{Path, Query, State, Json},             // Request extractors
@@ -43962,6 +44014,7 @@ async fn auth_middleware(
         .with_state(state)                           // Inject shared state
         .layer(tower_http::cors::CorsLayer::permissive());  // Add CORS
 **Common Patterns:**
+\`\`\`
 | Pattern | Implementation |
 | State sharing | <code>Arc<AppState></code> via <code>State</code> extractor |
 | Error handling | Custom error type implementing <code>IntoResponse</code> |
@@ -43971,13 +44024,14 @@ async fn auth_middleware(
 | File upload | <code>Multipart</code> extractor from axum-extra |
 ### Actix-web (Actor-based, mature)
 **Setup:**
-<code>toml
+\`\`\`toml
 [dependencies]
 actix-web = "4"
 actix-rt = "2"
 serde = { version = "1", features = ["derive"] }
 **Core Concepts:**
-<code>rust
+\`\`\`
+\`\`\`rust
 use actix_web::{web, App, HttpServer, HttpResponse, Responder, HttpRequest};
 // -- Handler (returns impl Responder) --
 async fn greet(path: web::Path<String>) -> impl Responder {
@@ -44007,6 +44061,7 @@ struct AppState {
             .route("/users/{id}", web::get().to(get_user))
             .route("/users", web::get().to(list_users))
     .bind("0.0.0.0:3000")?
+\`\`\`
 ## Comparison Tables
 | Feature | Axum | Actix-web | Warp |
 |---------|------|-----------|------|
@@ -44104,16 +44159,16 @@ struct AppState {
 ### Actix-web (Actor-based, mature)
 
 **Setup:**
-<code>toml
+\`\`\`toml
 [dependencies]
 actix-web = "4"
 actix-rt = "2"
 serde = { version = "1", features = ["derive"] }
-</code>
+\`\`\`
 
 **Core Concepts:**
 
-<code>rust
+\`\`\`rust
 use actix_web::{web, App, HttpServer, HttpResponse, Responder, HttpRequest};
 use serde::Deserialize;
 
@@ -44166,7 +44221,7 @@ async fn main() -> std::io::Result<()> {
     .run()
     .await
 }
-</code>
+\`\`\`
 
 ---
 
@@ -72872,6 +72927,258 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
 `,
             tags: ["Evaluation", "Safety", "MLOps"],
           },
+        ],
+      },
+    ],
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  // NUTSHELL — systematic beginner's guide
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id: "nutshell",
+    title: "Nutshell",
+    tagline: "A beginner's complete map — from syntax to production",
+    description: "A structured, beginner-friendly guide to understanding programming languages from the ground up. Each language is broken into progressive topics starting from syntax fundamentals and building up to complete frameworks and tooling ecosystems.",
+    color: "emerald",
+    iconName: "Compass",
+    topics: [],
+    modules: [
+      // ── Python ──────────────────────────────────────────────────────────
+      {
+        id: "nutshell-python",
+        title: "Python",
+        description: "Python from zero to Django — syntax, data model, OOP, standard library, testing, packaging, and full-stack frameworks.",
+        topics: [
+          { id: "ns-py-syntax", title: "Syntax & Basics", shortDesc: "Indentation, variables, comments, I/O, and the Python REPL.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-data-types", title: "Data Types & Structures", shortDesc: "Numbers, strings, lists, tuples, dicts, sets — immutability, mutability, and common operations.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-control-flow", title: "Control Flow & Functions", shortDesc: "if/elif/else, loops, comprehensions, defining functions, scope, and lambda expressions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-modules", title: "Modules & Packages", shortDesc: "import system, __init__.py, absolute vs relative imports, and structuring a Python project.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-file-io", title: "File I/O & Exception Handling", shortDesc: "Reading/writing files, context managers, try/except/finally, and custom exceptions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-oop", title: "Object-Oriented Programming", shortDesc: "Classes, inheritance, polymorphism, dunder methods, properties, descriptors, and metaclasses.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-stdlib", title: "Standard Library Highlights", shortDesc: "datetime, collections, itertools, functools, re, pathlib, subprocess, and more.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-testing", title: "Testing with pytest", shortDesc: "Test discovery, fixtures, parametrization, mocking, and coverage reporting.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-async", title: "Async Python", shortDesc: "asyncio, coroutines, tasks, futures, async context managers, and aiohttp.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-web", title: "Web Frameworks (Django, FastAPI, Flask)", shortDesc: "Routing, middleware, ORM, serialization, dependency injection, and production deployment patterns.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-tooling", title: "Tooling & Packaging", shortDesc: "pip, venv, poetry, rye, ruff, mypy, pre-commit, and publishing to PyPI.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── JavaScript ──────────────────────────────────────────────────────
+      {
+        id: "nutshell-javascript",
+        title: "JavaScript",
+        description: "JavaScript from the ground up — syntax, DOM, ES6+, async patterns, bundlers, frameworks (React, Vue, Angular), and Node.js.",
+        topics: [
+          { id: "ns-js-syntax", title: "Syntax & Basics", shortDesc: "Variables (var/let/const), data types, operators, type coercion, and strict mode.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-control-flow", title: "Control Flow & Functions", shortDesc: "Conditionals, loops, function declarations vs expressions, arrow functions, and default parameters.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-dom", title: "DOM Manipulation & Events", shortDesc: "Selecting elements, modifying the DOM, event propagation (capture/bubble), and event delegation.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-es6", title: "ES6+ Features", shortDesc: "Destructuring, spread/rest, template literals, optional chaining, nullish coalescing, and modules.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-async", title: "Asynchronous JavaScript", shortDesc: "Callbacks, Promises, async/await, event loop, microtasks vs macrotasks, and error handling.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-oop", title: "Prototypes & Classes", shortDesc: "Prototypal inheritance, class syntax, getters/setters, static methods, and private fields.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-modules", title: "Modules & Bundlers", shortDesc: "ESM vs CommonJS, dynamic imports, tree-shaking, and bundlers (Vite, Webpack, esbuild).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-browser-apis", title: "Browser APIs", shortDesc: "Fetch, localStorage, WebSocket, Service Workers, Canvas, and Web Animations API.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-frameworks", title: "Frontend Frameworks (React, Vue, Angular)", shortDesc: "Component model, reactivity, state management, routing, and when to choose which.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-node", title: "Node.js & Runtimes", shortDesc: "CommonJS vs ESM, fs/http modules, npm/yarn/pnpm, Express, and an overview of Deno/Bun.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-meta-frameworks", title: "Meta-Frameworks (Next.js, Nuxt)", shortDesc: "SSR, SSG, ISR, file-based routing, server actions, and when to use a meta-framework over vanilla SPA.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-desktop", title: "Desktop Frameworks (Electron, Tauri)", shortDesc: "Cross-platform desktop apps with web tech — IPC, native APIs, bundling, and Tauri's Rust-based architecture.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-js-testing", title: "Testing JavaScript", shortDesc: "Jest, Vitest, Playwright, testing strategies (unit/integration/e2e), and TDD basics.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── TypeScript ──────────────────────────────────────────────────────
+      {
+        id: "nutshell-typescript",
+        title: "TypeScript",
+        description: "TypeScript from basics to advanced — type system, generics, utility types, and integration with React and Node.js.",
+        topics: [
+          { id: "ns-ts-basics", title: "TypeScript Basics", shortDesc: "Setup (tsc, tsconfig.json), primitive types, type annotations, and the compilation pipeline.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-interfaces", title: "Interfaces & Type Aliases", shortDesc: "Interface vs type, optional/readonly properties, index signatures, and declaration merging.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-unions", title: "Unions, Intersections & Narrowing", shortDesc: "Union and intersection types, discriminated unions, type guards, and the never type.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-generics", title: "Generics", shortDesc: "Generic functions, constraints, conditional types, mapped types, and infer.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-utility", title: "Utility Types & Templates", shortDesc: "Partial, Required, Pick, Omit, Record, template literal types, and recursive types.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-modules", title: "Modules & Declaration Files", shortDesc: "ESM in TypeScript, ambient declarations (.d.ts), triple-slash directives, and publishing types.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-react", title: "TypeScript with React", shortDesc: "FC types, hooks typing, event handlers, children props, and context generics.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-node", title: "TypeScript with Node.js", shortDesc: "tsx/ts-node, Express typing, async handlers, and using Zod for runtime validation.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-advanced", title: "Advanced Type Patterns", shortDesc: "Branded types, phantom types, builder pattern with generics, and type-safe state machines.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-ts-compiler", title: "Compiler Configuration & Tooling", shortDesc: "tsconfig.json in depth, project references, tsc --build, and ESLint with typescript-eslint.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Go ──────────────────────────────────────────────────────────────
+      {
+        id: "nutshell-go",
+        title: "Go",
+        description: "Go from the ground up — syntax, concurrency, interfaces, the standard library, web frameworks, and tooling.",
+        topics: [
+          { id: "ns-go-syntax", title: "Syntax & Basics", shortDesc: "Package structure, variables, constants, zero values, fmt, and the go toolchain.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-data-types", title: "Data Types & Control Flow", shortDesc: "Basic types, arrays, slices, maps, structs, if/switch/for, and defer.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-functions", title: "Functions & Methods", shortDesc: "Multiple return values, variadic functions, methods, and function values.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-interfaces", title: "Interfaces & Embedding", shortDesc: "Interface satisfaction, empty interface, type assertions, struct embedding, and composition.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-concurrency", title: "Concurrency (Goroutines & Channels)", shortDesc: "Goroutines, channels, select, sync primitives (Mutex, WaitGroup), and the actor model.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-errors", title: "Error Handling", shortDesc: "Error interface, sentinel errors, wrapping (%w), As/Is, and panic/recover.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-packages", title: "Packages & Modules", shortDesc: "go mod, module structure, internal packages, vendoring, and workspace mode.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-stdlib", title: "Standard Library", shortDesc: "io, net/http, encoding/json, context, time, and testing packages.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-web", title: "Web Frameworks (Gin, Echo, Chi)", shortDesc: "Routing, middleware, request binding, validation, and building REST APIs.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-go-testing", title: "Testing & Benchmarking", shortDesc: "go test, table-driven tests, subtests, benchmarks, fuzzing, and testify.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Rust ────────────────────────────────────────────────────────────
+      {
+        id: "nutshell-rust",
+        title: "Rust",
+        description: "Rust from syntax to systems programming — ownership, traits, error handling, async, and production frameworks.",
+        topics: [
+          { id: "ns-rs-syntax", title: "Syntax & Basics", shortDesc: "Variables, mutability, data types, functions, comments, and cargo (new/build/run).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-ownership", title: "Ownership & Borrowing", shortDesc: "Ownership rules, references (&T, &mut T), slices, and the borrow checker.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-structs", title: "Structs, Enums & Pattern Matching", shortDesc: "Defining structs, enums, Option/Result, match arms, if let, and destructuring.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-traits", title: "Traits & Generics", shortDesc: "Trait definition and implementation, generics, trait bounds, associated types, and dyn dispatch.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-lifetimes", title: "Lifetimes", shortDesc: "Lifetime annotations, elision rules, lifetimes in structs, and the 'static lifetime.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-errors", title: "Error Handling", shortDesc: "Result<T, E>, the ? operator, mapping errors, anyhow, and thiserror crates.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-concurrency", title: "Concurrency (Fearless)", shortDesc: "Send/Sync traits, threads, channels (mpsc), Mutex/Arc, and async/await with tokio.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-unsafe", title: "Unsafe Rust & FFI", shortDesc: "Raw pointers, unsafe blocks, calling C via FFI (extern), and the #[no_mangle] attribute.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-frameworks", title: "Web Frameworks (Axum, Actix, Rocket)", shortDesc: "Routing, middlewares, extractors, state management, and WebSocket support.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rs-testing", title: "Testing & Tooling", shortDesc: "Unit/integration tests, doc tests, cargo test, clippy, rustfmt, and benchmarking (criterion).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Java ────────────────────────────────────────────────────────────
+      {
+        id: "nutshell-java",
+        title: "Java",
+        description: "Java from the ground up — syntax, OOP, collections, streams, concurrency, build tools, and Spring Boot.",
+        topics: [
+          { id: "ns-java-syntax", title: "Syntax & Basics", shortDesc: "Classes, main method, variables, primitive types, operators, and the Java compilation pipeline.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-control-flow", title: "Control Flow & Arrays", shortDesc: "if/else, switch, for/while loops, arrays, varargs, and the enhanced for loop.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-oop", title: "Object-Oriented Programming", shortDesc: "Constructors, this/super, inheritance, polymorphism, abstract classes, interfaces, and records.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-exceptions", title: "Exception Handling", shortDesc: "Checked vs unchecked, try/catch/finally, try-with-resources, and custom exceptions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-collections", title: "Collections Framework", shortDesc: "List, Set, Map, Queue, Deque, equals/hashCode, Comparable/Comparator, and Collections utility class.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-generics", title: "Generics & Annotations", shortDesc: "Generic classes/methods, wildcards, type erasure, and built-in/custom annotations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-streams", title: "Streams & Lambdas", shortDesc: "Lambda expressions, functional interfaces, stream pipeline (map/filter/reduce), and Optional.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-concurrency", title: "Concurrency", shortDesc: "Thread, Runnable, Callable, ExecutorService, synchronized, volatile, Locks, and CompletableFuture.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-build", title: "Build Tools (Maven, Gradle)", shortDesc: "Project structure, dependency management, lifecycle plugins, and multi-module projects.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-java-spring", title: "Spring Boot Framework", shortDesc: "DI/IoC, REST controllers, JPA/Hibernate, security (Spring Security), and testing with Mockito.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── HTML / CSS ───────────────────────────────────────────────────────
+      {
+        id: "nutshell-html-css",
+        title: "HTML / CSS",
+        description: "The foundational web languages — semantic markup, styling, layout, responsive design, preprocessors, and modern CSS frameworks.",
+        topics: [
+          { id: "ns-html-syntax", title: "HTML Syntax & Semantics", shortDesc: "Elements, attributes, document outline, semantic tags (header, nav, main, article, section), and best practices.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-selectors", title: "CSS Selectors & Specificity", shortDesc: "Type, class, ID, attribute, pseudo-class, pseudo-element selectors; specificity calculation and the cascade.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-box-model", title: "Box Model & Typography", shortDesc: "Content, padding, border, margin; box-sizing; font properties, line-height, and web font loading.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-layout", title: "Layout (Flexbox, Grid)", shortDesc: "Flex container/item properties, grid template areas, auto-fit/minmax, and combining flex + grid.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-responsive", title: "Responsive Design", shortDesc: "Media queries, mobile-first approach, relative units (rem, em, vw, vh), and container queries.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-animations", title: "Animations & Transitions", shortDesc: "CSS transitions, keyframe animations, transform, easing functions, and performance considerations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-preprocessors", title: "Preprocessors (Sass, PostCSS)", shortDesc: "Variables, nesting, mixins, functions, partials, and Autoprefixer with PostCSS.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-html-forms", title: "Forms & Validation", shortDesc: "Input types, form attributes, constraint validation API, custom validation, and accessible form design.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-css-frameworks", title: "CSS Frameworks (Tailwind, Bootstrap)", shortDesc: "Utility-first vs component-based frameworks, customization, and when to use each approach.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-html-a11y", title: "Accessibility & SEO", shortDesc: "ARIA roles/attributes, keyboard navigation, alt text, meta tags, Open Graph, and structured data (JSON-LD).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── SQL ──────────────────────────────────────────────────────────────
+      {
+        id: "nutshell-sql",
+        title: "SQL",
+        description: "SQL from the ground up — queries, joins, aggregation, schema design, indexes, transactions, and database tools.",
+        topics: [
+          { id: "ns-sql-basics", title: "SELECT & Basic Queries", shortDesc: "SELECT, FROM, WHERE, ORDER BY, LIMIT, DISTINCT, and column aliases.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-filtering", title: "Filtering, Sorting & Aggregation", shortDesc: "WHERE operators, LIKE, IN, BETWEEN, GROUP BY, HAVING, COUNT, SUM, AVG, MIN, MAX.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-joins", title: "JOINs & Subqueries", shortDesc: "INNER, LEFT, RIGHT, FULL OUTER, CROSS JOINs; correlated and uncorrelated subqueries; CTEs (WITH).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-ddl", title: "DDL (CREATE, ALTER, DROP)", shortDesc: "Creating tables, altering schemas, constraints (PK, FK, UNIQUE, CHECK), and data types.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-dml", title: "DML (INSERT, UPDATE, DELETE)", shortDesc: "Inserting rows, bulk inserts, updating with joins, delete with subqueries, and TRUNCATE.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-indexes", title: "Indexes & Performance", shortDesc: "B-tree indexes, composite indexes, EXPLAIN ANALYZE, query planning, and index-only scans.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-transactions", title: "Transactions & ACID", shortDesc: "BEGIN/COMMIT/ROLLBACK, isolation levels (READ COMMITTED, SERIALIZABLE), locks, and deadlocks.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-window", title: "Window Functions", shortDesc: "ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and frame specifications.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-design", title: "Database Design & Normalization", shortDesc: "ER diagrams, 1NF/2NF/3NF, denormalization trade-offs, and naming conventions.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-sql-tools", title: "Tools & Clients", shortDesc: "psql, DBeaver, pgAdmin, MySQL Workbench, migration tools (Flyway, Prisma Migrate), and ORMs.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── C / C++ ──────────────────────────────────────────────────────────
+      {
+        id: "nutshell-cpp",
+        title: "C / C++",
+        description: "C and C++ from the ground up — pointers, memory management, OOP, the STL, build systems, and popular frameworks.",
+        topics: [
+          { id: "ns-c-syntax", title: "C Syntax & Basics", shortDesc: "Data types, operators, control flow, functions, arrays, strings, and the compilation pipeline (gcc/clang).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-c-pointers", title: "Pointers & Memory Management", shortDesc: "Pointer arithmetic, malloc/calloc/realloc/free, stack vs heap, function pointers, and void pointers.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-c-stdlib", title: "C Standard Library", shortDesc: "stdio, stdlib, string, math, time, assert, and POSIX I/O (open, read, write, close).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-basics", title: "C++ Basics & Classes", shortDesc: "cin/cout, references, const, default arguments, function overloading, class definition, and access specifiers.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-oop", title: "OOP in C++", shortDesc: "Inheritance, virtual functions, polymorphism, abstract base classes, multiple inheritance, and virtual destructors.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-stl", title: "STL (Containers, Algorithms, Iterators)", shortDesc: "vector, map, set, unordered_map, algorithm (sort, find, accumulate), and iterator categories.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-raii", title: "RAII & Smart Pointers", shortDesc: "unique_ptr, shared_ptr, weak_ptr, move semantics, rvalue references (&&), and std::move.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-modern", title: "Modern C++ (C++11/14/17/20/23)", shortDesc: "auto, range-for, lambda, constexpr, concepts, ranges, coroutines, and modules.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-build", title: "Build Systems (CMake, Make)", shortDesc: "CMakeLists.txt, targets, dependencies, generators, vcpkg/conan, and cross-compilation.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-cpp-frameworks", title: "Popular Frameworks (Qt, Boost, Unreal)", shortDesc: "Qt widgets/QML, Boost libraries, Unreal Engine scripting, and embedded (Arduino, Zephyr).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Ruby / Rails ─────────────────────────────────────────────────────
+      {
+        id: "nutshell-ruby",
+        title: "Ruby / Rails",
+        description: "Ruby from syntax to Rails — blocks, metaprogramming, MVC, Active Record, testing, and deployment.",
+        topics: [
+          { id: "ns-rb-syntax", title: "Ruby Syntax & Basics", shortDesc: "Variables, data types, strings, symbols, arrays, hashes, puts/gets, and irb.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-control-flow", title: "Control Flow & Methods", shortDesc: "if/unless/case, loops, method definitions, splat arguments, and implicit return values.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-oop", title: "Objects & Classes", shortDesc: "Class definition, initialize, attr_accessor, inheritance, modules, mixins, and self.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-blocks", title: "Blocks, Procs & Lambdas", shortDesc: "Blocks with do/end and {}, yield, Proc.new, lambda, and closures.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-enumerable", title: "Enumerable & Collections", shortDesc: "each, map, select, reduce, sort_by, group_by, chaining, and lazy enumerators.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-gems", title: "Gems & Bundler", shortDesc: "Gemfile, bundler, gem creation, RubyGems.org, and versioning (semver).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-rails-mvc", title: "Rails MVC Basics", shortDesc: "Project structure, rails generate, routes, controllers, views, and the request lifecycle.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-activerecord", title: "Active Record & Migrations", shortDesc: "Models, associations, validations, callbacks, query interface, and schema migrations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-testing", title: "Testing (RSpec, Minitest)", shortDesc: "describe/it, let, subject, factories (FactoryBot), mocking, and system tests.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-rb-deploy", title: "Deployment & Tooling", shortDesc: "Capistrano, Docker, Render/Heroku, RubyMine, RuboCop, and security (Brakeman).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── PHP / Laravel ────────────────────────────────────────────────────
+      {
+        id: "nutshell-php",
+        title: "PHP / Laravel",
+        description: "PHP from the ground up — syntax, OOP, Composer, Laravel MVC, Eloquent, testing, and the WordPress ecosystem.",
+        topics: [
+          { id: "ns-php-syntax", title: "PHP Syntax & Basics", shortDesc: "Tags, variables, data types, echo/print, strings, arrays, and superglobals ($_GET, $_POST, $_SESSION).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-control-flow", title: "Control Flow & Functions", shortDesc: "if/else/elseif, switch, for/foreach/while, user-defined functions, variable scope, and type declarations.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-oop", title: "OOP in PHP", shortDesc: "Classes, inheritance, interfaces, traits, abstract classes, namespaces, and autoloading (PSR-4).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-composer", title: "Composer & Packages", shortDesc: "composer.json, autoload, Packagist, version constraints, and creating custom packages.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-laravel-mvc", title: "Laravel MVC", shortDesc: "Artisan CLI, routing, controllers, Blade templates, and the service container.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-eloquent", title: "Eloquent ORM & Migrations", shortDesc: "Models, relationships, query scopes, mutators/accessors, migrations, and seeders.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-middleware", title: "Middleware & Auth", shortDesc: "Custom middleware, authentication guards, policies, gates, and Laravel Sanctum for APIs.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-testing", title: "Testing (PHPUnit, Pest)", shortDesc: "Unit/feature tests, HTTP tests, database tests, mocking, and TDD workflows.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-wordpress", title: "WordPress Plugin & Theme Dev", shortDesc: "Hooks (actions/filters), CPT, meta boxes, shortcodes, the REST API, and block editor (Gutenberg).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-php-deploy", title: "Deployment & Tooling", shortDesc: "Laravel Forge, Envoyer, Docker/Sail, PHPStan, Laravel Horizon, and Octane.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Swift (iOS) ──────────────────────────────────────────────────────
+      {
+        id: "nutshell-swift",
+        title: "Swift (iOS)",
+        description: "Swift from syntax to App Store — optionals, protocols, SwiftUI, UIKit, networking, concurrency, and app distribution.",
+        topics: [
+          { id: "ns-swift-syntax", title: "Swift Syntax & Basics", shortDesc: "Variables (let/var), data types, string interpolation, optionals, and basic operators.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-optionals", title: "Optionals & Type Safety", shortDesc: "Optional binding (if-let, guard-let), forced unwrapping, nil coalescing, and optional chaining.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-control-flow", title: "Control Flow & Functions", shortDesc: "for-in, while, switch with pattern matching, function parameters, in-out, and guard statements.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-structs-classes", title: "Structs, Classes & Enums", shortDesc: "Value vs reference types, inheritance, initializers, computed properties, property observers, and associated values.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-protocols", title: "Protocols & Extensions", shortDesc: "Protocol definition, protocol inheritance, default implementations (protocol extensions), and protocol-oriented design.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-concurrency", title: "Concurrency (async/await)", shortDesc: "async/await syntax, Task, TaskGroup, actors, Sendable, and MainActor.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-swiftui", title: "SwiftUI Basics", shortDesc: "View/ViewBuilder, state ( @State, @Binding, @Observable), NavigationStack, and canvas previews.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-uikit", title: "UIKit & Storyboards", shortDesc: "UIViewController lifecycle, Auto Layout, UITableView/UICollectionView, segues, and programmatic UI.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-networking", title: "Networking & Data Persistence", shortDesc: "URLSession, Codable, Core Data, SwiftData, UserDefaults, and Keychain.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-swift-tooling", title: "App Distribution & Tooling", shortDesc: "Xcode basics, Swift Package Manager, TestFlight, App Store Connect, and CI with GitHub Actions.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        ],
+      },
+      // ── Terminal / Shell ─────────────────────────────────────────────────
+      {
+        id: "nutshell-terminal",
+        title: "Terminal / Shell",
+        description: "Cross-platform command-line essentials — bash/zsh (macOS/Linux), PowerShell/cmd (Windows), file system, text processing, package managers, scripting, and modern CLI tools.",
+        topics: [
+          { id: "ns-term-basics", title: "Shell Basics & Navigation", shortDesc: "Terminal emulators, shell types (bash/zsh/fish, PowerShell/cmd), prompt, pwd, ls, cd, and tab completion.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-files", title: "File & Directory Operations", shortDesc: "cp, mv, rm, mkdir, touch, ln (symlinks), find, and cross-platform gotchas (case sensitivity, path separators).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-permissions", title: "Permissions & Users", shortDesc: "chmod, chown, umask, sudo, su, file ownership (Unix), and ACLs (Windows icacls).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-text", title: "Text Processing & Pipelines", shortDesc: "grep, sed, awk, cut, sort, uniq, wc, diff, pipe (|), redirection (>, >>, 2>), and here-documents.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-process", title: "Process Management", shortDesc: "ps, top/htop, kill, jobs, fg/bg, nohup, disown, Task Manager (Windows), and WSL interop.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-networking", title: "Networking Commands", shortDesc: "ping, curl, wget, netstat/ss, ifconfig/ip, ssh, scp, rsync, and Windows equivalents (netsh, tracert).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-package", title: "Package Managers", shortDesc: "Homebrew (macOS), apt/dnf/pacman (Linux), winget/choco/scoop (Windows), and npm/pip as global tools.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-scripting", title: "Shell Scripting", shortDesc: "Variables, conditionals, loops, functions, exit codes, shebang, and debugging with set -x.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-env", title: "Environment & Dotfiles", shortDesc: "PATH, env vars, .bashrc/.zshrc/.profile, aliases, functions in dotfiles, and managing config with dotbot/chezmoi.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-term-modern", title: "Modern CLI Tools", shortDesc: "fzf, bat, ripgrep, fd, jq, yq, httpie, tmux, zoxide, starship, and lazygit.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
         ],
       },
     ],
