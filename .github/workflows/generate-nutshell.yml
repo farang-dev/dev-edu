@@ -6,9 +6,12 @@ jobs:
     strategy:
       matrix:
         batch:
-          - name: python-js
-            modules: nutshell-python,nutshell-javascript
-            count: 24
+          - name: python
+            modules: nutshell-python
+            count: 11
+          - name: javascript
+            modules: nutshell-javascript
+            count: 13
           - name: ts-go
             modules: nutshell-typescript,nutshell-go
             count: 20
@@ -94,7 +97,7 @@ jobs:
 
             ## Module-by-module topic list
 
-            ${{ matrix.batch.name == 'python-js' && '### nutshell-python (11 topics)
+            ${{ matrix.batch.name == 'python' && '### nutshell-python (11 topics)
             1. ns-py-syntax — Syntax & Basics
             2. ns-py-data-types — Data Types & Structures
             3. ns-py-control-flow — Control Flow & Functions
@@ -105,9 +108,9 @@ jobs:
             8. ns-py-testing — Testing with pytest
             9. ns-py-async — Async Python
             10. ns-py-web — Web Frameworks (Django, FastAPI, Flask)
-            11. ns-py-tooling — Tooling & Packaging
+            11. ns-py-tooling — Tooling & Packaging' || '' }}
 
-            ### nutshell-javascript (13 topics)
+            ${{ matrix.batch.name == 'javascript' && '### nutshell-javascript (13 topics)
             1. ns-js-syntax — Syntax & Basics
             2. ns-js-control-flow — Control Flow & Functions
             3. ns-js-dom — DOM Manipulation & Events
