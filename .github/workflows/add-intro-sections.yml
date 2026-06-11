@@ -1,10 +1,6 @@
 name: Add "What Is This" + "Why Learn This" to All Topics
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Generate Cheat Sheets"]
-    types:
-      - completed
 jobs:
   add-intros:
     runs-on: ubuntu-latest

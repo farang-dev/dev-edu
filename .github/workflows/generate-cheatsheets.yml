@@ -51,3 +51,14 @@ jobs:
             7. After ALL edits, run: npx tsc -p tsconfig.app.json --noEmit — fix any errors.
             8. Write in English, no emojis.
             9. readTimeMin must stay at 5.
+
+  dispatch-intros:
+    if: success()
+    needs: generate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch add-intro-sections workflow
+        run: |
+          gh workflow run add-intro-sections.yml --repo farang-dev/dev-edu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
