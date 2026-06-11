@@ -10305,6 +10305,8086 @@ Key Principle:
           },
         ],
       },
+      {
+        id: "cheat-frontend",
+        title: "Frontend Cheat Sheets",
+        description: "Quick-reference cheat sheets covering every major frontend technology -- HTML, CSS, JavaScript, TypeScript, frameworks, tools, and best practices.",
+        topics: [
+          {
+            id: "fe-cheat-html",
+            title: "HTML Cheat Sheet",
+            shortDesc: "Complete HTML reference -- elements, attributes, forms, semantics, accessibility, and SEO best practices.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "HTML5 semantic elements for accessible document structure",
+              "Form controls, validation, and input types",
+              "Attributes: global, event-handler, ARIA, and data-*",
+              "Metadata, SEO tags, and Open Graph protocol",
+              "Embedded content: images, video, audio, iframes, and canvas",
+            ],
+            content: `## Quick Reference
+
+HTML (HyperText Markup Language) is the standard language for creating web pages. It uses tags to structure content into elements such as headings, paragraphs, links, images, and forms. Every HTML document follows a doctype-declaration, html-root, head-metadata, and body-content structure.
+
+| Concept | Rule |
+|---------|------|
+| DOCTYPE | <code><!DOCTYPE html></code> must be the very first line |
+| Self-closing | <code>&lt;br&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> |
+| Void elements | Same as self-closing -- must not have a closing tag |
+| Attributes | Always use quotes: <code>&lt;a href="url"&gt;</code> |
+| Boolean attrs | Write <code>&lt;input disabled&gt;</code> not <code>disabled="false"</code> |
+| Nesting | Always close inner elements before outer: <code>&lt;div&gt;&lt;p&gt;...&lt;/p&gt;&lt;/div&gt;</code> |
+
+\`\`\`html
+<!DOCTYPE html>                         <!-- Declares HTML5 document type -->
+<html lang="en">                        <!-- Root element with language attribute -->
+<head>
+  <meta charset="UTF-8">               <!-- Character encoding declaration -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive viewport -->
+  <title>Page Title</title>             <!-- Browser tab title (required for SEO) -->
+  <meta name="description" content="Page description under 160 chars"> <!-- SEO meta description -->
+  <link rel="stylesheet" href="style.css"> <!-- External CSS (blocking) -->
+</head>
+<body>
+  <header>                              <!-- Semantic: introductory content -->
+    <nav>                               <!-- Semantic: navigation links -->
+      <ul>
+        <li><a href="/">Home</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>                               <!-- Semantic: primary content (one per page) -->
+    <article>                          <!-- Semantic: self-contained composition -->
+      <h1>Main Heading</h1>            <!-- One h1 per page for accessibility -->
+      <section>                        <!-- Semantic: thematic grouping -->
+        <h2>Section Title</h2>
+        <p>Paragraph text.</p>
+      </section>
+    </article>
+    <aside>                            <!-- Semantic: tangentially related content -->
+      <p>Sidebar content.</p>
+    </aside>
+  </main>
+  <footer>                             <!-- Semantic: footer metadata -->
+    <p>&copy; 2026</p>
+  </footer>
+</body>
+</html>
+\`\`\`
+
+## Document Structure & Semantic Elements
+
+HTML5 introduced semantic elements that describe their purpose to browsers, screen readers, and search engines.
+
+| Element | Purpose | Usage Rule |
+|---------|---------|------------|
+| <code>&lt;header&gt;</code> | Introductory content or navigational aids | Can be used per section, not just page-level |
+| <code>&lt;nav&gt;</code> | Navigation links | Use for primary navigation blocks only |
+| <code>&lt;main&gt;</code> | Dominant content of the <code>&lt;body&gt;</code> | One per page; not inside <code>&lt;article&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;header&gt;</code>, <code>&lt;footer&gt;</code> |
+| <code>&lt;article&gt;</code> | Self-contained composition (blog post, comment, widget) | Should make sense independently |
+| <code>&lt;section&gt;</code> | Thematic grouping of content | Each section should have a heading |
+| <code>&lt;aside&gt;</code> | Tangentially related content (sidebar, pull quote) | Indirectly related to surrounding content |
+| <code>&lt;figure&gt;</code> | Self-contained content (image, diagram, code block) | Often paired with <code>&lt;figcaption&gt;</code> |
+| <code>&lt;figcaption&gt;</code> | Caption for <code>&lt;figure&gt;</code> | First or last child of <code>&lt;figure&gt;</code> |
+| <code>&lt;mark&gt;</code> | Highlighted/referenced text | Search results, key terms |
+| <code>&lt;time&gt;</code> | Machine-readable date/time | Use <code>datetime</code> attribute for parsing |
+| <code>&lt;details&gt;</code> | Disclosure widget (expand/collapse) | Wrap <code>&lt;summary&gt;</code> as first child |
+| <code>&lt;summary&gt;</code> | Visible heading for <code>&lt;details&gt;</code> | Must be first child of <code>&lt;details&gt;</code> |
+
+\`\`\`html
+<!-- Correct landmark structure -->
+<header role="banner">                <!-- role attribute for older AT support -->
+  <nav role="navigation" aria-label="Main">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/about">About</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main role="main">
+  <article aria-labelledby="article-title">
+    <h1 id="article-title">Blog Post</h1>
+    <p>Content here.</p>
+    <figure>
+      <img src="diagram.png" alt="Architecture diagram showing system components">
+      <figcaption>System Architecture Overview</figcaption>
+    </figure>
+  </article>
+</main>
+
+<footer role="contentinfo">
+  <p>&copy; 2026 Example Corp</p>
+</footer>
+\`\`\`
+
+## Headings Hierarchy
+
+| Level | Rule |
+|-------|------|
+| <code>&lt;h1&gt;</code> | One per page; must describe the overall page topic |
+| <code>&lt;h2&gt;</code>-<code>&lt;h6&gt;</code> | Nest without skipping levels (never h2 then h4) |
+| All | Screen readers navigate by heading levels -- maintain a logical outline |
+
+\`\`\`html
+<!-- Correct heading hierarchy -->
+<h1>Site Title</h1>
+  <h2>Section One</h2>
+    <h3>Subsection A</h3>
+    <h3>Subsection B</h3>
+  <h2>Section Two</h2>
+
+<!-- INCORRECT - skip level -->
+<h1>Title</h1>
+  <h3>Subsection</h3>  <!-- Wrong: h1 to h3 skips h2 -->
+\`\`\`
+
+## Forms & Input Types
+
+Forms collect user input and submit it to a server via <code>GET</code> or <code>POST</code>.
+
+### Form Attributes
+
+| Attribute | Values | Purpose |
+|-----------|--------|---------|
+| <code>action</code> | URL | Where to send the form data |
+| <code>method</code> | <code>get</code> / <code>post</code> | HTTP method for submission |
+| <code>enctype</code> | <code>application/x-www-form-urlencoded</code>, <code>multipart/form-data</code>, <code>text/plain</code> | Encoding type (<code>multipart/form-data</code> for file uploads) |
+| <code>novalidate</code> | Boolean | Disable browser validation |
+| <code>autocomplete</code> | <code>on</code> / <code>off</code> | Allow browser auto-fill |
+
+### Input Types (HTML5)
+
+| Type | Example | Validation |
+|------|---------|------------|
+| <code>text</code> | Single-line text | None |
+| <code>password</code> | Masked characters | None |
+| <code>email</code> | <code>user@domain.com</code> | Checks for @ and domain format |
+| <code>url</code> | <code>https://example.com</code> | Checks URL protocol |
+| <code>number</code> | 42 | Accepts integers/floats; <code>min</code>, <code>max</code>, <code>step</code> |
+| <code>tel</code> | +1-555-0100 | No automatic validation (pattern needed) |
+| <code>date</code> | 2026-06-11 | Browser date picker |
+| <code>datetime-local</code> | 2026-06-11T14:30 | Date + time without timezone |
+| <code>time</code> | 14:30 | Time picker |
+| <code>color</code> | #ff6600 | Color picker |
+| <code>range</code> | 0-100 | Slider; use <code>min</code>, <code>max</code>, <code>step</code> |
+| <code>file</code> | File selector | <code>accept</code> attribute for MIME filter |
+| <code>checkbox</code> | Boolean toggle | Multiple can share the same <code>name</code> |
+| <code>radio</code> | Single-select group | Same <code>name</code> = same group |
+| <code>search</code> | Search field | Same as text but with clear button |
+| <code>submit</code> | Submit button | Triggers form submission |
+| <code>hidden</code> | Not visible | Used for CSRF tokens, page state |
+
+### Validation Attributes
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| <code>required</code> | Field must have a value | <code>&lt;input required&gt;</code> |
+| <code>minlength</code> / <code>maxlength</code> | Text length limits | <code>minlength="3" maxlength="50"</code> |
+| <code>min</code> / <code>max</code> | Numeric/date range | <code>min="0" max="100"</code> |
+| <code>step</code> | Increment step for numbers | <code>step="0.5"</code> |
+| <code>pattern</code> | Regex validation | <code>pattern="[A-Za-z]{3}"</code> |
+
+\`\`\`html
+<form action="/submit" method="post" novalidate>
+  <!-- Text input with label (always associate labels!) -->
+  <label for="name">Full Name:</label>
+  <input type="text" id="name" name="name" required minlength="2" maxlength="100"
+         placeholder="Jane Doe" autocomplete="name">
+
+  <!-- Email with built-in validation -->
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" required
+         placeholder="jane@example.com">
+
+  <!-- Number with constraints -->
+  <label for="age">Age:</label>
+  <input type="number" id="age" name="age" min="0" max="150" step="1" value="25">
+
+  <!-- Select dropdown -->
+  <label for="country">Country:</label>
+  <select id="country" name="country" required>
+    <option value="">-- Select --</option>             <!-- Placeholder option -->
+    <option value="us">United States</option>
+    <option value="ca">Canada</option>
+    <option value="mx">Mexico</option>
+  </select>
+
+  <!-- Radio group (same name = single select) -->
+  <fieldset>                                           <!-- Groups related inputs -->
+    <legend>Preferred Contact Method</legend>          <!-- Caption for fieldset -->
+    <input type="radio" id="contact-email" name="contact" value="email" checked>
+    <label for="contact-email">Email</label>
+    <input type="radio" id="contact-phone" name="contact" value="phone">
+    <label for="contact-phone">Phone</label>
+  </fieldset>
+
+  <!-- Checkbox -->
+  <input type="checkbox" id="terms" name="terms" required>
+  <label for="terms">I agree to the terms</label>
+
+  <!-- File upload with MIME filter -->
+  <label for="avatar">Profile Picture:</label>
+  <input type="file" id="avatar" name="avatar" accept="image/png, image/jpeg">
+
+  <!-- Datalist for autocomplete suggestions -->
+  <label for="browser">Browser:</label>
+  <input list="browsers" id="browser" name="browser">
+  <datalist id="browsers">
+    <option value="Chrome">
+    <option value="Firefox">
+    <option value="Safari">
+  </datalist>
+
+  <button type="submit">Submit</button>
+  <button type="reset">Reset</button>
+</form>
+\`\`\`
+
+## Attributes Reference
+
+### Global Attributes (valid on every element)
+
+| Attribute | Purpose | Example |
+|-----------|---------|---------|
+| <code>class</code> | CSS class selector (space-separated) | <code>class="container active"</code> |
+| <code>id</code> | Unique identifier (one per page) | <code>id="main-header"</code> |
+| <code>style</code> | Inline CSS (avoid when possible) | <code>style="color: red"</code> |
+| <code>data-*</code> | Custom data attributes | <code>data-user-id="42"</code> |
+| <code>aria-*</code> | Accessibility attributes | <code>aria-label="Close"</code> |
+| <code>role</code> | ARIA landmark / widget role | <code>role="button"</code> |
+| <code>hidden</code> | Hide element (display:none) | <code>hidden</code> |
+| <code>tabindex</code> | Tab order (-1 = skip, 0 = DOM order) | <code>tabindex="0"</code> |
+| <code>lang</code> | Language of element content | <code>lang="en-US"</code> |
+| <code>dir</code> | Text direction (ltr / rtl / auto) | <code>dir="rtl"</code> |
+| <code>title</code> | Tooltip / advisory information | <code>title="More info"</code> |
+| <code>translate</code> | Whether content is translatable | <code>translate="no"</code> |
+| <code>contenteditable</code> | Make element editable | <code>contenteditable="true"</code> |
+| <code>spellcheck</code> | Enable spell-checking | <code>spellcheck="true"</code> |
+| <code>draggable</code> | Enable drag-and-drop | <code>draggable="true"</code> |
+| <code>slot</code> | Web Components slot assignment | <code>slot="header"</code> |
+| <code>inert</code> | Make element and children non-interactive | <code>inert</code> |
+
+## Embedded Content
+
+| Element | Usage | Key Attributes |
+|---------|-------|----------------|
+| <code>&lt;img&gt;</code> | Raster images | <code>src</code>, <code>alt</code> (required), <code>srcset</code>, <code>sizes</code>, <code>loading="lazy"</code>, <code>decoding="async"</code> |
+| <code>&lt;picture&gt;</code> | Art direction / format selection | Contains <code>&lt;source&gt;</code> elements + fallback <code>&lt;img&gt;</code> |
+| <code>&lt;video&gt;</code> | Video playback | <code>src</code>, <code>controls</code>, <code>autoplay</code>, <code>loop</code>, <code>muted</code>, <code>poster</code> |
+| <code>&lt;audio&gt;</code> | Audio playback | <code>src</code>, <code>controls</code>, <code>autoplay</code>, <code>loop</code> |
+| <code>&lt;iframe&gt;</code> | Embedded document | <code>src</code>, <code>sandbox</code>, <code>allow</code>, <code>loading="lazy"</code>, <code>title</code> |
+| <code>&lt;canvas&gt;</code> | Scriptable bitmap drawing | <code>width</code>, <code>height</code> |
+| <code>&lt;svg&gt;</code> | Scalable vector graphics | <code>viewBox</code>, <code>width</code>, <code>height</code> |
+
+\`\`\`html
+<!-- Responsive images with srcset and sizes -->
+<img
+  src="photo-800.jpg"                               <!-- Fallback for old browsers -->
+  srcset="
+    photo-400.jpg 400w,                             <!-- 400 pixels wide image -->
+    photo-800.jpg 800w,                             <!-- 800 pixels wide image -->
+    photo-1200.jpg 1200w                            <!-- 1200 pixels wide image -->
+  "
+  sizes="
+    (max-width: 600px) 100vw,                       <!-- Full viewport width on mobile -->
+    (max-width: 1024px) 50vw,                       <!-- Half on tablet -->
+    800px                                           <!-- Fixed 800px on desktop -->
+  "
+  alt="Mountain landscape at sunset"                <!-- Required for accessibility -->
+  loading="lazy"                                    <!-- Defer loading until near viewport -->
+  decoding="async"                                  <!-- Decode off main thread -->
+>
+
+<!-- Picture element for format-based selection -->
+<picture>
+  <source srcset="photo.avif" type="image/avif">    <!-- AVIF: ~50% smaller than JPEG -->
+  <source srcset="photo.webp" type="image/webp">    <!-- WebP: ~30% smaller than JPEG -->
+  <img src="photo.jpg" alt="Description">           <!-- Universal fallback -->
+</picture>
+
+<!-- Video with multiple sources -->
+<video controls width="640" height="360" poster="thumbnail.jpg">
+  <source src="video.mp4" type="video/mp4">
+  <source src="video.webm" type="video/webm">
+  <track src="subtitles_en.vtt" kind="subtitles" srclang="en" label="English">
+  <p>Your browser does not support video. <a href="video.mp4">Download</a></p>   <!-- Fallback -->
+</video>
+
+<!-- Secure iframe -->
+<iframe
+  src="https://example.com/widget"
+  title="Example Widget"                             <!-- Required for accessibility -->
+  width="300" height="200"
+  sandbox="allow-scripts allow-same-origin"          <!-- Restrict capabilities -->
+  loading="lazy"                                     <!-- Lazy load iframe -->
+  allow="clipboard-write; camera; microphone"        <!-- Permissions policy -->
+></iframe>
+\`\`\`
+
+## SEO & Meta Tags
+
+| Tag | Purpose | Example |
+|-----|---------|---------|
+| <code>&lt;title&gt;</code> | Browser tab title (50-60 chars) | <code>&lt;title&gt;Page Name | Site Name&lt;/title&gt;</code> |
+| <code>meta description</code> | Search snippet (150-160 chars) | <code>&lt;meta name="description" content="..."&gt;</code> |
+| <code>meta robots</code> | Crawler instructions | <code>&lt;meta name="robots" content="index, follow"&gt;</code> |
+| <code>link canonical</code> | Preferred URL to avoid duplicate content | <code>&lt;link rel="canonical" href="https://..."&gt;</code> |
+| <code>og:title</code> | Open Graph title for social sharing | <code>&lt;meta property="og:title" content="..."&gt;</code> |
+| <code>og:description</code> | Open Graph description | <code>&lt;meta property="og:description" content="..."&gt;</code> |
+| <code>og:image</code> | Social share image (1200x630) | <code>&lt;meta property="og:image" content="..."&gt;</code> |
+| <code>og:type</code> | Content type (website, article, product) | <code>&lt;meta property="og:type" content="article"&gt;</code> |
+| <code>twitter:card</code> | Twitter card type | <code>&lt;meta name="twitter:card" content="summary_large_image"&gt;</code> |
+| <code>twitter:site</code> | Twitter @username | <code>&lt;meta name="twitter:site" content="@username"&gt;</code> |
+| <code>ld+json</code> | Structured data (JSON-LD) | See example below |
+
+\`\`\`html
+<head>
+  <title>HTML Cheat Sheet | Frontend Reference</title>
+  <meta name="description" content="The complete HTML cheat sheet covering semantic elements, forms, attributes, SEO, accessibility, and best practices for modern web development.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://example.com/html-cheat-sheet">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="HTML Cheat Sheet - Complete Reference">
+  <meta property="og:description" content="Every HTML element, attribute, and pattern you need for modern web development.">
+  <meta property="og:image" content="https://example.com/og-html.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://example.com/html-cheat-sheet">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Frontend Reference">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@frontendref">
+  <meta name="twitter:title" content="HTML Cheat Sheet">
+  <meta name="twitter:description" content="Complete HTML reference for modern web development.">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "HTML Cheat Sheet",
+    "description": "Complete HTML reference covering elements, forms, attributes, and best practices.",
+    "author": {
+      "@type": "Person",
+      "name": "Frontend Reference"
+    },
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-06-11"
+  }
+  </script>
+</head>
+\`\`\`
+
+## Accessibility (ARIA)
+
+### ARIA Landmark Roles (use semantic HTML when possible)
+
+| HTML Element | Implicit Role | When to Use Explicit ARIA |
+|--------------|---------------|---------------------------|
+| <code>&lt;header&gt;</code> | <code>banner</code> | Only for page-level header; section-level needs no role |
+| <code>&lt;nav&gt;</code> | <code>navigation</code> | Use <code>aria-label</code> when multiple navs |
+| <code>&lt;main&gt;</code> | <code>main</code> | One per page |
+| <code>&lt;aside&gt;</code> | <code>complementary</code> | Tangentially related content |
+| <code>&lt;footer&gt;</code> | <code>contentinfo</code> | Only for page-level footer |
+| <code>&lt;form&gt;</code> | <code>form</code> | Only if it has an accessible name (<code>aria-label</code> or <code>aria-labelledby</code>) |
+| <code>&lt;section&gt;</code> | <code>region</code> | Only if it has an accessible name |
+
+### ARIA States & Properties
+
+| Attribute | Purpose | Example |
+|-----------|---------|---------|
+| <code>aria-label</code> | String label for an element | <code>aria-label="Close dialog"</code> |
+| <code>aria-labelledby</code> | References another element as label | <code>aria-labelledby="dialog-title"</code> |
+| <code>aria-describedby</code> | References description element | <code>aria-describedby="error-msg"</code> |
+| <code>aria-hidden</code> | Hide from accessibility tree | <code>aria-hidden="true"</code> |
+| <code>aria-expanded</code> | Expand/collapse state | <code>aria-expanded="false"</code> |
+| <code>aria-controls</code> | References controlled element id | <code>aria-controls="menu-list"</code> |
+| <code>aria-current</code> | Current item in set (page, step, location) | <code>aria-current="page"</code> |
+| <code>aria-pressed</code> | Toggle button state | <code>aria-pressed="true"</code> |
+| <code>aria-selected</code> | Tab/option selection state | <code>aria-selected="true"</code> |
+| <code>aria-required</code> | Required field indicator | <code>aria-required="true"</code> |
+| <code>aria-invalid</code> | Validation error state | <code>aria-invalid="true"</code> |
+| <code>aria-errormessage</code> | References error message element | <code>aria-errormessage="error-msg"</code> |
+| <code>aria-live</code> | Live region (polite / assertive / off) | <code>aria-live="polite"</code> |
+| <code>aria-atomic</code> | Announce region as whole or parts | <code>aria-atomic="true"</code> |
+| <code>aria-relevant</code> | What changes trigger announcement | <code>aria-relevant="additions text"</code> |
+| <code>role="alert"</code> | Important, time-sensitive message | <code>role="alert"</code> |
+| <code>role="dialog"</code> / <code>role="alertdialog"</code> | Modal/non-modal dialog | Must have <code>aria-modal="true"</code> + <code>aria-labelledby</code> |
+
+### First Rule of ARIA
+
+Do NOT use ARIA if you can use a semantic HTML element. <code>&lt;button&gt;</code> already has implicit <code>role="button"</code>, keyboard handling, and focus management. Adding <code>&lt;div role="button"&gt;</code> requires manual keyboard event handling.
+
+\`\`\`html
+<!-- GOOD: semantic HTML -->
+<button aria-pressed="false" onclick="toggleMute()">
+  Mute
+</button>
+
+<!-- BAD: reinventing the wheel -->
+<div role="button" tabindex="0" onclick="toggleMute()" onkeydown="if(event.key==='Enter')toggleMute()">
+  Mute
+</div>
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Missing <code>alt</code> on images | Screen readers read the filename; hurts SEO | Always provide descriptive <code>alt</code> text (empty <code>alt=""</code> for decorative images) |
+| 2 | Duplicate <code>id</code> values | <code>document.getElementById</code> returns first match; ARIA references break | Every <code>id</code> must be unique per document |
+| 3 | Block elements inside inline elements | <code>&lt;a&gt;&lt;div&gt;...&lt;/div&gt;&lt;/a&gt;</code> is invalid in HTML4 and causes browser quirks | In HTML5, wrap block elements in <code>&lt;a&gt;</code> is valid; otherwise use <code>&lt;span&gt;</code> |
+| 4 | Using <code>&lt;br&gt;</code> for spacing | Breaks semantic structure; screen readers announce "line break" | Use CSS <code>margin</code> or <code>padding</code> |
+| 5 | Using <code>&lt;div&gt;</code> for buttons | No keyboard handling, no focus, no screen reader announcement | Use <code>&lt;button&gt;</code> or apply <code>role="button"</code> + keyboard handlers |
+| 6 | Forgetting <code>&lt;label&gt;</code> on form inputs | Screen readers cannot associate label with input; small click target | Wrap with <code>&lt;label&gt;</code> or use <code>for</code> + <code>id</code> |
+| 7 | Skipping heading levels (<code>h1</code> to <code>h3</code>) | Breaks screen reader navigation outline | Never skip heading levels |
+| 8 | Multiple <code>&lt;h1&gt;</code> on one page | Confuses search engines and screen reader hierarchy | Use exactly one <code>&lt;h1&gt;</code> per page |
+| 9 | Inline event handlers (<code>onclick="..."</code>) | Mixes behavior with structure; hard to maintain | Use <code>addEventListener</code> or framework event binding |
+| 10 | Self-closing syntax for non-void elements (<code>&lt;div /&gt;</code>) | Invalid HTML; browser treats as opening tag | Only void elements are self-closing: <code>&lt;br&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;link&gt;</code> |
+| 11 | Not setting <code>charset="UTF-8"</code> | Special characters (em-dash, accented letters, symbols) render incorrectly | Always include <code>&lt;meta charset="UTF-8"&gt;</code> in <code>&lt;head&gt;</code> |
+| 12 | Using deprecated elements (<code>&lt;center&gt;</code>, <code>&lt;font&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>) | These are presentational; CSS should handle styling | Use CSS <code>text-align</code>, <code>font-family</code>, <code>font-weight</code>, <code>font-style</code> |
+| 13 | Not using <code>&lt;fieldset&gt;</code> and <code>&lt;legend&gt;</code> for form groups | Reduces form accessibility for screen reader users | Group related inputs with <code>&lt;fieldset&gt;</code> and describe with <code>&lt;legend&gt;</code> |
+| 14 | Using <code>javascript:void(0)</code> in href | Breaks right-click open in new tab; accessibility issues | Use <code>&lt;button&gt;</code> for actions, <code>&lt;a href="..."&gt;</code> for navigation |
+| 15 | Forgetting <code>sandbox</code> on iframes | Embedded content can execute scripts, submit forms, open popups | Always use <code>sandbox</code> with minimal required permissions |
+
+## Complete API Reference
+
+### HTML5 Element Categories
+
+| Category | Elements | Purpose |
+|----------|----------|---------|
+| Document metadata | <code>&lt;base&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;link&gt;</code>, <code>&lt;meta&gt;</code>, <code>&lt;style&gt;</code>, <code>&lt;title&gt;</code> | Document-level information and resource links |
+| Sectioning root | <code>&lt;body&gt;</code>, <code>&lt;figure&gt;</code>, <code>&lt;blockquote&gt;</code>, <code>&lt;details&gt;</code>, <code>&lt;fieldset&gt;</code>, <code>&lt;td&gt;</code> | Elements with their own outlines |
+| Sectioning | <code>&lt;article&gt;</code>, <code>&lt;aside&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;section&gt;</code> | Define document regions for outlining |
+| Heading | <code>&lt;h1&gt;</code>-<code>&lt;h6&gt;</code>, <code>&lt;hgroup&gt;</code> | Section headings |
+| Phrasing | <code>&lt;a&gt;</code>, <code>&lt;abbr&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;br&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;cite&gt;</code>, <code>&lt;code&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;label&gt;</code>, <code>&lt;mark&gt;</code>, <code>&lt;q&gt;</code>, <code>&lt;samp&gt;</code>, <code>&lt;select&gt;</code>, <code>&lt;small&gt;</code>, <code>&lt;span&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;sub&gt;</code>, <code>&lt;sup&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;time&gt;</code>, <code>&lt;var&gt;</code> | Inline content elements |
+| Flow | Everything in phrasing + <code>&lt;div&gt;</code>, <code>&lt;form&gt;</code>, <code>&lt;hr&gt;</code>, <code>&lt;ol&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;pre&gt;</code>, <code>&lt;table&gt;</code>, <code>&lt;ul&gt;</code>, <code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code>, <code>&lt;canvas&gt;</code>, <code>&lt;details&gt;</code> | All block-level content |
+| Embedded | <code>&lt;audio&gt;</code>, <code>&lt;canvas&gt;</code>, <code>&lt;embed&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;object&gt;</code>, <code>&lt;picture&gt;</code>, <code>&lt;svg&gt;</code>, <code>&lt;video&gt;</code> | External content integration |
+| Interactive | <code>&lt;a&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;details&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;select&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;label&gt;</code> | User interaction elements |
+| Table | <code>&lt;table&gt;</code>, <code>&lt;caption&gt;</code>, <code>&lt;col&gt;</code>, <code>&lt;colgroup&gt;</code>, <code>&lt;thead&gt;</code>, <code>&lt;tbody&gt;</code>, <code>&lt;tfoot&gt;</code>, <code>&lt;tr&gt;</code>, <code>&lt;td&gt;</code>, <code>&lt;th&gt;</code> | Tabular data |
+| Form | <code>&lt;form&gt;</code>, <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;select&gt;</code>, <code>&lt;option&gt;</code>, <code>&lt;optgroup&gt;</code>, <code>&lt;button&gt;</code>, <code>&lt;datalist&gt;</code>, <code>&lt;fieldset&gt;</code>, <code>&lt;legend&gt;</code>, <code>&lt;label&gt;</code>, <code>&lt;output&gt;</code>, <code>&lt;progress&gt;</code>, <code>&lt;meter&gt;</code> | Interactive form controls |
+
+### HTML Entities Reference
+
+| Entity | Character | Description |
+|--------|-----------|-------------|
+| <code>&amp;lt;</code> | < | Less than |
+| <code>&amp;gt;</code> | > | Greater than |
+| <code>&amp;amp;</code> | & | Ampersand |
+| <code>&amp;quot;</code> | " | Double quote |
+| <code>&amp;apos;</code> | ' | Apostrophe / single quote |
+| <code>&amp;nbsp;</code> | Non-breaking space | Prevent line break |
+| <code>&amp;copy;</code> | (c) | Copyright |
+| <code>&amp;reg;</code> | (r) | Registered trademark |
+| <code>&amp;trade;</code> | TM | Trademark |
+| <code>&amp;mdash;</code> | -- | Em dash |
+| <code>&amp;ndash;</code> | - | En dash |
+| <code>&amp;hellip;</code> | ... | Horizontal ellipsis |
+| <code>&amp;larr;</code> | <- | Left arrow |
+| <code>&amp;rarr;</code> | -> | Right arrow |
+
+### Media Types (MIME)
+
+| Extension | MIME Type |
+|-----------|-----------|
+| <code>.html</code> | <code>text/html</code> |
+| <code>.css</code> | <code>text/css</code> |
+| <code>.js</code> | <code>application/javascript</code> |
+| <code>.json</code> | <code>application/json</code> |
+| <code>.png</code> | <code>image/png</code> |
+| <code>.jpg</code> / <code>.jpeg</code> | <code>image/jpeg</code> |
+| <code>.gif</code> | <code>image/gif</code> |
+| <code>.svg</code> | <code>image/svg+xml</code> |
+| <code>.webp</code> | <code>image/webp</code> |
+| <code>.avif</code> | <code>image/avif</code> |
+| <code>.mp4</code> | <code>video/mp4</code> |
+| <code>.webm</code> | <code>video/webm</code> |
+| <code>.mp3</code> | <code>audio/mpeg</code> |
+| <code>.wav</code> | <code>audio/wav</code> |
+| <code>.woff2</code> | <code>font/woff2</code> |
+| <code>.pdf</code> | <code>application/pdf</code> |
+
+## Practice Questions
+
+1. What is the difference between <code>&lt;div&gt;</code> and <code>&lt;span&gt;</code> in terms of display behavior and semantics?
+2. Write the minimal HTML5 document structure (doctype, html, head, body) that passes W3C validation.
+3. How does the <code>srcset</code> attribute work on <code>&lt;img&gt;</code>? Describe the browser's selection algorithm.
+4. Create a form with the following: email input with validation, password input with show/hide toggle, date of birth picker, country dropdown with optgroups, and a terms checkbox. All must be accessible.
+5. What is the difference between <code>aria-label</code>, <code>aria-labelledby</code>, and <code>aria-describedby</code>? When would you use each?
+6. Explain the purpose of the <code>sandbox</code> attribute on <code>&lt;iframe&gt;</code>. List all possible values and what they permit.
+7. What is the difference between <code>&lt;b&gt;</code> and <code>&lt;strong&gt;</code>? Between <code>&lt;i&gt;</code> and <code>&lt;em&gt;</code>? When should each be used?
+8. Write the JSON-LD structured data for a recipe page, including name, author, cookTime, ingredients, and instructions.
+9. What is the purpose of the <code>&lt;datalist&gt;</code> element? How does it differ from <code>&lt;select&gt;</code>?
+10. Describe how to make a custom checkbox component accessible using ARIA attributes.
+11. What are the valid values for <code>autocomplete</code> on a credit card input? List at least 5 credit-card-related autocomplete tokens.
+12. Explain the table accessibility pattern: <code>&lt;caption&gt;</code>, <code>&lt;thead&gt;</code>, <code>&lt;tbody&gt;</code>, <code>&lt;th&gt;</code> with <code>scope</code>, and <code>&lt;tfoot&gt;</code>. What does <code>scope="row"</code> do?
+
+`,
+            tags: ["HTML", "Semantic HTML", "Accessibility"],
+          },
+          {
+            id: "fe-cheat-css",
+            title: "CSS Cheat Sheet",
+            shortDesc: "Complete CSS reference -- selectors, box model, layout (flexbox, grid), animations, responsive design, and custom properties.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "Selectors, specificity, cascade, and inheritance",
+              "Box model: margin, border, padding, content",
+              "Flexbox and CSS Grid layout systems",
+              "Responsive design with media queries and container queries",
+              "Animations, transitions, transforms, and custom properties",
+            ],
+            content: `## Quick Reference
+
+CSS (Cascading Style Sheets) controls the visual presentation of HTML elements. The cascade algorithm resolves conflicting declarations by selector specificity, source order, and importance. Every element is a rectangular box composed of content, padding, border, and margin.
+
+| Rule | Description |
+|------|-------------|
+| Every element is a box | Box model: content + padding + border + margin |
+| Styles cascade | Specificity + source order determines which rule wins |
+| Layout is inherited | <code>display</code> determines inner and outer layout behavior |
+| Use rem for typography | Relative to root font-size; supports user preferences |
+| Mobile-first | Write base styles for mobile, add <code>min-width</code> media queries for larger screens |
+
+\`\`\`css
+/* CSS Custom Properties (CSS Variables) */
+:root {
+  --color-primary: #007bff;             /* Define at root for global scope */
+  --spacing-unit: 0.25rem;             /* 4px base unit */
+  --font-size-base: 1rem;              /* 16px default */
+  --breakpoint-md: 768px;
+}
+
+/* Cascade order (lowest to highest priority):
+   1. User agent (browser defaults)
+   2. User styles
+   3. Author styles (yours)
+   4. !important author
+   5. !important user
+   6. Animation
+   Within same priority: later declarations override earlier ones */
+\`\`\`
+
+## Selectors & Specificity
+
+### Selector Types
+
+| Selector | Pattern | Specificity | Example |
+|----------|---------|-------------|---------|
+| Universal | <code>*</code> | 0,0,0,0 | <code>* { box-sizing: border-box; }</code> |
+| Element | <code>div</code> | 0,0,0,1 | <code>p { margin: 0; }</code> |
+| Class | <code>.class</code> | 0,0,1,0 | <code>.container { max-width: 1200px; }</code> |
+| Attribute | <code>[attr]</code> | 0,0,1,0 | <code>[type="email"] { border-color: blue; }</code> |
+| Pseudo-class | <code>:hover</code> | 0,0,1,0 | <code>a:hover { text-decoration: underline; }</code> |
+| ID | <code>#id</code> | 0,1,0,0 | <code>#header { height: 60px; }</code> |
+| Inline style | <code>style="..."</code> | 1,0,0,0 | <code>&lt;div style="color: red"&gt;</code> |
+| !important | <code>color: red !important</code> | Overrides all | <code>.text { color: red !important; }</code> |
+
+Specificity is calculated as a 4-part value (inline, IDs, classes, elements). <code>0,1,2,3</code> beats <code>0,1,0,4</code> because the class column (third column) is higher. Pseudo-elements (<code>::before</code>) count as element selectors (0,0,0,1).
+
+### Combinators
+
+| Combinator | Symbol | Example | Description |
+|------------|--------|---------|-------------|
+| Descendant | (space) | <code>div p</code> | Any <code>p</code> inside <code>div</code> |
+| Child | <code>&gt;</code> | <code>div > p</code> | Direct child only |
+| Adjacent sibling | <code>+</code> | <code>h2 + p</code> | <code>p</code> immediately after <code>h2</code> |
+| General sibling | <code>~</code> | <code>h2 ~ p</code> | Any <code>p</code> after <code>h2</code> (same parent) |
+| Column | <code>||</code> | <code>col || td</code> | <code>td</code> belongs to the column |
+
+### Pseudo-classes
+
+| Pseudo-class | Description |
+|-------------|-------------|
+| <code>:hover</code> | Mouse over element |
+| <code>:focus</code> | Element has focus (keyboard/mouse) |
+| <code>:focus-visible</code> | Focus via keyboard only (preferred for outlines) |
+| <code>:active</code> | Element being activated (mouse down) |
+| <code>:target</code> | Element matching URL fragment (#hash) |
+| <code>:disabled</code> | Disabled form elements |
+| <code>:checked</code> | Checked radio/checkbox |
+| <code>:required</code> | Form elements with required attribute |
+| <code>:invalid</code> | Form elements failing validation |
+| <code>:first-child</code> | First child of parent |
+| <code>:last-child</code> | Last child of parent |
+| <code>:nth-child(n)</code> | Nth child (1-indexed, supports <code>odd</code>/<code>even</code>/<code>2n+1</code>) |
+| <code>:nth-of-type(n)</code> | Nth child of same type |
+| <code>:not(selector)</code> | Negation pseudo-class |
+| <code>:is(selector)</code> | Forgiving selector list |
+| <code>:where(selector)</code> | Zero-specificity version of <code>:is()</code> |
+| <code>:has(selector)</code> | Parent containing matching child (CSS parent selector) |
+| <code>:empty</code> | Element with no children |
+| <code>:root</code> | <code>&lt;html&gt;</code> element (higher specificity) |
+
+### Pseudo-elements
+
+| Pseudo-element | Description | Common Usage |
+|----------------|-------------|--------------|
+| <code>::before</code> | First child of element | Icons, decorative content |
+| <code>::after</code> | Last child of element | Clearfix, tooltips |
+| <code>::first-line</code> | First line of text | Typography styling |
+| <code>::first-letter</code> | First letter | Drop caps |
+| <code>::selection</code> | User-selected text | Custom highlight color |
+| <code>::placeholder</code> | Input placeholder text | Styling hints |
+| <code>::marker</code> | List item marker (bullet/number) | Custom list styles |
+| <code>::backdrop</code> | Full-screen element background | Dialog/modal overlay |
+
+\`\`\`css
+/* Parent selector via :has() */
+.card:has(img) {                      /* Only cards containing images */
+  grid-template-rows: auto 1fr;
+}
+
+/* Zero-specificity defaults with :where() */
+:where(.btn) {                        /* Can be easily overridden */
+  border-radius: 4px;
+  padding: 0.5em 1em;
+}
+
+/* Custom selection color */
+::selection {
+  background: var(--color-primary);
+  color: white;
+}
+\`\`\`
+
+## Box Model
+
+Every element generates a rectangular box. The box model defines how size is calculated.
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| <code>width</code> / <code>height</code> | Content area size | <code>auto</code> |
+| <code>padding</code> | Space inside border, outside content | <code>0</code> |
+| <code>border</code> | Line between padding and margin | <code>none</code> |
+| <code>margin</code> | Space outside border | <code>0</code> |
+| <code>box-sizing</code> | How width/height are calculated | <code>content-box</code> |
+
+\`\`\`css
+/* Box-sizing comparison */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;             /* Width includes padding + border */
+}
+
+/* content-box (default) */
+.content-box {
+  width: 100px;                        /* Content = 100px */
+  padding: 10px;                       /* Total width = 120px */
+  border: 2px solid;
+  /* Actual rendered width = 100 + 10 + 10 + 2 + 2 = 124px */
+}
+
+/* border-box */
+.border-box {
+  box-sizing: border-box;
+  width: 100px;                        /* Total width = 100px (content = 76px) */
+  padding: 10px;
+  border: 2px solid;
+  /* Content width = 100 - 10 - 10 - 2 - 2 = 76px */
+}
+
+/* Margin collapsing */
+.margin-collapse-1 { margin-bottom: 20px; }  /* Both margins collapse */
+.margin-collapse-2 { margin-top: 30px; }     /* Actual gap = 30px, not 50px */
+
+/* Margin collapsing rules:
+   - Adjacent siblings: larger margin wins
+   - Parent + first/last child: margin collapses if no border/padding separates
+   - Empty blocks: all margins collapse
+   - Fix: add overflow: hidden or padding: 1px on parent */
+\`\`\`
+
+## Layout Systems
+
+### Display Property
+
+| Value | Behavior |
+|-------|----------|
+| <code>block</code> | Fills parent width, line breaks before/after, respect <code>width</code>/<code>height</code> |
+| <code>inline</code> | Flows in text, no width/height, horizontal padding/margin only |
+| <code>inline-block</code> | Inline flow but block-like box (respects width/height) |
+| <code>flex</code> | Block-level flex container |
+| <code>inline-flex</code> | Inline-level flex container |
+| <code>grid</code> | Block-level grid container |
+| <code>inline-grid</code> | Inline-level grid container |
+| <code>none</code> | Removed from layout (not <code>visibility: hidden</code>) |
+| <code>contents</code> | Element's box removed; children become direct children of parent |
+
+### Flexbox Layout
+
+| Container Property | Values | Description |
+|-------------------|--------|-------------|
+| <code>display</code> | <code>flex</code> / <code>inline-flex</code> | Enables flex layout |
+| <code>flex-direction</code> | <code>row</code> (default), <code>row-reverse</code>, <code>column</code>, <code>column-reverse</code> | Main axis direction |
+| <code>flex-wrap</code> | <code>nowrap</code> (default), <code>wrap</code>, <code>wrap-reverse</code> | Multi-line behavior |
+| <code>justify-content</code> | <code>flex-start</code>, <code>flex-end</code>, <code>center</code>, <code>space-between</code>, <code>space-around</code>, <code>space-evenly</code> | Main axis alignment |
+| <code>align-items</code> | <code>stretch</code> (default), <code>flex-start</code>, <code>flex-end</code>, <code>center</code>, <code>baseline</code> | Cross axis alignment (all items) |
+| <code>align-content</code> | Same as <code>align-items</code> + <code>space-*</code> | Cross axis alignment (multi-line) |
+| <code>gap</code> | <code>&lt;length&gt;</code> | Gutters between items (formerly row-gap, column-gap) |
+
+| Item Property | Values | Description |
+|---------------|--------|-------------|
+| <code>flex</code> | <code>none</code> / <code>auto</code> / shorthand | Shorthand for grow, shrink, basis |
+| <code>flex-grow</code> | <code>0</code> (default) | Proportion of extra space to absorb |
+| <code>flex-shrink</code> | <code>1</code> (default) | Proportion to shrink when space is tight |
+| <code>flex-basis</code> | <code>auto</code> (default) / <code>&lt;length&gt;</code> | Initial main size before grow/shrink |
+| <code>align-self</code> | Overrides <code>align-items</code> for this item | Individual cross-axis alignment |
+| <code>order</code> | <code>0</code> (default) | Visual order (not tab order) |
+
+\`\`\`css
+/* Centering with flexbox */
+.center {
+  display: flex;
+  align-items: center;                 /* Vertical center */
+  justify-content: center;             /* Horizontal center */
+  min-height: 100vh;                   /* Full viewport height */
+}
+
+/* Holy grail layout (header, footer, 3 columns) */
+.holy-grail {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.holy-grail header,
+.holy-grail footer {
+  flex: 0 0 auto;                      /* Don't grow or shrink */
+}
+
+.holy-grail .content {
+  display: flex;
+  flex: 1;                             /* Fill remaining space */
+}
+
+/* Responsive card grid with flexbox */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;                           /* Spacing between items */
+}
+
+.card {
+  flex: 1 1 300px;                     /* Grow, shrink, min 300px basis */
+  /* Equivalent: flex-grow: 1, flex-shrink: 1, flex-basis: 300px */
+}
+
+/* Fixed sidebar + fluid content */
+.sidebar-layout {
+  display: flex;
+}
+
+.sidebar {
+  flex: 0 0 250px;                     /* Fixed 250px width */
+}
+
+.main-content {
+  flex: 1;                             /* Take remaining space */
+}
+\`\`\`
+
+### CSS Grid Layout
+
+| Container Property | Description |
+|-------------------|-------------|
+| <code>display: grid</code> | Enables grid layout |
+| <code>grid-template-columns</code> | Column track sizes (e.g., <code>1fr 1fr 1fr</code>) |
+| <code>grid-template-rows</code> | Row track sizes |
+| <code>grid-template-areas</code> | Named grid areas (ASCII-art map) |
+| <code>gap</code> | Gutters between rows and columns |
+| <code>justify-items</code> | Horizontal alignment of items within cells |
+| <code>align-items</code> | Vertical alignment of items within cells |
+| <code>justify-content</code> | Horizontal alignment of the entire grid |
+| <code>align-content</code> | Vertical alignment of the entire grid |
+| <code>grid-auto-flow</code> | Auto-placement algorithm (<code>row</code>, <code>column</code>, <code>dense</code>) |
+| <code>grid-auto-rows</code> | Implicit row size |
+| <code>grid-auto-columns</code> | Implicit column size |
+
+| Item Property | Description |
+|---------------|-------------|
+| <code>grid-column</code> | Shorthand: <code>start / end</code> (e.g., <code>1 / 3</code>) |
+| <code>grid-row</code> | Shorthand: <code>start / end</code> |
+| <code>grid-area</code> | Assign item to named area |
+| <code>justify-self</code> | Horizontal alignment of this item in its cell |
+| <code>align-self</code> | Vertical alignment of this item in its cell |
+
+| Grid Functions | Description |
+|----------------|-------------|
+| <code>fr</code> | Fractional unit of free space |
+| <code>minmax(min, max)</code> | Size between min and max |
+| <code>repeat(count, size)</code> | Repeated track pattern |
+| <code>fit-content(limit)</code> | Clamps to limit but shrinks if content is smaller |
+| <code>min-content</code> | Smallest size without overflow |
+| <code>max-content</code> | Size required to fit content without wrapping |
+| <code>auto-fill</code> | Creates as many tracks as possible (preserves empty tracks) |
+| <code>auto-fit</code> | Creates as many tracks as possible (collapses empty tracks) |
+
+\`\`\`css
+/* Basic grid with named areas */
+.page-layout {
+  display: grid;
+  grid-template-columns: 250px 1fr 200px;  /* Sidebar | Main | Aside */
+  grid-template-rows: auto 1fr auto;       /* Header | Content | Footer */
+  grid-template-areas:
+    "header  header  header"
+    "sidebar main    aside"
+    "footer  footer  footer";
+  min-height: 100vh;
+  gap: 1rem;
+}
+
+header  { grid-area: header; }
+aside   { grid-area: aside; }
+.sidebar { grid-area: sidebar; }
+main    { grid-area: main; }
+footer  { grid-area: footer; }
+
+/* Responsive grid with auto-fit */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* Creates as many 300px+ columns as fit, wrapping automatically */
+  gap: 1rem;
+}
+
+/* Explicit placement */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.featured {
+  grid-column: 1 / 3;                  /* Span 2 columns */
+  grid-row: 1 / 3;                     /* Span 2 rows */
+  /* Or use shorthand: grid-area: 1 / 1 / 3 / 3; */
+}
+
+/* Subgrid (inherit parent grid tracks) */
+.card {
+  display: grid;
+  grid-template-rows: subgrid;          /* Use parent grid's row tracks */
+  grid-row: span 2;                     /* Span 2 rows in parent grid */
+}
+\`\`\`
+
+### Flexbox vs Grid Comparison
+
+| Aspect | Flexbox | Grid |
+|--------|---------|------|
+| Dimension | One-dimensional (row OR column) | Two-dimensional (rows AND columns) |
+| Use case | Navigation bars, centering, card rows | Page layouts, galleries, overlapping elements |
+| Item sizing | Content-based (flex-basis controls start) | Container-based (tracks define available space) |
+| Wrapping | <code>flex-wrap: wrap</code> | <code>auto-fill</code> / <code>auto-fit</code> with <code>minmax()</code> |
+| Overlap | Not naturally supported | Use <code>grid-column</code> / <code>grid-row</code> to overlap cells |
+| Alignment | <code>justify-content</code> / <code>align-items</code> | <code>justify-items</code> / <code>align-items</code> + <code>justify-content</code> / <code>align-content</code> |
+
+## Responsive Design
+
+### Media Queries
+
+| Type | Syntax | Purpose |
+|------|--------|---------|
+| Width | <code>@media (min-width: 768px)</code> | Viewport width breakpoints |
+| Height | <code>@media (min-height: 600px)</code> | Viewport height |
+| Resolution | <code>@media (min-resolution: 2dppx)</code> | Pixel density (retina) |
+| Orientation | <code>@media (orientation: landscape)</code> | Device orientation |
+| Prefers color scheme | <code>@media (prefers-color-scheme: dark)</code> | Dark mode support |
+| Prefers reduced motion | <code>@media (prefers-reduced-motion: reduce)</code> | Accessibility: reduce animations |
+| Prefers contrast | <code>@media (prefers-contrast: more)</code> | High contrast mode |
+| Prefers reduced transparency | <code>@media (prefers-reduced-transparency: reduce)</code> | Reduce transparency effects |
+| Pointer | <code>@media (pointer: coarse)</code> | Touch vs mouse device |
+| Hover | <code>@media (hover: hover)</code> | Device supports hover |
+
+### Container Queries
+
+\`\`\`css
+/* Define a containment context */
+.card-container {
+  container-type: inline-size;          /* Query by inline size (width) */
+  container-name: card;                 /* Optional name for scoping */
+}
+
+/* Style based on container width, not viewport */
+@container card (min-width: 400px) {
+  .card {
+    display: grid;
+    grid-template-columns: 200px 1fr;   /* Side-by-side layout in wide cards */
+  }
+}
+
+/* Container query length units */
+@container (min-width: 500px) {
+  .card-title {
+    font-size: clamp(1rem, 5cqi, 2rem); /* cqi = container query inline-size unit */
+  }
+}
+\`\`\`
+
+### Common Breakpoints (Mobile-First)
+
+\`\`\`css
+/* Base styles: mobile (320px+) */
+/* Tablet (768px+) */
+@media (min-width: 768px) {
+  .container { max-width: 720px; }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: 1024px) {
+  .container { max-width: 960px; }
+}
+
+/* Wide desktop (1280px+) */
+@media (min-width: 1280px) {
+  .container { max-width: 1200px; }
+}
+\`\`\`
+
+## Typography & Custom Properties
+
+### Relative Units
+
+| Unit | Relative To |
+|------|-------------|
+| <code>em</code> | Parent element's font-size |
+| <code>rem</code> | Root element's font-size (html) |
+| <code>vw</code> | 1% of viewport width |
+| <code>vh</code> | 1% of viewport height |
+| <code>%</code> | Parent element's same property |
+| <code>ch</code> | Width of "0" character in current font |
+| <code>ex</code> | Height of "x" character in current font |
+| <code>cqi</code> | 1% of container's inline size |
+| <code>cqw</code> | 1% of container's width |
+| <code>svw</code> / <code>svh</code> | Smallest viewport width/height |
+| <code>lvw</code> / <code>lvh</code> | Largest viewport width/height |
+| <code>dvw</code> / <code>dvh</code> | Dynamic viewport width/height |
+
+### Fluid Typography with clamp()
+
+\`\`\`css
+/* Fluid typography */
+h1 {
+  font-size: clamp(
+    1.75rem,                           /* Minimum size */
+    1.75rem + 1vw,                     /* Preferred size (linear scaling) */
+    3rem                               /* Maximum size */
+  );
+}
+
+/* Custom properties for typography scale */
+:root {
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.375rem);
+  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.75rem);
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2.25rem);
+  --text-3xl: clamp(1.875rem, 1.5rem + 1.5vw, 3rem);
+}
+\`\`\`
+
+## Animations & Transitions
+
+### Transitions
+
+| Property | Description |
+|----------|-------------|
+| <code>transition-property</code> | CSS properties to animate |
+| <code>transition-duration</code> | Duration (<code>0.3s</code>, <code>500ms</code>) |
+| <code>transition-timing-function</code> | Easing: <code>ease</code>, <code>linear</code>, <code>ease-in</code>, <code>ease-out</code>, <code>ease-in-out</code>, <code>cubic-bezier(n,n,n,n)</code> |
+| <code>transition-delay</code> | Delay before starting |
+
+\`\`\`css
+.button {
+  background: var(--color-primary);
+  transition:
+    background-color 0.3s ease,                         /* Animate background */
+    transform 0.2s ease-out;                             /* Animate transform separately */
+  /* Allows different duration/timing per property */
+}
+
+.button:hover {
+  background: darkblue;
+  transform: translateY(-2px);                           /* Lift effect (GPU accelerated) */
+}
+
+/* Which properties can be animated?
+   - Safe: transform, opacity, color, background-color, border-color, box-shadow
+   - Avoid: width, height, margin, padding, top, left (trigger layout recalc)
+   - Reason: layout-triggering properties are expensive (reflow + repaint) */
+\`\`\`
+
+### Keyframe Animations
+
+| Property | Description |
+|----------|-------------|
+| <code>animation-name</code> | Name of @keyframes rule |
+| <code>animation-duration</code> | Duration (<code>2s</code>) |
+| <code>animation-timing-function</code> | Easing curve |
+| <code>animation-delay</code> | Delay before start |
+| <code>animation-iteration-count</code> | <code>1</code> (default), <code>infinite</code>, <code>3</code> |
+| <code>animation-direction</code> | <code>normal</code>, <code>reverse</code>, <code>alternate</code>, <code>alternate-reverse</code> |
+| <code>animation-fill-mode</code> | <code>none</code>, <code>forwards</code>, <code>backwards</code>, <code>both</code> |
+| <code>animation-play-state</code> | <code>running</code>, <code>paused</code> |
+
+\`\`\`css
+/* Keyframe definition */
+@keyframes slide-in {
+  0% {                                                   /* Start state */
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {                                                 /* End state */
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Applying the animation */
+.animated-element {
+  animation: slide-in 0.5s ease-out 0.2s both;
+  /* name: slide-in, duration: 0.5s, timing: ease-out */
+  /* delay: 0.2s, fill-mode: both (applies 0% before start, keeps 100% after) */
+}
+
+/* GPU-accelerated properties only:
+   - transform: translate(), scale(), rotate()
+   - opacity
+   - filter (some browsers)
+   Reason: composited on GPU without triggering layout or paint */
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Using <code>!important</code> as a crutch | Breaks the cascade; harder to override later | Increase specificity (add class/ID) or refactor source order |
+| 2 | Animating <code>width</code>/<code>height</code> | Triggers layout recalc (reflow) on every frame -- causes jank | Animate <code>transform: scale()</code> or <code>opacity</code> only |
+| 3 | Global selectors like <code>div { }</code> | Leaks styles to unintended elements; specificity battles | Use classes or <code>@scope</code> if supported |
+| 4 | Not resetting <code>box-sizing</code> | <code>padding</code> and <code>border</code> add to specified width, causing overflow | <code>* { box-sizing: border-box }</code> |
+| 5 | Using <code>px</code> for font-size | Ignores user browser font-size settings; breaks zoom | Use <code>rem</code> for font sizes, <code>em</code> for padding/margin on components |
+| 6 | Nesting more than 3 levels deep (Sass) | Over-specific selectors; fragile to HTML structure changes | Use utility classes or CSS custom properties; limit nesting |
+| 7 | <code>overflow: hidden</code> on body/root | Clips sticky/fixed elements; breaks position: sticky | Use on specific containers only |
+| 8 | Using <code>visibility: hidden</code> vs <code>display: none</code> incorrectly | <code>visibility: hidden</code> still occupies layout space | <code>display: none</code> removes from flow; <code>visibility: hidden</code> hides visually |
+| 9 | Forgetting <code>gap</code> is not supported in older flexbox implementations | <code>gap</code> in flexbox is supported in modern browsers only | Use <code>margin</code> on children with <code>:first-child</code> reset for legacy support |
+| 10 | Not defining <code>min-height: 100vh</code> for full-page layouts | Short pages leave empty footer space | Use flexbox <code>min-height: 100vh</code> with <code>flex: 1</code> on main content |
+| 11 | Using relative units (<code>%</code>) for <code>height</code> expecting it to work like width | Height percentage requires explicit height on parent | Use <code>vh</code>, <code>dvh</code>, or flexbox for height |
+| 12 | Assuming <code>auto-fit</code> and <code>auto-fill</code> are the same in CSS Grid | <code>auto-fill</code> preserves empty tracks; <code>auto-fit</code> collapses them | Use <code>auto-fill</code> when alignment matters; <code>auto-fit</code> for responsive wrapping |
+| 13 | Not using <code>will-change</code> correctly | Overuse consumes GPU memory; incorrect use has no effect | Apply <code>will-change: transform</code> just before animation, remove after |
+| 14 | Relying on <code>float</code> for layout | <code>float</code> was designed for text wrapping, not page layout | Use flexbox or grid |
+| 15 | Using <code>position: absolute</code> for centering | Fragile; breaks when content changes size | Use flexbox centering or <code>place-items: center</code> on grid |
+
+## Complete API Reference
+
+### At-rules
+
+| At-rule | Purpose | Example |
+|---------|---------|---------|
+| <code>@import</code> | Import external stylesheet | <code>@import url("reset.css");</code> |
+| <code>@media</code> | Conditional styles (viewport, device features) | <code>@media (min-width: 768px) { ... }</code> |
+| <code>@container</code> | Container queries (by container size) | <code>@container (min-width: 400px) { ... }</code> |
+| <code>@layer</code> | Explicit cascade layer ordering | <code>@layer base, components, utilities;</code> |
+| <code>@scope</code> | Scoped styles (limited to subtree) | <code>@scope (.card) { ... }</code> |
+| <code>@starting-style</code> | Initial styles before transition | <code>@starting-style { ... }</code> |
+| <code>@keyframes</code> | Animation keyframe definitions | <code>@keyframes fade-in { ... }</code> |
+| <code>@font-face</code> | Custom font definition | <code>@font-face { font-family: "Custom"; src: url(...); }</code> |
+| <code>@property</code> | Registered custom property with type | <code>@property --my-color { syntax: "<color>"; inherits: false; initial-value: red; }</code> |
+| <code>@supports</code> | Feature detection | <code>@supports (display: grid) { ... }</code> |
+| <code>@counter-style</code> | Custom list counter styles | <code>@counter-style circled-numbers { ... }</code> |
+| <code>@page</code> | Print styles (page margins, size) | <code>@page { size: A4; margin: 2cm; }</code> |
+
+### Cascade Layers
+
+\`\`\`css
+/* Define layer order (earlier = lower priority) */
+@layer reset, base, components, utilities;
+
+/* Assign styles to layers */
+@layer reset {
+  * { margin: 0; padding: 0; }         /* Lowest priority */
+}
+
+@layer components {
+  .card { padding: 1rem; }             /* Higher than reset/base */
+}
+
+@layer utilities {
+  .hidden { display: none; }           /* Highest priority */
+}
+
+/* Unlayered styles (outside any @layer) have highest priority */
+/* !important works in reverse: unlayered !important > utilities !important > components !important > ... */
+\`\`\`
+
+### CSS Custom Properties (Variables)
+
+\`\`\`css
+:root {
+  /* Design tokens */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-danger: #ef4444;
+  --color-text: #1e293b;
+  --color-bg: #ffffff;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-8: 2rem;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Component with fallback */
+.btn-primary {
+  background: var(--color-primary, #007bff);            /* Fallback if var not defined */
+  color: white;
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-sans);
+
+  /* Invalid property value falls through */
+  background: var(--undefined-var, var(--color-primary)); /* Nested fallback */
+}
+\`\`\`
+
+## Practice Questions
+
+1. Write a complete page layout using CSS Grid with: fixed header/footer, collapsible sidebar, and main content area that scrolls independently.
+2. Create a responsive card grid that shows 1 column on mobile, 2 on tablet (768px+), 3 on desktop (1024px+), and 4 on wide (1280px+), using both flexbox and grid approaches.
+3. Explain the difference between <code>justify-content: center</code>, <code>align-items: center</code>, and <code>place-items: center</code> in grid vs flexbox.
+4. Write a <code>clamp()</code> expression that creates fluid typography scaling from 16px at 320px viewport to 24px at 1440px viewport.
+5. Implement a dark mode toggle using <code>prefers-color-scheme</code> with CSS custom properties and a class override.
+6. Create a custom checkbox component using only CSS (no JavaScript) that uses <code>::before</code> and <code>::after</code> for styling.
+7. What is the difference between <code>auto-fill</code> and <code>auto-fit</code> in <code>repeat()</code>? Provide code examples where the difference matters.
+8. Write a container query that changes a card from vertical to horizontal layout when the container is wider than 500px.
+9. Create a loading spinner animation using only CSS keyframes (no SVG or images).
+10. Explain z-index stacking contexts. What creates a new stacking context? How would you fix a z-index bug?
+11. Write CSS that creates a sticky table header, sticky first column, and scrollable body using <code>position: sticky</code>.
+12. Compare <code>content-visibility: auto</code>, <code>contain: content</code>, and <code>will-change</code>. When would you use each for performance?
+13. Create a responsive navigation that becomes a hamburger menu on mobile, all in CSS (use checkbox hack if needed).
+14. Explain how <code>@layer</code> works and how it differs from specificity. When is <code>@layer</code> preferable?
+15. Write a CSS-only tooltip that appears on hover, positioned above the trigger element, with a smooth opacity transition.
+
+`,
+            tags: ["CSS", "Layout", "Animations", "Responsive"],
+          },
+          {
+            id: "fe-cheat-javascript",
+            title: "JavaScript Cheat Sheet",
+            shortDesc: "Complete JavaScript reference -- types, scopes, closures, promises, async/await, modules, proxies, and the standard library.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Primitive types, type coercion, and type checking",
+              "Execution context, hoisting, scope chain, and closures",
+              "Prototypal inheritance and class syntax",
+              "Event loop, microtasks, promises, and async/await",
+              "ES modules, symbols, iterators, generators, proxies, and reflect",
+            ],
+            content: `## Quick Reference
+
+JavaScript is a single-threaded, dynamic, prototype-based language. Everything except primitives is an object. Functions are first-class citizens (can be assigned, passed, and returned). The event loop enables non-blocking concurrency via a single thread, a heap, and a callback queue.
+
+| Concept | Key Insight |
+|---------|-------------|
+| Primitives are immutable | 7 primitive types: string, number, boolean, null, undefined, symbol, bigint |
+| Objects are references | Objects, arrays, functions are passed by reference (not value) |
+| this is dynamic | Determined by call-site (how function is called), not declaration |
+| Closures persist scope | A function retains access to variables of the scope where it was defined |
+| Prototypes share behavior | Objects inherit from other objects via [[Prototype]] chain |
+| Event loop is single-threaded | Microtasks (Promise) run before macrotasks (setTimeout, I/O) |
+
+## Types & Values
+
+| Type | typeof | Mutable | Falsy Value | Notes |
+|------|--------|---------|-------------|-------|
+| <code>undefined</code> | <code>"undefined"</code> | No | <code>undefined</code> | Variable declared but not assigned |
+| <code>null</code> | <code>"object"</code> | No | <code>null</code> | Intentional absence of value |
+| <code>boolean</code> | <code>"boolean"</code> | No | <code>false</code> | <code>true</code> / <code>false</code> |
+| <code>number</code> | <code>"number"</code> | No | <code>0</code>, <code>NaN</code> | IEEE-754 double precision, <code>NaN</code> !== <code>NaN</code> |
+| <code>string</code> | <code>"string"</code> | No | <code>""</code> | Immutable sequence of UTF-16 code units |
+| <code>symbol</code> | <code>"symbol"</code> | No | N/A | Unique, immutable identifier, often for object keys |
+| <code>bigint</code> | <code>"bigint"</code> | No | <code>0n</code> | Arbitrary precision integers, <code>42n</code> or <code>BigInt(42)</code> |
+| <code>object</code> | <code>"object"</code> | Yes | N/A | Keyed collections, arrays, functions, dates, regexps |
+
+\`\`\`js
+// Type checking
+typeof "hello";                        // "string"
+typeof 42;                             // "number"
+typeof true;                           // "boolean"
+typeof undefined;                      // "undefined"
+typeof null;                           // "object"  (historical bug)
+typeof Symbol("id");                   // "symbol"
+typeof 42n;                            // "bigint"
+typeof {};                             // "object"
+typeof [];                             // "object"
+typeof function(){};                   // "function"
+
+// Falsy values (coerce to false in boolean context)
+const falsyValues = [false, 0, -0, "", null, undefined, NaN, 0n];
+
+// Truthy values (everything else)
+const truthyValues = ["0", "false", [], {}, Infinity, -Infinity];
+
+// NaN comparison
+NaN === NaN;                           // false  (use Number.isNaN() instead)
+Number.isNaN(NaN);                     // true
+
+// Object.is() -- strict equality (no coercion, handles NaN)
+Object.is(NaN, NaN);                   // true
+Object.is(0, -0);                      // false
+\`\`\`
+
+### Type Coercion
+
+| Operation | Result | Explanation |
+|-----------|--------|-------------|
+| <code>"5" - 2</code> | <code>3</code> | String coerced to number for <code>-</code> |
+| <code>"5" + 2</code> | <code>"52"</code> | Number coerced to string for <code>+</code> |
+| <code>+"5"</code> | <code>5</code> | Unary <code>+</code> coerces to number |
+| <code>!!"hello"</code> | <code>true</code> | Double NOT coerces to boolean |
+| <code>[] + []</code> | <code>""</code> | Empty arrays coerce to empty strings |
+| <code>[] + {}</code> | <code>"[object Object]"</code> | Array + object |
+| <code>{}+[]</code> | <code>0</code> | Object literal is parsed as block, then <code>+[]</code> |
+| <code>undefined == null</code> | <code>true</code> | Loose equality considers them equal |
+| <code>undefined === null</code> | <code>false</code> | Strict equality does not |
+
+## Variables & Scopes
+
+| Keyword | Scope | Hoisting | Redeclare? | Reassign? | Temporal Dead Zone |
+|---------|-------|----------|------------|-----------|-------------------|
+| <code>var</code> | Function-scoped | Hoisted (initialized as <code>undefined</code>) | Yes | Yes | No |
+| <code>let</code> | Block-scoped | Hoisted (uninitialized -- TDZ) | No | Yes | Yes |
+| <code>const</code> | Block-scoped | Hoisted (uninitialized -- TDZ) | No | No (object properties can mutate) | Yes |
+
+\`\`\`js
+// Scope chain: inner -> outer -> global
+const global = "global";
+function outer() {
+  const outerVar = "outer";
+  function inner() {
+    const innerVar = "inner";
+    console.log(innerVar, outerVar, global);       // "inner" "outer" "global"
+  }
+  inner();
+}
+
+// Temporal Dead Zone (TDZ)
+console.log(x);                        // ReferenceError: Cannot access 'x' before initialization
+let x = 5;
+
+// No TDZ for var
+console.log(y);                        // undefined (not an error)
+var y = 5;
+
+// Const with objects
+const obj = { name: "Alice" };
+obj.name = "Bob";                      // Allowed: property mutation
+// obj = { name: "Charlie" };          // TypeError: Assignment to constant variable
+\`\`\`
+
+## Functions
+
+### Function Declaration vs Expression vs Arrow
+
+| Feature | Declaration | Expression | Arrow |
+|---------|------------|------------|-------|
+| Hoisting | Full hoisting | No | No |
+| this binding | Dynamic (call-site) | Dynamic | Lexical (parent scope) |
+| arguments object | Yes | Yes | No (use rest params) |
+| Constructable (new) | Yes | Yes | No |
+| Implicit return | No | No | Yes (single expression) |
+| Method syntax | <code>function name() {}</code> | <code>const fn = function() {}</code> | <code>const fn = () => {}</code> |
+
+\`\`\`js
+// Function declaration (hoisted)
+hoistedFn();                           // Works: "I am hoisted"
+function hoistedFn() {
+  return "I am hoisted";
+}
+
+// Function expression (not hoisted)
+// expressionFn();                     // TypeError: expressionFn is not a function
+const expressionFn = function() {
+  return "Not hoisted";
+};
+
+// Arrow function (no this binding)
+const arrowFn = () => {
+  return "Arrow";
+};
+
+// Implicit return
+const double = (n) => n * 2;          // No braces = implicit return
+
+// Rest parameters (replaces arguments)
+function sum(...numbers) {
+  return numbers.reduce((acc, n) => acc + n, 0);
+}
+sum(1, 2, 3, 4);                      // 10
+
+// Default parameters
+function greet(name = "Guest") {
+  return \`Hello, \${name}\`;          // Escaped dollar-brace
+}
+
+// this binding demonstration
+const obj = {
+  name: "Alice",
+  regular: function() { return this.name; },            // "Alice" (dynamic)
+  arrow: () => this.name,                               // undefined (lexical)
+};
+\`\`\`
+
+## Closures
+
+A closure is created when a function retains access to its lexical scope even after that scope has finished executing.
+
+\`\`\`js
+// Basic closure
+function createCounter() {
+  let count = 0;                       // Private variable
+  return function() {                  // Closure "closes over" count
+    return ++count;
+  };
+}
+const counter = createCounter();
+console.log(counter());                // 1
+console.log(counter());                // 2
+
+// Classic loop closure problem
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0); // 3, 3, 3 (var is function-scoped)
+}
+
+// Fix 1: Use let (block-scoped)
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0); // 0, 1, 2
+}
+
+// Fix 2: IIFE closure
+for (var i = 0; i < 3; i++) {
+  ((j) => {                           // IIFE captures value of j
+    setTimeout(() => console.log(j), 0);
+  })(i);                              // 0, 1, 2
+}
+
+// Module pattern via closure
+const counterModule = (function() {
+  let privateCount = 0;                // Private
+  return {
+    increment: () => ++privateCount,
+    decrement: () => --privateCount,
+    getCount: () => privateCount,
+  };
+})();
+\`\`\`
+
+## Prototypes & Classes
+
+\`\`\`js
+// Prototypal inheritance (pre-ES6)
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.speak = function() {
+  return \`\${this.name} makes a sound.\`;
+};
+
+function Dog(name, breed) {
+  Animal.call(this, name);             // Call parent constructor
+  this.breed = breed;
+}
+Dog.prototype = Object.create(Animal.prototype); // Set up prototype chain
+Dog.prototype.constructor = Dog;       // Fix constructor reference
+Dog.prototype.bark = function() {
+  return \`\${this.name} barks!\`;
+};
+
+// ES6 class syntax (syntactic sugar over prototypes)
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  speak() {
+    return \`\${this.name} makes a sound.\`;
+  }
+}
+
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name);                       // Must call super() before using this
+    this.breed = breed;
+  }
+  speak() {                            // Method override
+    return \`\${this.name} barks!\`;
+  }
+  static classify() {                  // Static method (on class, not instance)
+    return "Mammal";
+  }
+  get description() {                  // Getter
+    return \`\${this.name} is a \${this.breed}\`;
+  }
+}
+
+// instanceof checks prototype chain
+const fido = new Dog("Fido", "Lab");
+fido instanceof Dog;                   // true
+fido instanceof Animal;                // true
+fido instanceof Object;                // true
+
+// Property descriptors
+Object.getOwnPropertyDescriptor(fido, "name");
+// { value: "Fido", writable: true, enumerable: true, configurable: true }
+
+Object.defineProperty(fido, "id", {
+  value: 42,
+  writable: false,                     // Cannot reassign
+  enumerable: false,                   // Won't appear in for...in or Object.keys()
+  configurable: false,                 // Cannot delete or redefine
+});
+\`\`\`
+
+## Control Flow
+
+| Statement | Syntax | Notes |
+|-----------|--------|-------|
+| <code>if/else</code> | <code>if (cond) {} else if (cond) {} else {}</code> | Coerces to boolean |
+| <code>switch</code> | <code>switch(val) { case x: break; default: }</code> | Uses strict equality (<code>===</code>) |
+| <code>for</code> | <code>for (let i=0; i<5; i++) {}</code> | Classic loop |
+| <code>for...in</code> | <code>for (const key in obj) {}</code> | Iterates enumerable string keys (including prototype) |
+| <code>for...of</code> | <code>for (const val of iterable) {}</code> | Iterates values of iterable (arrays, maps, sets) |
+| <code>while</code> | <code>while (cond) {}</code> | Pre-check |
+| <code>do...while</code> | <code>do {} while (cond)</code> | Post-check (runs at least once) |
+| <code>try/catch/finally</code> | <code>try {} catch(e) {} finally {}</code> | <code>finally</code> always runs |
+| <code>for await...of</code> | <code>for await (const val of asyncIterable) {}</code> | Async iteration |
+
+\`\`\`js
+// try/catch/finally
+try {
+  throw new Error("Something went wrong");
+} catch (error) {
+  console.error(error.message);        // "Something went wrong"
+} finally {
+  console.log("Always runs");          // Cleanup: close connections, clear state
+}
+
+// for...of vs for...in
+const arr = [10, 20, 30];
+for (const i in arr) console.log(i);  // "0", "1", "2" (keys as strings)
+for (const val of arr) console.log(val); // 10, 20, 30 (values)
+\`\`\`
+
+## Iterators & Generators
+
+\`\`\`js
+// Iterable protocol: object with [Symbol.iterator] method
+const range = {
+  start: 0,
+  end: 5,
+  [Symbol.iterator]() {
+    let current = this.start;
+    const end = this.end;
+    return {
+      next() {
+        if (current <= end) {
+          return { value: current++, done: false };
+        }
+        return { value: undefined, done: true };
+      },
+    };
+  },
+};
+console.log([...range]);              // [0, 1, 2, 3, 4, 5]
+
+// Generator function (function*)
+function* idGenerator() {
+  let id = 0;
+  while (true) {
+    yield id++;                        // Pause and return value
+  }
+}
+const gen = idGenerator();
+console.log(gen.next().value);         // 0
+console.log(gen.next().value);         // 1
+console.log(gen.next().value);         // 2
+
+// Generator as iterable
+function* rangeGenerator(start, end) {
+  for (let i = start; i <= end; i++) {
+    yield i;
+  }
+}
+console.log([...rangeGenerator(1, 3)]); // [1, 2, 3]
+\`\`\`
+
+## Async JavaScript
+
+### Event Loop
+
+| Phase | Queue | Examples |
+|-------|-------|----------|
+| Synchronous | Call stack | <code>console.log</code>, <code>let x = 1 + 2</code> |
+| Microtask | Microtask queue | <code>Promise.then/catch/finally</code>, <code>queueMicrotask</code>, <code>MutationObserver</code> |
+| Macrotask | Task queue | <code>setTimeout</code>, <code>setInterval</code>, <code>I/O</code>, <code>setImmediate</code>, <code>requestAnimationFrame</code> |
+
+\`\`\`js
+console.log("1: sync");                // 1. Call stack (sync)
+
+Promise.resolve().then(() => {
+  console.log("2: microtask");         // 3. Microtask queue
+});
+
+setTimeout(() => {
+  console.log("3: macrotask");         // 4. Macrotask queue
+}, 0);
+
+queueMicrotask(() => {
+  console.log("4: queueMicrotask");    // 3. Also microtask queue
+});
+
+console.log("5: sync");                // 2. Call stack (sync)
+
+// Execution order: 1, 5, 2, 4, 3
+\`\`\`
+
+### Promises
+
+\`\`\`js
+// Creating a promise
+const promise = new Promise((resolve, reject) => {
+  // resolve(value);                   // Fulfill the promise
+  // reject(new Error("..."));         // Reject the promise
+});
+
+// Promise methods
+Promise.resolve(42);                   // Creates resolved promise with value 42
+Promise.reject(new Error("fail"));     // Creates rejected promise
+Promise.all([p1, p2]);                 // Resolves when ALL resolve; rejects if ANY reject
+Promise.allSettled([p1, p2]);          // Resolves when ALL settle (resolve or reject)
+Promise.race([p1, p2]);                // Resolves/rejects with first settled promise
+Promise.any([p1, p2]);                 // Resolves with first fulfilled; rejects if ALL reject
+
+// Async/await (syntactic sugar over promises)
+async function fetchData(url) {
+  try {
+    const response = await fetch(url); // Pauses execution until promise resolves
+    if (!response.ok) {
+      throw new Error(\`HTTP \${response.status}\`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Fetch failed:", error);
+    throw error;                       // Re-throw for caller to handle
+  }
+}
+
+// Sequential vs parallel
+async function process() {
+  const result1 = await asyncOp1();    // Waits for op1 to complete
+  const result2 = await asyncOp2();    // Then starts op2 (sequential)
+
+  // Parallel execution with Promise.all
+  const [res1, res2] = await Promise.all([
+    asyncOp1(),
+    asyncOp2(),
+  ]);                                  // Both start immediately; wait for both
+}
+
+// Error handling in async
+async function safeOperation() {
+  const result = await riskyOp()
+    .catch(err => ({ error: err.message })); // Catch and recover
+  if (result.error) {
+    return fallbackValue;
+  }
+  return result;
+}
+\`\`\`
+
+## Modules (ES Modules)
+
+\`\`\`js
+// ----- math.js -----
+export const PI = 3.14159;             // Named export
+export function double(n) { return n * 2; }
+export default class Calculator {      // Default export (one per module)
+  static add(a, b) { return a + b; }
+}
+
+// ----- app.js -----
+import Calculator, { PI, double as doubleFn } from "./math.js"; // Default + named
+import * as MathUtils from "./math.js";  // Namespace import
+console.log(PI);
+
+// Dynamic import (returns promise)
+const module = await import("./math.js");
+console.log(module.PI);
+
+// Re-exporting
+export { double } from "./math.js";
+
+// Side-effect import (runs module for its side effects)
+import "./polyfills.js";
+\`\`\`
+
+## Standard Library Highlights
+
+| API | Usage | Description |
+|-----|-------|-------------|
+| <code>Object.keys()</code> | <code>Object.keys(obj)</code> | Returns own enumerable string keys |
+| <code>Object.values()</code> | <code>Object.values(obj)</code> | Returns own enumerable values |
+| <code>Object.entries()</code> | <code>Object.entries(obj)</code> | Returns <code>[key, value]</code> pairs |
+| <code>Object.freeze()</code> | <code>Object.freeze(obj)</code> | Makes object immutable (shallow) |
+| <code>Object.seal()</code> | <code>Object.seal(obj)</code> | Prevents adding/removing properties |
+| <code>Object.assign()</code> | <code>Object.assign(target, ...sources)</code> | Copies own enumerable properties |
+| <code>Object.hasOwn()</code> | <code>Object.hasOwn(obj, key)</code> | Safe hasOwnProperty check (ES2022) |
+| <code>Array.from()</code> | <code>Array.from(arrayLike, mapFn)</code> | Creates Array from iterable/array-like |
+| <code>Array.isArray()</code> | <code>Array.isArray(val)</code> | Checks if value is Array |
+| <code>Array.prototype.flat()</code> | <code>arr.flat(depth)</code> | Flattens nested arrays |
+| <code>Array.prototype.flatMap()</code> | <code>arr.flatMap(fn)</code> | Map then flat(1) |
+| <code>String.prototype.replaceAll()</code> | <code>str.replaceAll(from, to)</code> | Global replace without regex |
+| <code>String.prototype.matchAll()</code> | <code>str.matchAll(regex)</code> | Iterator of all regex matches |
+| <code>Number.EPSILON</code> | <code>Math.abs(a-b) < Number.EPSILON</code> | Float comparison tolerance |
+| <code>Number.isNaN()</code> | <code>Number.isNaN(val)</code> | Does not coerce (unlike global isNaN) |
+| <code>Number.isInteger()</code> | <code>Number.isInteger(val)</code> | Check for integer |
+| <code>Math.trunc()</code> | <code>Math.trunc(1.7)</code> | Removes fractional part (1) |
+| <code>Math.round()</code> | <code>Math.round(1.5)</code> | Rounds to nearest integer (2) |
+| <code>Math.floor()</code> | <code>Math.floor(1.7)</code> | Rounds down (1) |
+| <code>Math.ceil()</code> | <code>Math.ceil(1.2)</code> | Rounds up (2) |
+| <code>structuredClone()</code> | <code>structuredClone(obj)</code> | Deep clone (global function) |
+| <code>Intl.DateTimeFormat</code> | <code>new Intl.DateTimeFormat("en", {...})</code> | Locale-aware date formatting |
+| <code>Intl.NumberFormat</code> | <code>new Intl.NumberFormat("en", {...})</code> | Locale-aware number formatting |
+
+\`\`\`js
+// Array methods
+const numbers = [3, 1, 4, 1, 5];
+numbers.map(n => n * 2);               // [6, 2, 8, 2, 10]
+numbers.filter(n => n > 2);            // [3, 4, 5]
+numbers.reduce((sum, n) => sum + n, 0);// 14
+numbers.sort((a, b) => a - b);         // [1, 1, 3, 4, 5]
+numbers.find(n => n > 3);              // 4
+numbers.some(n => n > 4);              // true
+numbers.every(n => n > 0);             // true
+numbers.includes(4);                   // true
+
+// Object operations
+const user = { name: "Alice", age: 30 };
+const entries = Object.entries(user);  // [["name", "Alice"], ["age", 30]]
+const fromEntries = Object.fromEntries(entries);
+
+// Optional chaining & nullish coalescing
+const street = user?.address?.street;  // undefined (no error)
+const count = user?.count ?? 0;        // 0 (?? treats null/undefined only)
+
+// Logical assignment
+let x = 0;
+x ||= 5;                               // x = 5 (||= assigns if falsy)
+let y = null;
+y ??= 10;                              // y = 10 (??= assigns if null/undefined)
+let z = { a: 1 };
+z &&= { ...z, b: 2 };                  // z = { a: 1, b: 2 } (&&= assigns if truthy)
+\`\`\`
+
+## Proxy & Reflect
+
+\`\`\`js
+// Proxy: intercept operations on an object
+const target = { name: "Alice" };
+const handler = {
+  get(obj, prop) {
+    if (prop in obj) {
+      return obj[prop];
+    }
+    return "Property not found";
+  },
+  set(obj, prop, value) {
+    if (prop === "age" && typeof value !== "number") {
+      throw new TypeError("Age must be a number");
+    }
+    obj[prop] = value;
+    return true;                        // Indicate success
+  },
+  deleteProperty(obj, prop) {
+    console.log(\`Deleting \${prop}\`);
+    return delete obj[prop];
+  },
+};
+const proxy = new Proxy(target, handler);
+console.log(proxy.name);               // "Alice"
+console.log(proxy.unknown);            // "Property not found"
+proxy.age = 30;                         // OK
+// proxy.age = "thirty";               // TypeError
+delete proxy.name;
+
+// Reflect: methods that correspond to Proxy traps
+const obj2 = { a: 1, b: 2 };
+Reflect.get(obj2, "a");                // 1
+Reflect.set(obj2, "c", 3);             // true, obj2 = { a: 1, b: 2, c: 3 }
+Reflect.has(obj2, "a");                // true
+Reflect.defineProperty(obj2, "d", { value: 4 });
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Comparing with <code>==</code> | Performs type coercion, leading to unexpected results | Always use <code>===</code> and <code>!==</code> |
+| 2 | Blocking the event loop with long synchronous work | Freezes the UI and prevents other JS from running | Use <code>setTimeout</code> chunks, Web Workers, or <code>Atomics</code> |
+| 3 | Forgetting <code>await</code> in async functions | Returns a Promise instead of the resolved value | Use <code>await</code> or <code>.then()</code> |
+| 4 | Mutating state directly in React/Vue | Prevents change detection and breaks reactivity | Use immutable patterns (spread, <code>structuredClone</code>, <code>Immer</code>) |
+| 5 | Using <code>var</code> instead of <code>const</code>/<code>let</code> | Function-scoped, hoisted, can be redeclared, no TDZ | Default to <code>const</code>, use <code>let</code> only for reassignment |
+| 6 | Deep clone with <code>JSON.parse(JSON.stringify(obj))</code> | Loses functions, <code>undefined</code>, <code>Symbol</code>, dates, special objects | Use <code>structuredClone()</code> or a library like <code>lodash.cloneDeep</code> |
+| 7 | Callback hell (deep nesting) | Poor readability, hard to debug, error-prone | Use <code>async/await</code> or <code>Promise</code> chains |
+| 8 | Floating point arithmetic | <code>0.1 + 0.2 !== 0.3</code> due to IEEE-754 precision | Use <code>toFixed()</code> or multiply to integers; use libraries for finance |
+| 9 | Modifying array while iterating | Skipping or double-processing elements | Use <code>filter()</code> to create new array, or iterate in reverse |
+| 10 | Forgetting <code>new</code> with Date/String/Number | Creates primitive, not object (string vs String) | Use primitives directly; <code>new Date()</code> is fine, don't use <code>new String()</code> |
+| 11 | Unhandled Promise rejection | Node exits with non-zero code in future; browsers log warnings | Always add <code>.catch()</code> or use <code>try/catch</code> with async/await |
+| 12 | Omitted <code>radix</code> in <code>parseInt()</code> | <code>parseInt("08")</code> in older browsers evaluates as octal (0) | <code>parseInt("08", 10)</code> for base-10 |
+| 13 | Shadowing variable names | Inner scope hides outer variable; confusing bugs | Use descriptive, unique variable names; avoid generic names like <code>data</code>, <code>result</code> |
+| 14 | Relying on automatic semicolon insertion (ASI) | Line breaks cause parsing errors (e.g., <code>return {}</code> vs <code>return\n{}</code>) | Use a formatter (Prettier), terminate with semicolons |
+| 15 | Creating arrays with <code>Array(3)</code> | Creates sparse array ([empty x3]), not [undefined, undefined, undefined] | Use <code>Array.from({length: 3}, () => val)</code> or <code>Array(3).fill(val)</code> |
+
+## Practice Questions
+
+1. Explain the difference between <code>var</code>, <code>let</code>, and <code>const</code> in terms of scope, hoisting, and TDZ. Provide code examples.
+2. What is a closure? Create a <code>memoize(fn)</code> function that caches return values using a closure.
+3. Write an <code>async function</code> that fetches data from 3 APIs in parallel and returns the combined results. Handle errors gracefully so one failure doesn't block the others.
+4. Implement a <code>deepEqual(a, b)</code> function that compares two values (including nested objects and arrays) by value.
+5. What is the output of the following and why?
+   <code>
+   console.log(1);
+   setTimeout(() => console.log(2), 0);
+   Promise.resolve().then(() => console.log(3));
+   console.log(4);
+   </code>
+6. Implement a <code>debounce(fn, delay)</code> function using closures and <code>setTimeout</code>.
+7. How does <code>this</code> binding work in arrow functions vs regular functions? Provide examples with event handlers, methods, and callbacks.
+8. Write a custom iterable that produces the Fibonacci sequence up to n.
+9. Explain the difference between <code>Object.freeze()</code>, <code>Object.seal()</code>, and <code>Object.preventExtensions()</code>.
+10. Implement a <code>pipe(...fns)</code> function that composes functions from left to right.
+11. What is the <code>[[Prototype]]</code> chain? Write code that demonstrates prototypal inheritance without using <code>class</code> syntax.
+12. Write a function that deep-clones an object handling: Date, RegExp, Map, Set, Arrays, and circular references.
+13. Explain how <code>Array.prototype.reduce()</code> works. Implement <code>map</code> and <code>filter</code> using <code>reduce</code>.
+14. What are the differences between <code>Promise.all</code>, <code>Promise.allSettled</code>, <code>Promise.race</code>, and <code>Promise.any</code>?
+15. Create a <code>Retry(fn, maxAttempts, delay)</code> function that retries an async operation on failure with exponential backoff.
+
+`,
+            tags: ["JavaScript", "ES6+", "Async", "Closures"],
+          },
+          {
+            id: "fe-cheat-typescript",
+            title: "TypeScript Cheat Sheet",
+            shortDesc: "Complete TypeScript reference -- type system, generics, utility types, decorators, modules, and configuration.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Primitive, union, intersection, and literal types",
+              "Interfaces, type aliases, generics, and mapped types",
+              "Utility types: Partial, Pick, Omit, Record, ReturnType",
+              "Type narrowing, discriminated unions, and type guards",
+              "tsconfig options, declaration files, and module resolution",
+            ],
+            content: `## Quick Reference
+
+TypeScript is a typed superset of JavaScript that compiles to plain JavaScript. It adds static type checking to catch errors at compile time rather than runtime. The type system is structural (not nominal) -- compatibility is determined by shape, not declaration.
+
+| Rule | Description |
+|------|-------------|
+| TypeScript compiles to JavaScript | Browsers and Node run JS, not TS |
+| Types are erased at compile time | No runtime type checking (use plain JS for runtime validation) |
+| Structural typing | Two types are compatible if their shapes match |
+| strict mode enables full safety | Enable <code>strict: true</code> in tsconfig |
+| Generics are compile-time | No runtime cost; erased like other types |
+| Declaration files (.d.ts) describe JS modules | Used for type-checking plain JS libraries |
+
+## Type Fundamentals
+
+### Basic Types
+
+| TS Syntax | JS Equivalent | Example |
+|-----------|---------------|---------|
+| <code>string</code> | string | <code>"hello"</code> |
+| <code>number</code> | number | <code>42</code>, <code>3.14</code> |
+| <code>boolean</code> | boolean | <code>true</code>, <code>false</code> |
+| <code>null</code> / <code>undefined</code> | null / undefined | <code>null</code>, <code>undefined</code> |
+| <code>void</code> | No return value | <code>function log(): void {}</code> |
+| <code>never</code> | Never returns | <code>function throwErr(): never { throw new Error(); }</code> |
+| <code>any</code> | No type checking | Avoid -- opts out of type system |
+| <code>unknown</code> | Safe any | Must narrow before use |
+| <code>T[]</code> / <code>Array&lt;T&gt;</code> | Array | <code>[1, 2, 3]</code> |
+| <code>[string, number]</code> | Tuple | <code>["age", 30]</code> |
+| <code>enum</code> | Enum (numeric or string) | <code>enum Color { Red, Green, Blue }</code> |
+| <code>literal type</code> | Specific value | <code>type Status = "active" | "inactive"</code> |
+| <code>union</code> | One of multiple types | <code>string | number</code> |
+| <code>intersection</code> | All combined | <code>A & B</code> |
+
+\`\`\`ts
+// Primitive type annotations
+const name: string = "Alice";
+const age: number = 30;
+const isActive: boolean = true;
+
+// Arrays
+const numbers: number[] = [1, 2, 3];
+const strings: Array<string> = ["a", "b"];
+
+// Tuples (fixed length, typed positions)
+const pair: [string, number] = ["age", 30];
+
+// Union types
+const id: string | number = "abc123";   // Can be either
+
+// Literal types
+type Direction = "north" | "south" | "east" | "west";
+const dir: Direction = "north";         // Only these 4 values allowed
+
+// Type aliases
+type Point = {
+  x: number;
+  y: number;
+};
+
+// Interfaces (similar to type aliases, but extensible)
+interface User {
+  readonly id: number;                  // Readonly property
+  name: string;
+  email?: string;                       // Optional property
+}
+
+// Intersection types
+type Admin = User & { role: "admin" };  // Combines User properties + role
+
+// Type assertions (use sparingly)
+const input = document.getElementById("input") as HTMLInputElement;
+// Alternative: <HTMLInputElement>document.getElementById("input") // JSX incompatible
+\`\`\`
+
+### Interfaces vs Type Aliases
+
+| Feature | Interface | Type Alias |
+|---------|-----------|------------|
+| Declaration merging | Yes (multiple declarations merge) | No (duplicate = error) |
+| Extends | <code>extends</code> | <code>&</code> intersection |
+| Computed properties | No | Yes |
+| Mapped types | No | Yes |
+| Union/intersection | No | Yes |
+| Performance | Cached internally | Re-evaluated |
+
+\`\`\`ts
+// Interface merging (declaration merging)
+interface User {
+  name: string;
+}
+interface User {
+  age: number;                         // Merges with above: User has name + age
+}
+const u: User = { name: "A", age: 30 };// OK
+
+// Type alias does NOT merge
+type Person = { name: string };
+// type Person = { age: number };      // Error: Duplicate identifier
+\`\`\`
+
+## Functions & Methods
+
+\`\`\`ts
+// Function type annotations
+function add(a: number, b: number): number {
+  return a + b;
+}
+
+// Arrow functions
+const multiply = (a: number, b: number): number => a * b;
+
+// Optional and default parameters
+function greet(name: string, greeting: string = "Hello"): string {
+  return \`\${greeting}, \${name}!\`;
+}
+
+// Rest parameters
+function sum(...numbers: number[]): number {
+  return numbers.reduce((acc, n) => acc + n, 0);
+}
+
+// Function overloads (multiple call signatures)
+function process(input: string): string;          // Overload 1
+function process(input: number): number;          // Overload 2
+function process(input: string | number): string | number {
+  if (typeof input === "string") {
+    return input.toUpperCase();
+  }
+  return input * 2;
+}
+
+// this parameter (first param tells TS the type of this)
+interface Button {
+  label: string;
+  onClick(this: HTMLElement, event: MouseEvent): void;
+}
+\`\`\`
+
+## Generics
+
+\`\`\`ts
+// Generic function
+function identity<T>(arg: T): T {
+  return arg;
+}
+const result = identity<string>("hello");          // Explicit type
+const result2 = identity(42);                      // Inferred: number
+
+// Generic constraints
+interface Lengthwise {
+  length: number;
+}
+function logLength<T extends Lengthwise>(arg: T): number {
+  return arg.length;
+}
+logLength("hello");                                // 5
+logLength([1, 2, 3]);                              // 3
+// logLength(42);                                  // Error: number has no length
+
+// Generic interfaces
+interface Repository<T> {
+  get(id: string): T | undefined;
+  save(item: T): void;
+  delete(id: string): void;
+}
+
+// Generic class
+class Stack<T> {
+  private items: T[] = [];
+  push(item: T): void { this.items.push(item); }
+  pop(): T | undefined { return this.items.pop(); }
+}
+
+// Generic constraints with keyof
+function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
+  return obj[key];
+}
+const user = { name: "Alice", age: 30 };
+getProperty(user, "name");                         // string
+// getProperty(user, "email");                     // Error: "email" not in keyof
+\`\`\`
+
+## Advanced Types
+
+### Mapped Types
+
+\`\`\`ts
+// Mapped types transform properties
+type Readonly<T> = {
+  readonly [K in keyof T]: T[K];
+};
+
+type Optional<T> = {
+  [K in keyof T]?: T[K];
+};
+
+type Nullable<T> = {
+  [K in keyof T]: T[K] | null;
+};
+
+// Key remapping via as (TS 4.1+)
+type Getters<T> = {
+  [K in keyof T as \`get\${Capitalize<string & K>}\`]: () => T[K];
+};
+type UserGetters = Getters<{ name: string; age: number }>;
+// { getName: () => string; getAge: () => number }
+
+// Conditional types
+type IsString<T> = T extends string ? "yes" : "no";
+type A = IsString<"hello">;                        // "yes"
+type B = IsString<42>;                             // "no"
+
+// Infer keyword
+type ReturnType<T> = T extends (...args: any[]) => infer R ? R : never;
+type FnReturn = ReturnType<() => string>;          // string
+
+// Template literal types
+type EventName = \`on\${Capitalize<string>}\`;
+type HTMLEvents = \`on\${keyof HTMLElementEventMap}\`;
+// "onclick", "onmouseover", etc.
+\`\`\`
+
+### Discriminated Unions
+
+\`\`\`ts
+// Discriminated union: types share a literal property (discriminant)
+type Shape =
+  | { kind: "circle"; radius: number }
+  | { kind: "rectangle"; width: number; height: number }
+  | { kind: "triangle"; base: number; height: number };
+
+// Type narrowing via switch on discriminant
+function area(shape: Shape): number {
+  switch (shape.kind) {
+    case "circle":
+      return Math.PI * shape.radius ** 2;            // TS knows shape is { kind: "circle"; radius: number }
+    case "rectangle":
+      return shape.width * shape.height;             // TS knows shape is rectangle
+    case "triangle":
+      return (shape.base * shape.height) / 2;
+    default:
+      const _exhaustive: never = shape;              // Compile error if not all cases handled
+      return _exhaustive;
+  }
+}
+\`\`\`
+
+### Type Guards
+
+\`\`\`ts
+// typeof type guard
+function narrowValue(val: string | number): number {
+  if (typeof val === "string") {
+    return val.length;                               // val is string
+  }
+  return val;                                        // val is number
+}
+
+// instanceof type guard
+class Dog { bark() {} }
+class Cat { meow() {} }
+function speak(animal: Dog | Cat) {
+  if (animal instanceof Dog) {
+    animal.bark();
+  } else {
+    animal.meow();
+  }
+}
+
+// Custom type predicate
+interface Fish { swim(): void; }
+interface Bird { fly(): void; }
+function isFish(pet: Fish | Bird): pet is Fish {    // Returns type predicate
+  return (pet as Fish).swim !== undefined;
+}
+function move(pet: Fish | Bird) {
+  if (isFish(pet)) {
+    pet.swim();                                      // Narrowed to Fish
+  } else {
+    pet.fly();
+  }
+}
+
+// in operator narrowing
+function handle(shape: Shape) {
+  if ("radius" in shape) {                           // Narrowed to circle
+    console.log(shape.radius);
+  }
+}
+
+// Assertion functions (TS 3.7+)
+function assert(condition: any, msg?: string): asserts condition {
+  if (!condition) throw new Error(msg);
+}
+function assertString(val: any): asserts val is string {
+  if (typeof val !== "string") throw new Error("Not a string");
+}
+\`\`\`
+
+## Utility Types
+
+| Utility Type | Description | Example |
+|-------------|-------------|---------|
+| <code>Partial&lt;T&gt;</code> | All properties optional | <code>Partial&lt;User&gt;</code> |
+| <code>Required&lt;T&gt;</code> | All properties required | <code>Required&lt;User&gt;</code> |
+| <code>Readonly&lt;T&gt;</code> | All properties readonly | <code>Readonly&lt;Config&gt;</code> |
+| <code>Pick&lt;T, K&gt;</code> | Select subset of keys | <code>Pick&lt;User, "name" | "email"&gt;</code> |
+| <code>Omit&lt;T, K&gt;</code> | Remove subset of keys | <code>Omit&lt;User, "password"&gt;</code> |
+| <code>Record&lt;K, T&gt;</code> | Object type with keys K, values T | <code>Record&lt;"id" | "name", string&gt;</code> |
+| <code>Exclude&lt;T, U&gt;</code> | Exclude types from union | <code>Exclude&lt;"a" | "b" | "c", "a"&gt;</code> |
+| <code>Extract&lt;T, U&gt;</code> | Extract types from union | <code>Extract&lt;"a" | "b" | "c", "a" | "b"&gt;</code> |
+| <code>NonNullable&lt;T&gt;</code> | Remove null and undefined | <code>NonNullable&lt;string | null&gt;</code> |
+| <code>ReturnType&lt;T&gt;</code> | Return type of function | <code>ReturnType&lt;typeof myFn&gt;</code> |
+| <code>Parameters&lt;T&gt;</code> | Parameter types of function | <code>Parameters&lt;typeof myFn&gt;</code> |
+| <code>ConstructorParameters&lt;T&gt;</code> | Constructor parameter types | <code>ConstructorParameters&lt;typeof MyClass&gt;</code> |
+| <code>InstanceType&lt;T&gt;</code> | Instance type of constructor | <code>InstanceType&lt;typeof MyClass&gt;</code> |
+| <code>Awaited&lt;T&gt;</code> | Unwraps Promise type | <code>Awaited&lt;Promise&lt;string&gt;&gt;</code> |
+| <code>ThisParameterType&lt;T&gt;</code> | Type of this parameter | <code>ThisParameterType&lt;T&gt;</code> |
+| <code>OmitThisParameter&lt;T&gt;</code> | Remove this parameter | <code>OmitThisParameter&lt;T&gt;</code> |
+| <code>Uppercase&lt;S&gt;</code> | Uppercase string literal | <code>Uppercase&lt;"hello"&gt;</code> |
+| <code>Lowercase&lt;S&gt;</code> | Lowercase string literal | <code>Lowercase&lt;"HELLO"&gt;</code> |
+| <code>Capitalize&lt;S&gt;</code> | Capitalize first char | <code>Capitalize&lt;"hello"&gt;</code> |
+| <code>Uncapitalize&lt;S&gt;</code> | Uncapitalize first char | <code>Uncapitalize&lt;"Hello"&gt;</code> |
+
+\`\`\`ts
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+}
+
+// Pick: select specific keys
+type PublicUser = Pick<User, "id" | "name" | "email">;
+
+// Omit: exclude specific keys
+type SafeUser = Omit<User, "password">;
+
+// Partial for updates
+type UpdateUser = Partial<User>;                     // All fields optional
+
+// Record for dictionaries
+type UserMap = Record<string, User>;
+
+// ReturnType
+function fetchUser(): Promise<User> { /* ... */ }
+type FetchResult = ReturnType<typeof fetchUser>;     // Promise<User>
+
+// Awaited (TS 4.5+)
+type ResolvedUser = Awaited<ReturnType<typeof fetchUser>>; // User
+
+// Conditional + infer
+type Flatten<T> = T extends Array<infer U> ? U : T;
+type Nums = Flatten<number[]>;                       // number
+type Str = Flatten<string>;                          // string
+\`\`\`
+
+## Enums
+
+\`\`\`ts
+// Numeric enum (auto-incrementing from 0)
+enum Direction {
+  Up,                                                // 0
+  Down,                                              // 1
+  Left,                                              // 2
+  Right,                                             // 3
+}
+
+// Custom numeric values
+enum Status {
+  Active = 1,
+  Inactive = 0,
+  Pending = -1,
+}
+
+// String enum
+enum Color {
+  Red = "RED",
+  Green = "GREEN",
+  Blue = "BLUE",
+}
+
+// Reverse mapping (numeric only)
+console.log(Direction[0]);                           // "Up"
+
+// Const enum (no runtime object -- inlined at compile time)
+const enum Size {
+  Small = 100,
+  Medium = 200,
+  Large = 300,
+}
+console.log(Size.Small);                             // Compiled to console.log(100)
+\`\`\`
+
+## TypeScript Configuration
+
+### tsconfig.json (recommended)
+
+\`\`\`json
+{
+  "compilerOptions": {
+    /* Strict mode (recommended for new projects) */
+    "strict": true,                                  // Enables all strict checks below
+    "strictNullChecks": true,                        // null/undefined not assignable to other types
+    "strictFunctionTypes": true,                     // Bivariant parameter check
+    "strictBindCallApply": true,                     // Proper types for bind/call/apply
+    "strictPropertyInitialization": true,            // Class properties must be initialized
+    "noImplicitAny": true,                           // Error on implicit any
+    "noImplicitThis": true,                          // Error on this with implicit any
+    "alwaysStrict": true,                            // "use strict" in output
+
+    /* Module resolution */
+    "target": "ES2022",                              // Output JS version
+    "module": "ESNext",                              // Module system
+    "moduleResolution": "bundler",                   // Modern module resolution
+    "esModuleInterop": true,                         // Interop with CommonJS
+    "isolatedModules": true,                         // Each file is a separate module
+    "verbatimModuleSyntax": true,                    // Preserve import/export syntax
+
+    /* Output */
+    "outDir": "./dist",
+    "sourceMap": true,
+    "declaration": true,                             // Generate .d.ts files
+    "declarationMap": true,
+
+    /* Additional */
+    "skipLibCheck": true,                            // Skip .d.ts type checking (faster)
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": true,                                 // Allow JS files in project
+    "checkJs": false,                                // Enable type checking in JS files
+    "noUnusedLocals": true,                          // Error on unused locals
+    "noUnusedParameters": true,                      // Error on unused params
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true               // Exact optional property semantics
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}
+\`\`\`
+
+### Key Compiler Options
+
+| Option | Description | Recommended |
+|--------|-------------|-------------|
+| <code>strict: true</code> | Enables all strict type-checking options | Yes |
+| <code>noUncheckedIndexedAccess</code> | Adds undefined to indexed access types | Yes for extra safety |
+| <code>exactOptionalPropertyTypes</code> | <code>prop?: T</code> means <code>prop: T | undefined</code> (not just absent) | Optional |
+| <code>paths</code> | Path alias mapping (e.g., <code>@/components/*</code>) | Yes |
+| <code>baseUrl</code> | Base directory for path resolution | Yes |
+| <code>types</code> | Auto-included <code>@types</code> packages | Often omitted |
+| <code>lib</code> | Library type definitions (DOM, ES2022) | Depends on target |
+| <code>jsx</code> | JSX handling: <code>preserve</code>, <code>react-jsx</code>, <code>react</code> | <code>react-jsx</code> for React 17+ |
+
+## Modules & Declaration Files
+
+\`\`\`ts
+// ----- types.ts -----
+export interface User { name: string; }
+
+// ----- utils.ts -----
+export { User } from "./types";                      // Re-export
+export type { User } from "./types";                 // Explicit type export (isolatedModules)
+
+// ----- global.d.ts ----- (ambient declarations)
+// Declare global variables/modules without importing
+declare module "*.module.css" {
+  const classes: Record<string, string>;
+  export default classes;
+}
+
+declare module "*.svg" {
+  const ReactComponent: React.FC<React.SVGProps<SVGSVGElement>>;
+  export default ReactComponent;
+}
+
+// Augment existing types
+declare module "express" {
+  interface Request {
+    user?: { id: string; role: string };
+  }
+}
+
+// ----- types.ts ----- (namespace pattern)
+// Prefer ES modules over namespaces. Use for legacy code or global types.
+declare namespace MyLib {
+  function helper(): string;
+  interface Options {
+    debug: boolean;
+  }
+}
+\`\`\`
+
+## Decorators (Experimental)
+
+\`\`\`ts
+// Enable: "experimentalDecorators": true in tsconfig
+
+// Class decorator
+function sealed(constructor: Function) {
+  Object.seal(constructor);
+  Object.seal(constructor.prototype);
+}
+
+@sealed
+class Greeter {
+  greet() { return "Hello"; }
+}
+
+// Method decorator
+function log(target: any, key: string, descriptor: PropertyDescriptor) {
+  const original = descriptor.value;
+  descriptor.value = function(...args: any[]) {
+    console.log(\`Calling \${key} with\`, args);
+    return original.apply(this, args);
+  };
+}
+
+class Calculator {
+  @log
+  add(a: number, b: number): number {
+    return a + b;
+  }
+}
+\`\`\`
+
+## Comparison: TypeScript vs JavaScript
+
+| Aspect | TypeScript | JavaScript |
+|--------|------------|------------|
+| Type system | Static, structural, optional | Dynamic, no types |
+| Compilation | Requires compilation step | Runs directly |
+| IDE experience | Autocomplete, refactoring, type checking | Limited intelligence |
+| Learning curve | Higher (types, generics, config) | Lower |
+| Runtime errors | Fewer (caught at compile time) | More (caught at runtime) |
+| Library ecosystem | Types @types or built-in | N/A |
+| File extension | <code>.ts</code>, <code>.tsx</code> | <code>.js</code>, <code>.jsx</code> |
+| Strict mode | <code>strict: true</code> in tsconfig | <code>"use strict"</code> |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Overusing <code>any</code> | Opts out of type safety entirely | Use <code>unknown</code> and narrow, or proper union types |
+| 2 | Using type assertions (<code>as</code>) to silence errors | Ignores compile-time checks; crashes at runtime | Use type guards, discriminated unions, or proper annotations |
+| 3 | Making everything optional (<code>?:</code>) | Defeats the purpose of type checking; no guarantees | Only make properties optional when truly optional; use <code>Partial&lt;T&gt;</code> when needed |
+| 4 | Not using strict mode | Misses null checks, implicit any, and other safety nets | Always enable <code>strict: true</code> |
+| 5 | Confusing interface merging with type alias | Expecting type to merge (they don't) | Use interface for public API types; type for unions, computed types |
+| 6 | Deeply nested generics without constraints | Unreadable, poor errors, hard to debug | Use descriptive type aliases; add constraints (<code>extends</code>); break into smaller types |
+| 7 | Using <code>Function</code> type | Too broad; no parameter/return safety | Use explicit function signature: <code>(args: Type) => ReturnType</code> |
+| 8 | Not using <code>satisfies</code> (TS 4.9+) | Misses narrowing while still type-checking | <code>const config = { port: 3000 } satisfies Record&lt;string, number&gt;;</code> |
+| 9 | Declaring same type in multiple files | Duplication leads to drift | Define shared types in a central <code>types.ts</code> file |
+| 10 | Using <code>as const</code> without strict mode | Loses literal type inference | Use <code>as const</code> for literal types; enable strict mode |
+| 11 | Not using <code>noUncheckedIndexedAccess</code> | Accessing object properties by index can return undefined silently | Enable the flag; handle undefined |
+| 12 | Using <code>namespace</code> instead of ES modules | Namespaces are for declaration merging, not code organization | Use ES module <code>import</code>/<code>export</code> |
+| 13 | Ignoring <code>@ts-expect-error</code> vs <code>@ts-ignore</code> | <code>@ts-ignore</code> silently ignores errors; <code>@ts-expect-error</code> errors if no error present | Use <code>@ts-expect-error</code> to document intentional violations |
+| 14 | Not enabling <code>isolatedModules</code> with bundlers | Each file is transpiled independently; certain patterns break | Enable and use type-only imports: <code>import type { X } from "./x"</code> |
+| 15 | Using <code>enum</code> when a union of literals suffices | Enums add runtime code and reverse mapping overhead | Prefer <code>type Status = "active" | "inactive"</code> for simple cases |
+
+## Practice Questions
+
+1. Implement a generic <code>DeepReadonly&lt;T&gt;</code> that makes all properties (including nested) readonly.
+2. Write a <code>PickByType&lt;T, V&gt;</code> utility type that picks properties of T whose values extend V.
+3. Create a discriminated union for a form field that can be text, number, email, select, or checkbox -- each with appropriate type-specific properties (placeholder, min, max, options, etc.).
+4. Implement a generic <code>EventEmitter&lt;T&gt;</code> class where T is a map of event names to payload types, with type-safe <code>on()</code>, <code>emit()</code>, and <code>off()</code> methods.
+5. What is the difference between <code>type</code> and <code>interface</code>? When would you choose one over the other?
+6. Implement <code>MyPartial&lt;T&gt;</code> using mapped types (recreate the built-in <code>Partial&lt;T&gt;</code> from scratch).
+7. Write a <code>Validator&lt;T&gt;</code> type that given a schema <code>{ field: { type: "string", required: true } }</code>, produces the correct TypeScript type.
+8. Explain how <code>infer</code> works in conditional types. Use it to implement <code>ArrayElement&lt;T&gt;</code> that extracts the element type from an array.
+9. Create a strongly-typed <code>createAction</code> function that returns <code>{ type: string, payload: T }</code> with proper types inferred from the argument.
+10. Write a <code>tsconfig.json</code> for a library project that outputs ESM and CJS simultaneously.
+11. How does <code>satisfies</code> differ from type annotation (<code>const x: Type = ...</code>)? Provide an example where <code>satisfies</code> preserves narrower types.
+12. Implement a <code>BrandedType&lt;T, Brand&gt;</code> utility for nominal typing in TypeScript.
+13. Write a generic <code>Builder&lt;T&gt;</code> class that allows chaining <code>.withX(value)</code> methods and produces a fully-typed T.
+14. Explain <code>--isolatedModules</code>, <code>--verbatimModuleSyntax</code>, and how they affect <code>import type</code> vs <code>import</code>.
+15. Create a type-safe <code>API client</code> using template literal types for endpoint paths.
+
+`,
+            tags: ["TypeScript", "Types", "Generics"],
+          },
+          {
+            id: "fe-cheat-react",
+            title: "React Cheat Sheet",
+            shortDesc: "Complete React reference -- hooks, component patterns, state management, rendering, performance, and testing.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Hooks: useState, useEffect, useRef, useMemo, useCallback, useContext",
+              "Component composition, children, and render props",
+              "State management: context, reducer, zustand, jotai",
+              "Rendering: reconciliation, keys, batching, Suspense",
+              "Performance: memoization, lazy loading, profiling",
+            ],
+            content: `## Quick Reference
+
+React is a declarative, component-based library for building user interfaces. Components receive <code>props</code> and return a description of the UI (JSX). When state changes, React re-renders the component and reconciles the virtual DOM with the real DOM using a diffing algorithm.
+
+| Rule | Description |
+|------|-------------|
+| Components are pure functions | Same props/same state = same output |
+| State triggers re-render | Call <code>setState</code> or dispatch action |
+| Hooks must be called in order | Never conditionally; at top level of component |
+| Data flows down | Parent passes props to children |
+| Events flow up | Children call callbacks from props |
+| Keys must be stable | Use unique, stable IDs (not array index) |
+
+## Hooks API
+
+### State Hooks
+
+\`\`\`tsx
+// useState: local component state
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0);             // Initial value: 0
+  const [user, setUser] = useState({ name: "", age: 0 });
+
+  // State batcher (React 18+)
+  const handleClick = () => {
+    setCount(c => c + 1);                             // Functional update (preferred)
+    setCount(c => c + 1);                             // Two updates batched = +2
+  };
+
+  // Object state (merge manually)
+  const updateName = (name: string) => {
+    setUser(prev => ({ ...prev, name }));             // Must spread existing state
+  };
+
+  return <button onClick={handleClick}>{count}</button>;
+}
+
+// useReducer: complex state logic
+import { useReducer } from "react";
+
+type Action =
+  | { type: "increment" }
+  | { type: "decrement" }
+  | { type: "set"; payload: number };
+
+function reducer(state: number, action: Action): number {
+  switch (action.type) {
+    case "increment": return state + 1;
+    case "decrement": return state - 1;
+    case "set": return action.payload;
+    default: return state;
+  }
+}
+
+function CounterWithReducer() {
+  const [count, dispatch] = useReducer(reducer, 0);
+  return (
+    <div>
+      <button onClick={() => dispatch({ type: "decrement" })}>-</button>
+      <span>{count}</span>
+      <button onClick={() => dispatch({ type: "increment" })}>+</button>
+    </div>
+  );
+}
+\`\`\`
+
+### Effect Hooks
+
+\`\`\`tsx
+// useEffect: side effects (fetch, subscriptions, DOM, timers)
+import { useEffect, useRef } from "react";
+
+function DataFetcher({ id }: { id: string }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;                             // Cleanup flag for race condition
+
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const res = await fetch(\`/api/items/\${id}\`);
+        const json = await res.json();
+        if (!cancelled) {                              // Only set state if still mounted
+          setData(json);
+        }
+      } catch (err) {
+        if (!cancelled) console.error(err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchData();
+
+    return () => {                                     // Cleanup function
+      cancelled = true;
+    };
+  }, [id]);                                            // Re-run when id changes
+
+  if (loading) return <div>Loading...</div>;
+  return <div>{JSON.stringify(data)}</div>;
+}
+
+// useLayoutEffect: synchronous effect (before browser paint)
+// Use for measuring DOM, scroll position, animations
+import { useLayoutEffect } from "react";
+function MeasureTooltip() {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      const { width } = ref.current.getBoundingClientRect();
+      // Adjust position before the user sees it
+    }
+  }, []);                                              // Runs synchronously after DOM mutations
+
+  return <div ref={ref}>Tooltip content</div>;
+}
+
+// useEffectEvent (React 19+) -- stable callback ref for effects
+// (See React 19 hooks section below)
+\`\`\`
+
+### Ref Hooks
+
+\`\`\`tsx
+// useRef: mutable ref (persistent across renders, no re-render on change)
+import { useRef } from "react";
+
+function TextInput() {
+  const inputRef = useRef<HTMLInputElement>(null);     // Typed ref
+
+  const focusInput = () => {
+    inputRef.current?.focus();                         // Access DOM node
+  };
+
+  // Storing previous value
+  const prevCountRef = useRef<number>();
+  useEffect(() => {
+    prevCountRef.current = count;
+  }, [count]);
+
+  return (
+    <>
+      <input ref={inputRef} type="text" />
+      <button onClick={focusInput}>Focus</button>
+    </>
+  );
+}
+
+// forwardRef + useImperativeHandle: expose methods to parent
+import { forwardRef, useImperativeHandle } from "react";
+
+interface FancyInputHandle {
+  focus(): void;
+  clear(): void;
+}
+
+const FancyInput = forwardRef<FancyInputHandle, {}>((props, ref) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+    clear: () => { if (inputRef.current) inputRef.current.value = ""; },
+  }), []);
+
+  return <input ref={inputRef} />;
+});
+
+// Parent usage
+function Parent() {
+  const fancyRef = useRef<FancyInputHandle>(null);
+  return (
+    <>
+      <FancyInput ref={fancyRef} />
+      <button onClick={() => fancyRef.current?.focus()}>Focus</button>
+    </>
+  );
+}
+\`\`\`
+
+### Memoization Hooks
+
+\`\`\`tsx
+// useMemo: memoize expensive computation
+import { useMemo } from "react";
+
+function ExpensiveComponent({ items, filter }: { items: Item[]; filter: string }) {
+  const filteredItems = useMemo(() => {
+    return items.filter(item =>
+      item.name.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [items, filter]);                                 // Re-compute only when items or filter change
+
+  return <ul>{filteredItems.map(item => <li key={item.id}>{item.name}</li>)}</ul>;
+}
+
+// useCallback: memoize function reference (for child memoization)
+import { useCallback } from "react";
+
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = useCallback(() => {
+    setCount(prev => prev + 1);
+  }, []);                                              // Empty deps: function identity is stable
+
+  return <Child onClick={handleClick} />;
+}
+
+// React.memo: skip re-render if props haven't changed
+const Child = React.memo(function Child({ onClick }: { onClick: () => void }) {
+  return <button onClick={onClick}>Increment</button>;
+});
+\`\`\`
+
+### Context Hooks
+
+\`\`\`tsx
+// useContext: consume context
+import { createContext, useContext } from "react";
+
+interface Theme {
+  mode: "light" | "dark";
+  primary: string;
+  background: string;
+}
+
+const ThemeContext = createContext<Theme | null>(null);  // Default value (null for safety)
+
+function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme: Theme = {
+    mode: "light",
+    primary: "#007bff",
+    background: "#ffffff",
+  };
+
+  return (
+    <ThemeContext.Provider value={theme}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+function useTheme(): Theme {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within ThemeProvider");
+  }
+  return context;
+}
+
+function ThemedButton() {
+  const theme = useTheme();
+  return (
+    <button style={{ background: theme.primary }}>
+      Styled Button
+    </button>
+  );
+}
+\`\`\`
+
+## Component Patterns
+
+### Composition
+
+\`\`\`tsx
+// Containment (children)
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="card">
+      <h2>{title}</h2>
+      <div className="card-body">{children}</div>
+    </div>
+  );
+}
+
+// Usage
+<Card title="Profile">
+  <p>User information goes here</p>
+</Card>
+
+// Slots (multiple children)
+function Layout({
+  header,
+  sidebar,
+  main,
+  footer,
+}: {
+  header: React.ReactNode;
+  sidebar: React.ReactNode;
+  main: React.ReactNode;
+  footer: React.ReactNode;
+}) {
+  return (
+    <div className="layout">
+      <header>{header}</header>
+      <aside>{sidebar}</aside>
+      <main>{main}</main>
+      <footer>{footer}</footer>
+    </div>
+  );
+}
+
+// Render props
+function DataFetcher({ render }: { render: (data: any) => React.ReactNode }) {
+  const [data, setData] = useState(null);
+  // ... fetch logic
+  return <>{render(data)}</>;
+}
+\`\`\`
+
+### Error Boundaries
+
+\`\`\`tsx
+// Error boundary (must be class component -- no hook equivalent yet)
+import { Component, ErrorInfo, ReactNode } from "react";
+
+interface Props { children: ReactNode; fallback?: ReactNode; }
+interface State { hasError: boolean; error: Error | null; }
+
+class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("Caught error:", error, info.componentStack);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || <h1>Something went wrong</h1>;
+    }
+    return this.props.children;
+  }
+}
+\`\`\`
+
+## React 19 New Features
+
+\`\`\`tsx
+// use() hook -- read promises and context outside of hooks
+// (available in React 19 RC+)
+import { use } from "react";
+
+function Comments({ commentsPromise }: { commentsPromise: Promise<Comment[]> }) {
+  const comments = use(commentsPromise);               // Suspends if pending
+  return <ul>{comments.map(c => <li key={c.id}>{c.text}</li>)}</ul>;
+}
+
+// Server Components (RSC)
+// Files named .server.tsx run on the server, never sent to client
+// Files named .client.tsx run in the browser
+// Default in Next.js App Router
+
+// Actions (form action)
+function CreateUserForm() {
+  async function createUser(formData: FormData) {
+    "use server";                                      // Server Action
+    const name = formData.get("name");
+    await db.user.create({ data: { name } });
+    // revalidatePath("/users")                       // Next.js specific
+  }
+
+  return (
+    <form action={createUser}>
+      <input name="name" required />
+      <button type="submit">Create</button>
+    </form>
+  );
+}
+
+// useOptimistic -- optimistic UI updates
+import { useOptimistic } from "react";
+
+function MessageList({ messages, sendMessage }) {
+  const [optimisticMessages, addOptimistic] = useOptimistic(
+    messages,
+    (state, newMessage) => [...state, { text: newMessage, sending: true }]
+  );
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    addOptimistic(formData.get("message"));
+    await sendMessage(formData);
+    form.reset();
+  }
+
+  return (
+    <ul>
+      {optimisticMessages.map((msg, i) => (
+        <li key={i}>{msg.text} {msg.sending && "(sending...)"}</li>
+      ))}
+    </ul>
+  );
+}
+\`\`\`
+
+## State Management Comparison
+
+| Library | Pattern | Best For | Bundle Size | Notes |
+|---------|---------|----------|-------------|-------|
+| React Context | Provider/Consumer | Low-frequency updates (theme, auth) | 0 (built-in) | Causes all consumers to re-render |
+| useReducer | Reducer pattern | Complex local state | 0 (built-in) | Predictable state transitions |
+| Zustand | External store (hooks) | Medium apps, simplicity | ~1KB | No provider needed; TypeScript-friendly |
+| Jotai | Atomic state | Granular re-renders | ~3KB | Atom-based; built-in derived atoms |
+| Redux Toolkit | Global store (slices, thunks) | Large apps, team scale | ~12KB | DevTools, middleware, RTK Query |
+| TanStack Query | Server state (cache) | API data fetching/caching | ~13KB | Auto cache, refetch, pagination |
+| Valtio | Proxy-based mutation | Simplicity, mutable API | ~4KB | Automatic re-render optimization |
+
+## Performance Patterns
+
+\`\`\`tsx
+// Code splitting with React.lazy + Suspense
+import { lazy, Suspense } from "react";
+
+const HeavyComponent = lazy(() => import("./HeavyComponent"));
+
+function App() {
+  const [show, setShow] = useState(false);
+
+  return (
+    <div>
+      <button onClick={() => setShow(true)}>Load Component</button>
+      <Suspense fallback={<div>Loading...</div>}>
+        {show && <HeavyComponent />}
+      </Suspense>
+    </div>
+  );
+}
+
+// Virtualization (react-window)
+import { FixedSizeList } from "react-window";
+
+function VirtualList({ items }: { items: string[] }) {
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
+    <div style={style}>{items[index]}</div>
+  );
+
+  return (
+    <FixedSizeList
+      height={400}
+      itemCount={items.length}
+      itemSize={35}
+      width={300}
+    >
+      {Row}
+    </FixedSizeList>
+  );
+}
+
+// Debouncing state updates
+import { useDeferredValue } from "react";
+
+function SearchPage({ query }: { query: string }) {
+  const deferredQuery = useDeferredValue(query);       // Lower priority update
+  const isStale = query !== deferredQuery;
+
+  return (
+    <div style={{ opacity: isStale ? 0.5 : 1 }}>
+      <SearchResults query={deferredQuery} />
+    </div>
+  );
+}
+
+// useTransition for non-urgent state updates
+import { useTransition } from "react";
+
+function TabSwitcher() {
+  const [isPending, startTransition] = useTransition();
+  const [tab, setTab] = useState("home");
+
+  const switchTab = (newTab: string) => {
+    startTransition(() => {
+      setTab(newTab);                                  // Marked as non-urgent
+    });
+  };
+
+  return (
+    <div>
+      {isPending && <Spinner />}
+      <TabContent tab={tab} />
+    </div>
+  );
+}
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Using array index as key | Causes stale state, incorrect reordering, broken inputs | Use unique stable ID (database id, uuid) |
+| 2 | Calling hooks conditionally | React relies on call order; breaks the rules of hooks | Always call hooks at top level, unconditionally |
+| 3 | Mutating state directly | React does not detect mutation; no re-render | Use <code>setState</code> or functional update |
+| 4 | Missing deps in useEffect | Stale closure (reads old state/props) | Include all reactive values in deps array or use <code>useEffectEvent</code> |
+| 5 | Infinite useEffect loop | Effect sets state, re-renders, triggers effect again | Fix deps array; use functional update if possible |
+| 6 | Over-memoizing everything | <code>useMemo</code>/<code>useCallback</code> have overhead | Only memoize when profiling shows benefit |
+| 7 | Large context with frequent updates | Every consumer re-renders on any context change | Split contexts; use Zustand/Jotai for frequent updates |
+| 8 | Prop drilling (5+ levels) | Component coupling; hard to refactor | Use composition (children/slots) or context selectively |
+| 9 | Not handling cleanup in useEffect | Memory leaks, stale fetch responses, duplicate subscriptions | Always return a cleanup function; use abort controller for fetch |
+| 10 | Creating components inside components | Child component recreated on every render (loses state) | Define components outside or use <code>useCallback</code> for render functions |
+| 11 | Using <code>useState</code> for derived state | Extra re-render; state can get out of sync | Compute derived values during render or use <code>useMemo</code> |
+| 12 | Not using <code>React.memo</code> effectively | Unnecessary re-renders of leaf components | Apply <code>React.memo</code> only when component re-renders with same props |
+| 13 | Fetching in useEffect without cleanup | Race conditions (response arrives after unmount) | Use abort signal or cancelled flag |
+| 14 | Using <code>index</code> as key in lists with reorder/filter | Causes input focus loss, wrong animations, incorrect state | Use <code>item.id</code> or <code>uuid()</code> for dynamic lists |
+| 15 | Not using error boundaries | Entire React tree unmounts on render error | Wrap sections with error boundaries |
+
+## Complete API Reference
+
+### Built-in Hooks
+
+| Hook | Purpose | Returns |
+|------|---------|---------|
+| <code>useState(init)</code> | Stateful value | <code>[value, setter]</code> |
+| <code>useReducer(red, init)</code> | Complex state logic | <code>[state, dispatch]</code> |
+| <code>useEffect(fn, deps)</code> | Side effects | void |
+| <code>useLayoutEffect(fn, deps)</code> | Sync side effects | void |
+| <code>useInsertionEffect(fn, deps)</code> | CSS-in-JS insertion | void |
+| <code>useRef(init)</code> | Mutable ref | <code>{ current: T }</code> |
+| <code>useImperativeHandle(ref, fn, deps)</code> | Expose methods | void |
+| <code>useMemo(fn, deps)</code> | Memoized value | <code>T</code> |
+| <code>useCallback(fn, deps)</code> | Memoized function | <code>Function</code> |
+| <code>useContext(Context)</code> | Read context | <code>T</code> |
+| <code>useTransition()</code> | Non-urgent update | <code>[isPending, startTransition]</code> |
+| <code>useDeferredValue(val)</code> | Deferred value | <code>T</code> |
+| <code>useSyncExternalStore(sub, getSnap)</code> | External store | <code>T</code> |
+| <code>useId()</code> | Unique ID (SSR-safe) | <code>string</code> |
+| <code>useDebugValue(val)</code> | DevTools label | void |
+| <code>use(Awaited)</code> (React 19) | Read promise/context | <code>T</code> |
+| <code>useOptimistic(state, fn)</code> (React 19) | Optimistic updates | <code>[state, addTransition]</code> |
+| <code>useActionState(fn, init)</code> (React 19) | Form action state | <code>[state, action, isPending]</code> |
+
+### Component APIs
+
+| API | Purpose |
+|-----|---------|
+| <code>React.memo(Comp)</code> | Memoized component (=== props comparison) |
+| <code>React.lazy(() => import("./Comp"))</code> | Code-splitting |
+| <code>&lt;Suspense fallback={...}&gt;</code> | Loading fallback for lazy/RSC |
+| <code>&lt;Profiler id="..." onRender={fn}&gt;</code> | Performance measurement |
+| <code>&lt;StrictMode&gt;</code> | Dev-only checks (double render, side effect detection) |
+| <code>&lt;Fragment&gt;</code> or <code>&lt;&gt;&lt;/&gt;</code> | Group children without extra DOM node |
+| <code>createPortal(child, domNode)</code> | Render outside parent DOM tree |
+| <code>flushSync(fn)</code> (react-dom) | Force synchronous React update |
+| <code>createRoot(domNode).render(app)</code> | React 18+ root API |
+| <code>hydrateRoot(domNode, app)</code> | Hydrate SSR content |
+
+## Practice Questions
+
+1. Implement a <code>useDebounce</code> hook that returns a debounced version of a value.
+2. Create a <code>useLocalStorage</code> hook that persists state to localStorage and syncs across tabs.
+3. Build a <code>usePrevious</code> hook that returns the previous value of a state or prop.
+4. Implement a <code>useIntersectionObserver</code> hook for lazy-loading images or infinite scroll.
+5. What is the difference between <code>useEffect</code> and <code>useLayoutEffect</code>? When would you use each?
+6. Build a custom <code>useForm</code> hook that handles validation, submission, and error display for a form with multiple field types.
+7. Create a <code>useMediaQuery</code> hook that listens to a CSS media query and returns whether it matches.
+8. Implement an <code>ErrorBoundary</code> component that catches errors and shows a fallback UI with a retry button.
+9. Explain React reconciliation: what is the diffing algorithm? How do keys improve performance?
+10. Build a state manager using <code>useReducer</code> + <code>Context</code> that provides type-safe actions and state.
+11. Create a <code>useAsync</code> hook that handles loading, success, error states for async operations.
+12. Implement a <code>useEventListener</code> hook that safely adds/removes event listeners.
+13. Explain the difference between <code>useMemo</code> and <code>useCallback</code>. Provide examples where each is necessary.
+14. Build a <code>useClickOutside</code> hook that detects clicks outside a ref element (for modals, dropdowns).
+15. Create a React 19 Server Action form that creates a database record and shows optimistic feedback.
+
+`,
+            tags: ["React", "Hooks", "State Management"],
+          },
+          {
+            id: "fe-cheat-vue",
+            title: "Vue Cheat Sheet",
+            shortDesc: "Complete Vue 3 reference -- Composition API, reactivity, directives, routing, state management with Pinia.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Composition API: ref, reactive, computed, watch, onMounted",
+              "Templates: directives (v-for, v-if, v-model, v-bind, v-on)",
+              "Reactivity system: Proxy-based, shallow vs deep, raw",
+              "Vue Router: dynamic routes, guards, lazy loading",
+              "Pinia: stores, actions, getters, plugins",
+            ],
+            content: `## Quick Reference
+
+Vue 3 is a progressive JavaScript framework for building user interfaces. The Composition API (preferred for Vue 3) organizes component logic by feature rather than lifecycle. The reactivity system uses JavaScript Proxies to track dependencies and trigger updates automatically.
+
+| Rule | Description |
+|------|-------------|
+| <code>ref()</code> for primitives | Wraps value in a reactive object with <code>.value</code> |
+| <code>reactive()</code> for objects | Deeply reactive proxy (no <code>.value</code>) |
+| <code>computed()</code> is lazy | Only re-evaluates when dependencies change |
+| <code>watch()</code> for side effects | Runs function when source changes |
+| Templates are compiled | Directives (<code>v-*</code>) are compiled to virtual DOM functions |
+| One-way data flow | Props flow down, events flow up |
+
+## Composition API
+
+### Reactivity Core
+
+\`\`\`vue
+<script setup lang="ts">
+// Recommended: <script setup> syntax (less boilerplate)
+import { ref, reactive, computed, watch, onMounted } from "vue";
+
+// ref: wrap primitives (or objects when .value is desired)
+const count = ref(0);                                  // Reactive number: { value: 0 }
+const message = ref("hello");                          // Reactive string
+
+// Access and mutate via .value
+console.log(count.value);                              // 0
+count.value++;                                         // Triggers update
+
+// reactive: deep proxy for objects
+const user = reactive({
+  name: "Alice",
+  address: { city: "NYC" }                             // Nested is also reactive
+});
+user.name = "Bob";                                     // Direct mutation, no .value
+user.address.city = "LA";                              // Nested reactivity works
+
+// ref vs reactive: when to use
+// - ref: primitives, values that need reassignment
+// - reactive: plain objects/arrays that won't be reassigned
+
+// computed: derived state
+const doubled = computed(() => count.value * 2);       // Lazy, cached
+// Read only: doubled.value
+
+// Writable computed
+const fullName = computed({
+  get: () => \`\${firstName.value} \${lastName.value}\`,
+  set: (val) => {
+    [firstName.value, lastName.value] = val.split(" ");
+  },
+});
+
+// watch: run side effects on change
+watch(count, (newVal, oldVal) => {
+  console.log(\`Count changed from \${oldVal} to \${newVal}\`);
+});
+
+// watch multiple sources
+watch([count, message], ([newCount, newMsg], [oldCount, oldMsg]) => {
+  console.log("One of them changed");
+});
+
+// immediate watch (runs immediately on creation)
+watch(count, (val) => {
+  console.log(\`Count: \${val}\`);
+}, { immediate: true });
+
+// deep watch (for nested objects)
+watch(user, (newVal) => {
+  console.log("User changed deeply", newVal);
+}, { deep: true });                                    // Expensive for large objects
+
+// watchEffect: auto-tracks dependencies
+watchEffect(() => {
+  // Runs immediately and re-runs when reactive deps change
+  console.log(\`Count is \${count.value}\`);
+});
+
+// Lifecycle hooks
+onMounted(() => { /* Component mounted */ });
+onUnmounted(() => { /* Component unmounted -- cleanup */ });
+onUpdated(() => { /* Component re-rendered */ });
+onBeforeMount(() => { /* Before mount */ });
+onBeforeUnmount(() => { /* Before unmount */ });
+onErrorCaptured((err) => { /* Child error caught */ });
+</script>
+\`\`\`
+
+### Template Directives
+
+\`\`\`vue
+<template>
+  <!-- Text interpolation -->
+  <p>{{ message }}</p>                                  <!-- Escaped text -->
+  <p v-text="message"></p>                              <!-- Same as {{ }} -->
+  <p v-html="rawHtml"></p>                              <!-- Raw HTML (XSS risk!) -->
+
+  <!-- Conditional rendering -->
+  <div v-if="type === 'A'">Type A</div>
+  <div v-else-if="type === 'B'">Type B</div>
+  <div v-else>Other</div>
+
+  <div v-show="isVisible">Always rendered (display: none)</div>
+
+  <!-- List rendering -->
+  <ul>
+    <li v-for="(item, index) in items" :key="item.id">  <!-- :key is required -->
+      {{ index }}: {{ item.name }}
+    </li>
+  </ul>
+
+  <!-- v-for with object -->
+  <div v-for="(value, key, index) in obj" :key="key">
+    {{ index }}. {{ key }}: {{ value }}
+  </div>
+
+  <!-- Event handling -->
+  <button v-on:click="handleClick">Click</button>
+  <button @click="handleClick">Click (shorthand)</button>
+  <button @click.prevent="onSubmit">Prevent default</button>
+  <button @click.stop="onClick">Stop propagation</button>
+  <input @keyup.enter="submit">                         <!-- Key modifiers -->
+
+  <!-- Event modifiers -->
+  <!-- .stop, .prevent, .capture, .self, .once, .passive -->
+
+  <!-- Class and style binding -->
+  <div :class="{ active: isActive, 'text-danger': hasError }"></div>
+  <div :class="[isActive ? 'active' : '', 'base-class']"></div>
+  <div :style="{ color: activeColor, fontSize: fontSize + 'px' }"></div>
+
+  <!-- Two-way binding (v-model) -->
+  <input v-model="username" />                           <!-- text input -->
+  <textarea v-model="bio"></textarea>
+  <input type="checkbox" v-model="isChecked" />
+  <select v-model="selected">
+    <option value="A">Option A</option>
+    <option value="B">Option B</option>
+  </select>
+
+  <!-- v-model modifiers -->
+  <input v-model.lazy="value" />                         <!-- Update on change, not input -->
+  <input v-model.number="age" />                         <!-- Coerce to number -->
+  <input v-model.trim="name" />                          <!-- Trim whitespace -->
+
+  <!-- Attribute binding -->
+  <img :src="imageUrl" :alt="altText" />
+  <a :href="url" :target="target">Link</a>
+
+  <!-- Slot -->
+  <BaseLayout>
+    <template #header>Header content</template>
+    <template #default>Main content</template>
+    <template #footer>Footer content</template>
+  </BaseLayout>
+</template>
+\`\`\`
+
+### Component Communication
+
+\`\`\`vue
+<!-- Parent component -->
+<script setup lang="ts">
+import { ref } from "vue";
+import ChildComponent from "./ChildComponent.vue";
+
+const parentMessage = ref("Hello from parent");
+const childResponse = ref("");
+
+function handleChildEvent(msg: string) {
+  childResponse.value = msg;
+}
+</script>
+
+<template>
+  <ChildComponent
+    :message="parentMessage"                             <!-- Prop binding -->
+    @response="handleChildEvent"                         <!-- Event listener -->
+  />
+  <p>Child said: {{ childResponse }}</p>
+</template>
+\`\`\`
+
+\`\`\`vue
+<!-- Child component -->
+<script setup lang="ts">
+// Props definition
+const props = defineProps<{
+  message: string;
+}>();
+
+// Emit definition
+const emit = defineEmits<{
+  (e: "response", value: string): void;
+}>();
+
+// With defaults
+const props2 = withDefaults(defineProps<{
+  name?: string;
+  age?: number;
+}>(), {
+  name: "Guest",
+  age: 0,
+});
+
+function sendResponse() {
+  emit("response", "Hello back!");
+}
+
+// Expose (rarely needed)
+defineExpose({ sendResponse });
+</script>
+
+<template>
+  <p>{{ message }}</p>
+  <button @click="sendResponse">Reply</button>
+</template>
+\`\`\`
+
+### Slots
+
+\`\`\`vue
+<!-- BaseLayout.vue -->
+<template>
+  <div class="layout">
+    <header>
+      <slot name="header">Default header</slot>          <!-- Named slot with fallback -->
+    </header>
+    <main>
+      <slot />                                           <!-- Default slot -->
+    </main>
+    <footer>
+      <slot name="footer" />
+    </footer>
+  </div>
+</template>
+
+<!-- Usage with scoped slots -->
+<ListComponent :items="items">
+  <template #default="{ item, index }">                  <!-- Scoped slot destructuring -->
+    <span>{{ index }}: {{ item.name }}</span>
+  </template>
+</ListComponent>
+\`\`\`
+
+## Pinia (State Management)
+
+\`\`\`ts
+// stores/counter.ts
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+
+export const useCounterStore = defineStore("counter", () => {  // Setup store (preferred)
+  // State (ref)
+  const count = ref(0);
+  const name = ref("counter");
+
+  // Getters (computed)
+  const doubleCount = computed(() => count.value * 2);
+
+  // Actions (functions)
+  function increment() {
+    count.value++;
+  }
+
+  function decrement() {
+    count.value--;
+  }
+
+  async function fetchAndSet() {
+    const result = await api.getCount();                 // Async actions
+    count.value = result;
+  }
+
+  return { count, name, doubleCount, increment, decrement, fetchAndSet };
+});
+
+// In component
+<script setup lang="ts">
+import { useCounterStore } from "@/stores/counter";
+import { storeToRefs } from "pinia";
+
+const store = useCounterStore();
+
+// Destructure with reactivity (not standard destructuring!)
+const { count, doubleCount } = storeToRefs(store);       // Preserves reactivity
+const { increment, decrement } = store;                  // Actions can be destructured
+
+store.$reset();                                           // Reset to initial state
+store.$patch({ count: 10 });                              // Partial update
+store.$subscribe((mutation, state) => {                   // Watch store changes
+  console.log("Store changed", mutation, state);
+});
+</script>
+\`\`\`
+
+### Options Store (alternative)
+
+\`\`\`ts
+// stores/user.ts
+export const useUserStore = defineStore("user", {
+  state: () => ({
+    name: "Alice",
+    role: "admin" as "admin" | "user",
+  }),
+  getters: {
+    isAdmin: (state) => state.role === "admin",
+    greeting: (state) => \`Hello, \${state.name}!\`,
+  },
+  actions: {
+    async login(credentials: { username: string; password: string }) {
+      const user = await api.login(credentials);
+      this.$patch({ name: user.name, role: user.role });
+    },
+    logout() {
+      this.$reset();
+    },
+  },
+});
+\`\`\`
+
+## Vue Router
+
+\`\`\`ts
+// router/index.ts
+import { createRouter, createWebHistory } from "vue-router";
+import Home from "@/views/Home.vue";
+
+const router = createRouter({
+  history: createWebHistory(),                           // HTML5 history mode
+  // createWebHashHistory() for hash mode (static hosting)
+  routes: [
+    {
+      path: "/",
+      name: "home",
+      component: Home,                                   // Direct import (eager)
+    },
+    {
+      path: "/about",
+      name: "about",
+      component: () => import("@/views/About.vue"),      // Lazy-loaded
+    },
+    {
+      path: "/users/:id",                                // Dynamic segment
+      name: "user",
+      component: () => import("@/views/User.vue"),
+      props: true,                                       // Pass route params as props
+      children: [
+        { path: "profile", component: UserProfile },     // Nested route: /users/:id/profile
+        { path: "settings", component: UserSettings },
+      ],
+    },
+    {
+      path: "/redirect-me",
+      redirect: "/",                                     // Redirect
+    },
+    {
+      path: "/:pathMatch(.*)*",                          // Catch-all (404)
+      name: "not-found",
+      component: () => import("@/views/NotFound.vue"),
+    },
+  ],
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) return savedPosition;             // Restore scroll on back/forward
+    return { top: 0 };                                   // Scroll to top on navigation
+  },
+});
+
+// Navigation guards
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem("token");
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: "login", query: { redirect: to.fullPath } });
+  } else {
+    next();
+  }
+});
+
+router.afterEach((to, from) => {
+  // Analytics, title updates, etc.
+  document.title = \`\${to.meta.title} | My App\`;
+});
+
+export default router;
+
+// In component
+<script setup lang="ts">
+import { useRouter, useRoute } from "vue-router";
+
+const router = useRouter();                              // For navigation
+const route = useRoute();                                // For current route info
+
+const userId = computed(() => route.params.id);          // Reactive route param
+
+function navigate() {
+  // Programmatic navigation
+  router.push({ name: "user", params: { id: "123" } });
+  router.replace({ name: "home" });                      // No history entry
+  router.back();                                         // Go back
+  router.forward();                                      // Go forward
+}
+
+// Route guards in component
+onBeforeRouteLeave((to, from) => {
+  const answer = window.confirm("Leave?");
+  if (!answer) return false;                             // Cancel navigation
+});
+
+onBeforeRouteUpdate(async (to, from) => {
+  // Re-fetch data when params change
+  await fetchData(to.params.id as string);
+});
+</script>
+\`\`\`
+
+## Vue vs React Comparison
+
+| Aspect | Vue 3 | React 18+ |
+|--------|-------|-----------|
+| Reactivity | Proxy-based, automatic tracking | Manual via state setters; useMemo/useCallback |
+| API style | Options API or Composition API | Hooks |
+| Template | HTML-based with directives (<code>v-*</code>) | JSX (JavaScript XML) |
+| State management | Pinia (official) | Zustand, Jotai, Redux (community) |
+| Bundle size | ~33kB (runtime + compiler) | ~42kB (react + react-dom) |
+| Learning curve | Gradual (HTML-like templates) | Higher (JSX, hooks mental model) |
+| SSR | Nuxt 3 | Next.js, Remix |
+| Re-render optimization | Fine-grained by default | manual via memo, useMemo, useCallback |
+| CSS scoping | Scoped by default (<code>&lt;style scoped&gt;</code>) | CSS-in-JS or CSS Modules |
+| Two-way binding | <code>v-model</code> | Manual <code>value</code> + <code>onChange</code> |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Mutating props in child component | Breaks one-way data flow; confusing side effects | Use <code>emit()</code> or <code>v-model</code> |
+| 2 | Using <code>watch</code> when <code>computed</code> suffices | Extra complexity; manually tracking dependencies | Use <code>computed()</code> for derived state |
+| 3 | Deep watching large objects | Performance issues; fires for any nested change | Watch specific properties or use <code>shallowRef</code> |
+| 4 | Not using <code>key</code> in <code>v-for</code> | Leads to incorrect DOM reuse and state bugs | Always use <code>:key="item.id"</code> |
+| 5 | Forgetting <code>.value</code> on refs in script | Returns the Ref object, not the value | Use <code>.value</code> in <code>&lt;script setup&gt;</code> (not needed in template) |
+| 6 | Using <code>reactive</code> for primitives | Does not work -- primitives cannot be proxied meaningfully | Use <code>ref()</code> for primitives |
+| 7 | Overusing <code>provide/inject</code> for state | Makes data flow unclear; components tightly coupled | Use Pinia for shared state; provide/inject for theme/locale |
+| 8 | Not cleaning up intervals/timeouts | Memory leaks; component still executes after unmount | Use <code>onUnmounted</code> to clear timers |
+| 9 | Mixing Options API and Composition API | Unnecessary complexity; team confusion | Pick one and stay consistent (Composition API preferred) |
+| 10 | Using <code>v-html</code> with user content | XSS vulnerability | Sanitize first; use <code>v-text</code> or interpolation |
+| 11 | Creating components inside <code>&lt;script setup&gt;</code> | Components recreated every render; lose state | Define components in separate files |
+| 12 | Forgetting <code>nextTick</code> for DOM access after state change | DOM is not updated synchronously | Use <code>await nextTick()</code> after mutation |
+| 13 | Not using <code>:key</code> with <code>&lt;Transition&gt;</code> | Transitions may not fire correctly | Provide <code>:key</code> to trigger enter/leave |
+| 14 | Accessing <code>route.params</code> directly without <code>computed</code> | Loses reactivity if params change in same component | Use <code>computed(() => route.params.id)</code> |
+| 15 | Using <code>v-if</code> and <code>v-for</code> on the same element | <code>v-if</code> has higher priority; unexpected behavior | Use <code>&lt;template v-if&gt;</code> wrapper |
+
+## Practice Questions
+
+1. Build a <code>useDebounce</code> composable in Vue 3 Composition API that debounces a ref value.
+2. Create a custom directive <code>v-focus</code> that auto-focuses an input on mount.
+3. Implement a modal component using <code>Teleport</code> to move it to the body element.
+4. Build a Pinia store for a shopping cart with: add, remove, update quantity, clear, and total price getter.
+5. Create a composable <code>useLocalStorage</code> that syncs a ref with localStorage.
+6. Implement route guards: a) require auth for dashboard routes, b) prevent leaving forms with unsaved changes.
+7. Build a reusable table component with sorting, filtering, and pagination using slots.
+8. Explain the difference between <code>ref</code>, <code>shallowRef</code>, <code>reactive</code>, and <code>shallowReactive</code>.
+9. Create a custom transition animation using <code>&lt;Transition&gt;</code> and <code>&lt;TransitionGroup&gt;</code>.
+10. Implement an infinite scroll composable using <code>IntersectionObserver</code>.
+11. Build a multi-step form wizard using dynamic components (<code>&lt;component :is="..."&gt;</code>).
+12. Create a plugin that adds a global <code>$translate</code> function for i18n.
+13. Implement <code>v-model</code> on a custom input component with validation.
+14. Explain the Vue 3 reactivity system: how does <code>ref()</code> work under the hood with Proxies?
+15. Build a real-time chat component using WebSockets with proper cleanup in <code>onUnmounted</code>.
+
+`,
+            tags: ["Vue", "Composition API", "Pinia"],
+          },
+          {
+            id: "fe-cheat-angular",
+            title: "Angular Cheat Sheet",
+            shortDesc: "Complete Angular reference -- components, directives, services, routing, forms, signals, and RxJS patterns.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "Components, templates, data binding, and directives",
+              "Dependency injection, services, and hierarchical injectors",
+              "RxJS: Observables, Subjects, operators, and error handling",
+              "Routing: guards, resolvers, lazy modules, standalone APIs",
+              "Signals: signal, computed, effect, input, output, model",
+            ],
+            content: `## Quick Reference
+
+Angular is a TypeScript-based application framework. It uses a component-based architecture with dependency injection, RxJS for async operations, and a powerful template syntax. Angular 17+ defaults to standalone components (no NgModules required).
+
+| Rule | Description |
+|------|-------------|
+| Components are classes with <code>@Component</code> decorator | Template, styles, and logic defined declaratively |
+| Dependency injection is hierarchical | Each injector can provide its own instances |
+| RxJS drives async patterns | <code>Observable</code>, <code>Subject</code>, <code>BehaviorSubject</code> |
+| Signals are the new reactive primitive | <code>signal()</code>, <code>computed()</code>, <code>effect()</code> |
+| Change detection is zone-based | Default strategy checks all components; OnPush checks only inputs |
+| Angular CLI generates code | <code>ng generate component</code>, <code>ng generate service</code> |
+
+## Components & Templates
+
+\`\`\`ts
+// Standalone component (Angular 17+)
+import { Component, Input, Output, EventEmitter } from "@angular/core";
+import { CommonModule } from "@angular/common";
+
+@Component({
+  selector: "app-user-card",                             // Custom HTML tag
+  standalone: true,                                      // No NgModule needed
+  imports: [CommonModule],                               // Import directives/pipes
+  template: \`
+    <div class="card">
+      <h2>{{ user.name }}</h2>                           <!-- Interpolation -->
+      <p>{{ user.email }}</p>
+
+      <!-- Property binding -->
+      <img [src]="user.avatar" [alt]="user.name" />
+
+      <!-- Event binding -->
+      <button (click)="onEdit()">Edit</button>
+
+      <!-- Two-way binding (banana-in-a-box) -->
+      <input [(ngModel)]="user.name" />
+
+      <!-- Structural directives -->
+      <div *ngIf="user.isAdmin">Admin User</div>
+
+      <ul>
+        <li *ngFor="let role of user.roles; let i = index">
+          {{ i + 1 }}. {{ role }}
+        </li>
+      </ul>
+
+      <!-- Pipe -->
+      <p>Created: {{ user.createdAt | date:'medium' }}</p>
+    </div>
+  \`,
+  styles: [\`.card { border: 1px solid #ccc; padding: 1rem; }\`],
+})
+export class UserCardComponent {
+  @Input({ required: true }) user!: User;                 // Required input
+  @Input() showDetails = false;                           // Input with default
+
+  @Output() edit = new EventEmitter<number>();            // Output event
+
+  onEdit() {
+    this.edit.emit(this.user.id);                         // Emit to parent
+  }
+}
+\`\`\`
+
+### Template Syntax
+
+| Syntax | Type | Example | Purpose |
+|--------|------|---------|---------|
+| <code>{{ expr }}</code> | Interpolation | <code>{{ user.name }}</code> | One-way (component to template) |
+| <code>[prop]="expr"</code> | Property binding | <code>[src]="imageUrl"</code> | Bind to DOM property |
+| <code>(event)="handler"</code> | Event binding | <code>(click)="onClick()"</code> | User events |
+| <code>[(ngModel)]</code> | Two-way binding | <code>[(ngModel)]="name"</code> | Form input binding |
+| <code>[(value)]</code> | Banana-in-box | <code>[(value)]="val"</code> | Custom two-way binding |
+| <code>*ngIf</code> | Structural | <code>*ngIf="isVisible"</code> | Conditional render |
+| <code>*ngFor</code> | Structural | <code>*ngFor="let item of items"</code> | List rendering |
+| <code>*ngSwitch</code> | Structural | <code>*ngSwitchCase="'A'"</code> | Switch rendering |
+| <code>| pipe</code> | Pipe | <code>{{ date | date:'short' }}</code> | Transform display |
+| <code>@if</code> | Control flow (17+) | <code>@if (cond) { ... }</code> | New control flow syntax |
+| <code>@for</code> | Control flow (17+) | <code>@for (item of items; track item.id) { ... }</code> | New for with track |
+| <code>@defer</code> | Deferrable views (17+) | <code>@defer { ... } @placeholder { ... }</code> | Lazy load |
+
+\`\`\`html
+<!-- New control flow syntax (Angular 17+) -->
+@if (user.isAdmin) {
+  <p>Welcome, admin!</p>
+} @else if (user.isModerator) {
+  <p>Welcome, moderator!</p>
+} @else {
+  <p>Welcome, user!</p>
+}
+
+@for (item of items; track item.id; let i = $index, first = $first) {
+  <div [class.first]="first">{{ i }}: {{ item.name }}</div>
+} @empty {
+  <p>No items found.</p>
+}
+
+@defer (on viewport) {
+  <heavy-component />                                      <!-- Lazy loaded when visible -->
+} @placeholder {
+  <p>Loading...</p>
+} @loading (minimum 500ms) {
+  <p>Still loading...</p>
+} @error {
+  <p>Failed to load.</p>
+}
+\`\`\`
+
+## Directives
+
+\`\`\`ts
+// Structure directive (custom *ngIf-like)
+import { Directive, Input, TemplateRef, ViewContainerRef } from "@angular/core";
+
+@Directive({
+  selector: "[appUnless]",
+  standalone: true,
+})
+export class UnlessDirective {
+  private hasView = false;
+
+  constructor(
+    private templateRef: TemplateRef<any>,                // What to render
+    private viewContainer: ViewContainerRef                // Where to render
+  ) {}
+
+  @Input() set appUnless(condition: boolean) {
+    if (!condition && !this.hasView) {
+      this.viewContainer.createEmbeddedView(this.templateRef);
+      this.hasView = true;
+    } else if (condition && this.hasView) {
+      this.viewContainer.clear();
+      this.hasView = false;
+    }
+  }
+}
+
+// Attribute directive (modify appearance/behavior)
+@Directive({
+  selector: "[appHighlight]",
+  standalone: true,
+})
+export class HighlightDirective {
+  @Input() appHighlight = "";
+
+  @HostListener("mouseenter")
+  onMouseEnter() {
+    this.el.nativeElement.style.backgroundColor = this.appHighlight || "yellow";
+  }
+
+  @HostListener("mouseleave")
+  onMouseLeave() {
+    this.el.nativeElement.style.backgroundColor = "";
+  }
+
+  constructor(private el: ElementRef) {}
+}
+\`\`\`
+
+## Dependency Injection & Services
+
+\`\`\`ts
+// Injectable service
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { User } from "./user.model";
+
+@Injectable({
+  providedIn: "root",                                    // Singleton across app
+})
+export class UserService {
+  private apiUrl = "/api/users";
+
+  constructor(private http: HttpClient) {}                // DI: HttpClient injected
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(this.apiUrl);
+  }
+
+  getUser(id: number): Observable<User> {
+    return this.http.get<User>(\`\${this.apiUrl}/\${id}\`);
+  }
+
+  createUser(user: Partial<User>): Observable<User> {
+    return this.http.post<User>(this.apiUrl, user);
+  }
+}
+
+// Using the service in a component
+@Component({ /* ... */ })
+export class UserListComponent implements OnInit {
+  users$: Observable<User[]> = this.userService.getUsers();
+
+  constructor(private userService: UserService) {}        // DI
+
+  ngOnInit() {
+    // Subscription handled by AsyncPipe in template
+  }
+}
+
+// Template usage: {{ users$ | async }}
+\`\`\`
+
+### Hierarchical Injectors
+
+| Provider Level | Scope | Lifetime |
+|----------------|-------|----------|
+| <code>providedIn: "root"</code> | Entire application | Singleton, exists as long as app |
+| Component providers | Component + children | Created with component, destroyed with it |
+| Directive providers | Directive only | Created with directive |
+| Lazy module/<code>EnvInjector</code> | Lazy-loaded context | Created when route activated |
+| <code>@Optional()</code> | Null if not found | Prevents "no provider" error |
+| <code>@Self()</code> | Only current injector | Does not search parents |
+| <code>@SkipSelf()</code> | Parent injectors only | Skips current injector |
+| <code>@Host()</code> | Host element injector | Only searches up to host |
+
+## RxJS Core Patterns
+
+\`\`\`ts
+import { Observable, Subject, BehaviorSubject, ReplaySubject, of, from, merge, forkJoin, combineLatest } from "rxjs";
+import { map, filter, switchMap, debounceTime, catchError, retry, takeUntil, tap, finalize } from "rxjs/operators";
+
+// Creating observables
+const single$ = of(42);                                  // Emits 42, then completes
+const array$ = from([1, 2, 3]);                          // Emits each value sequentially
+const event$ = fromEvent(document, "click");             // DOM events
+
+// Subject: multicast observable
+const subject$ = new Subject<number>();
+subject$.subscribe(val => console.log("A:", val));
+subject$.subscribe(val => console.log("B:", val));
+subject$.next(1);                                        // Both subscribers get 1
+
+// BehaviorSubject: requires initial value, replays last
+const currentUser$ = new BehaviorSubject<User | null>(null);
+currentUser$.value;                                      // Synchronous access to current value
+
+// ReplaySubject: replays N last values
+const lastFive$ = new ReplaySubject<number>(5);
+
+// Common operators
+searchInput$
+  .pipe(
+    debounceTime(300),                                   // Wait 300ms after last input
+    filter(text => text.length >= 2),                    // Skip short queries
+    distinctUntilChanged(),                              // Skip duplicate queries
+    switchMap(query => this.api.search(query)),          // Cancel previous request
+    catchError(err => {
+      console.error(err);
+      return of([]);                                     // Return fallback
+    }),
+    finalize(() => console.log("Search complete"))       // Always runs
+  )
+  .subscribe(results => this.results = results);
+
+// Unsubscribe management
+private destroy$ = new Subject<void>();
+
+ngOnInit() {
+  this.userService.getUsers()
+    .pipe(takeUntil(this.destroy$))                      // Auto-unsubscribe on destroy
+    .subscribe(users => this.users = users);
+}
+
+ngOnDestroy() {
+  this.destroy$.next();                                  // Signal completion
+  this.destroy$.complete();
+}
+
+// Error handling
+this.http.get("/api/data")
+  .pipe(
+    retry(3),                                            // Retry 3 times on error
+    catchError(err => {
+      this.error = err.message;
+      return throwError(() => new Error("API failed"));  // Re-throw
+    })
+  )
+  .subscribe({
+    next: data => this.data = data,
+    error: err => this.logger.error(err),
+  });
+\`\`\`
+
+## Angular Signals (Angular 16+)
+
+\`\`\`ts
+import { signal, computed, effect, inject } from "@angular/core";
+
+@Component({ /* ... */ })
+export class CounterComponent {
+  // Signal: reactive value
+  count = signal(0);                                     // Writable signal
+  multiplier = signal(2);
+
+  // Computed: derived from other signals (read-only)
+  doubleCount = computed(() => this.count() * 2);        // Read like function: count()
+  total = computed(() => this.count() * this.multiplier());
+
+  // Input as signal (Angular 17.3+)
+  readonly userId = input<number>();                     // Required input signal
+  readonly userName = input("", { alias: "name" });      // Optional with alias
+
+  // Output as signal (Angular 17.3+)
+  readonly userChange = output<User>();
+
+  // Model (two-way signal binding, Angular 17.3+)
+  readonly selected = model(false);                      // Like [(selected)]
+
+  // Effect: side effect that runs when signals change
+  constructor() {
+    effect(() => {
+      console.log(\`Count changed to \${this.count()}\`);
+    });
+  }
+
+  increment() {
+    this.count.update(val => val + 1);                   // Update based on previous
+    // this.count.set(10);                               // Set directly
+    // this.count.mutate(obj => obj.property = val);     // Mutate (for objects)
+  }
+}
+
+// Template usage (signals work with OnPush detection)
+// <p>Count: {{ count() }}</p>
+// <p>Double: {{ doubleCount() }}</p>
+// <button (click)="increment()">+</button>
+\`\`\`
+
+## Routing
+
+\`\`\`ts
+// app.routes.ts
+import { Routes } from "@angular/router";
+import { authGuard } from "./guards/auth.guard";
+import { userResolver } from "./resolvers/user.resolver";
+
+export const routes: Routes = [
+  {
+    path: "",
+    pathMatch: "full",                                   // Exact match
+    redirectTo: "/home",
+  },
+  {
+    path: "home",
+    loadComponent: () => import("./home/home.component"), // Lazy load component
+    title: "Home",                                        // Sets document.title
+  },
+  {
+    path: "users",
+    canActivate: [authGuard],                             // Guard
+    children: [
+      {
+        path: "",
+        loadComponent: () => import("./users/user-list.component"),
+      },
+      {
+        path: ":id",
+        loadComponent: () => import("./users/user-detail.component"),
+        resolve: { user: userResolver },                  // Pre-fetch data
+        title: "User Detail",
+      },
+    ],
+  },
+  {
+    path: "**",
+    component: NotFoundComponent,                         // Wildcard (404)
+  },
+];
+
+// Route guards
+@Injectable({ providedIn: "root" })
+export class authGuard implements CanActivate {
+  constructor(private auth: AuthService, private router: Router) {}
+
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
+    if (this.auth.isLoggedIn()) {
+      return true;
+    }
+    return this.router.createUrlTree(["/login"], {
+      queryParams: { returnUrl: state.url },
+    });
+  }
+}
+
+// Resolver
+@Injectable({ providedIn: "root" })
+export class userResolver implements Resolve<User> {
+  constructor(private userService: UserService) {}
+
+  resolve(route: ActivatedRouteSnapshot): Observable<User> {
+    const id = route.paramMap.get("id")!;
+    return this.userService.getUser(+id);
+  }
+}
+
+// Using route params in component
+@Component({ /* ... */ })
+export class UserDetailComponent {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
+  user$ = this.route.data.pipe(map(data => data["user"])); // From resolver
+
+  goBack() {
+    this.router.navigate(["/users"], { queryParams: { page: 1 } });
+  }
+
+  // Query params
+  page$ = this.route.queryParamMap.pipe(
+    map(params => +(params.get("page") ?? "1"))
+  );
+}
+\`\`\`
+
+## Forms
+
+\`\`\`ts
+// Reactive forms (preferred)
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from "@angular/forms";
+
+@Component({
+  standalone: true,
+  imports: [ReactiveFormsModule],
+  template: \`
+    <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+      <input formControlName="name" placeholder="Name" />
+      <div *ngIf="nameControl?.invalid && nameControl?.touched">
+        Name is required
+      </div>
+
+      <input formControlName="email" type="email" placeholder="Email" />
+      <div *ngIf="userForm.get('email')?.errors?.['email']">
+        Invalid email
+      </div>
+
+      <button type="submit" [disabled]="userForm.invalid">Submit</button>
+    </form>
+  \`,
+})
+export class UserFormComponent {
+  private fb = inject(FormBuilder);
+
+  userForm: FormGroup = this.fb.group({
+    name: ["", [Validators.required, Validators.minLength(2)]],
+    email: ["", [Validators.required, Validators.email]],
+    address: this.fb.group({                            // Nested group
+      street: [""],
+      city: [""],
+      zip: ["", Validators.pattern(/^\\d{5}$/)],
+    }),
+  });
+
+  get nameControl() {
+    return this.userForm.get("name");
+  }
+
+  onSubmit() {
+    if (this.userForm.valid) {
+      console.log(this.userForm.value);                  // Raw form values
+      console.log(this.userForm.getRawValue());          // Includes disabled
+    }
+  }
+}
+
+// Custom validator
+export function cannotContainSpace(control: AbstractControl): ValidationErrors | null {
+  if ((control.value || "").indexOf(" ") >= 0) {
+    return { cannotContainSpace: true };
+  }
+  return null;
+}
+\`\`\`
+
+## Angular vs React vs Vue Comparison
+
+| Aspect | Angular | React | Vue |
+|--------|---------|-------|-----|
+| Language | TypeScript (required) | JavaScript/TSX | JavaScript/TS |
+| Architecture | Full framework (MVC-like) | Library (UI only) | Progressive framework |
+| Change detection | Zone.js (auto) | Manual (re-render on setState) | Proxy (auto) |
+| Forms | Reactive + Template-driven | Manual | v-model |
+| HTTP client | Built-in HttpClient | fetch / axios (external) | fetch / axios |
+| Router | Built-in | React Router (external) | Vue Router (official) |
+| State management | Signals + services | Context + external libs | Pinia (official) |
+| Dependency injection | Built-in (hierarchical) | Manual (props/context) | provide/inject |
+| CLI | Angular CLI | Vite / CRA | Vite / create-vue |
+| Bundle size | ~100kB+ (full framework) | ~42kB (react+dom) | ~33kB |
+| Learning curve | Steep | Moderate | Gradual |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Subscribing manually without cleanup | Memory leaks from orphaned subscriptions | Use <code>AsyncPipe</code> in template, <code>takeUntil(destroy$)</code> or <code>toSignal</code> |
+| 2 | Mutating input properties from child | Breaks unidirectional data flow; unexpected behavior | Use <code>output()</code> or <code>model()</code> for two-way |
+| 3 | Putting logic in <code>ngOnInit</code> that should be in constructor | Constructor runs before input properties are set | Use <code>ngOnInit</code> for initialization; constructor for DI only |
+| 4 | Not using <code>OnPush</code> change detection | Performance issues with large component trees | Use <code>changeDetection: ChangeDetectionStrategy.OnPush</code> |
+| 5 | Using <code>any</code> type instead of interfaces | Loses TypeScript benefits; harder to refactor | Define interfaces for all data models |
+| 6 | Nesting subscriptions (subscribe inside subscribe) | Hard to read, race conditions | Use higher-order operators: <code>switchMap</code>, <code>mergeMap</code>, <code>concatMap</code> |
+| 7 | Heavy computations in template expressions | Runs on every change detection cycle | Use pipes or computed signals |
+| 8 | Not using trackBy in <code>*ngFor</code> | Entire list re-rendered on any change | <code>trackBy: trackByFn(index, item) => item.id</code> |
+| 9 | Large NgModule imports (pre-standalone) | Slow compilation; unused imports | Use standalone components with <code>imports</code> array |
+| 10 | Using <code>setTimeout</code> or <code>setInterval</code> without NgZone | Change detection may not trigger properly | Use <code>NgZone.run()</code> or signals |
+| 11 | Overusing <code>BehaviorSubject</code> when <code>signal</code> suffices | Extra complexity; more boilerplate | Use signals for synchronous state; subjects for streams |
+| 12 | Not using <code>lazy loading</code> for routes | Larger initial bundle; slower startup | Use <code>loadComponent: () => import(...)</code> |
+| 13 | Ignoring <code>unsubscribe</code> in <code>ngOnDestroy</code> | Memory leaks | Use <code>takeUntil(destroy$)</code> or async pipe |
+| 14 | Forgetting <code>providedIn: "root"</code> on services | New instance every time (if provided in component) | Always set <code>providedIn: "root"</code> for singletons |
+| 15 | Using HTTP calls without error handling | App crashes on network errors | Always add <code>catchError</code> and show user feedback |
+
+## Practice Questions
+
+1. Create a standalone component with signals for a todo list (add, toggle, remove, filter).
+2. Implement a <code>debounceSearch</code> directive using RxJS that emits search terms after 300ms of inactivity.
+3. Build a route guard that checks auth and redirects to login with return URL.
+4. Create a custom pipe that truncates text to N characters with an ellipsis.
+5. Implement a reactive form for user registration with cross-field validation (password match).
+6. Build a service using <code>HttpClient</code> with retry logic, error handling, and caching.
+7. Create a structural directive <code>*appPermissions</code> that shows/hides elements based on user role.
+8. Explain the difference between <code>switchMap</code>, <code>mergeMap</code>, and <code>concatMap</code>. Provide use cases for each.
+9. Implement a signal-based shopping cart with computed totals and effects for localStorage persistence.
+10. Build a lazy-loaded route with a resolver that fetches data before activation.
+11. Create a custom form validator that checks if a username is already taken (async validator).
+12. Implement an <code>@defer</code> block with <code>@placeholder</code>, <code>@loading</code>, and <code>@error</code> states.
+13. Explain zone.js: how does Angular know when to run change detection?
+14. Build a reusable table component with sortable columns using signals.
+15. Implement a WebSocket service with reconnection logic using RxJS <code>retry</code> and <code>delay</code>.
+
+`,
+            tags: ["Angular", "RxJS", "Signals"],
+          },
+          {
+            id: "fe-cheat-svelte",
+            title: "Svelte Cheat Sheet",
+            shortDesc: "Complete Svelte 5 reference -- runes, reactivity, stores, transitions, SvelteKit integration.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Runes: $state, $derived, $effect, $props, $bindable",
+              "Reactivity: runes vs stores vs legacy syntax",
+              "Template syntax: {#each}, {#if}, {#await}, bind:value",
+              "Transitions, animations, and actions",
+              "SvelteKit: routing, load functions, form actions, endpoints",
+            ],
+            content: `## Quick Reference
+
+Svelte 5 is a compiler-based UI framework that shifts reactivity from runtime to compile time. Runes ($-prefixed functions) are the new reactive primitives replacing the old <code>let</code>/<code>export let</code>/<code>store</code> syntax. SvelteKit is the official application framework built on Svelte.
+
+| Rule | Description |
+|------|-------------|
+| <code>$state</code> replaces <code>let</code> for reactive declarations | <code>let count = \$state(0)</code> |
+| <code>$derived</code> replaces <code>$:</code> for computed values | <code>let doubled = \$derived(count * 2)</code> |
+| <code>$effect</code> replaces <code>$:</code> for side effects | <code>\$effect(() => { ... })</code> |
+| <code>$props</code> replaces <code>export let</code> | <code>let { name, age } = \$props()</code> |
+| <code>$bindable</code> enables two-way binding | <code>let { value = \$bindable() } = \$props()</code> |
+| Components are compiled, not interpreted | No virtual DOM -- direct DOM manipulation |
+
+## Svelte 5 Runes
+
+\`\`\`svelte
+<script>
+  // ===================== $state =====================
+  let count = \$state(0);                                // Reactive primitive
+  let user = \$state({ name: "Alice", age: 30 });        // Deeply reactive object
+
+  // Mutations trigger updates automatically
+  function increment() {
+    count += 1;                                          // Direct mutation -- no setter needed
+  }
+
+  function updateName(newName: string) {
+    user.name = newName;                                 // Nested mutation also reactive
+  }
+
+  // $state with class instance
+  class Counter {
+    value = \$state(0);
+    increment() { this.value += 1; }
+  }
+  let counter = new Counter();
+
+  // $state.raw -- skip deep reactivity for performance
+  let largeArray = \$state.raw([1, 2, 3]);               // Shallow reactive only
+
+  // ===================== $derived =====================
+  let doubled = \$derived(count * 2);                     // Computed from count
+  let greeting = \$derived(\`Hello, \${user.name}\`);       // Derived from multiple sources
+
+  // $derived.by -- for complex computations
+  let expensive = \$derived.by(() => {
+    return someExpensiveComputation(count);
+  });
+
+  // ===================== $effect =====================
+  \$effect(() => {
+    // Runs whenever dependencies change
+    console.log(\`Count is now \${count}\`);
+
+    // Return a cleanup function
+    return () => {
+      console.log("Cleanup before next run or on destroy");
+    };
+  });
+
+  // $effect.root -- for non-reverting effects
+  // $effect.tracking -- check if inside a tracking context
+
+  // ===================== $props =====================
+  // Component props (replaces export let)
+  let { name, age = 25, onSave } = \$props();            // Destructure with defaults
+
+  // ===================== $bindable =====================
+  // Two-way bindable prop
+  let { value = \$bindable() } = \$props();               // Allows <Component bind:value={x} />
+
+  // ===================== $inspect =====================
+  \$inspect(count);                                        // Dev-only logging
+</script>
+
+<h1>{greeting}</h1>
+<p>Count: {count}</p>
+<p>Doubled: {doubled}</p>
+<button onclick={increment}>+1</button>
+\`\`\`
+
+### Legacy vs Runes Syntax
+
+| Feature | Legacy (Svelte 4) | Runes (Svelte 5) |
+|---------|-------------------|-------------------|
+| Reactive variable | <code>let count = 0</code> | <code>let count = \$state(0)</code> |
+| Computed | <code>$: doubled = count * 2</code> | <code>let doubled = \$derived(count * 2)</code> |
+| Side effect | <code>$: { console.log(count); }</code> | <code>\$effect(() => { console.log(count); })</code> |
+| Props | <code>export let name</code> | <code>let { name } = \$props()</code> |
+| Two-way prop | <code>export let value</code> + <code>bind:value</code> | <code>let { value = \$bindable() } = \$props()</code> |
+| Store | <code>import { writable } from "svelte/store"</code> | Still supported; <code>$state</code> preferred |
+| Reactive class | Not natively supported | <code>class { value = \$state(0); }</code> |
+
+## Template Syntax
+
+\`\`\`svelte
+<script>
+  let items = [
+    { id: 1, name: "Apple" },
+    { id: 2, name: "Banana" },
+    { id: 3, name: "Cherry" },
+  ];
+  let isVisible = true;
+  let promise = fetchData();
+  let count = \$state(0);
+  let name = \$state("");
+
+  function handleClick(event: MouseEvent) {
+    console.log("Clicked", event);
+  }
+</script>
+
+<!-- Conditional rendering -->
+{#if isVisible}
+  <p>Visible content</p>
+{:else if count > 0}
+  <p>Count is positive</p>
+{:else}
+  <p>Nothing to show</p>
+{/if}
+
+<!-- List rendering -->
+<ul>
+  {#each items as item, i (item.id)}                     <!-- (value, index) -- key is item.id -->
+    <li>{i + 1}: {item.name}</li>
+  {:else}
+    <li>No items</li>
+  {/each}
+</ul>
+
+<!-- Async blocks -->
+{#await promise}
+  <p>Loading...</p>
+{:then data}
+  <p>Data: {data}</p>
+{:catch error}
+  <p>Error: {error.message}</p>
+{/await}
+
+<!-- Event handlers -->
+<button onclick={handleClick}>Click</button>
+<button on:click|preventDefault={handler}>With Modifier</button>
+
+<!-- Event modifiers: preventDefault, stopPropagation, once, passive, capture, self -->
+
+<!-- Two-way binding -->
+<input bind:value={name} />                               <!-- Binds to input value -->
+<input bind:this={inputElement} />                        <!-- DOM reference -->
+<input bind:checked={isChecked} />                        <!-- Checkbox binding -->
+
+<!-- HTML content (sanitize user content!) -->
+<p>{@html someHtml}</p>
+
+<!-- Svelte element directives -->
+<svelte:window on:keydown={handleKey} />
+<svelte:document on:click={handleClick} />
+<svelte:body on:mouseenter={handleEnter} />
+<svelte:head>
+  <title>Page Title</title>
+</svelte:head>
+<svelte:options immutable={true} />                       <!-- Component options -->
+
+<!-- Reactive statements (Svelte 4 legacy, use $derived in v5) -->
+$: combined = \`\${firstName} \${lastName}\`;
+$: if (count > 10) console.log("High count");
+\`\`\`
+
+## Transitions & Animations
+
+\`\`\`svelte
+<script>
+  import { fade, fly, slide, scale, blur, crossfade } from "svelte/transition";
+  import { flip } from "svelte/animate";
+  import { tweened, spring } from "svelte/motion";
+
+  let visible = \$state(false);
+  let items = \$state([1, 2, 3]);
+
+  // Transition parameters
+  let transitionParams = {
+    duration: 300,
+    delay: 100,
+    easing: (t) => t * (2 - t),                          // Custom easing
+  };
+</script>
+
+<!-- Basic transition -->
+{#if visible}
+  <div transition:fade={{ duration: 200 }}>Fade</div>
+  <div transition:fly={{ y: 20, duration: 300 }}>Fly In</div>
+  <div transition:slide>Slide In/Out</div>
+  <div transition:scale={{ start: 0.5 }}>Scale</div>
+{/if}
+
+<!-- In/out transitions -->
+<div in:fly={{ x: -100 }} out:scale={{ duration: 200 }}>Animate</div>
+
+<!-- Local transitions (parent transitions don't affect children) -->
+<div transition:slide|local>Local Only</div>
+
+<!-- Animation (flip for list reordering) -->
+{#each items as item, i (item)}
+  <div animate:flip>{item}</div>
+{/each}
+
+<!-- Motion stores -->
+<script>
+  let size = tweened(10, { duration: 400 });
+  let pos = spring({ x: 0, y: 0 }, { stiffness: 0.1, damping: 0.5 });
+
+  \$effect(() => {
+    console.log(\$size);                                   // $ prefix to subscribe (Svelte 4 syntax)
+  });
+</script>
+\`\`\`
+
+## Actions
+
+\`\`\`svelte
+<!-- Custom action: applied to any element -->
+<script>
+  function clickOutside(node: HTMLElement, callback: () => void) {
+    function handle(event: MouseEvent) {
+      if (!node.contains(event.target as Node)) {
+        callback();
+      }
+    }
+
+    document.addEventListener("click", handle, true);
+
+    return {
+      destroy() {
+        document.removeEventListener("click", handle, true);
+      },
+      update(newCallback: () => void) {                  // Optional: react to param changes
+        callback = newCallback;
+      },
+    };
+  }
+
+  let open = \$state(true);
+</script>
+
+<div use:clickOutside={() => open = false}>
+  <p>Click outside to close</p>
+</div>
+
+<!-- Built-in actions: use:enhance for form actions (SvelteKit) -->
+<form method="POST" use:enhance>
+  <input name="email" type="email" />
+  <button>Submit</button>
+</form>
+\`\`\`
+
+## Stores (Svelte 4 Legacy -- Still Supported)
+
+\`\`\`ts
+// stores/counter.ts
+import { writable, derived, readable } from "svelte/store";
+
+// Writable store
+export const count = writable(0);
+
+// Derived store
+export const doubled = derived(count, (\$count) => \$count * 2);
+
+// Readable store (custom setup/teardown)
+export const time = readable(new Date(), (set) => {
+  const interval = setInterval(() => set(new Date()), 1000);
+  return () => clearInterval(interval);
+});
+
+// Custom store (encapsulated logic)
+function createCounter() {
+  const { subscribe, set, update } = writable(0);
+
+  return {
+    subscribe,
+    increment: () => update(n => n + 1),
+    decrement: () => update(n => n - 1),
+    reset: () => set(0),
+  };
+}
+
+export const counter = createCounter();
+\`\`\`
+
+\`\`\`svelte
+<!-- Using stores in Svelte -->
+<script>
+  import { count, doubled, counter } from "./stores/counter";
+  import { onMount } from "svelte";
+
+  // Auto-subscribe with $ prefix (Svelte 4 syntax)
+  // In Svelte 5, use get() or subscribe manually
+  import { get } from "svelte/store";
+  let currentCount = get(count);                          // One-time read
+
+  onMount(() => {
+    const unsub = count.subscribe(val => {               // Manual subscription
+      console.log(val);
+    });
+    return unsub;                                         // Cleanup on unmount
+  });
+</script>
+
+<!-- $ prefix auto-subscribes (Svelte 4 syntax) -->
+<p>Count: {$count}</p>
+<p>Doubled: {$doubled}</p>
+\`\`\`
+
+## SvelteKit
+
+### Routing
+
+\`\`\`svelte
+// src/routes/
+// +page.svelte          --> / (home page)
+// +page.svelte          --> /about (when in /about/+page.svelte)
+// [slug]/+page.svelte   --> /posts/hello-world (dynamic params)
+// [...path]/+page.svelte --> /a/b/c (catch-all)
+// (group)/+page.svelte  --> route group (no path segment)
+// +layout.svelte        --> shared layout for route group
+// +error.svelte         --> error boundary
+// +server.ts            --> API endpoint
+
+<!-- src/routes/+page.svelte -->
+<script>
+  import { page } from "\$app/stores";
+  import { goto } from "\$app/navigation";
+</script>
+
+<h1>Welcome to SvelteKit</h1>
+<p>Current path: {$page.url.pathname}</p>
+<a href="/about">About</a>
+<button onclick={() => goto("/about")}>Go to About</button>
+
+<!-- src/routes/blog/[slug]/+page.svelte -->
+<script>
+  import { page } from "\$app/stores";
+  let { data } = \$props();                                // Data from load function
+</script>
+
+<h1>{data.title}</h1>
+<div>{@html data.content}</div>
+\`\`\`
+
+### Load Functions
+
+\`\`\`ts
+// src/routes/blog/[slug]/+page.ts
+import type { PageLoad } from "./\$types";
+
+export const load: PageLoad = async ({ params, fetch, url, parent, depends }) => {
+  const slug = params.slug;                              // Route parameter
+
+  const response = await fetch(\`/api/posts/\${slug}.json\`);
+  if (!response.ok) {
+    throw error(404, "Post not found");                  // Shows +error.svelte
+  }
+
+  const post = await response.json();
+
+  return {
+    post,
+    title: post.title,                                   // Used in +page.svelte as data
+  };
+};
+
+// Layout load (runs for all child routes)
+// src/routes/+layout.ts
+import type { LayoutLoad } from "./\$types";
+
+export const load: LayoutLoad = async ({ fetch }) => {
+  const response = await fetch("/api/user");
+  const user = await response.json();
+
+  return {
+    user,                                                 // Available in all child loads and layouts
+  };
+};
+\`\`\`
+
+### Form Actions (Server-Side)
+
+\`\`\`ts
+// src/routes/contact/+page.server.ts
+import type { Actions } from "./\$types";
+
+export const actions: Actions = {
+  default: async ({ request, locals }) => {
+    const data = await request.formData();
+    const email = data.get("email") as string;
+    const message = data.get("message") as string;
+
+    // Validate
+    const errors: Record<string, string> = {};
+    if (!email) errors.email = "Email is required";
+    if (!message) errors.message = "Message is required";
+
+    if (Object.keys(errors).length > 0) {
+      return { errors, email };                           // Return validation errors
+    }
+
+    // Process (send email, save to DB)
+    await sendEmail({ email, message });
+
+    return { success: true, message: "Message sent!" };
+  },
+};
+\`\`\`
+
+\`\`\`svelte
+<!-- src/routes/contact/+page.svelte -->
+<script>
+  import { enhance } from "\$app/forms";
+  let { form, data } = \$props();
+</script>
+
+<form method="POST" use:enhance>
+  <input name="email" type="email" value={form?.email ?? ""} />
+  {#if form?.errors?.email}
+    <p class="error">{form.errors.email}</p>
+  {/if}
+
+  <textarea name="message"></textarea>
+  {#if form?.errors?.message}
+    <p class="error">{form.errors.message}</p>
+  {/if}
+
+  <button type="submit">Send</button>
+</form>
+
+{#if form?.success}
+  <p>{form.message}</p>
+{/if}
+\`\`\`
+
+### API Endpoints
+
+\`\`\`ts
+// src/routes/api/posts/[slug].json/+server.ts
+import type { RequestHandler } from "./\$types";
+import { json } from "@sveltejs/kit";
+
+export const GET: RequestHandler = async ({ params }) => {
+  const post = await getPost(params.slug);
+  if (!post) {
+    return json({ error: "Not found" }, { status: 404 });
+  }
+  return json(post);
+};
+
+export const POST: RequestHandler = async ({ request, locals }) => {
+  const body = await request.json();
+  const post = await createPost(body);
+  return json(post, { status: 201 });
+};
+\`\`\`
+
+## Svelte vs Other Frameworks
+
+| Aspect | Svelte 5 | React 18 | Vue 3 |
+|--------|----------|----------|-------|
+| Rendering | Compiler (no virtual DOM) | Virtual DOM (reconciliation) | Virtual DOM + Proxy reactivity |
+| Reactivity | Compile-time ($state, $derived) | Runtime (hooks, setState) | Runtime (Proxy-based) |
+| Bundle size | ~2kB (compiled) | ~42kB (runtime) | ~33kB (runtime) |
+| State management | $state / stores (built-in) | External (Zustand, Redux) | Pinia (official) |
+| Learning curve | Low (minimal concepts) | Moderate (hooks, pure) | Gradual |
+| SSR framework | SvelteKit | Next.js, Remix | Nuxt |
+| TypeScript | Excellent (runes are typed) | Good | Good |
+| Scoped CSS | Built-in (<code>&lt;style&gt;</code> scoped) | CSS-in-JS or modules | Scoped by default |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Mixing runes and legacy syntax | Inconsistent; runes and <code>$:</code> don't interact | Choose runes for new code; migrate legacy systematically |
+| 2 | Mutating <code>\$state</code> objects without reassignment | Old Svelte 4 habit of <code>arr.push</code> not triggering update | Direct assignment works in v5: <code>items = [...items, newItem]</code> or <code>items.push(newItem)</code> (both work with \$state) |
+| 3 | Using <code>on:click</code> instead of <code>onclick</code> | Legacy event syntax still works but runes prefer lowercase | Use <code>onclick={handler}</code> (Svelte 5) |
+| 4 | Forgetting <code>key</code> in <code>{#each}</code> | Re-renders all items on any change; lost state in inputs | Always provide a unique key: <code>{#each items as item (item.id)}</code> |
+| 5 | Overusing <code>\$effect</code> for manual DOM updates | Fights the framework; <code>\$effect</code> is for side effects, not UI logic | Let the template react automatically; use <code>\$derived</code> for computed |
+| 6 | Not cleaning up in <code>\$effect</code> return | Memory leaks (intervals, subscriptions, event listeners) | Return a cleanup function from <code>\$effect</code> |
+| 7 | Using <code>get()</code> from stores instead of subscribing | One-time read loses reactivity | Use <code>\$storeName</code> in templates or <code>subscribe()</code> |
+| 8 | Heavy computations in template expressions | Runs on every reactive update | Use <code>\$derived</code> to memoize |
+| 9 | Not using <code>use:enhance</code> for forms | Full page refresh instead of progressive enhancement | Always use <code>use:enhance</code> for SvelteKit forms |
+| 10 | Modifying <code>$page</code> store directly | Read-only store; mutations have no effect | Use <code>goto()</code> or <code>invalidate()</code> |
+| 11 | Using <code>onMount</code> for data fetching in SvelteKit | Misses SSR; data won't be available on server | Use <code>load</code> functions in <code>+page.ts</code> or <code>+layout.ts</code> |
+| 12 | Returning non-serializable data from load functions | Cannot be transferred from server to client | Only return JSON-serializable data |
+| 13 | Not handling errors in <code>load</code> functions | Unhandled exceptions crash the page | Use <code>throw error(...)</code> for expected errors; <code>+error.svelte</code> for unexpected |
+| 14 | Using <code>fetch</code> without SvelteKit's <code>fetch</code> in load | Loses request tracking and deduplication | Use the <code>fetch</code> argument provided to load functions |
+| 15 | Creating stores outside component context without cleanup | Memory leaks in SSR | Use <code>\$state</code> for component state; limit global stores |
+
+## Practice Questions
+
+1. Build a counter component using Svelte 5 runes with increment, decrement, reset, and a derived doubled value.
+2. Create a reactive <code>\$state</code> class for a Todo item with toggle, edit, and delete methods.
+3. Implement a custom <code>use:clickOutside</code> action that closes a dropdown when clicking elsewhere.
+4. Build a SvelteKit route with dynamic params (<code>[slug]</code>), a load function fetching from an API, and proper error handling.
+5. Create a form with <code>use:enhance</code> that validates on the server and returns field-level errors.
+6. Implement a list with <code>{#each}</code>, <code>animate:flip</code>, and add/remove/reorder functionality.
+7. Build a SvelteKit API endpoint (<code>+server.ts</code>) that handles GET, POST, PUT, DELETE for a resource.
+8. Explain the difference between <code>\$state</code>, <code>\$derived</code>, and <code>\$effect</code> in Svelte 5.
+9. Create a reusable Button component with <code>\$props()</code> that accepts variant, size, disabled, and onclick.
+10. Implement a custom transition using <code>svelte/transition</code> with fade and slide combined.
+11. Build a SvelteKit layout that shows a sidebar on desktop and a bottom nav on mobile.
+12. Create a reactive <code>\$state.raw</code> array for a high-performance list of 10,000 items.
+13. Implement a store (Svelte 4 compatible) for a notification system with add, dismiss, and auto-dismiss after timeout.
+14. Build a SvelteKit page that uses <code>goto()</code> and <code>invalidate()</code> to refresh data after a mutation.
+15. Create a component using <code>\$bindable()</code> for a custom input with validation feedback.
+
+`,
+            tags: ["Svelte", "Runes", "SvelteKit"],
+          },
+          {
+            id: "fe-cheat-nextjs",
+            title: "Next.js Cheat Sheet",
+            shortDesc: "Complete Next.js reference -- App Router, RSC, data fetching, caching, middleware, and deployment.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "App Router: layouts, pages, loading, error, not-found",
+              "React Server Components: server vs client boundaries",
+              "Data fetching: fetch, server actions, route handlers",
+              "Caching: full route, data, router cache, revalidation",
+              "Middleware, internationalization, edge runtime, self-hosting",
+            ],
+            content: `## Quick Reference
+
+Next.js 14+ uses the App Router (directory-based routing) with React Server Components by default. Pages are Server Components unless marked with <code>"use client"</code>. Data fetching is colocated with components using the extended <code>fetch</code> API or server actions for mutations.
+
+| Rule | Description |
+|------|-------------|
+| Server Components by default | No <code>"use client"</code> = runs on server only |
+| Client Components need <code>"use client"</code> | Runs on server (SSR) + client (hydration) |
+| <code>fetch</code> is extended | Automatic caching, deduplication, revalidation |
+| Server Actions handle mutations | <code>"use server"</code> in form actions or functions |
+| Caching is layered | Full route, data, router cache -- each configurable |
+
+## App Router File Conventions
+
+| File | Purpose |
+|------|---------|
+| <code>page.tsx</code> | Route UI (required for a route) |
+| <code>layout.tsx</code> | Shared layout (persists across navigations) |
+| <code>loading.tsx</code> | Suspense fallback for the route segment |
+| <code>error.tsx</code> | Error boundary (catches errors in segment) |
+| <code>global-error.tsx</code> | Error boundary for root layout |
+| <code>not-found.tsx</code> | 404 page for the segment |
+| <code>template.tsx</code> | Re-rendered layout (remounts on navigation) |
+| <code>default.tsx</code> | Parallel route fallback |
+| <code>route.tsx</code> | API route (no UI) |
+| <code>middleware.ts</code> | Edge middleware (runs before request) |
+
+\`\`\`tsx
+// app/layout.tsx -- Root layout (required)
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <header>Site Header</header>
+        {children}
+        <footer>Site Footer</footer>
+      </body>
+    </html>
+  );
+}
+
+// app/page.tsx -- Home page (Server Component by default)
+// This is a Server Component (no "use client")
+async function getPosts() {
+  const res = await fetch("https://api.example.com/posts"); // Auto-cached
+  if (!res.ok) throw new Error("Failed to fetch");
+  return res.json();
+}
+
+export default async function HomePage() {
+  const posts = await getPosts();
+
+  return (
+    <main>
+      <h1>Blog Posts</h1>
+      <ul>
+        {posts.map((post: any) => (
+          <li key={post.id}>{post.title}</li>
+        ))}
+      </ul>
+    </main>
+  );
+}
+\`\`\`
+
+## Routing Patterns
+
+\`\`\`tsx
+// Dynamic routes
+// app/blog/[slug]/page.tsx
+interface Props {
+  params: Promise<{ slug: string }>;                     // Params is a Promise in Next.js 15
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function BlogPost({ params }: Props) {
+  const { slug } = await params;                         // Await params
+
+  const post = await getPost(slug);
+  return <article><h1>{post.title}</h1></article>;
+}
+
+// Generate static params (SSG)
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({ slug: post.slug }));
+}
+
+// Catch-all routes
+// app/docs/[...slug]/page.tsx  --> /docs/a/b/c, params.slug = ["a", "b", "c"]
+// app/docs/[[...slug]]/page.tsx --> /docs, /docs/a (optional catch-all)
+
+// Route groups (for layout organization)
+// app/(marketing)/about/page.tsx   --> /about
+// app/(dashboard)/settings/page.tsx --> /settings
+// (marketing) and (dashboard) don't affect the URL path
+
+// Parallel routes (multiple pages in one layout)
+// app/@analytics/page.tsx  --> rendered in layout via children or named slot
+// app/@team/page.tsx       --> rendered via {analytics} and {team} in layout
+
+// Intercepting routes (modal patterns)
+// app/feed/page.tsx               --> /feed (normal page)
+// app/feed/(.)photo/[id]/page.tsx --> /feed/photo/123 (intercepted from within feed)
+// (.) same level, (..) one up, (..)(..) two up, (...) root
+\`\`\`
+
+## Data Fetching & Caching
+
+\`\`\`tsx
+// Server Component data fetching (async component)
+export default async function Page() {
+  // fetch with cache options
+  const data = await fetch("https://api.example.com/data", {
+    cache: "force-cache",                                // Default: cache indefinitely
+    // cache: "no-store",                                // Skip cache (always fresh)
+    next: {
+      revalidate: 60,                                    // ISR: revalidate every 60 seconds
+      tags: ["posts"],                                   // Cache tags for on-demand revalidation
+    },
+  });
+
+  // Deduplication: same fetch URL + options = single request
+  // Multiple components fetching the same URL share the request
+}
+
+// Revalidate on demand
+// app/api/revalidate/route.ts
+import { revalidateTag, revalidatePath } from "next/cache";
+
+export async function POST(request: Request) {
+  const body = await request.json();
+
+  revalidateTag("posts");                                // Revalidate all fetches with tag "posts"
+  revalidatePath("/blog");                               // Revalidate a specific path
+  revalidatePath("/blog/[slug]", "page");                // Revalidate dynamic page
+
+  return Response.json({ revalidated: true });
+}
+
+// Parallel data fetching
+export default async function Dashboard() {
+  // Start fetching in parallel (not sequential)
+  const userPromise = getCurrentUser();
+  const postsPromise = getUserPosts();
+  const notificationsPromise = getNotifications();
+
+  // Wait for all to resolve
+  const [user, posts, notifications] = await Promise.all([
+    userPromise,
+    postsPromise,
+    notificationsPromise,
+  ]);
+
+  return <DashboardView user={user} posts={posts} notifications={notifications} />;
+}
+
+// Sequential when dependent
+export default async function UserProfile({ params }: { params: { id: string } }) {
+  const user = await getUser(params.id);
+  const posts = await getUserPosts(user.id);             // Depends on user
+
+  return <Profile user={user} posts={posts} />;
+}
+\`\`\`
+
+## Server Actions (Mutations)
+
+\`\`\`tsx
+// Server Action defined in a Server Component or separate file
+"use server";                                            // Top-level directive for file
+
+// app/actions.ts
+export async function createPost(formData: FormData) {
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+
+  // Validate
+  if (!title || title.length < 3) {
+    return { error: "Title must be at least 3 characters" };
+  }
+
+  // Mutate database
+  const post = await db.post.create({ data: { title, content } });
+
+  // Revalidate cache
+  revalidatePath("/blog");
+  revalidateTag("posts");
+
+  return { success: true, post };
+}
+
+// Client Component using Server Action
+// app/components/CreatePostForm.tsx
+"use client";
+
+import { createPost } from "@/app/actions";
+import { useFormStatus } from "react-dom";
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return <button disabled={pending}>{pending ? "Creating..." : "Create"}</button>;
+}
+
+export default function CreatePostForm() {
+  return (
+    <form action={createPost}>
+      <input name="title" required />
+      <textarea name="content" required />
+      <SubmitButton />
+    </form>
+  );
+}
+
+// Inline Server Action (in Server Component)
+export default function Page() {
+  async function handleSubmit(formData: FormData) {
+    "use server";                                         // Inline directive
+    await db.item.create({ data: { name: formData.get("name") } });
+    revalidatePath("/items");
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input name="name" required />
+      <button type="submit">Add</button>
+    </form>
+  );
+}
+
+// Server Action with additional arguments
+"use server";
+export async function updateUser(userId: string, formData: FormData) {
+  const name = formData.get("name") as string;
+  await db.user.update({ where: { id: userId }, data: { name } });
+  revalidatePath("/users");
+}
+
+// In Client Component:
+<form action={updateUser.bind(null, user.id)}>           // Use .bind to pass extra args
+\`\`\`
+
+## Client Components
+
+\`\`\`tsx
+"use client";                                            // Must be first line
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+export default function InteractiveButton() {
+  const [count, setCount] = useState(0);
+  const router = useRouter();
+
+  // Client-side navigation
+  const navigate = () => {
+    router.push("/about");
+    router.refresh();                                    // Refresh Server Components
+    router.replace("/home");                             // No history entry
+    router.back();
+    router.forward();
+    router.prefetch("/blog");                            // Prefetch in background
+  };
+
+  useEffect(() => {
+    // Client-only code (event listeners, etc.)
+  }, []);
+
+  return <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>;
+}
+
+// Client boundary: everything imported into a Client Component is bundled for the client
+// Keep Client Components at the leaf level when possible
+\`\`\`
+
+## Middleware
+
+\`\`\`ts
+// middleware.ts (at root of project)
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Authentication check
+  const token = request.cookies.get("token")?.value;
+  const isAuthPage = pathname.startsWith("/login");
+
+  if (!token && !isAuthPage) {
+    // Redirect to login with return URL
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Rewrite (serve different content without changing URL)
+  if (pathname.startsWith("/admin")) {
+    request.nextUrl.pathname = "/dashboard";
+    return NextResponse.rewrite(request.nextUrl);
+  }
+
+  // Set cookies
+  const response = NextResponse.next();
+  response.cookies.set("visitor", "true", { httpOnly: true });
+
+  return response;
+}
+
+// Config: matcher (which routes the middleware runs on)
+export const config = {
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico).*)", // Exclude static files
+    "/dashboard/:path*",
+    "/admin/:path*",
+  ],
+};
+\`\`\`
+
+## Caching Overview
+
+| Cache Layer | Location | Duration | Revalidation |
+|-------------|----------|----------|--------------|
+| Full Route Cache (RSC) | Server (disk) | Persistent | <code>revalidatePath</code> or <code>revalidateTag</code> |
+| Data Cache (<code>fetch</code>) | Server (disk) | Configurable | <code>next.revalidate</code>, <code>revalidateTag</code> |
+| Router Cache (client) | Browser (memory) | Session / 30s | <code>router.refresh()</code>, navigation |
+| Static Generation (SSG) | Build output | Until rebuild | ISR (<code>revalidate</code> in fetch) |
+
+\`\`\`tsx
+// Cache configuration examples
+
+// Never cache (always fresh)
+fetch(url, { cache: "no-store" });
+
+// Cache with time-based revalidation (ISR)
+fetch(url, { next: { revalidate: 60 } });                // Revalidate max every 60s
+
+// Cache with on-demand revalidation
+fetch(url, { next: { tags: ["posts"] } });
+// Later: revalidateTag("posts")
+
+// Opt out of Full Route Cache
+export const dynamic = "force-dynamic";                    // Page is always dynamic
+export const revalidate = 0;                               // Equivalent to force-dynamic
+export const fetchCache = "default-no-store";              // Default no-store for fetch
+\`\`\`
+
+## Route Handlers (API Routes)
+
+\`\`\`ts
+// app/api/posts/route.ts
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
+  const page = searchParams.get("page") ?? "1";
+
+  const posts = await db.post.findMany({
+    skip: (parseInt(page) - 1) * 10,
+    take: 10,
+  });
+
+  return NextResponse.json(posts);
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const post = await db.post.create({ data: body });
+  return NextResponse.json(post, { status: 201 });
+}
+
+// Dynamic route handler
+// app/api/posts/[id]/route.ts
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const post = await db.post.findUnique({ where: { id: params.id } });
+  if (!post) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  return NextResponse.json(post);
+}
+\`\`\`
+
+## Metadata & SEO
+
+\`\`\`tsx
+// Static metadata
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "My Blog",
+  description: "A blog about web development",
+  openGraph: {
+    title: "My Blog",
+    description: "A blog about web development",
+    images: [{ url: "/og-image.png" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
+};
+
+// Dynamic metadata
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = await getPost(params.slug);
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+    },
+  };
+}
+\`\`\`
+
+## Next.js vs Other Frameworks
+
+| Aspect | Next.js (App Router) | Remix | Nuxt (Vue) | Astro |
+|--------|---------------------|-------|------------|-------|
+| Rendering | RSC by default | Loader/Action | Universal (SSR/SSG) | Island architecture |
+| Data fetching | Server Components + fetch | Loaders | useAsyncData + fetch | Component-level |
+| Mutations | Server Actions | Actions | useFetch + API routes | Form endpoints |
+| Caching | Multi-layer (auto) | HTTP cache (manual) | Nitro (build) | Static by default |
+| Bundler | Webpack/Turbopack | ESBuild | Vite | Vite (Snowpack) |
+| Routing | File-based (App Router) | File-based | File-based (Nuxt) | File-based |
+| Server | Node.js + Edge | Node.js + Edge | Node.js (Nitro) | Node.js (adapters) |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Putting <code>"use client"</code> too high | Entire subtree becomes client JS; larger bundle | Push <code>"use client"</code> to leaf components |
+| 2 | Fetching in Client Components unnecessarily | Misses server-side benefits (caching, smaller bundle) | Move data fetching to Server Components or use <code>use</code> |
+| 3 | Not using <code>loading.tsx</code> | Users see blank screen during data fetching | Create <code>loading.tsx</code> in each route segment |
+| 4 | Forgetting <code>generateStaticParams</code> for dynamic SSG | Dynamic routes not pre-rendered | Export <code>generateStaticParams</code> for SSG |
+| 5 | Using <code>useEffect</code> for data fetching | Extra round trip; no SSR; no caching | Use Server Component fetch or TanStack Query on client |
+| 6 | Not handling error in <code>layout.tsx</code> | Layout errors crash entire app | Add <code>error.tsx</code> at each layout level |
+| 7 | Mutating without revalidation | UI shows stale data after mutation | Always call <code>revalidatePath</code> or <code>revalidateTag</code> after mutation |
+| 8 | Using <code>cache: "no-store"</code> everywhere | No caching benefits; slower page loads | Use ISR (<code>revalidate</code>) for semi-static content |
+| 9 | Calling hooks in Server Components | Server Components cannot use hooks | Move interactive parts to Client Components with <code>"use client"</code> |
+| 10 | Not importing Server Action correctly | Action not accessible; form submission fails | Use <code>import { action } from "./actions"</code> in Client Component |
+| 11 | Using <code>getServerSideProps</code> (Pages Router) | Legacy API incompatible with App Router | Migrate to Server Components or <code>async function Page</code> |
+| 12 | Not using <code>next/link</code> for internal links | Full page navigation instead of client-side transition | Always use <code>Link</code> from <code>next/link</code> |
+| 13 | Large Client Component bundles | Slow page load; large JS payload | Use <code>dynamic(() => import(...), { ssr: false })</code> for lazy loading |
+| 14 | Not setting <code>dynamic</code> or <code>revalidate</code> appropriately | Unpredictable caching behavior | Explicitly set <code>dynamic</code> in page exports |
+| 15 | Using <code>router.push</code> without <code>await</code> | Navigation may not complete before next action | <code>await router.push("/path")</code> |
+
+## Practice Questions
+
+1. Build a blog with the App Router: list page, dynamic post page with <code>generateStaticParams</code>, and ISR revalidation every 60 seconds.
+2. Create a search page with <code>searchParams</code>, debounced input, and server-side filtering.
+3. Implement a Server Action that creates a form submission, validates input, and revalidates the parent route.
+4. Build middleware that redirects unauthenticated users to login, preserving the return URL.
+5. Create a parallel route layout with a main feed (slot) and a sidebar analytics slot.
+6. Implement a route handler (API) with GET, POST, PUT, DELETE for a resource, including error handling.
+7. Build an intercepted route for a photo modal that opens from a feed page.
+8. Explain the difference between <code>cache: "force-cache"</code>, <code>cache: "no-store"</code>, and <code>next.revalidate</code>.
+9. Create a Client Component that uses <code>useOptimistic</code> for optimistic updates with a Server Action.
+10. Implement <code>generateMetadata</code> for dynamic SEO titles and Open Graph images.
+11. Build a multi-step form using Server Actions with <code>useActionState</code> for pending states.
+12. Create a <code>dynamic(() => import(...))</code> component that loads a heavy chart only when visible.
+13. Implement <code>revalidateTag</code> from a webhook endpoint (POST route handler).
+14. Build an internationalized site with <code>next-intl</code> or the built-in cookies-based i18n pattern.
+15. Create an API route with streaming response using <code>ReadableStream</code> for SSE or chat.
+
+`,
+            tags: ["Next.js", "App Router", "RSC"],
+          },
+          {
+            id: "fe-cheat-tailwind",
+            title: "Tailwind CSS Cheat Sheet",
+            shortDesc: "Complete Tailwind CSS reference -- utility classes, responsive design, customization, plugins, and best practices.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "Utility classes: layout, typography, spacing, colors, effects",
+              "Responsive prefixes: sm, md, lg, xl, 2xl",
+              "Customization: tailwind.config, theme extension, arbitrary values",
+              "Dark mode, JIT engine, and class ordering conventions",
+              "Plugins: forms, typography, container queries, custom plugins",
+            ],
+            content: `## Quick Reference
+
+Tailwind CSS is a utility-first CSS framework that provides low-level utility classes to build any design directly in your HTML. It uses a Just-In-Time (JIT) engine that generates only the CSS you use. Every utility maps to a single CSS property.
+
+| Rule | Description |
+|------|-------------|
+| Utility-first | Combine small classes to build components |
+| Responsive prefixes | <code>sm:</code>, <code>md:</code>, <code>lg:</code>, <code>xl:</code>, <code>2xl:</code> |
+| State variants | <code>hover:</code>, <code>focus:</code>, <code>active:</code>, <code>disabled:</code>, <code>group-hover:</code> |
+| Dark mode | <code>dark:</code> prefix (class-based or media-based) |
+| Arbitrary values | <code>w-[420px]</code>, <code>bg-[#1da1f1]</code> |
+| JIT generates on-demand | Only the classes you use appear in the output |
+
+## Common Utility Classes
+
+### Layout
+
+| Category | Classes | CSS Equivalent |
+|----------|---------|----------------|
+| Container | <code>container</code> | <code>max-width</code> responsive breakpoints |
+| Display | <code>block</code>, <code>inline-block</code>, <code>inline</code>, <code>flex</code>, <code>grid</code>, <code>hidden</code> | <code>display</code> |
+| Position | <code>static</code>, <code>fixed</code>, <code>absolute</code>, <code>relative</code>, <code>sticky</code> | <code>position</code> |
+| Top/Right/Bottom/Left | <code>inset-0</code>, <code>top-4</code>, <code>right-auto</code>, <code>left-1/2</code> | <code>top</code>, <code>right</code>, etc. |
+| Z-index | <code>z-0</code> through <code>z-50</code>, <code>z-auto</code> | <code>z-index</code> |
+| Overflow | <code>overflow-hidden</code>, <code>overflow-scroll</code>, <code>overflow-x-auto</code> | <code>overflow</code> |
+
+### Flexbox
+
+| Utility | CSS |
+|---------|-----|
+| <code>flex</code> | <code>display: flex</code> |
+| <code>flex-row</code> / <code>flex-col</code> | <code>flex-direction</code> |
+| <code>flex-wrap</code> / <code>flex-nowrap</code> | <code>flex-wrap</code> |
+| <code>flex-1</code> | <code>flex: 1 1 0%</code> |
+| <code>flex-auto</code> | <code>flex: 1 1 auto</code> |
+| <code>flex-initial</code> | <code>flex: 0 1 auto</code> |
+| <code>flex-none</code> | <code>flex: none</code> |
+| <code>grow</code> / <code>grow-0</code> | <code>flex-grow</code> |
+| <code>shrink</code> / <code>shrink-0</code> | <code>flex-shrink</code> |
+| <code>justify-start</code>, <code>justify-center</code>, <code>justify-between</code>, <code>justify-around</code>, <code>justify-evenly</code> | <code>justify-content</code> |
+| <code>items-start</code>, <code>items-center</code>, <code>items-end</code>, <code>items-stretch</code>, <code>items-baseline</code> | <code>align-items</code> |
+| <code>gap-0</code> through <code>gap-96</code> | <code>gap</code> |
+
+### Grid
+
+| Utility | CSS |
+|---------|-----|
+| <code>grid</code> | <code>display: grid</code> |
+| <code>grid-cols-1</code> through <code>grid-cols-12</code> | <code>grid-template-columns</code> |
+| <code>grid-rows-1</code> through <code>grid-rows-6</code> | <code>grid-template-rows</code> |
+| <code>col-span-1</code> through <code>col-span-12</code> | <code>grid-column: span N</code> |
+| <code>col-start-1</code> / <code>col-end-4</code> | <code>grid-column-start/end</code> |
+| <code>row-span-1</code> through <code>row-span-6</code> | <code>grid-row: span N</code> |
+| <code>grid-flow-row</code>, <code>grid-flow-col</code>, <code>grid-flow-dense</code> | <code>grid-auto-flow</code> |
+| <code>auto-cols-auto</code>, <code>auto-cols-fr</code>, <code>auto-cols-min</code>, <code>auto-cols-max</code> | <code>grid-auto-columns</code> |
+| <code>auto-rows-auto</code>, <code>auto-rows-fr</code>, etc. | <code>grid-auto-rows</code> |
+
+### Spacing
+
+Spacing uses a 4px base scale (1 unit = 0.25rem). Available from <code>0</code> to <code>96</code> plus fractions and percentages.
+
+| Class | CSS | Rem |
+|-------|-----|-----|
+| <code>p-0</code> | <code>padding: 0</code> | 0 |
+| <code>p-1</code> | <code>padding: 0.25rem</code> | 4px |
+| <code>p-2</code> | <code>padding: 0.5rem</code> | 8px |
+| <code>p-4</code> | <code>padding: 1rem</code> | 16px |
+| <code>p-8</code> | <code>padding: 2rem</code> | 32px |
+| <code>p-px</code> | <code>padding: 1px</code> | 1px |
+
+Directional: <code>pt-</code>, <code>pr-</code>, <code>pb-</code>, <code>pl-</code>, <code>px-</code> (horizontal), <code>py-</code> (vertical). Margin uses the same scale: <code>m-</code>, <code>mt-</code>, <code>mx-</code>, etc. Negative: <code>-m-4</code>.
+
+### Typography
+
+| Purpose | Classes |
+|---------|---------|
+| Font size | <code>text-xs</code>, <code>text-sm</code>, <code>text-base</code>, <code>text-lg</code>, <code>text-xl</code>, <code>text-2xl</code> through <code>text-9xl</code> |
+| Font weight | <code>font-thin</code> (100), <code>font-light</code> (300), <code>font-normal</code> (400), <code>font-medium</code> (500), <code>font-semibold</code> (600), <code>font-bold</code> (700), <code>font-extrabold</code> (800), <code>font-black</code> (900) |
+| Line height | <code>leading-none</code> (1), <code>leading-tight</code> (1.25), <code>leading-normal</code> (1.5), <code>leading-relaxed</code> (1.625), <code>leading-loose</code> (2) |
+| Text alignment | <code>text-left</code>, <code>text-center</code>, <code>text-right</code>, <code>text-justify</code> |
+| Text color | <code>text-gray-500</code>, <code>text-red-600</code>, <code>text-blue-700</code> |
+| Text decoration | <code>underline</code>, <code>line-through</code>, <code>no-underline</code> |
+| Text transform | <code>uppercase</code>, <code>lowercase</code>, <code>capitalize</code>, <code>normal-case</code> |
+| Letter spacing | <code>tracking-tighter</code>, <code>tracking-tight</code>, <code>tracking-normal</code>, <code>tracking-wide</code>, <code>tracking-wider</code>, <code>tracking-widest</code> |
+| Font family | <code>font-sans</code>, <code>font-serif</code>, <code>font-mono</code> |
+
+### Colors
+
+Tailwind includes 22 color palettes, each with shades from 50 to 950 (plus <code>DEFAULT</code>):
+
+| Color | Example Classes |
+|-------|----------------|
+| Slate | <code>bg-slate-50</code>, <code>text-slate-900</code>, <code>border-slate-300</code> |
+| Gray | <code>bg-gray-100</code>, <code>text-gray-700</code> |
+| Zinc | <code>bg-zinc-800</code> |
+| Neutral | <code>bg-neutral-50</code> |
+| Stone | <code>bg-stone-200</code> |
+| Red | <code>bg-red-500</code>, <code>text-red-700</code>, <code>hover:bg-red-600</code> |
+| Orange | <code>bg-orange-400</code> |
+| Amber | <code>text-amber-500</code> |
+| Yellow | <code>bg-yellow-300</code> |
+| Lime | <code>text-lime-600</code> |
+| Green | <code>bg-green-500</code>, <code>text-green-800</code> |
+| Emerald | <code>bg-emerald-500</code> |
+| Teal | <code>bg-teal-400</code> |
+| Cyan | <code>text-cyan-600</code> |
+| Sky | <code>bg-sky-500</code> |
+| Blue | <code>bg-blue-600</code>, <code>text-blue-700</code> |
+| Indigo | <code>bg-indigo-500</code> |
+| Violet | <code>text-violet-600</code> |
+| Purple | <code>bg-purple-500</code> |
+| Fuchsia | <code>text-fuchsia-500</code> |
+| Pink | <code>bg-pink-400</code> |
+| Rose | <code>text-rose-600</code> |
+
+### Borders
+
+| Class | CSS |
+|-------|-----|
+| <code>border</code> | <code>border-width: 1px</code> |
+| <code>border-0</code> through <code>border-8</code> | <code>border-width</code> |
+| <code>border-t</code>, <code>border-r</code>, <code>border-b</code>, <code>border-l</code> | Directional borders |
+| <code>border-gray-300</code> | <code>border-color</code> |
+| <code>rounded-none</code> through <code>rounded-3xl</code> | <code>border-radius</code> |
+| <code>rounded-full</code> | <code>border-radius: 9999px</code> (pill/round) |
+| <code>rounded-t-md</code>, <code>rounded-l-lg</code> | Directional radius |
+| <code>divide-x</code>, <code>divide-y</code> | Dividers between children |
+
+### Effects & Filters
+
+| Class | CSS |
+|-------|-----|
+| <code>shadow-sm</code>, <code>shadow</code>, <code>shadow-md</code>, <code>shadow-lg</code>, <code>shadow-xl</code>, <code>shadow-2xl</code> | <code>box-shadow</code> |
+| <code>shadow-inner</code> | Inner shadow |
+| <code>opacity-0</code> through <code>opacity-100</code> | <code>opacity</code> |
+| <code>blur-sm</code>, <code>blur</code>, <code>blur-lg</code>, <code>blur-xl</code>, <code>blur-2xl</code>, <code>blur-3xl</code> | <code>filter: blur()</code> |
+| <code>brightness-50</code> through <code>brightness-200</code> | <code>filter: brightness()</code> |
+| <code>contrast-50</code> through <code>contrast-200</code> | <code>filter: contrast()</code> |
+| <code>grayscale</code>, <code>grayscale-0</code> | <code>filter: grayscale()</code> |
+| <code>sepia</code>, <code>sepia-0</code> | <code>filter: sepia()</code> |
+| <code>drop-shadow-md</code> | <code>filter: drop-shadow()</code> |
+
+### Transitions & Transforms
+
+| Class | CSS |
+|-------|-----|
+| <code>transition</code> | <code>transition-property: all</code> |
+| <code>transition-colors</code> | <code>transition-property: color, background-color, border-color</code> |
+| <code>transition-opacity</code> | <code>transition-property: opacity</code> |
+| <code>transition-transform</code> | <code>transition-property: transform</code> |
+| <code>duration-100</code> through <code>duration-1000</code> | <code>transition-duration</code> |
+| <code>ease-linear</code>, <code>ease-in</code>, <code>ease-out</code>, <code>ease-in-out</code> | <code>transition-timing-function</code> |
+| <code>delay-100</code> through <code>delay-1000</code> | <code>transition-delay</code> |
+| <code>scale-50</code> through <code>scale-150</code> | <code>transform: scale()</code> |
+| <code>rotate-0</code> through <code>rotate-180</code>, <code>-rotate-45</code> | <code>transform: rotate()</code> |
+| <code>translate-x-0</code> through <code>translate-x-full</code> | <code>transform: translateX()</code> |
+| <code>translate-y-1/2</code>, <code>-translate-y-full</code> | <code>transform: translateY()</code> |
+| <code>skew-x-1</code> through <code>skew-x-12</code> | <code>transform: skewX()</code> |
+| <code>origin-center</code>, <code>origin-top-left</code> | <code>transform-origin</code> |
+
+## Responsive Design
+
+\`\`\`html
+<!-- Breakpoint prefixes: sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px) -->
+
+<!-- Responsive layout: 1 col mobile, 2 cols tablet, 3 cols desktop -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div class="bg-white p-4 rounded-lg shadow">Card 1</div>
+  <div class="bg-white p-4 rounded-lg shadow">Card 2</div>
+  <div class="bg-white p-4 rounded-lg shadow">Card 3</div>
+</div>
+
+<!-- Responsive text: small on mobile, large on desktop -->
+<h1 class="text-xl md:text-3xl lg:text-5xl font-bold">Responsive Heading</h1>
+
+<!-- Responsive visibility -->
+<div class="hidden md:block">Visible on tablet and up</div>
+<div class="block md:hidden">Visible on mobile only</div>
+
+<!-- Responsive padding/margin -->
+<section class="p-4 md:p-8 lg:p-12">Content</section>
+
+<!-- Container with responsive max-width -->
+<div class="container mx-auto px-4">Centered content</div>
+\`\`\`
+
+### Custom Breakpoints in config
+
+\`\`\`js
+// tailwind.config.js
+module.exports = {
+  theme: {
+    screens: {
+      xs: "475px",                     // Custom extra small
+      ...defaultTheme.screens,         // Keep defaults
+      "3xl": "1600px",                 // Custom large
+    },
+  },
+};
+\`\`\`
+
+## Configuring Tailwind
+
+\`\`\`js
+// tailwind.config.js (ESM)
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx,mdx}",     // Scan these files for class names
+    "./pages/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
+  ],
+
+  darkMode: "class",                         // or "media" for system preference
+
+  theme: {
+    extend: {
+      // Custom colors
+      colors: {
+        brand: {
+          50: "#eff6ff",
+          100: "#dbeafe",
+          500: "#3b82f6",
+          900: "#1e3a8a",
+        },
+        // Or use: 'brand': '#3b82f6',
+      },
+
+      // Custom font sizes
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],  // 10px
+      },
+
+      // Custom spacing
+      spacing: {
+        18: "4.5rem",                     // 72px
+        88: "22rem",                      // 352px
+      },
+
+      // Custom animations
+      keyframes: {
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+      },
+      animation: {
+        "fade-in": "fade-in 0.3s ease-out",
+      },
+    },
+  },
+
+  plugins: [
+    require("@tailwindcss/forms"),         // Better form element styling
+    require("@tailwindcss/typography"),    // Prose classes for rich text
+    require("@tailwindcss/container-queries"), // @container support
+    require("@tailwindcss/aspect-ratio"),  // Aspect ratio utilities (legacy)
+  ],
+};
+\`\`\`
+
+## Arbitrary Values
+
+\`\`\`html
+<!-- Arbitrary values: use [value] -->
+<div class="w-[420px]">Fixed width</div>
+<div class="bg-[#1da1f1]">Custom color</div>
+<div class="grid-cols-[1fr_2fr]">Custom grid</div>
+<div class="text-[clamp(1rem,3vw,2rem)]">Fluid text</div>
+<div class="mt-[calc(100vh-80px)]">Custom calc</div>
+
+<!-- Arbitrary properties (Tailwind v3.2+) -->
+<div class="[mask-image:url(menu.svg)]">Arbitrary property</div>
+
+<!-- Important modifier -->
+<div class="!hidden">Force hidden (!important)</div>
+\`\`\`
+
+## Best Practices & Patterns
+
+\`\`\`html
+<!-- Component extraction: use @apply for repeated patterns -->
+<div class="card">
+  <!-- Instead of repeating: -->
+  <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow">
+    <h3 class="text-lg font-semibold text-gray-900">Card Title</h3>
+    <p class="text-gray-600 mt-2">Card content</p>
+  </div>
+</div>
+
+<!-- State variants -->
+<button class="
+  bg-blue-500 hover:bg-blue-600 active:bg-blue-700
+  disabled:opacity-50 disabled:cursor-not-allowed
+  focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
+  transition-colors duration-200
+">
+  Submit
+</button>
+
+<!-- Group hover -->
+<div class="group cursor-pointer">
+  <h3 class="group-hover:text-blue-600 transition-colors">Title</h3>
+  <p class="opacity-0 group-hover:opacity-100 transition-opacity">Hidden tooltip</p>
+</div>
+
+<!-- Peer modifier (sibling state) -->
+<input class="peer" type="email" required />
+<p class="invisible peer-invalid:visible text-red-500">Invalid email</p>
+
+<!-- Before/after pseudo-elements -->
+<div class="before:content-['*'] before:text-red-500">Required field</div>
+\`\`\`
+
+## Plugins
+
+| Package | Purpose | Classes Added |
+|---------|---------|---------------|
+| <code>@tailwindcss/forms</code> | Reset and style form elements | Better <code>input</code>, <code>select</code>, <code>textarea</code>, <code>checkbox</code>, <code>radio</code> |
+| <code>@tailwindcss/typography</code> | Prose-like styling for rich text | <code>prose</code>, <code>prose-sm</code>, <code>prose-lg</code>, <code>prose-gray</code> |
+| <code>@tailwindcss/container-queries</code> | Container query support | <code>@sm:</code>, <code>@md:</code>, <code>@lg:</code> prefixes |
+| <code>@tailwindcss/aspect-ratio</code> | Aspect ratio utilities (legacy) | <code>aspect-w-16</code>, <code>aspect-h-9</code> |
+| <code>tailwindcss-animate</code> | Animation utilities | <code>animate-in</code>, <code>fade-in</code>, <code>slide-in</code> |
+| <code>daisyui</code> | Component library | Pre-built components |
+
+\`\`\`js
+// Custom plugin
+import plugin from "tailwindcss/plugin";
+
+export default {
+  plugins: [
+    plugin(function({ addUtilities, addComponents, addBase, theme }) {
+      addUtilities({                                     // Custom utilities
+        ".content-auto": { contentVisibility: "auto" },
+      });
+      addComponents({                                    // Component classes
+        ".card": {
+          backgroundColor: theme("colors.white"),
+          borderRadius: theme("borderRadius.lg"),
+          padding: theme("spacing.6"),
+        },
+      });
+    }),
+  ],
+};
+\`\`\`
+
+## Comparison: Tailwind vs Other Approaches
+
+| Aspect | Tailwind CSS | CSS Modules | styled-components | Vanilla Extract |
+|--------|-------------|-------------|-------------------|-----------------|
+| Philosophy | Utility-first | Scoped CSS | CSS-in-JS | Zero-runtime CSS |
+| Runtime | None | None | ~12kB runtime | None |
+| Learning curve | Low (classes) | Low | Medium | Medium |
+| File size | < 10kB (gzipped, after purge) | As authored | As authored + runtime | As authored |
+| Dynamic styles | Arbitrary values | Dynamic classes | Template literals | CSS variables |
+| Naming | Standard utilities | Local scope | Component-scoped | Scoped by file |
+| Type safety | No (string classes) | Partial | Good | Excellent |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Not purging unused classes | Huge CSS file with all utilities | Configure <code>content</code> paths correctly |
+| 2 | Using <code>@apply</code> for everything | Recreates monolithic CSS; loses utility benefits | Use <code>@apply</code> sparingly for repeated patterns only |
+| 3 | Inline arbitrary values everywhere | Hard to maintain; no design consistency | Extend the theme in <code>tailwind.config.js</code> |
+| 4 | Not using responsive prefixes correctly | Classes apply at all breakpoints | Prefix with breakpoint: <code>md:flex</code>, <code>lg:text-lg</code> |
+| 5 | Mixing with other CSS approaches inconsistently | Conflicting styles; specificity issues | Pick one approach per project |
+| 6 | Over-nesting in CSS with <code>@apply</code> compared to utility classes | Verbose; harder to remove unused styles | Keep HTML and classes flat |
+| 7 | Not using <code>group</code> for parent-child hover | Separate hover states for each child | Use <code>group</code> + <code>group-hover:</code> |
+| 8 | Forgetting <code>dark:</code> prefix | Dark mode not applied | Add <code>dark:</code> variant to elements |
+| 9 | Using <code>w-full</code> with <code>container</code> | Conflicts between fixed max-width and full width | Use container alone or with <code>mx-auto</code> |
+| 10 | Not configuring <code>darkMode: "class"</code> for manual toggle | Only respects system preference | Set to <code>"class"</code> and toggle with JS |
+| 11 | Using negative spacing incorrectly | Shadow or outline clipped | Use <code>-translate-*</code> for positioning |
+| 12 | Relying on <code>space-y-4</code> for layout gaps | Can cause unexpected margins with dynamic content | Use <code>gap</code> with flex/grid or <code>margin</code> directly |
+| 13 | Not using <code>focus-visible:</code> for keyboard focus | Outlines show on click too | <code>focus-visible:ring-2</code> for accessibility |
+| 14 | Putting all classes on one line | Hard to read and diff | Use multi-line with consistent ordering |
+| 15 | Using <code>@import</code> in CSS file with Tailwind directives | Order matters: Tailwind layers may override incorrectly | Use <code>@tailwind base/components/utilities</code> in correct order |
+
+## Practice Questions
+
+1. Build a responsive card grid: 1 column on mobile, 2 on tablet, 4 on desktop, with hover effects.
+2. Create a custom <code>btn-primary</code> class using <code>@apply</code> with hover, active, and disabled states.
+3. Configure a custom brand color palette in <code>tailwind.config.js</code> with shades 50-900.
+4. Build a responsive navbar that collapses to a hamburger menu on mobile (use <code>hidden</code>/<code>block</code> with breakpoints).
+5. Create a hero section with a gradient background, centered text, and a CTA button with hover effects.
+6. Implement dark mode support using <code>class</code> strategy with a toggle button.
+7. Build a form with custom-styled inputs, select, checkbox, and validation states using <code>@tailwindcss/forms</code>.
+8. Create an animated loading spinner using Tailwind's <code>animate-spin</code> and custom keyframes.
+9. Implement a modal dialog with backdrop blur, centered content, and enter/leave transitions.
+10. Build a pricing table with 3 tiers, highlighting the "popular" tier differently.
+11. Create a <code>prose</code>-styled blog article using <code>@tailwindcss/typography</code> with dark mode support.
+12. Write a custom plugin that adds a <code>.scrollbar-hide</code> utility for hiding scrollbars.
+13. Build a tooltip component using <code>group</code> and <code>group-hover</code> with positioning.
+14. Create a responsive table with horizontal scroll on mobile using <code>overflow-x-auto</code>.
+15. Implement a staggered list animation using <code>transition-delay</code> with <code>nth-child</code> arbitrary values.
+
+`,
+            tags: ["Tailwind CSS", "Utility CSS", "Styling"],
+          },
+          {
+            id: "fe-cheat-browser-apis",
+            title: "Browser APIs Cheat Sheet",
+            shortDesc: "Complete browser APIs reference -- DOM, Fetch, WebSocket, Storage, Canvas, Web Workers, Geolocation, and more.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "DOM: selection, manipulation, events, observers (Mutation, Intersection, Resize)",
+              "Fetch API: request/response, streaming, abort, caching",
+              "Storage: localStorage, sessionStorage, IndexedDB, Cache API",
+              "Web Workers, Service Workers, and Background Sync",
+              "Canvas, WebGL, WebRTC, Geolocation, Web Audio, Notifications",
+            ],
+            content: `## Quick Reference
+
+Browser APIs are interfaces exposed by the browser to JavaScript for interacting with web pages, the network, storage, hardware, and operating system capabilities. They are available in the global <code>window</code> object (or <code>globalThis</code>).
+
+| Category | Key APIs |
+|----------|----------|
+| DOM | <code>document.querySelector</code>, <code>Element</code>, <code>EventTarget</code>, Observers |
+| Networking | <code>fetch</code>, <code>WebSocket</code>, <code>EventSource</code> (SSE) |
+| Storage | <code>localStorage</code>, <code>sessionStorage</code>, <code>IndexedDB</code>, <code>Cache</code> |
+| Concurrency | <code>Web Worker</code>, <code>Service Worker</code>, <code>SharedWorker</code> |
+| Device | <code>Geolocation</code>, <code>DeviceOrientation</code>, <code>Battery</code> |
+| Graphics | <code>Canvas 2D</code>, <code>WebGL</code>, <code>WebGPU</code> |
+| Media | <code>WebRTC</code>, <code>Web Audio</code>, <code>MediaRecorder</code>, <code>Screen Capture</code> |
+| Notifications | <code>Notification</code>, <code>Push API</code> |
+
+## DOM API
+
+### Selection & Traversal
+
+\`\`\`js
+// Modern selection methods
+const root = document.getElementById("root");            // Single element by ID
+const header = document.querySelector("header");         // First matching CSS selector
+const buttons = document.querySelectorAll(".btn");       // All matching (NodeList, not Array!)
+const form = document.forms[0];                          // Forms collection
+const images = document.images;                          // All <img> elements
+
+// Traversal
+const parent = element.parentElement;                    // Parent element node
+const children = element.children;                       // HTMLCollection (live!)
+const firstChild = element.firstElementChild;            // First element child
+const nextSibling = element.nextElementSibling;          // Next sibling element
+const closest = element.closest(".card");                // Nearest ancestor matching selector
+
+// Converting NodeList to Array
+const btnArray = [...document.querySelectorAll(".btn")]; // Spread operator
+const btnArray2 = Array.from(document.querySelectorAll(".btn"));
+\`\`\`
+
+### Manipulation
+
+\`\`\`js
+// Creating elements
+const div = document.createElement("div");               // Create element
+const text = document.createTextNode("Hello");           // Create text node
+const fragment = document.createDocumentFragment();      // Lightweight container
+
+// Inserting
+parent.appendChild(child);                               // Append as last child
+parent.insertBefore(newChild, referenceChild);           // Insert before reference
+parent.prepend(newChild);                                // Insert as first child (ES2017)
+parent.append(newChild);                                 // Insert as last child (ES2017)
+element.insertAdjacentHTML("beforeend", "<p>HTML</p>"); // Parse HTML and insert
+// Positions: "beforebegin", "afterbegin", "beforeend", "afterend"
+
+// Replacing & Removing
+parent.replaceChild(newChild, oldChild);                 // Replace child
+element.remove();                                        // Remove element (ES2017)
+element.innerHTML = "";                                  // Remove all children
+
+// Attributes & Properties
+element.setAttribute("data-id", "123");                  // Set attribute
+element.getAttribute("data-id");                         // Get attribute
+element.removeAttribute("data-id");                      // Remove attribute
+element.hasAttribute("data-id");                         // Check attribute existence
+element.classList.add("active");                         // Add class
+element.classList.remove("active");                      // Remove class
+element.classList.toggle("active");                      // Toggle class
+element.classList.contains("active");                    // Check class
+
+// Style
+element.style.color = "red";                             // Inline style
+element.style.cssText = "color: red; font-size: 16px";   // Multiple styles
+window.getComputedStyle(element).color;                  // Computed style (read-only)
+\`\`\`
+
+### Events
+
+\`\`\`js
+// Adding event listeners
+element.addEventListener("click", handler, options);
+// options: { capture: false, once: false, passive: false }
+
+// Event delegation (parent listens for events from children)
+document.querySelector("ul")?.addEventListener("click", (event) => {
+  const target = event.target as HTMLElement;             // Actual clicked element
+  if (target.matches("li")) {                             // Check if it's an <li>
+    console.log("Clicked item:", target.textContent);
+  }
+});
+
+// Custom events
+const event = new CustomEvent("user-login", {
+  detail: { userId: 42 },
+  bubbles: true,
+  cancelable: true,
+});
+element.dispatchEvent(event);
+
+// Listening for custom events
+element.addEventListener("user-login", (e: CustomEvent) => {
+  console.log("User logged in:", e.detail.userId);
+});
+
+// Intersection Observer (lazy loading, infinite scroll)
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      console.log("Element is visible:", entry.target);
+      entry.target.setAttribute("src", entry.target.dataset.src); // Lazy load
+      observer.unobserve(entry.target);                    // Stop observing after load
+    }
+  });
+}, { rootMargin: "200px", threshold: 0 });
+document.querySelectorAll("img[data-src]").forEach(img => observer.observe(img));
+
+// Mutation Observer (watch DOM changes)
+const mutationObserver = new MutationObserver((mutations) => {
+  mutations.forEach(mutation => {
+    if (mutation.type === "childList") {
+      console.log("Children added/removed:", mutation.addedNodes);
+    }
+    if (mutation.type === "attributes") {
+      console.log(\`Attribute \${mutation.attributeName} changed\`);
+    }
+  });
+});
+mutationObserver.observe(document.body, {
+  childList: true,                                       // Watch children
+  attributes: true,                                      // Watch attributes
+  subtree: true,                                         // Watch descendants
+  attributeFilter: ["class"],                            // Only specific attributes
+});
+
+// Resize Observer (watch element size changes)
+const resizeObserver = new ResizeObserver((entries) => {
+  entries.forEach(entry => {
+    const { width, height } = entry.contentRect;
+    console.log(\`Element resized: \${width}x\${height}\`);
+  });
+});
+resizeObserver.observe(document.getElementById("sidebar"));
+\`\`\`
+
+## Fetch API
+
+\`\`\`js
+// Basic GET request
+const response = await fetch("https://api.example.com/data");
+if (!response.ok) throw new Error(\`HTTP \${response.status}\`); // Handle 404, 500, etc.
+const data = await response.json();                       // Parse JSON body
+
+// Other methods
+const postResponse = await fetch("https://api.example.com/users", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: \`Bearer \${token}\`,
+  },
+  body: JSON.stringify({ name: "Alice" }),
+});
+
+// FormData for file uploads
+const formData = new FormData();
+formData.append("name", "Alice");
+formData.append("avatar", fileInput.files[0]);            // File object
+const uploadResponse = await fetch("/upload", {
+  method: "POST",
+  body: formData,                                          // Content-Type set automatically
+});
+
+// Request abort with AbortController
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 5000); // Timeout after 5s
+
+try {
+  const res = await fetch(url, { signal: controller.signal });
+  const data = await res.json();
+} catch (err) {
+  if (err.name === "AbortError") {
+    console.log("Request timed out");
+  } else {
+    console.error("Fetch error:", err);
+  }
+} finally {
+  clearTimeout(timeoutId);
+}
+
+// Streaming responses (large payloads)
+const streamResponse = await fetch("/large-file.json");
+const reader = streamResponse.body.getReader();
+const decoder = new TextDecoder();
+let result = "";
+
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  result += decoder.decode(value, { stream: true });      // Decode chunk
+  updateProgress(result.length);                           // Show progress
+}
+
+// Request/Response objects (for fine-grained control)
+const request = new Request("/api/data", {
+  method: "POST",
+  headers: { "X-Custom": "value" },
+});
+const cachedResponse = await caches.match(request);        // Check Cache API
+const fetchResponse = await fetch(request);                // Or fetch normally
+\`\`\`
+
+## Storage APIs
+
+### Web Storage
+
+\`\`\`js
+// localStorage (persists until explicitly cleared, ~5MB per origin)
+localStorage.setItem("theme", "dark");                   // Store string
+const theme = localStorage.getItem("theme");              // Retrieve: "dark"
+localStorage.removeItem("theme");                         // Remove single key
+localStorage.clear();                                     // Clear all
+
+// Store objects (serialize to JSON)
+const user = { name: "Alice", role: "admin" };
+localStorage.setItem("user", JSON.stringify(user));
+const storedUser = JSON.parse(localStorage.getItem("user"));
+
+// sessionStorage (cleared when tab closes)
+sessionStorage.setItem("sessionId", "abc123");
+
+// Storage event (fires in other tabs when localStorage changes)
+window.addEventListener("storage", (event) => {
+  console.log(\`\${event.key} changed from \${event.oldValue} to \${event.newValue}\`);
+});
+\`\`\`
+
+### IndexedDB
+
+\`\`\`js
+// IndexedDB: asynchronous, structured data storage (no size limit)
+const request = indexedDB.open("MyDatabase", 1);          // Open/create database
+
+request.onupgradeneeded = (event) => {
+  const db = event.target.result;
+  const store = db.createObjectStore("users", { keyPath: "id", autoIncrement: true });
+  store.createIndex("email", "email", { unique: true }); // Create index
+};
+
+request.onsuccess = (event) => {
+  const db = event.target.result;
+
+  // Transaction: read-write
+  const tx = db.transaction("users", "readwrite");
+  const store = tx.objectStore("users");
+
+  // CRUD operations
+  store.add({ name: "Alice", email: "alice@example.com" }); // Create
+  store.put({ id: 1, name: "Bob", email: "bob@example.com" }); // Update
+  store.delete(1);                                        // Delete
+  const getRequest = store.get(1);                        // Read by key
+
+  getRequest.onsuccess = () => console.log(getRequest.result);
+
+  // Query by index
+  const emailIndex = store.index("email");
+  const emailRequest = emailIndex.get("alice@example.com");
+  emailRequest.onsuccess = () => console.log(emailRequest.result);
+
+  tx.oncomplete = () => db.close();
+};
+\`\`\`
+
+## Web Workers
+
+\`\`\`js
+// ----- main.js -----
+const worker = new Worker("worker.js");
+
+worker.postMessage({ type: "compute", data: [1, 2, 3, 4, 5] });
+
+worker.onmessage = (event) => {
+  console.log("Result from worker:", event.data);
+};
+
+worker.onerror = (error) => {
+  console.error("Worker error:", error.message);
+};
+
+// Terminate worker
+worker.terminate();
+
+// ----- worker.js -----
+self.onmessage = (event) => {
+  const { type, data } = event.data;
+
+  if (type === "compute") {
+    const result = data.map(n => heavyComputation(n));     // Expensive work
+    self.postMessage(result);                              // Send result back
+  }
+};
+
+// Transferable objects (zero-copy transfer)
+const buffer = new ArrayBuffer(1024 * 1024 * 100);         // 100MB
+worker.postMessage(buffer, [buffer]);                       // Transfer ownership
+
+// SharedWorker (shared across tabs)
+const sharedWorker = new SharedWorker("shared-worker.js");
+sharedWorker.port.postMessage("hello");
+sharedWorker.port.onmessage = (event) => {
+  console.log("SharedWorker says:", event.data);
+};
+\`\`\`
+
+## Service Workers
+
+\`\`\`js
+// Registration (in main thread)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js", { scope: "/" })
+    .then(reg => {
+      console.log("SW registered:", reg.scope);
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            // New version available -- prompt user to refresh
+            showUpdatePrompt();
+          }
+        });
+      });
+    })
+    .catch(err => console.error("SW registration failed:", err));
+}
+
+// ----- sw.js (Service Worker) -----
+const CACHE_NAME = "my-app-v1";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/app.js",
+  "/style.css",
+  "/logo.png",
+];
+
+// Install: cache static assets
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting();                                    // Activate immediately
+});
+
+// Activate: clean old caches
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();                                  // Take control immediately
+});
+
+// Fetch: serve from cache or network
+self.addEventListener("fetch", (event) => {
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      // Cache-first strategy (for static assets)
+      if (cached) return cached;
+
+      // Network-first strategy (for API calls)
+      return fetch(event.request).then(response => {
+        if (response.ok && event.request.method === "GET") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Offline fallback
+        return caches.match("/offline.html");
+      });
+    })
+  );
+});
+
+// Background Sync
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-messages") {
+    event.waitUntil(syncPendingMessages());
+  }
+});
+
+// Push notifications
+self.addEventListener("push", (event) => {
+  const data = event.data.json();
+  self.registration.showNotification(data.title, {
+    body: data.body,
+    icon: "/icon-192.png",
+    badge: "/badge.png",
+    data: { url: data.url },
+  });
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data.url));
+});
+\`\`\`
+
+## WebSocket
+
+\`\`\`js
+const socket = new WebSocket("wss://example.com/ws");
+
+socket.onopen = () => {
+  console.log("WebSocket connected");
+  socket.send(JSON.stringify({ type: "join", room: "general" }));
+};
+
+socket.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log("Received:", message);
+  displayMessage(message);
+};
+
+socket.onerror = (error) => {
+  console.error("WebSocket error:", error);
+};
+
+socket.onclose = (event) => {
+  console.log(\`WebSocket closed: \${event.code} \${event.reason}\`);
+  // Reconnect logic
+  setTimeout(() => {
+    new WebSocket("wss://example.com/ws");
+  }, 1000);
+};
+
+// Close
+socket.close(1000, "User left");
+// Close codes: 1000 (normal), 1001 (going away), 1006 (abnormal),
+// 1008 (policy violation), 1011 (server error)
+\`\`\`
+
+## Canvas & Graphics
+
+\`\`\`js
+const canvas = document.getElementById("myCanvas");
+const ctx = canvas.getContext("2d");
+
+// Setup
+canvas.width = 800;
+canvas.height = 600;
+
+// Drawing
+ctx.fillStyle = "#ff6600";                               // Fill color
+ctx.fillRect(10, 10, 100, 50);                           // Filled rectangle
+
+ctx.strokeStyle = "#000";                                 // Stroke color
+ctx.lineWidth = 2;
+ctx.strokeRect(10, 10, 100, 50);                          // Outlined rectangle
+
+ctx.beginPath();
+ctx.arc(200, 200, 50, 0, Math.PI * 2);                   // Circle (x, y, radius, startAngle, endAngle)
+ctx.fillStyle = "blue";
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(300, 300);
+ctx.lineTo(350, 250);
+ctx.lineTo(400, 300);
+ctx.closePath();
+ctx.fillStyle = "green";
+ctx.fill();                                               // Triangle
+
+// Text
+ctx.font = "24px sans-serif";
+ctx.fillStyle = "black";
+ctx.fillText("Hello Canvas", 100, 500);                   // Filled text
+ctx.strokeText("Hello Canvas", 100, 550);                 // Outlined text
+
+// Images
+const img = new Image();
+img.onload = () => ctx.drawImage(img, 0, 0, 200, 150);    // Draw image
+img.src = "photo.jpg";
+
+// Animation loop
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);      // Clear canvas
+  // ... draw frame ...
+  requestAnimationFrame(animate);                         // Next frame
+}
+animate();
+
+// WebGL (3D graphics)
+const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+// Low-level 3D rendering API -- requires shaders, buffers, etc.
+\`\`\`
+
+## Other Notable APIs
+
+| API | Purpose | Key Methods/Properties |
+|-----|---------|----------------------|
+| <code>Geolocation</code> | Device location | <code>navigator.geolocation.getCurrentPosition(success, error, options)</code>, <code>watchPosition</code> |
+| <code>Notification</code> | Desktop notifications | <code>Notification.requestPermission()</code>, <code>new Notification("title", { body })</code> |
+| <code>Web Audio</code> | Audio processing | <code>AudioContext</code>, <code>OscillatorNode</code>, <code>GainNode</code>, <code>AnalyserNode</code> |
+| <code>MediaRecorder</code> | Record audio/video | <code>new MediaRecorder(stream)</code>, <code>ondataavailable</code>, <code>start()</code>, <code>stop()</code> |
+| <code>Screen Capture</code> | Screen sharing | <code>navigator.mediaDevices.getDisplayMedia()</code> |
+| <code>WebRTC</code> | Peer-to-peer audio/video | <code>RTCPeerConnection</code>, <code>createOffer</code>, <code>createAnswer</code>, <code>addIceCandidate</code> |
+| <code>Battery</code> | Battery status | <code>navigator.getBattery()</code>, <code>level</code>, <code>charging</code>, <code>onchargingchange</code> |
+| <code>Vibration</code> | Device vibration | <code>navigator.vibrate(200)</code> or <code>[200, 100, 200]</code> for pattern |
+| <code>Clipboard</code> | Read/write clipboard | <code>navigator.clipboard.writeText("text")</code>, <code>readText()</code> |
+| <code>Fullscreen</code> | Fullscreen API | <code>element.requestFullscreen()</code>, <code>document.exitFullscreen()</code> |
+| <code>Pointer Lock</code> | Mouse capture for games | <code>element.requestPointerLock()</code>, <code>document.pointerLockElement</code> |
+| <code>Page Visibility</code> | Tab visibility | <code>document.visibilityState</code>, <code>visibilitychange</code> event |
+| <code>Network Info</code> | Connection info | <code>navigator.connection.effectiveType</code> (4g, 3g, 2g, slow-2g) |
+| <code>Payment Request</code> | Browser payments | <code>new PaymentRequest(methods, details)</code>, <code>.show()</code>, <code>.canMakePayment()</code> |
+| <code>Credentials</code> | Password management | <code>navigator.credentials.create()</code>, <code>get()</code>, <code>store()</code> |
+| <code>Web Share</code> | Native sharing | <code>navigator.share({ title, text, url })</code> |
+| <code>Broadcast Channel</code> | Tab communication | <code>new BroadcastChannel("channel")</code>, <code>postMessage()</code>, <code>onmessage</code> |
+| <code>Performance</code> | Performance metrics | <code>performance.now()</code>, <code>performance.getEntriesByType("navigation")</code> |
+
+\`\`\`js
+// Geolocation
+navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    const { latitude, longitude } = pos.coords;
+    console.log(\`Lat: \${latitude}, Lng: \${longitude}\`);
+  },
+  (err) => {
+    console.error(\`Geolocation error (\${err.code}): \${err.message}\`);
+  },
+  { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+);
+
+// Notification
+if ("Notification" in window && Notification.permission === "default") {
+  Notification.requestPermission().then(permission => {
+    if (permission === "granted") {
+      new Notification("Hello!", { body: "This is a notification" });
+    }
+  });
+}
+
+// Clipboard
+await navigator.clipboard.writeText("Text to copy");
+const text = await navigator.clipboard.readText();
+
+// Page Visibility
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    console.log("Tab hidden -- pause animations, stop audio");
+  } else {
+    console.log("Tab visible -- resume");
+  }
+});
+
+// Broadcast Channel (cross-tab communication)
+const channel = new BroadcastChannel("app-updates");
+channel.postMessage({ type: "USER_LOGGED_IN", userId: 42 });
+channel.onmessage = (event) => {
+  console.log("Other tab says:", event.data);
+};
+
+// Performance
+const start = performance.now();
+// ... do work ...
+const elapsed = performance.now() - start;
+console.log(\`Took \${elapsed}ms\`);
+
+// Get navigation timing
+const [navEntry] = performance.getEntriesByType("navigation");
+console.log("TTFB:", navEntry.responseStart - navEntry.requestStart);
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why Is Wrong | Correct Approach |
+|---|---------|--------------|------------------|
+| 1 | Using <code>innerHTML</code> with user input | XSS vulnerability | Use <code>textContent</code> or sanitize with DOMPurify |
+| 2 | Not aborting fetch requests on unmount | Race conditions; state set on unmounted component | Use <code>AbortController</code> and abort in cleanup |
+| 3 | Blocking UI with synchronous XHR | Freezes the tab; poor UX | Use <code>fetch()</code> (async) or Web Workers |
+| 4 | Reading <code>localStorage</code> synchronously in SSR | <code>localStorage</code> is not available on server | Check <code>typeof window !== "undefined"</code> first |
+| 5 | Not handling WebSocket reconnection | Permanent disconnection on network drop | Implement auto-reconnect with exponential backoff |
+| 6 | Heavy computation on main thread | Creates jank; unresponsive UI | Offload to Web Worker |
+| 7 | Forgetting <code>event.preventDefault()</code> in form handlers | Page reloads; lost form data | Call <code>e.preventDefault()</code> for custom form handling |
+| 8 | Memory leaks from observers not disconnected | Observers keep references; prevent GC | Call <code>observer.disconnect()</code> or <code>observer.unobserve()</code> |
+| 9 | Service Worker caching dynamic content | Returns stale API responses | Use network-first or stale-while-revalidate for dynamic routes |
+| 10 | Not checking for API support before calling | Errors in older browsers | Use feature detection: <code>if ("geolocation" in navigator)</code> |
+| 11 | Storing sensitive data in localStorage | XSS can read stored tokens; no encryption | Use httpOnly cookies for auth; encrypt sensitive data |
+| 12 | Creating many <code>IntersectionObserver</code> instances | Performance overhead | Use one observer with multiple targets |
+| 13 | Not using <code>passive: true</code> for touch/wheel events | Blocks scrolling; jank | Add <code>{ passive: true }</code> to scroll/touch listeners |
+| 14 | Using <code>document.write</code> | Overwrites the entire document if called after load | Use DOM manipulation methods |
+| 15 | Ignoring <code>requestAnimationFrame</code> for animations | setInterval/setTimeout are not aligned with vsync | Use <code>requestAnimationFrame</code> for smooth animations |
+
+## Practice Questions
+
+1. Implement an infinite scroll component using IntersectionObserver that loads more items when the user reaches the bottom.
+2. Create a fetch wrapper with automatic retry (3 attempts), timeout (10s), and abort controller.
+3. Build an IndexedDB wrapper class with CRUD methods for a "notes" store with a "title" index.
+4. Implement a Web Worker that processes a large array (1M+ items) and sends progress updates back to the main thread.
+5. Create a service worker with cache-first for static assets and network-first for API calls, with an offline fallback page.
+6. Build a real-time chat client using WebSocket with auto-reconnect, heartbeats (ping/pong), and message history.
+7. Implement a canvas-based signature pad with mouse and touch support, with undo and clear functionality.
+8. Create a cross-tab synchronization system using BroadcastChannel that syncs auth state and theming.
+9. Build a media recorder that captures the user's screen and saves it as a WebM blob.
+10. Implement an audio visualizer using Web Audio API (AnalyserNode) and Canvas.
+11. Create a drag-and-drop file upload zone using the File and DragEvent APIs.
+12. Build a notification system that requests permission, shows push notifications, and handles click events.
+13. Implement a performance monitoring script that captures Core Web Vitals (LCP, CLS, FID, INP) using the Performance API.
+14. Create a geolocation-based weather app that shows current conditions for the user's location.
+15. Build an offline-first note-taking PWA with IndexedDB storage, service worker caching, and background sync.
+
+`,
+            tags: ["Browser APIs", "DOM", "Web APIs"],
+          },
+          {
+            id: "fe-cheat-responsive",
+            title: "Responsive Design Cheat Sheet",
+            shortDesc: "Complete responsive design reference -- media queries, container queries, fluid typography, mobile-first patterns, and testing.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "Viewport meta, relative units (rem, em, vw, vh, %, ch)",
+              "Media queries: breakpoints, features (prefers-color-scheme, prefers-reduced-motion)",
+              "Container queries: @container, container-type, container-name",
+              "Fluid typography with clamp(), min(), max()",
+              "Mobile-first vs desktop-first strategies",
+            ],
+            content: `## Quick Reference
+
+Responsive design ensures web pages render well on all devices by adapting layout, content, and behavior to screen size, orientation, and capabilities. The core principle is "mobile-first" -- start with the smallest screen and progressively enhance for larger ones.
+
+| Principle | Implementation |
+|-----------|---------------|
+| Fluid grids | Use relative units (<code>%</code>, <code>fr</code>, <code>vw</code>) not fixed pixels |
+| Flexible images | <code>max-width: 100%</code> on all images |
+| Media queries | <code>@media (min-width: 768px) { ... }</code> |
+| Container queries | <code>@container (min-width: 400px) { ... }</code> |
+| Viewport meta | Always include <code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</code> |
+| Content parity | Same content, different layout -- not hide/show |
+
+## Units Reference
+
+### Relative Units
+
+| Unit | Relative To | Best Used For |
+|------|-------------|---------------|
+| <code>%</code> | Parent element's same property | Fluid widths, heights |
+| <code>vw</code> | 1% of viewport width | Full-width elements, hero sections |
+| <code>vh</code> | 1% of viewport height | Full-height sections, hero backgrounds |
+| <code>dvw</code> / <code>dvh</code> | Dynamic viewport (excludes browser chrome) | Mobile layouts avoiding address bar issues |
+| <code>svw</code> / <code>svh</code> | Smallest viewport | Minimum sizing |
+| <code>lvw</code> / <code>lvh</code> | Largest viewport | Maximum sizing |
+| <code>rem</code> | Root font-size (usually 16px) | Font sizes, spacing (preferred) |
+| <code>em</code> | Parent element's font-size | Component-relative sizing, padding |
+| <code>ch</code> | Width of "0" character | Max line width, code blocks |
+| <code>ex</code> | Height of "x" character | Vertical typography alignment |
+| <code>cqi</code> | 1% of container's inline size | Container-relative sizing |
+| <code>cqw</code> | 1% of container's width | Container-relative sizing |
+
+\`\`\`css
+/* Viewport units: handling mobile browser chrome */
+.hero {
+  /* Before: 100vh includes browser address bar */
+  min-height: 100vh;                     /* Old approach -- may be too tall on mobile */
+
+  /* After: dynamic viewport excludes address bar */
+  min-height: 100dvh;                    /* Modern approach -- adapts to chrome */
+}
+\`\`\`
+
+## Fluid Typography
+
+\`\`\`css
+/* clamp(min, preferred, max) -- fluid scaling */
+h1 {
+  font-size: clamp(
+    1.75rem,                             /* Minimum: 28px */
+    1.75rem + 1vw,                       /* Preferred: linear between breakpoints */
+    3rem                                 /* Maximum: 48px */
+  );
+}
+
+/* Using calc for fluid scaling */
+h2 {
+  font-size: calc(1.2rem + 0.6vw);       /* 19.2px at 320vw, 24px at 1280vw */
+}
+
+/* min() and max() */
+.sidebar {
+  width: min(300px, 30vw);               /* Takes the smaller of the two values */
+  /* On mobile 320vw: 96px, on desktop: 300px */
+}
+
+.container {
+  padding: max(1rem, 2vw);               /* Minimum 1rem, scales with viewport */
+}
+
+/* Combo: clamp for full control */
+.card {
+  padding: clamp(0.75rem, 2vw, 2rem);
+}
+
+/* CSS locks formula */
+/* target: size scales from minSize at minViewport to maxSize at maxViewport */
+/* slope = (maxSize - minSize) / (maxViewport - minViewport) */
+/* intercept = minSize - slope * minViewport */
+/* font-size = intercept + slope * 100vw */
+
+/* Example: 16px at 320vw -> 24px at 1280vw */
+/* slope = (24 - 16) / (1280 - 320) = 8 / 960 = 0.0083 */
+/* intercept = 16 - 0.0083 * 320 = 13.33 */
+/* font-size = calc(13.33px + 0.83vw) */
+/* Simplified: clamp(1rem, 0.833rem + 0.83vw, 1.5rem) */
+\`\`\`
+
+## Media Queries
+
+### Viewport Breakpoints
+
+\`\`\`css
+/* Mobile-first approach: base styles = mobile, then layer on larger screens */
+
+/* Base: mobile (320px and up) */
+.container {
+  padding: 1rem;
+}
+
+/* Tablet (768px and up) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+  }
+}
+
+/* Desktop (1024px and up) */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 960px;
+  }
+  .layout {
+    grid-template-columns: 250px 1fr 200px;
+  }
+}
+
+/* Wide (1280px and up) */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+\`\`\`
+
+### Media Features
+
+| Feature | Example | Purpose |
+|---------|---------|---------|
+| <code>width</code> | <code>@media (width: 768px)</code> | Exact width (rarely used) |
+| <code>min-width</code> | <code>@media (min-width: 768px)</code> | Mobile-first breakpoints |
+| <code>max-width</code> | <code>@media (max-width: 767px)</code> | Desktop-first breakpoints |
+| <code>height</code> | <code>@media (min-height: 600px)</code> | Vertical space |
+| <code>aspect-ratio</code> | <code>@media (aspect-ratio: 16/9)</code> | Screen aspect ratio |
+| <code>orientation</code> | <code>@media (orientation: landscape)</code> | Device orientation |
+| <code>resolution</code> | <code>@media (min-resolution: 2dppx)</code> | Retina/high-DPI displays |
+| <code>hover</code> | <code>@media (hover: hover)</code> | Device supports hover (mouse vs touch) |
+| <code>pointer</code> | <code>@media (pointer: coarse)</code> | Touch vs mouse precision |
+| <code>prefers-color-scheme</code> | <code>@media (prefers-color-scheme: dark)</code> | Dark mode preference |
+| <code>prefers-reduced-motion</code> | <code>@media (prefers-reduced-motion: reduce)</code> | Reduced motion preference |
+| <code>prefers-contrast</code> | <code>@media (prefers-contrast: more)</code> | High contrast preference |
+| <code>prefers-reduced-transparency</code> | <code>@media (prefers-reduced-transparency: reduce)</code> | Reduced transparency |
+| <code>prefers-reduced-data</code> | <code>@media (prefers-reduced-data: reduce)</code> | Data saving mode |
+| <code>color-gamut</code> | <code>@media (color-gamut: p3)</code> | Wide color gamut (Display P3) |
+| <code>display-mode</code> | <code>@media (display-mode: standalone)</code> | PWA display mode |
+| <code>scripting</code> | <code>@media (scripting: enabled)</code> | JavaScript availability |
+| <code>update</code> | <code>@media (update: slow)</code> | Screen refresh rate (e-reader) |
+
+\`\`\`css
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a2e;
+    --text: #e0e0e0;
+    --primary: #64b5f6;
+  }
+}
+
+/* Reduced motion -- respect user preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Touch vs mouse */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device -- larger touch targets */
+  .button {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  /* Mouse -- can use hover states */
+  .button:hover {
+    background: var(--primary-hover);
+  }
+}
+
+/* Print */
+@media print {
+  .no-print { display: none !important; }
+  body { font-size: 12pt; }
+}
+\`\`\`
+
+### Combining Media Queries
+
+\`\`\`css
+/* AND */
+@media (min-width: 768px) and (orientation: landscape) {
+  /* Tablet landscape */
+}
+
+/* OR (comma-separated) */
+@media (max-width: 480px), (orientation: portrait) {
+  /* Small screen OR portrait */
+}
+
+/* NOT */
+@media not (pointer: coarse) {
+  /* Not touch */
+}
+
+/* Range syntax (modern) */
+@media (width >= 768px) {  /* Same as (min-width: 768px) */ }
+@media (width <= 1024px) { /* Same as (max-width: 1024px) */ }
+@media (768px <= width <= 1024px) { /* Between 768px and 1024px */ }
+\`\`\`
+
+## Container Queries
+
+\`\`\`css
+/* Container query allows styling based on parent container width, not viewport */
+
+/* Define a containment context */
+.card-container {
+  container-type: inline-size;             /* Query by inline axis (width) */
+  container-name: card;                    /* Optional name for targeting */
+}
+
+/* Or shorthand */
+.sidebar {
+  container: sidebar / inline-size;        /* Name / type */
+}
+
+/* Query the container */
+@container card (min-width: 400px) {
+  .card {
+    display: grid;
+    grid-template-columns: 1fr 2fr;        /* Side-by-side when container is wide */
+  }
+  .card-title {
+    font-size: 1.5rem;
+  }
+}
+
+@container card (max-width: 399px) {
+  .card {
+    display: flex;
+    flex-direction: column;               /* Stacked when container is narrow */
+  }
+}
+
+/* Container query units */
+@container (min-width: 500px) {
+  .card {
+    padding: 2cqi;                         /* 2% of container's inline size */
+    font-size: clamp(1rem, 3cqi, 2rem);    /* Fluid based on container */
+  }
+}
+
+/* Style queries (query container computed styles) */
+@container card style(--variant: featured) {
+  .card {
+    border-color: gold;
+  }
+}
+\`\`\`
+
+## Responsive Patterns
+
+### Responsive Navigation
+
+\`\`\`html
+<!-- Hamburger menu pattern -->
+<nav class="navbar">
+  <div class="brand">Logo</div>
+  <button class="hamburger" aria-label="Toggle menu" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="navMenu">
+    <li><a href="/">Home</a></li>
+    <li><a href="/about">About</a></li>
+    <li><a href="/contact">Contact</a></li>
+  </ul>
+</nav>
+
+<style>
+.nav-links {
+  display: none; /* Hidden on mobile by default */
+}
+
+@media (min-width: 768px) {
+  .nav-links {
+    display: flex; /* Horizontal nav on desktop */
+    gap: 1rem;
+  }
+  .hamburger {
+    display: none; /* Hide hamburger on desktop */
+  }
+}
+</style>
+\`\`\`
+
+### Responsive Images
+
+\`\`\`html
+<!-- srcset and sizes for resolution-based selection -->
+<img
+  src="photo-800.jpg"                    <!-- Fallback for old browsers -->
+  srcset="
+    photo-400.jpg 400w,                  <!-- Image width: 400px -->
+    photo-800.jpg 800w,                  <!-- Image width: 800px -->
+    photo-1200.jpg 1200w                 <!-- Image width: 1200px -->
+  "
+  sizes="
+    (max-width: 600px) 100vw,            <!-- Full viewport on mobile -->
+    (max-width: 1024px) 50vw,            <!-- Half viewport on tablet -->
+    800px                                <!-- Fixed 800px on desktop -->
+  "
+  alt="Description"
+  loading="lazy"
+>
+
+<!-- Picture element for format selection -->
+<picture>
+  <source srcset="photo.avif" type="image/avif" media="(min-width: 768px)">
+  <source srcset="photo.webp" type="image/webp">
+  <img src="photo.jpg" alt="Description">
+</picture>
+
+<!-- CSS: make images fluid -->
+<style>
+img {
+  max-width: 100%;                       /* Never exceed container */
+  height: auto;                          /* Maintain aspect ratio */
+  display: block;                        /* Remove bottom gap */
+}
+
+/* Art-directed cropping */
+.cropped-hero {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;                     /* Crop to fill */
+  object-position: center 20%;           /* Focus on top portion */
+}
+</style>
+\`\`\`
+
+### Responsive Tables
+
+\`\`\`html
+<!-- Approach 1: Horizontal scroll on mobile -->
+<div style="overflow-x: auto;">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Alice</td><td>alice@example.com</td><td>Admin</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Approach 2: Reflow to card layout -->
+<style>
+@media (max-width: 600px) {
+  table, thead, tbody, tr, th, td {
+    display: block;                      /* Stack everything */
+  }
+  thead { display: none; }               /* Hide header */
+  td::before {
+    content: attr(data-label);           /* Show label from data attribute */
+    font-weight: bold;
+    display: block;
+  }
+  td + td { margin-top: 0.25rem; }
+  tr + tr { margin-top: 1rem; border-top: 1px solid #ccc; padding-top: 1rem; }
+}
+</style>
+
+<table>
+  <thead>
+    <tr><th>Name</th><th>Email</th><th>Role</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td data-label="Name">Alice</td>
+      <td data-label="Email">alice@example.com</td>
+      <td data-label="Role">Admin</td>
+    </tr>
+  </tbody>
+</table>
+\`\`\`
+
+## Mobile-First vs Desktop-First
+
+| Aspect | Mobile-First | Desktop-First |
+|--------|-------------|---------------|
+| Base styles | Mobile | Desktop |
+| Breakpoints | <code>min-width</code> (add on larger) | <code>max-width</code> (adjust on smaller) |
+| CSS weight | Less CSS on mobile (no override needed) | More CSS (overrides for mobile) |
+| Performance | Lighter for mobile first | Heavier for mobile (more CSS) |
+| Adoption | Recommended | Legacy |
+
+\`\`\`css
+/* Mobile-first: base = mobile */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;            /* Single column on mobile */
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .grid { grid-template-columns: 1fr 1fr; }   /* Two columns on tablet */
+}
+
+@media (min-width: 1024px) {
+  .grid { grid-template-columns: 1fr 1fr 1fr; } /* Three columns on desktop */
+}
+
+/* Desktop-first: base = desktop */
+.grid-desktop-first {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;    /* Three columns on desktop */
+  gap: 1rem;
+}
+
+@media (max-width: 1023px) {
+  .grid-desktop-first { grid-template-columns: 1fr 1fr; } /* Two on tablet */
+}
+
+@media (max-width: 767px) {
+  .grid-desktop-first { grid-template-columns: 1fr; }     /* One on mobile */
+}
+\`\`\`
+
+## Testing Responsive Designs
+
+| Tool | Method |
+|------|--------|
+| Browser DevTools | Device toolbar (toggle responsive mode) |
+| Chrome DevTools | <code>Ctrl+Shift+M</code> -- resize, rotate, throttle network |
+| Firefox DevTools | Responsive Design Mode (mobile, tablet, desktop presets) |
+| Safari DevTools | "Responsive Design Mode" toggle |
+| Lighthouse | Reports responsiveness issues in audits |
+| Real devices | Test on actual phones/tablets for touch handling |
+| BrowserStack / Sauce Labs | Cloud device testing for cross-browser |
+| Percy / Chromatic | Visual regression testing for responsive breakpoints |
+
+\`\`\`js
+// JS for responsive behavior
+const mediaQuery = window.matchMedia("(min-width: 768px)");
+
+function handleBreakpointChange(e: MediaQueryListEvent) {
+  if (e.matches) {
+    // Viewport is 768px or wider
+    enableDesktopLayout();
+  } else {
+    // Viewport is less than 768px
+    enableMobileLayout();
+  }
+}
+
+mediaQuery.addEventListener("change", handleBreakpointChange);
+// Initial check
+handleBreakpointChange({ matches: mediaQuery.matches } as MediaQueryListEvent);
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why Is Wrong | Correct Approach |
+|---|---------|--------------|------------------|
+| 1 | Fixed pixel widths (<code>width: 1200px</code>) | Overflows on smaller screens; horizontal scrollbar | Use <code>max-width</code> or relative units |
+| 2 | Not including viewport meta tag | Mobile browsers render at desktop width (zoom out) | Always include <code>&lt;meta name="viewport" ...&gt;</code> |
+| 3 | Using <code>vh</code> for full-height elements | Includes address bar; too tall on mobile | Use <code>100dvh</code> (dynamic viewport height) |
+| 4 | Hiding content with <code>display: none</code> for mobile | Content unavailable to screen readers; SEO penalty | Use responsive layout (reflow, stack, collapse) |
+| 5 | Desktop-first approach (base = desktop) | Mobile users download desktop CSS overrides | Use mobile-first (base = mobile) |
+| 6 | Images without <code>max-width: 100%</code> | Images overflow containers on small screens | Always set <code>img { max-width: 100%; height: auto; }</code> |
+| 7 | Touch targets smaller than 48x48px | Hard to tap; WCAG failure | Minimum 48x48px touch target |
+| 8 | Using <code>em</code> for media queries | <code>em</code> in media queries is based on browser default (16px), but confusing | Use <code>rem</code> or just <code>px</code> for media queries (consistent) |
+| 9 | Not testing on real devices | DevTools emulation is not exact | Test on actual mobile devices for touch, orientation, performance |
+| 10 | Using <code>min-device-width</code> | Deprecated; doesn't account for viewport changes | Use <code>min-width</code> for viewport |
+| 11 | Complex layouts without container queries | Components break when placed in different context containers | Use <code>@container</code> for component-level responsiveness |
+| 12 | Not handling orientation changes | Layout breaks when user rotates phone | Listen for <code>orientationchange</code> or use <code>orientation</code> media feature |
+| 13 | Fixed font sizes (<code>px</code>) | Ignores user browser font-size settings; accessibility issue | Use <code>rem</code> for font sizes |
+| 14 | Using only <code>max-width</code> breakpoints (desktop-first) | Harder to maintain; less performant | Prefer <code>min-width</code> (mobile-first) |
+| 15 | Not considering keyboard/mouse vs touch interaction | Hover states get "stuck" on touch devices | Use <code>@media (hover: hover)</code> for hover effects |
+
+## Practice Questions
+
+1. Write a mobile-first CSS grid that shows 1 column on mobile, 2 on tablet, 3 on desktop, and 4 on wide screens.
+2. Create a <code>clamp()</code> expression that scales font-size from 14px at 375px viewport to 20px at 1440px viewport.
+3. Build a responsive card component that uses container queries to change from vertical to horizontal layout at 500px.
+4. Implement a responsive navigation: hamburger menu below 768px, horizontal menu above, with proper ARIA attributes.
+5. Create a responsive table that uses data attributes to show labels on mobile and horizontal headers on desktop.
+6. Explain the difference between <code>min-width</code> and <code>max-width</code> media queries with examples for mobile-first vs desktop-first.
+7. Build a responsive hero section with: full-viewport background image, centered text, CTA button, that works on mobile and desktop.
+8. Use <code>min()</code>, <code>max()</code>, and <code>clamp()</code> in a single design (padding, font-size, width) and explain each.
+9. Create a responsive image gallery using <code>srcset</code> and <code>sizes</code> with three breakpoints.
+10. Implement an accordion component that becomes a tab interface on desktop using container queries.
+11. Build a responsive form with inline labels on desktop and stacked labels on mobile.
+12. Create a dark mode implementation using <code>prefers-color-scheme</code> with a manual toggle override.
+13. Use the <code>prefers-reduced-motion</code> media query to disable animations for users who prefer reduced motion.
+14. Build a responsive grid system using CSS Grid with <code>auto-fit</code> and <code>minmax()</code> that works without media queries.
+15. Create a responsive footer with multiple columns on desktop, stacked on mobile.
+
+`,
+            tags: ["Responsive", "CSS", "Mobile-First"],
+          },
+          {
+            id: "fe-cheat-perf",
+            title: "Web Performance Cheat Sheet",
+            shortDesc: "Complete web performance reference -- Core Web Vitals, loading strategies, asset optimization, caching, and measurement.",
+            difficulty: "advanced",
+            readTimeMin: 5,
+            keyPoints: [
+              "Core Web Vitals: LCP, FID, CLS, INP, TTFB",
+              "Loading: preload, prefetch, preconnect, dns-prefetch, async/defer",
+              "Images: responsive sizes, WebP/AVIF, lazy loading, blur-up placeholders",
+              "JavaScript: code splitting, tree shaking, dead-code elimination",
+              "Caching: HTTP cache, CDN, service workers, stale-while-revalidate",
+            ],
+            content: `## Quick Reference
+
+Web performance optimization aims to make pages load fast, render smoothly, and respond instantly to user interactions. Google's Core Web Vitals (LCP, FID/INP, CLS) are both UX metrics and SEO ranking factors.
+
+| Metric | Target | What It Measures |
+|--------|--------|-----------------|
+| LCP (Largest Contentful Paint) | \\( \\) ≤ 2.5s | Perceived load speed |
+| INP (Interaction to Next Paint) | \\( \\) ≤ 200ms | Responsiveness (replaces FID in 2024) |
+| CLS (Cumulative Layout Shift) | \\( \\) ≤ 0.1 | Visual stability |
+| TTFB (Time to First Byte) | \\( \\) ≤ 800ms | Server response time |
+| FCP (First Contentful Paint) | \\( \\) ≤ 1.8s | First visible content |
+| TBT (Total Blocking Time) | \\( \\) ≤ 200ms | CPU blocking during load |
+
+## Core Web Vitals Deep Dive
+
+### Largest Contentful Paint (LCP)
+
+LCP measures when the largest visible element (image, video poster, text block) is rendered.
+
+\`\`\`html
+<!-- Optimize LCP: the hero image must load fast -->
+<!-- 1. Preload the LCP image -->
+<link rel="preload" href="hero.webp" as="image" />
+
+<!-- 2. Use responsive images -->
+<img
+  src="hero-1200.webp"
+  srcset="hero-800.webp 800w, hero-1200.webp 1200w"
+  sizes="100vw"
+  alt="Hero image"
+  fetchpriority="high"                  <!-- Highest priority for LCP image -->
+>
+
+<!-- 3. Use modern formats -->
+<picture>
+  <source srcset="hero.avif" type="image/avif">
+  <source srcset="hero.webp" type="image/webp">
+  <img src="hero.jpg" alt="Hero" fetchpriority="high">
+</picture>
+
+<!-- 4. Avoid lazy loading the LCP element -->
+<!-- DO NOT: <img loading="lazy" src="hero.jpg" /> for the hero image -->
+\`\`\`
+
+### Interaction to Next Paint (INP)
+
+INP measures the longest interaction delay on the page.
+
+\`\`\`js
+// Optimize INP: keep main thread free
+
+// 1. Avoid long tasks (>50ms)
+// BAD: blocking main thread
+function processHugeData() {
+  for (let i = 0; i < 1_000_000; i++) { /* heavy work */ }
+}
+
+// GOOD: yield to main thread
+async function processInChunks() {
+  const chunkSize = 1000;
+  for (let i = 0; i < 1_000_000; i += chunkSize) {
+    processChunk(i, chunkSize);
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  }
+}
+
+// 2. Use Web Workers for heavy computation
+const worker = new Worker("compute-worker.js");
+
+// 3. Use passive event listeners
+document.addEventListener("touchstart", handler, { passive: true });
+document.addEventListener("wheel", handler, { passive: true });
+
+// 4. Debounce expensive event handlers
+input.addEventListener("input", debounce(handleSearch, 300));
+
+// 5. Avoid layout thrashing (read/write DOM in batches)
+// BAD: interleaving reads and writes
+for (const el of elements) {
+  const width = el.offsetWidth;         // Forces layout (read)
+  el.style.width = (width + 10) + "px"; // Forces layout (write)
+}
+
+// GOOD: batch reads first, then writes
+const widths = elements.map(el => el.offsetWidth); // Read all
+elements.forEach((el, i) => {
+  el.style.width = (widths[i] + 10) + "px";       // Write all
+});
+\`\`\`
+
+### Cumulative Layout Shift (CLS)
+
+CLS measures unexpected layout shifts during page load.
+
+\`\`\`html
+<!-- CLS prevention strategies -->
+
+<!-- 1. Set explicit dimensions on images -->
+<img src="photo.jpg" width="800" height="600" alt="Photo" />
+<!-- Or with CSS -->
+<img src="photo.jpg" style="aspect-ratio: 4/3; width: 100%; height: auto;" alt="Photo" />
+
+<!-- 2. Reserve space for dynamic content -->
+<div style="min-height: 300px;">
+  <div id="ads"></div>                 <!-- Reserve ad space -->
+</div>
+
+<!-- 3. Set explicit sizes for embeds -->
+<div style="aspect-ratio: 16/9; max-width: 560px;">
+  <iframe src="https://youtube.com/embed/..." style="width: 100%; height: 100%;"></iframe>
+</div>
+
+<!-- 4. Pre-allocate font space -->
+<link rel="preload" href="/fonts/inter.woff2" as="font" crossorigin="anonymous" />
+<style>
+  body {
+    font-family: 'Inter', sans-serif;
+    font-display: swap;                <!-- Use fallback font immediately -->
+  }
+</style>
+
+<!-- 5. Insert dynamic content above existing content carefully -->
+<!-- Use a fixed-size container for injected content -->
+\`\`\`
+
+## Resource Loading Strategies
+
+### Resource Hints
+
+\`\`\`html
+<!-- dns-prefetch: resolve DNS early (minimal cost) -->
+<link rel="dns-prefetch" href="https://api.example.com" />
+<link rel="dns-prefetch" href="https://images.example.com" />
+
+<!-- preconnect: DNS + TCP + TLS handshake (more expensive, use sparingly) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+<!-- prefetch: fetch for FUTURE navigation (idle priority) -->
+<link rel="prefetch" href="/blog/page-2" as="document" />
+
+<!-- preload: fetch CURRENT page resource (high priority) -->
+<link rel="preload" href="/fonts/inter.woff2" as="font" crossorigin />
+<link rel="preload" href="/hero.webp" as="image" />
+<link rel="preload" href="/critical.css" as="style" />
+<link rel="preload" href="/critical.js" as="script" />
+
+<!-- modulepreload: preload ES Modules -->
+<link rel="modulepreload" href="/app.js" />
+
+<!-- prerender: fully prerender next page (expensive) -->
+<link rel="prerender" href="/next-page" />
+
+<!-- Preload vs Prefetch decision guide:
+     preload: resources needed by CURRENT page (high priority)
+     prefetch: resources needed by NEXT page (low priority)
+     preconnect: third-party origins (fonts, APIs)
+     dns-prefetch: many third-party origins (analytics, CDNs) -->
+\`\`\`
+
+### Script Loading Strategies
+
+\`\`\`html
+<!-- Default: blocking (parse, fetch, execute) -->
+<script src="app.js"></script>
+
+<!-- defer: fetch in parallel, execute after HTML parse (preserves order) -->
+<script src="app.js" defer></script>
+<!-- Preferred for all non-critical scripts -->
+
+<!-- async: fetch in parallel, execute immediately when ready (no order) -->
+<script src="analytics.js" async></script>
+<!-- Good for independent scripts (analytics, ads) -->
+
+<!-- module: deferred by default, supports import/export -->
+<script type="module" src="app.js"></script>
+<script type="module">
+  import { helper } from "./utils.js";
+</script>
+
+<!-- nomodule: fallback for older browsers -->
+<script nomodule src="legacy-polyfill.js"></script>
+\`\`\`
+
+### CSS Loading
+
+\`\`\`html
+<!-- Critical CSS inlined in <head> -->
+<style>
+  /* Above-the-fold styles only (usually < 14KB) */
+  header, .hero, .nav { /* critical styles */ }
+</style>
+
+<!-- Non-critical CSS loaded asynchronously -->
+<link rel="preload" href="styles.css" as="style" onload="this.rel='stylesheet'" />
+<noscript><link rel="stylesheet" href="styles.css"></noscript>
+
+<!-- OR using media trick -->
+<link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="styles.css"></noscript>
+
+<!-- Component-level CSS (code-split with JS) -->
+<link rel="stylesheet" href="chat-widget.css" media="print" onload="this.media='all'" />
+\`\`\`
+
+## Image Optimization
+
+### Formats & Sizes
+
+| Format | Compression | Transparency | Animation | Browser Support |
+|--------|-------------|--------------|-----------|-----------------|
+| JPEG | Lossy | No | No | Universal |
+| PNG | Lossless | Yes | No | Universal |
+| GIF | Lossless | Yes | Yes | Universal |
+| WebP | Lossy/Lossless | Yes | Yes | 95%+ (Chrome, Firefox, Edge, Safari 14+) |
+| AVIF | Lossy/Lossless | Yes | Yes | 80%+ (Chrome, Firefox, Safari 16.4+) |
+| SVG | Vector | Yes | Yes (SMIL) | Universal |
+
+\`\`\`html
+<!-- Art direction + format selection -->
+<picture>
+  <source srcset="hero.avif" type="image/avif" media="(min-width: 768px)">
+  <source srcset="hero.webp" type="image/webp" media="(min-width: 768px)">
+  <source srcset="hero-mobile.avif" type="image/avif">
+  <source srcset="hero-mobile.webp" type="image/webp">
+  <img
+    src="hero.jpg"
+    srcset="hero-400.jpg 400w, hero-800.jpg 800w, hero-1200.jpg 1200w"
+    sizes="(max-width: 768px) 100vw, 1200px"
+    alt="Hero"
+    loading="lazy"
+    decoding="async"
+    width="1200" height="600"
+  >
+</picture>
+
+<!-- Lazy loading with blur-up placeholder -->
+<img
+  src="placeholder.jpg"                <!-- Tiny blurred version (200 bytes) -->
+  data-src="full-image.jpg"
+  class="lazy"
+  alt="Lazy-loaded image"
+  width="800" height="600"
+>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const lazyImages = document.querySelectorAll("img.lazy");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        img.src = img.dataset.src;
+        img.classList.remove("lazy");
+        observer.unobserve(img);
+      }
+    });
+  }, { rootMargin: "200px" });
+  lazyImages.forEach(img => observer.observe(img));
+});
+</script>
+
+<!-- CSS for blur-up (low quality image placeholder) -->
+<style>
+img.lazy {
+  filter: blur(10px);
+  transition: filter 0.3s;
+}
+img.lazy-loaded {
+  filter: blur(0);
+}
+</style>
+\`\`\`
+
+### Image CDN Parameters
+
+\`\`\`text
+// Image CDN (Cloudinary, Imgix, Cloudflare) transformation parameters
+
+// Cloudinary
+https://res.cloudinary.com/demo/image/upload/
+  c_fill,                              // Crop mode: fill
+  w_800,                               // Width: 800px
+  q_auto,                              // Quality: auto (perceptual)
+  f_auto,                              // Format: auto (WebP/AVIF)
+  dpr_2,                               // Device pixel ratio: 2x
+  /sample.jpg
+
+// Imgix
+https://example.imgix.net/image.jpg?
+  w=800&                               // Width: 800px
+  h=600&                               // Height: 600px
+  fit=crop&                            // Crop mode
+  q=75&                                // Quality: 75
+  auto=format                          // Auto format (WebP)
+\`\`\`
+
+## JavaScript Optimization
+
+\`\`\`js
+// Code splitting (dynamic import)
+const handleClick = async () => {
+  const { showToast } = await import("./toast.js");     // Lazy load
+  showToast("Clicked!");
+};
+
+// Tree shaking: only import what you use
+import { formatDistanceToNow } from "date-fns";          // Only this function, not the whole lib
+
+// Dead-code elimination: use side-effect-free imports
+// Configure package.json: "sideEffects": false
+
+// Bundle analysis
+// Use: npx vite-bundle-analyzer or next-bundle-analyzer
+
+// Export maps: conditionally load polyfills
+// In package.json:
+// "exports": {
+//   ".": {
+//     "import": "./dist/esm/index.js",
+//     "require": "./dist/cjs/index.js",
+//     "browser": "./dist/browser/index.js"
+//   }
+// }
+
+// Avoid export * (prevents tree shaking)
+// BAD: export * from "./utils";
+// GOOD: export { specificFn, specificConst } from "./utils";
+\`\`\`
+
+### Bundle Size Budgets
+
+| Resource | Budget | Strategy |
+|----------|--------|----------|
+| HTML (critical) | \\( \\) 14KB (first TCP packet) | Inline critical CSS, minify |
+| CSS (critical) | \\( \\) 14KB | Inline above-the-fold only |
+| JavaScript (initial) | \\( \\) 100KB (compressed) | Code-split, tree-shake, lazy load |
+| Fonts | \\( \\) 30KB per weight | Subset, use woff2, preload |
+| Images (above-fold) | \\( \\) 100KB | Use responsive sizes, modern formats |
+| Total page | \\( \\) 500KB (compressed) | Audit with Lighthouse |
+
+## Caching Strategies
+
+### HTTP Caching
+
+\`\`\`
+# Server response headers
+
+# Static assets (immutable)
+Cache-Control: public, max-age=31536000, immutable
+
+# HTML (SSR pages)
+Cache-Control: public, max-age=0, must-revalidate
+
+# API responses
+Cache-Control: private, max-age=60
+
+# Dynamic content (no cache)
+Cache-Control: no-cache, no-store, must-revalidate
+
+# Stale-while-revalidate (serve stale, update in background)
+Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+
+# ETag for validation
+ETag: "abc123"
+Cache-Control: public, max-age=0, must-revalidate
+# Client sends: If-None-Match: "abc123"
+# Server responds: 304 Not Modified (no body)
+\`\`\`
+
+### Service Worker Caching Strategies
+
+\`\`\`js
+// Cache-first (static assets)
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  caches.open("static-v1").then(cache => cache.put(request, response.clone()));
+  return response;
+}
+
+// Network-first (API calls)
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    caches.open("api-v1").then(cache => cache.put(request, response.clone()));
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response("Offline", { status: 503 });
+  }
+}
+
+// Stale-while-revalidate (best for frequently updated resources)
+async function staleWhileRevalidate(request) {
+  const cacheKey = request;
+  const cached = await caches.match(cacheKey);
+  const fetchPromise = fetch(request).then(response => {
+    caches.open("dynamic-v1").then(cache => cache.put(cacheKey, response.clone()));
+    return response;
+  });
+  return cached || fetchPromise;
+}
+\`\`\`
+
+## Performance Measurement
+
+\`\`\`js
+// Web Vitals API (in the browser)
+import { onLCP, onFID, onCLS, onFCP, onTTFB, onINP } from "web-vitals";
+
+onCLS(console.log);
+onFCP(console.log);
+onLCP(console.log);
+onINP(console.log);                     // Replaces onFID
+onTTFB(console.log);
+
+// Performance Observer API
+const observer = new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    console.log(entry.name, entry.startTime, entry.duration);
+  }
+});
+
+observer.observe({ type: "largest-contentful-paint", buffered: true });
+observer.observe({ type: "layout-shift", buffered: true });
+observer.observe({ type: "first-input", buffered: true });
+observer.observe({ type: "navigation", buffered: true });
+
+// Custom performance marks
+performance.mark("start-fetch");
+// ... fetch data ...
+performance.mark("end-fetch");
+performance.measure("data-fetch-time", "start-fetch", "end-fetch");
+const measures = performance.getEntriesByName("data-fetch-time");
+console.log(\`Fetch took \${measures[0].duration}ms\`);
+
+// Long tasks
+const longTaskObserver = new PerformanceObserver((list) => {
+  list.getEntries().forEach(entry => {
+    console.warn(\`Long task: \${entry.duration}ms\`);
+  });
+});
+longTaskObserver.observe({ type: "longtask", buffered: true });
+
+// Navigation Timing
+const [navEntry] = performance.getEntriesByType("navigation");
+console.log({
+  ttfb: navEntry.responseStart - navEntry.requestStart,
+  fcp: navEntry.domInteractive - navEntry.fetchStart,
+  domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.fetchStart,
+  loadTime: navEntry.loadEventEnd - navEntry.fetchStart,
+});
+\`\`\`
+
+## Optimization Checklist
+
+| Category | Action | Impact |
+|----------|--------|--------|
+| Images | Use WebP/AVIF, responsive sizes, lazy load | Large |
+| JavaScript | Code-split, tree-shake, defer, minify | Large |
+| CSS | Inline critical CSS, remove unused CSS | Medium |
+| Fonts | Subset, preload, font-display: swap | Medium |
+| Server | CDN, HTTP/2, compression (Brotli), caching | Large |
+| Third-party | Audit and defer, self-host critical scripts | Medium |
+| Rendering | content-visibility: auto on below-fold sections | Medium |
+| Bundler | Enable compression, chunk splitting, scope hoisting | Medium |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why It Is Wrong | Correct Approach |
+|---|---------|----------------|------------------|
+| 1 | Not compressing images | Huge payload (JPEG at 80% quality is often indistinguishable) | Compress to 70-85%, use WebP/AVIF |
+| 2 | Loading all JavaScript immediately | Blocks parsing; delays first paint | Use <code>defer</code> or <code>async</code>; code-split |
+| 3 | Not caching assets | Every visit re-downloads same resources | Long cache (<code>max-age=31536000</code>) with content hash |
+| 4 | Large hero image without preload | LCP is delayed; image loads last | <code>rel="preload"</code> the LCP image |
+| 5 | No dimensions on images | Causes CLS when image loads | Always set <code>width</code>/<code>height</code> or <code>aspect-ratio</code> |
+| 6 | Blocking render with CSS/JS in <head> | Increases FCP and LCP | Inline critical CSS; defer non-critical CSS/JS |
+| 7 | Too many third-party scripts | Each adds requests, competition for bandwidth, CPU time | Audit; use tag manager; lazy load below-fold |
+| 8 | Using <code>@import</code> in CSS | Cascading network requests (sequential) | Use <code>&lt;link&gt;</code> tags; bundle via build tool |
+| 9 | Not using CDN | Higher latency for distant users | Use CDN for all static assets |
+| 10 | Over-optimizing prematurely | Wasted effort; complex code for negligible gains | Measure first; optimize what matters (Pareto 80/20) |
+| 11 | Not setting <code>font-display</code> | Invisible text while font loads (FOIT) | Use <code>font-display: swap</code> (or <code>optional</code>) |
+| 12 | Loading the same library twice | Duplicate code; wasted bytes | Use module deduplication; check bundle |
+| 13 | Not using <code>content-visibility</code> | Below-fold elements are rendered immediately | <code>content-visibility: auto</code> on below-fold sections |
+| 14 | Using client-side rendering for everything | Blank screen until JS loads and hydrates | Use SSR/SSG where possible; critical content first |
+| 15 | Not monitoring performance in production | Regressions go unnoticed | Use RUM (Real User Monitoring): web-vitals, Sentry, Datadog RUM |
+
+## Practice Questions
+
+1. Analyze a page's Core Web Vitals using the Performance Observer API and log LCP, CLS, and INP.
+2. Optimize a hero section: preload the hero image, set dimensions, use responsive formats, and defer non-critical CSS.
+3. Implement a lazy-loading image component with IntersectionObserver that supports blur-up placeholders.
+4. Create a service worker that caches static assets on install and serves stale-while-revalidate for API calls.
+5. Implement code splitting: lazy-load a heavy component (e.g., chart library) only when the user scrolls to it.
+6. Build a performance budget checker that warns if bundle size exceeds 300KB or if LCP > 2.5s.
+7. Optimize webfont loading: subset, preload, use <code>font-display: swap</code>, and prevent FOIT/FOUT.
+8. Identify and fix layout shifts caused by: images without dimensions, dynamic ads, web fonts, and injected content.
+9. Implement long task detection and break up a blocking task (<500ms) into smaller chunks using <code>setTimeout</code> yielding.
+10. Create a report comparing Lighthouse performance scores before and after optimizations.
+11. Use <code>content-visibility: auto</code> to optimize below-fold rendering for a long article page.
+12. Configure HTTP caching headers for: static assets (1 year), API responses (60s), and HTML (no-cache with ETag).
+13. Build a bundle analysis pipeline that catches size regressions in CI.
+14. Implement resource hints (preconnect, dns-prefetch, preload) for a page that loads third-party fonts, an API, and a hero image.
+15. Create a custom performance monitoring script that sends Web Vitals to an analytics endpoint with sampling.
+
+`,
+            tags: ["Performance", "Core Web Vitals", "Optimization"],
+          },
+          {
+            id: "fe-cheat-testing",
+            title: "Frontend Testing Cheat Sheet",
+            shortDesc: "Complete frontend testing reference -- unit, integration, e2e, component testing, mocking, and test patterns.",
+            difficulty: "intermediate",
+            readTimeMin: 5,
+            keyPoints: [
+              "Unit tests: Vitest, Jest, describe/it, assertions, mocks",
+              "Component tests: React Testing Library, Vue Test Utils, Angular TestBed",
+              "E2E tests: Playwright, Cypress, locators, assertions, fixtures",
+              "Mocking: vi.mock, MSW (Mock Service Worker), test doubles",
+              "Coverage, CI integration, snapshot testing, and visual regression",
+            ],
+            content: `## Quick Reference
+
+Frontend testing spans four levels: unit (isolated functions), integration (component + dependencies), E2E (full user flow), and visual (screenshot comparison). The testing trophy prioritizes integration tests, with fewer E2E and unit tests.
+
+| Level | Tools | What to Test | Speed | Cost to Maintain |
+|-------|-------|-------------|-------|-----------------|
+| Unit | Vitest, Jest | Pure functions, utilities, hooks | Fast | Low |
+| Integration | Testing Library, MSW | Component interactions, API calls, forms | Medium | Medium |
+| E2E | Playwright, Cypress | Critical user flows, auth, checkout | Slow | High |
+| Visual | Percy, Chromatic, Playwright | UI regressions, responsive layouts | Medium | Medium |
+| Static | TypeScript, ESLint | Type errors, lint violations | Fast | Low |
+
+## Unit Testing (Vitest)
+
+\`\`\`ts
+// Basic test structure: describe -> it -> expect
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { formatCurrency, validateEmail } from "./utils";
+
+describe("formatCurrency", () => {
+  it("formats USD correctly", () => {
+    expect(formatCurrency(10.5)).toBe("$10.50");
+    expect(formatCurrency(0)).toBe("$0.00");
+    expect(formatCurrency(1000000)).toBe("$1,000,000.00");
+  });
+
+  it("handles negative values", () => {
+    expect(formatCurrency(-5)).toBe("-$5.00");
+  });
+
+  it("rounds to two decimal places", () => {
+    expect(formatCurrency(10.555)).toBe("$10.56");
+    expect(formatCurrency(10.554)).toBe("$10.55");
+  });
+});
+
+describe("validateEmail", () => {
+  it("accepts valid emails", () => {
+    expect(validateEmail("user@example.com")).toBe(true);
+    expect(validateEmail("a.b@c.co")).toBe(true);
+  });
+
+  it("rejects invalid emails", () => {
+    expect(validateEmail("not-email")).toBe(false);
+    expect(validateEmail("")).toBe(false);
+    expect(validateEmail("@example.com")).toBe(false);
+  });
+});
+
+// Setup and teardown
+describe("Database module", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();                                 // Reset mocks between tests
+  });
+
+  afterAll(() => {
+    // Global cleanup
+  });
+});
+
+// Snapshot testing
+it("generates correct config snapshot", () => {
+  const config = generateConfig({ debug: true });
+  expect(config).toMatchSnapshot();
+});
+\`\`\`
+
+### Mocking
+
+\`\`\`ts
+// Function mocking
+import { vi } from "vitest";
+
+const mockFn = vi.fn();
+mockFn("arg1", "arg2");
+expect(mockFn).toHaveBeenCalledWith("arg1", "arg2");
+expect(mockFn).toHaveBeenCalledTimes(1);
+
+// Return values
+mockFn.mockReturnValue(42);                              // Always return 42
+mockFn.mockReturnValueOnce(10);                          // Return once, then revert
+mockFn.mockResolvedValue({ data: "async" });             // Returns Promise
+
+// Module mocking
+import { api } from "./api";
+
+vi.mock("./api", () => ({
+  api: {
+    fetchUsers: vi.fn().mockResolvedValue([
+      { id: 1, name: "Alice" },
+      { id: 2, name: "Bob" },
+    ]),
+    fetchUser: vi.fn().mockImplementation((id: number) => {
+      return Promise.resolve({ id, name: "Mocked User" });
+    }),
+  },
+}));
+
+// Partial mocking (keep some real implementations)
+vi.mock("./db", async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual as object,                                 // Keep real implementations
+    connect: vi.fn(),                                    // Override specific functions
+  };
+});
+
+// Spying on existing methods
+const spy = vi.spyOn(console, "log");
+spy.mockImplementation(() => {});                        // Suppress console.log
+console.log("test");
+expect(spy).toHaveBeenCalledWith("test");
+spy.mockRestore();                                       // Restore original
+\`\`\`
+
+## Component Testing (React Testing Library)
+
+\`\`\`tsx
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";      // Better than fireEvent
+import { describe, it, expect, vi } from "vitest";
+import UserForm from "./UserForm";
+
+describe("UserForm", () => {
+  it("renders the form with all fields", () => {
+    render(<UserForm />);
+
+    // Query methods: getBy*, findBy*, queryBy*
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Enter email")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /submit/i })).toBeInTheDocument();
+  });
+
+  it("shows validation errors for empty fields", async () => {
+    const user = userEvent.setup();
+    render(<UserForm />);
+
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+
+    // Wait for async validation feedback
+    expect(await screen.findByText(/name is required/i)).toBeInTheDocument();
+    expect(screen.getByText(/email is required/i)).toBeInTheDocument();
+  });
+
+  it("calls onSubmit with form data when valid", async () => {
+    const handleSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(<UserForm onSubmit={handleSubmit} />);
+
+    // Type into fields
+    await user.type(screen.getByLabelText("Name"), "Alice");
+    await user.type(screen.getByLabelText("Email"), "alice@example.com");
+
+    // Submit
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledTimes(1);
+      expect(handleSubmit).toHaveBeenCalledWith({
+        name: "Alice",
+        email: "alice@example.com",
+      });
+    });
+  });
+
+  it("does not submit with invalid email", async () => {
+    const handleSubmit = vi.fn();
+    const user = userEvent.setup();
+
+    render(<UserForm onSubmit={handleSubmit} />);
+
+    await user.type(screen.getByLabelText("Email"), "invalid");
+    await user.click(screen.getByRole("button", { name: /submit/i }));
+
+    expect(handleSubmit).not.toHaveBeenCalled();
+    expect(screen.getByText(/invalid email/i)).toBeInTheDocument();
+  });
+});
+
+// Testing async operations
+it("loads and displays users", async () => {
+  render(<UserList />);
+
+  // Loading state
+  expect(screen.getByText(/loading/i)).toBeInTheDocument();
+
+  // Wait for data
+  expect(await screen.findByText("Alice")).toBeInTheDocument();
+  expect(await screen.findByText("Bob")).toBeInTheDocument();
+});
+
+// Testing with context providers
+import { ThemeProvider } from "./ThemeContext";
+
+it("renders with dark theme", () => {
+  render(
+    <ThemeProvider initialTheme="dark">
+      <ThemedButton />
+    </ThemeProvider>
+  );
+
+  expect(screen.getByRole("button")).toHaveStyle({ backgroundColor: "#333" });
+});
+
+// Testing custom hooks
+import { renderHook, act } from "@testing-library/react";
+import useCounter from "./useCounter";
+
+it("increments counter", () => {
+  const { result } = renderHook(() => useCounter(0));
+
+  act(() => {
+    result.current.increment();
+  });
+
+  expect(result.current.count).toBe(1);
+});
+\`\`\`
+
+## API Mocking (MSW)
+
+\`\`\`ts
+// Mock Service Worker: intercepts requests at the network level
+import { http, HttpResponse, delay } from "msw";
+import { setupServer } from "msw/node";
+
+// Define handlers
+const handlers = [
+  http.get("/api/users", async () => {
+    await delay(100);                                     // Simulate network latency
+    return HttpResponse.json([
+      { id: 1, name: "Alice" },
+      { id: 2, name: "Bob" },
+    ]);
+  }),
+
+  http.get("/api/users/:id", ({ params }) => {
+    const { id } = params;
+    return HttpResponse.json({ id: Number(id), name: "Alice" });
+  }),
+
+  http.post("/api/users", async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ id: 3, ...body as object }, { status: 201 });
+  }),
+
+  http.get("/api/error", () => {
+    return new HttpResponse(null, { status: 500, statusText: "Server Error" });
+  }),
+];
+
+// Setup server for tests
+const server = setupServer(...handlers);
+
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterEach(() => server.resetHandlers());                 // Reset to default handlers
+afterAll(() => server.close());
+
+// Override handlers for specific test
+it("handles empty user list", async () => {
+  server.use(
+    http.get("/api/users", () => HttpResponse.json([]))
+  );
+
+  render(<UserList />);
+  expect(await screen.findByText(/no users/i)).toBeInTheDocument();
+});
+
+// Network error simulation
+it("handles network failure", async () => {
+  server.use(
+    http.get("/api/users", () => HttpResponse.error())  // Simulate network error
+  );
+
+  render(<UserList />);
+  expect(await screen.findByText(/error/i)).toBeInTheDocument();
+});
+\`\`\`
+
+## E2E Testing (Playwright)
+
+\`\`\`ts
+// playwright.config.ts
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./e2e",
+  fullyParallel: true,                                   // Run tests in parallel
+  forbidOnly: !!process.env.CI,                          // Prevent .only in CI
+  retries: process.env.CI ? 2 : 0,                       // Retry flaky tests in CI
+  workers: process.env.CI ? 4 : undefined,
+  reporter: [["html"], ["list"]],
+  use: {
+    baseURL: "http://localhost:5173",                    // Dev server URL
+    trace: "on-first-retry",                             // Trace on failure
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
+  },
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"] },
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+    },
+    {
+      name: "Mobile Chrome",
+      use: { ...devices["Pixel 5"] },
+    },
+  ],
+  webServer: {
+    command: "npm run dev",                              // Start dev server
+    url: "http://localhost:5173",
+    reuseExistingServer: !process.env.CI,
+  },
+});
+\`\`\`
+
+\`\`\`ts
+// e2e/auth.spec.ts
+import { test, expect } from "@playwright/test";
+
+test.describe("Authentication", () => {
+  test("signs up with valid credentials", async ({ page }) => {
+    await page.goto("/signup");
+
+    // Fill form
+    await page.getByLabel("Name").fill("Alice");
+    await page.getByLabel("Email").fill("alice@example.com");
+    await page.getByLabel("Password").fill("SecurePass123!");
+    await page.getByRole("button", { name: /sign up/i }).click();
+
+    // Wait for redirect
+    await page.waitForURL("/dashboard");
+
+    // Assert dashboard loaded
+    await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+  });
+
+  test("shows error for duplicate email", async ({ page }) => {
+    await page.goto("/signup");
+    await page.getByLabel("Email").fill("existing@example.com");
+    await page.getByLabel("Password").fill("SecurePass123!");
+
+    // Intercept API request
+    await page.route("**/api/auth/signup", async (route) => {
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Email already in use" }),
+      });
+    });
+
+    await page.getByRole("button", { name: /sign up/i }).click();
+    await expect(page.getByText("Email already in use")).toBeVisible();
+  });
+
+  test("persists session across page reload", async ({ page }) => {
+    // Login via API (not UI - faster)
+    await page.request.post("/api/auth/login", {
+      data: { email: "alice@example.com", password: "SecurePass123!" },
+    });
+
+    await page.goto("/dashboard");
+    await expect(page.getByText("Welcome, Alice!")).toBeVisible();
+
+    // Reload
+    await page.reload();
+    await expect(page.getByText("Welcome, Alice!")).toBeVisible();
+  });
+});
+
+// Testing mobile viewport
+test("shows hamburger menu on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 }); // iPhone SE
+  await page.goto("/");
+
+  // Desktop nav should be hidden
+  await expect(page.getByRole("navigation")).not.toBeVisible();
+
+  // Hamburger should be visible
+  await expect(page.getByRole("button", { name: /menu/i })).toBeVisible();
+});
+
+// Visual comparison
+test("homepage matches screenshot", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveScreenshot("homepage.png", {
+    maxDiffPixelRatio: 0.02,                             // Allow 2% difference
+  });
+});
+
+// Testing with fixtures
+test.describe("with test fixture", () => {
+  test.use({ storageState: "e2e/.auth/user.json" });    // Authenticated state
+
+  test("accesses protected page", async ({ page }) => {
+    await page.goto("/dashboard");
+    await expect(page.getByText("Dashboard")).toBeVisible();
+  });
+});
+\`\`\`
+
+## Coverage & CI
+
+\`\`\`ts
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/**/*.d.ts",
+        "src/**/types.ts",
+        "src/main.tsx",                                  // Entry point
+      ],
+      thresholds: {
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
+      },
+    },
+  },
+});
+\`\`\`
+
+\`\`\`yaml
+# .github/workflows/test.yml
+name: Test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test -- --coverage           # Unit + integration
+      - run: npx playwright install --with-deps    # E2E browsers
+      - run: npm run test:e2e                      # E2E tests
+      - uses: actions/upload-artifact@v4          # Upload screenshots on failure
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+\`\`\`
+
+## Testing Comparison Table
+
+| Tool | Type | Language | Speed | Assertions | Best For |
+|------|------|----------|-------|------------|----------|
+| Vitest | Unit/Integration | TypeScript | Fast | Built-in (expect) | Vite projects, React/Vue/Svelte |
+| Jest | Unit/Integration | TypeScript | Medium | Built-in (expect) | Older projects, Next.js < 13 |
+| Testing Library | Component | TypeScript | Medium | jest-dom matchers | User-centric component tests |
+| Playwright | E2E | TypeScript | Medium (parallel) | Built-in (expect) | Critical user flows, cross-browser |
+| Cypress | E2E | TypeScript | Medium | Chai/Sinon | Component + E2E, time-travel debug |
+| MSW | Network Mock | TypeScript | N/A | N/A (mocking) | Intercept HTTP in tests |
+| Percy | Visual | Any | External | Screenshots | Visual regression |
+| Chromatic | Visual | Storybook | External | Screenshots | Storybook visual diff |
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why Is Wrong | Correct Approach |
+|---|---------|--------------|------------------|
+| 1 | Testing implementation details (<code>wrapper.state()</code>, internal methods) | Tests break on refactor; don't test user behavior | Test what the user sees and does (DOM output, events) |
+| 2 | Using <code>fireEvent</code> instead of <code>userEvent</code> | <code>fireEvent</code> does not simulate full user interaction (key events, focus/blur) | Always prefer <code>userEvent.setup()</code> |
+| 3 | Not cleaning up mocks between tests | Mock state bleeds between tests, causing false positives | Use <code>beforeEach(vi.clearAllMocks)</code> or <code>afterEach</code> |
+| 4 | Over-mocking (mocking everything) | Tests pass but app breaks in production | Use MSW for network; test real behavior when possible |
+| 5 | Missing <code>waitFor</code> or <code>findBy</code> for async tests | Tests fail because state hasn't updated yet | Use <code>await findBy*</code> or <code>await waitFor()</code> for async operations |
+| 6 | Testing too many implementation details with snapshots | Fragile tests that break on minor formatting changes | Keep snapshots small; use inline snapshots for string values |
+| 7 | Not testing error states | Happy-path only; errors crash the app in production | Test loading, empty, error, and edge-case states |
+| 8 | Using test IDs (<code>data-testid</code>) as first resort | Brittle; not how users interact with the app | Prefer accessible queries: <code>getByRole</code>, <code>getByLabelText</code>, <code>getByText</code> |
+| 9 | Flaky E2E tests (race conditions) | Tests fail intermittently, reducing trust | Use <code>toBeVisible</code>, <code>waitForURL</code>, retries, and proper assertions |
+| 10 | Running E2E against production | Risk of data corruption; hard to isolate | Use test environments or <code>page.route</code> interception |
+| 11 | Not running tests in CI | Regressions go to production | Add to CI pipeline; block merge on failure |
+| 12 | Testing through the UI what can be tested in unit tests | Slow, flaky, expensive | Unit test pure logic; E2E test only critical user flows |
+| 13 | No accessibility testing | Misses ARIA issues, focus management problems | Use <code>@axe-core/playwright</code> or <code>jest-axe</code> |
+| 14 | Ignoring coverage thresholds | Uncovered code may hide bugs | Set coverage thresholds; review uncovered lines |
+| 15 | Making tests too DRY (<code>beforeEach</code> heavy) | Test intent is hidden; hard to debug failures | Keep test setup visible; use factory functions |
+
+## Practice Questions
+
+1. Write unit tests for a <code>formatDate(date, locale)</code> function covering: ISO string, Date object, invalid input, and locale-specific formatting.
+2. Create a component test for a <code>LoginForm</code> that: renders email/password fields, shows validation errors, calls onSubmit with credentials, and displays server errors.
+3. Implement MSW handlers for a <code>/api/products</code> endpoint and test the <code>ProductList</code> component with: loading state, product data, empty state, and error state.
+4. Write E2E tests using Playwright for a shopping cart flow: add item, update quantity, remove item, checkout.
+5. Create a custom hook <code>useDebounce</code> and test it with <code>renderHook</code> from Testing Library.
+6. Implement snapshot testing for a <code>UserProfile</code> component and handle intentional UI changes.
+7. Set up a CI pipeline that runs lint, typecheck, unit tests with coverage, and E2E tests in parallel.
+8. Write a test that verifies a modal dialog is accessible: focus is trapped inside, Escape closes, focus returns on close.
+9. Create a <code>useLocalStorage</code> hook and test it with localStorage mocking (including <code>vi.stubGlobal</code>).
+10. Implement visual regression tests using Playwright's <code>toHaveScreenshot</code> for the homepage and a form page.
+11. Test a React Router setup: navigate from home to about, verify URL changed, verify about content rendered.
+12. Create integration tests for a drag-and-drop component using <code>dragOver</code> and <code>drop</code> events.
+13. Write performance regression tests using <code>performance.mark</code> and <code>performance.measure</code>.
+14. Implement MSW handlers that simulate network delays (500ms, 2s) and test timeout behavior.
+15. Build a test factory for generating user data (with <code>@faker-js/faker</code>) to use across tests.
+
+`,
+            tags: ["Testing", "Vitest", "Playwright", "MSW"],
+          },
+          {
+            id: "fe-cheat-git",
+            title: "Git Cheat Sheet",
+            shortDesc: "Complete Git reference -- branching, rebasing, merging, workflows, hooks, and advanced commands.",
+            difficulty: "foundational",
+            readTimeMin: 5,
+            keyPoints: [
+              "Branching, merging, rebasing, cherry-pick, and revert",
+              "GitHub/GitLab workflows: feature branches, Git Flow, trunk-based",
+              "Interactive rebase, bisect, blame, and reflog",
+              "Stashing, submodules, worktrees, and hooks",
+              "CI/CD integration: conventional commits, semantic versioning, changelogs",
+            ],
+            content: `## Quick Reference
+
+Git is a distributed version control system that tracks changes to files over time. Every developer has a complete local copy of the repository. The three main areas are: working directory, staging area (index), and commit history (HEAD).
+
+| Concept | Explanation |
+|---------|-------------|
+| Repository | <code>.git</code> folder containing the full history |
+| Commit | Snapshot of all files at a point in time (has a SHA-1 hash) |
+| Branch | Movable pointer to a commit (default: <code>main</code> or <code>master</code>) |
+| HEAD | Pointer to the current commit/branch |
+| Origin | Default name for the remote repository |
+| Staging area | Files added with <code>git add</code>, ready to commit |
+| Working directory | Files you are currently editing |
+
+## Basic Commands
+
+\`\`\`bash
+# Configuration
+git config --global user.name "Your Name"               # Set username
+git config --global user.email "email@example.com"      # Set email
+git config --global init.defaultBranch main             # Default branch name
+git config --global core.editor code --wait             # VS Code as editor
+git config --global pull.rebase true                    # Rebase on pull
+git config --global fetch.prune true                    # Prune deleted remote branches
+git config --global core.autocrlf input                 # Handle line endings (Mac/Linux)
+# For Windows: core.autocrlf true
+
+# View config
+git config --list                                       # All config
+git config user.name                                    # Single value
+git config --global --edit                              # Edit config file
+
+# Creating and cloning
+git init                                                # Initialize new repo
+git clone https://github.com/user/repo.git              # Clone remote repo
+git clone --depth 1 https://github.com/user/repo.git    # Shallow clone (no history)
+git clone --branch develop https://github.com/user/repo.git  # Clone specific branch
+
+# Basic workflow
+git status                                              # Show working tree status
+git add file.txt                                        # Stage file
+git add .                                               # Stage all changes
+git add -p                                              # Interactive staging (hunk by hunk)
+git rm file.txt                                         # Remove file and stage
+git mv old.txt new.txt                                  # Rename file
+git commit -m "feat: add user login"                    # Commit staged changes
+git commit -am "fix: typo"                              # Stage all tracked files + commit
+git commit --amend -m "Updated message"                 # Amend last commit (don't amend pushed!)
+git commit --amend --no-edit                            # Add staged changes to last commit
+
+# Viewing history
+git log                                                 # Full history
+git log --oneline                                       # One line per commit
+git log --oneline --graph --all                         # Visual branch graph
+git log --oneline -5                                    # Last 5 commits
+git log --author="Alice"                                # Filter by author
+git log --since="2026-01-01" --until="2026-06-01"      # Date range
+git log --grep="fix:"                                   # Search commit messages
+git log -p file.txt                                     # Show patches for file
+git log --oneline --follow -- file.txt                  # History of renamed file
+git show COMMIT_HASH                                    # Show commit details
+git show HEAD                                           # Show latest commit
+git show HEAD:path/to/file.txt                          # Show file from specific commit
+git blame file.txt                                      # Who changed each line
+\`\`\`
+
+## Branching & Merging
+
+\`\`\`bash
+# Branch operations
+git branch                                              # List local branches
+git branch -a                                           # List all branches (including remote)
+git branch -v                                           # List with last commit
+git branch feature/login                                # Create branch
+git switch feature/login                                # Switch to branch (modern)
+git checkout feature/login                              # Switch to branch (legacy)
+git switch -c feature/login                             # Create and switch
+git checkout -b feature/login                           # Create and switch (legacy)
+git branch -d feature/login                             # Delete branch (merged)
+git branch -D feature/login                             # Force delete branch
+git branch -m old-name new-name                         # Rename branch
+git push origin --delete feature/login                  # Delete remote branch
+
+# Merging
+git switch main                                         # Go to target branch
+git merge feature/login                                 # Merge feature into main
+# Merge types:
+# 1. Fast-forward (no divergent commits): just moves pointer
+# 2. 3-way merge: creates merge commit
+# 3. Squash merge: combines all feature commits into one
+git merge --squash feature/login                        # Squash merge
+git merge --no-ff feature/login                         # Force merge commit even if fast-forward
+
+# Resolving merge conflicts
+git merge feature/login                                 # If conflicts:
+git status                                              # See conflicted files
+# Edit files to resolve conflicts
+git add <resolved-file>                                 # Mark as resolved
+git commit                                              # Complete the merge
+# OR abort the merge
+git merge --abort                                       # Cancel merge
+\`\`\`
+
+## Rebasing
+
+\`\`\`bash
+# Basic rebase: replay feature commits on top of main
+git switch feature/login
+git rebase main                                         # Replay feature commits on main
+
+# Interactive rebase (edit/squash/reorder commits)
+git rebase -i HEAD~5                                    # Rebase last 5 commits
+# Commands in interactive rebase:
+#   pick    - use commit as-is
+#   reword  - change commit message
+#   edit    - stop to amend commit
+#   squash  - combine with previous commit (keep message)
+#   fixup   - combine with previous commit (discard message)
+#   drop    - remove commit
+
+# Always rebase, never merge for feature branches
+# Golden rule: never rebase a branch that others have based work on
+
+# Rebase onto another branch
+git rebase --onto main feature/login feature/login      # Rebase feature from login onto main
+
+# Rebase conflicts
+git rebase main                                          # If conflicts:
+# Fix conflicts
+git add <resolved-file>
+git rebase --continue                                   # Continue after fixing
+git rebase --skip                                       # Skip this commit
+git rebase --abort                                      # Cancel rebase
+
+# Pull with rebase (cleaner history)
+git pull --rebase                                       # Fetch + rebase instead of merge
+# Configure default: git config --global pull.rebase true
+\`\`\`
+
+## Remote Operations
+
+\`\`\`bash
+# Remote management
+git remote -v                                           # List remotes
+git remote add upstream https://github.com/original/repo.git  # Add remote
+git remote remove origin                                # Remove remote
+git remote rename origin upstream                       # Rename remote
+
+# Pushing
+git push origin main                                    # Push local main to remote main
+git push -u origin feature/login                        # Push + set upstream (tracking)
+git push origin --delete feature/login                  # Delete remote branch
+git push --tags                                         # Push all tags
+git push origin --force                                 # Force push (use with care!)
+git push --force-with-lease                             # Safer force (checks if remote changed)
+
+# Pulling
+git pull                                                # Fetch + merge
+git pull --rebase                                       # Fetch + rebase
+git fetch                                               # Fetch remote changes (don't merge)
+git fetch origin                                        # Fetch from specific remote
+git fetch --prune                                       # Remove deleted remote branches
+git fetch --all                                         # Fetch from all remotes
+
+# Syncing a fork
+git remote add upstream https://github.com/original/repo.git
+git fetch upstream
+git checkout main
+git merge upstream/main                                 # Update local main
+git push origin main                                    # Push to fork
+\`\`\`
+
+## Undoing Changes
+
+\`\`\`bash
+# Working directory
+git restore file.txt                                    # Discard changes in working directory
+git checkout -- file.txt                                # Legacy: discard changes
+git clean -n                                            # Dry-run: show untracked files
+git clean -fd                                           # Remove untracked files/directories
+
+# Staging area
+git restore --staged file.txt                           # Unstage file (keep changes)
+git reset file.txt                                      # Legacy: unstage file
+
+# Commits
+git commit --amend -m "New message"                     # Change last commit message
+git reset --soft HEAD~1                                 # Undo commit, keep changes staged
+git reset --mixed HEAD~1                                # Undo commit, unstage changes (default)
+git reset --hard HEAD~1                                 # Undo commit, discard changes (destructive!)
+git revert HEAD                                         # Create new commit that undoes HEAD
+git revert COMMIT_HASH                                  # Revert specific commit (safe for public history)
+
+# The Reflog (safety net -- logs all movements of HEAD)
+git reflog                                              # Show all HEAD movements
+git reflog --relative-date                             # With readable dates
+git reset --hard HEAD@{5}                               # Restore to reflog entry
+git checkout HEAD@{yesterday}                           # Checkout yesterday's state
+# Reflog entries expire after 90 days (or 30 for unreachable)
+\`\`\`
+
+## Stashing
+
+\`\`\`bash
+git stash                                              # Stash working directory changes
+git stash push -m "WIP: fixing login"                  # Stash with message
+git stash list                                         # List stashes
+git stash show stash@{0}                               # Show stash contents
+git stash pop                                          # Apply and remove latest stash
+git stash apply stash@{2}                              # Apply specific stash (keep in list)
+git stash drop stash@{0}                               # Delete a stash
+git stash clear                                        # Delete all stashes
+git stash -u                                           # Stash including untracked files
+git stash --patch                                      # Interactive stashing
+git stash branch feature/new-branch                    # Create branch from stash
+\`\`\`
+
+## Cherry-Pick & Bisect
+
+\`\`\`bash
+# Cherry-pick: apply specific commit to current branch
+git switch main
+git cherry-pick COMMIT_HASH                              # Apply commit to main
+git cherry-pick A..C                                     # Cherry-pick range (exclusive of A)
+git cherry-pick A^..C                                    # Cherry-pick range (inclusive)
+
+# Bisect: binary search for the commit that introduced a bug
+git bisect start                                         # Start bisect
+git bisect bad                                           # Current commit is bad
+git bisect good COMMIT_HASH                              # Mark known good commit
+# Git checks out a commit in the middle
+# Test the commit, then:
+git bisect good                                          # This commit is good
+# OR
+git bisect bad                                           # This commit is bad
+# Repeat until commit is found
+git bisect reset                                         # End bisect, return to original branch
+
+# Bisect script mode (automate with test command)
+git bisect start HEAD v1.0 --                            # bad=v1.0 good=HEAD
+git bisect run npm test                                  # Run test automatically
+git bisect reset
+\`\`\`
+
+## Tags
+
+\`\`\`bash
+# Lightweight tag (just a pointer)
+git tag v1.0.0                                          # Create tag at HEAD
+git tag v1.0.0 COMMIT_HASH                              # Tag specific commit
+git tag -d v1.0.0                                       # Delete local tag
+
+# Annotated tag (recommended for releases)
+git tag -a v2.0.0 -m "Release version 2.0.0"           # Annotated tag with message
+git tag -s v2.0.0 -m "Signed release"                   # GPG signed tag
+
+# Tag operations
+git tag                                                 # List tags
+git tag -l "v1.*"                                       # Filter tags by pattern
+git show v1.0.0                                         # Show tag details
+git push origin v1.0.0                                  # Push specific tag
+git push origin --tags                                  # Push all tags
+git push --delete origin v1.0.0                         # Delete remote tag
+git checkout v1.0.0                                     # Checkout tag (detached HEAD)
+\`\`\`
+
+## Worktrees & Submodules
+
+\`\`\`bash
+# Worktrees: check out multiple branches simultaneously
+git worktree add ../project-feature feature/login       # New worktree for branch
+git worktree add -b new-branch ../project-v2 main       # Create branch + worktree
+git worktree list                                       # List all worktrees
+git worktree remove ../project-feature                  # Remove worktree
+
+# Submodules: include other repos within your repo
+git submodule add https://github.com/user/lib.git lib   # Add submodule
+git submodule status                                    # Show submodule status
+git submodule update --init --recursive                 # Clone all submodules
+git submodule update --remote                           # Update to latest commit
+git clone --recurse-submodules https://github.com/user/repo.git  # Clone with submodules
+\`\`\`
+
+## Hooks
+
+\`\`\`bash
+# Hooks are scripts in .git/hooks/ that run on certain events
+# To enable: make them executable (chmod +x)
+
+# .git/hooks/pre-commit -- run before commit message editor
+#!/bin/sh
+# Lint staged files
+npx lint-staged || exit 1
+
+# .git/hooks/commit-msg -- validate commit message
+#!/bin/sh
+# Enforce conventional commits
+npx --yes commitlint --edit $1 || exit 1
+
+# .git/hooks/pre-push -- run before push
+#!/bin/sh
+# Run tests before push
+npm test || exit 1
+
+# .git/hooks/post-commit -- run after commit
+#!/bin/sh
+# Notify CI
+
+# .git/hooks/prepare-commit-msg -- prepare default message
+#!/bin/sh
+# Add branch name to commit message
+
+# Using husky (recommended for JS/TS projects)
+npx husky init
+# Creates .husky/pre-commit, .husky/commit-msg, etc.
+# commit-msg: npx --no -- commitlint --edit $1
+# pre-commit: npx lint-staged
+\`\`\`
+
+## Git Workflows
+
+### Feature Branch Workflow (GitHub Flow)
+
+\`\`\`
+main
+  |-- feature/login        # Create feature branch from main
+  |   |-- commit           # Work
+  |   |-- commit
+  |   |-- push -u origin feature/login
+  |   |-- PR to main       # Open Pull Request
+  |   |-- review + merge   # Code review, CI passes, merge to main
+  |<-- merged
+\`\`\`
+
+### Git Flow
+
+\`\`\`
+main                        # Production code
+  |-- develop              # Integration branch (from main)
+       |-- feature/login   # Features from develop
+       |   |-- merge back to develop
+       |-- release/1.0     # Release branch (from develop)
+       |   |-- bugfixes
+       |   |-- merge to main + tag v1.0.0
+       |   |-- merge back to develop
+       |-- hotfix/1.0.1    # Hotfix (from main)
+            |-- merge to main + tag
+            |-- merge to develop
+\`\`\`
+
+### Trunk-Based Development
+
+\`\`\`
+main                        # Single long-lived branch
+  |-- commit (small!)      # Short-lived feature branches (hours)
+  |-- commit
+  |-- commit
+  # No release branches -- releases are tags on main
+  # Feature flags for incomplete features
+\`\`\`
+
+### Conventional Commits
+
+\`\`\`
+<type>(<scope>): <description>          # Header (max 72 chars)
+
+[optional body]                          # Detail
+
+[optional footer(s)]                     # BREAKING CHANGE, issues
+
+# Types:
+# feat:      new feature (increments minor)
+# fix:       bug fix (increments patch)
+# docs:      documentation
+# style:     formatting (no logic change)
+# refactor:  code restructuring
+# perf:      performance improvement
+# test:      adding tests
+# chore:     build/tooling changes
+# ci:        CI/CD changes
+# BREAKING CHANGE: incompatible API change (increments major)
+
+# Examples:
+feat(auth): add OAuth2 login with Google
+fix(api): handle null response from user endpoint
+docs(readme): update installation instructions
+refactor(parser): extract tokenizer module
+perf: reduce memory usage in large lists
+BREAKING CHANGE: remove deprecated /api/v1 endpoint
+\`\`\`
+
+## Common Pitfalls & Anti-patterns
+
+| # | Pitfall | Why Is Wrong | Correct Approach |
+|---|---------|--------------|------------------|
+| 1 | Committing directly to <code>main</code>/<code>master</code> | Bypasses code review; hard to rollback | Use feature branches + PRs |
+| 2 | Large commits (100+ files) | Impossible to review; hard to revert | Commit often (one logical change per commit) |
+| 3 | Committing secrets (.env, keys, tokens) | Credentials exposed in history; security breach | Use <code>.gitignore</code>; <code>git-secrets</code> or pre-commit hooks to prevent |
+| 4 | Unclear commit messages ("fix", "update", "stuff") | History is useless for understanding intent | Use conventional commits |
+| 5 | Rebasing shared branches | Rewrites public history; destroys others' work | Only rebase local/feature branches; never shared/pushed branches |
+| 6 | Using <code>--force</code> instead of <code>--force-with-lease</code> | Overwrites remote changes without warning | Always use <code>--force-with-lease</code> |
+| 7 | Not pulling before working | Divergent histories; unnecessary merge conflicts | <code>git pull --rebase</code> before starting work |
+| 8 | Merging instead of rebasing feature branches | Merge commits clutter history; makes bisect harder | Rebase features on main, then fast-forward merge |
+| 9 | Ignoring <code>.gitignore</code> at project start | Accidental commits of <code>node_modules</code>, build artifacts | Set up <code>.gitignore</code> before first commit |
+| 10 | Storing large binary files in Git | Bloats repository; slow clone/push | Use Git LFS or external storage |
+| 11 | Long-lived feature branches | Merge conflicts; diverged from main | Keep branches short-lived (days, not weeks); merge/rebase often |
+| 12 | Not testing before commit/push | CI fails; blocks team | Use pre-commit hooks to run lint + tests |
+| 13 | Using <code>git commit --amend</code> on pushed commits | Forces rewrite of public history | Only amend local commits (not yet pushed) |
+| 14 | No commit signing (GPG) | Can't verify commit authenticity | Enable <code>commit.gpgSign</code>; sign all commits |
+| 15 | Not using <code>.gitattributes</code> for line endings | Cross-platform line ending issues | Set <code>* text=auto</code> in <code>.gitattributes</code> |
+
+## Practice Questions
+
+1. You committed to the wrong branch. How do you move the last commit to a new branch and reset the original branch?
+2. Write a bash script that uses <code>git bisect</code> to find the commit where a test started failing.
+3. Create a <code>.husky/pre-commit</code> hook that runs lint-staged and TypeScript type-checking.
+4. Explain the difference between <code>git merge</code> and <code>git rebase</code>. When would you use each?
+5. Simulate a merge conflict scenario: create two branches that modify the same file, merge, resolve conflicts, and complete the merge.
+6. You accidentally committed a <code>.env</code> file. How do you remove it from Git history without losing the file locally?
+7. Set up a monorepo with <code>git submodules</code> for a shared library used by two projects.
+8. Write a conventional commit message for: a bug fix in the login component, a new payment feature, and a breaking change to the API.
+9. Use <code>git worktree</code> to work on two features simultaneously without stashing.
+10. Recover a commit that was lost after a <code>git reset --hard</code> using <code>git reflog</code>.
+11. Create a <code>git alias</code> for: a custom log format with graph, a squash merge command, and a "last commit" detail view.
+12. Implement a GitHub Actions workflow that: runs on PR to main, lints, type-checks, runs unit tests, and blocks merge on failure.
+13. Squash the last 3 commits into one with an interactive rebase, then explain what <code>fixup</code> does vs <code>squash</code>.
+14. Cherry-pick a hotfix commit from one branch to two other release branches.
+15. Configure Git for a team: set user.name/email, enable GPG signing, set pull.rebase true, and configure a <code>.gitignore</code> template for a Node.js project.
+
+`,
+            tags: ["Git", "Version Control", "DevOps"],
+          },
+        ],
+      },
     ],
   },
 
