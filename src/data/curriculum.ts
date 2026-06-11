@@ -77129,16 +77129,2869 @@ class TodoController {
         title: "HTML / CSS",
         description: "The foundational web languages — semantic markup, styling, layout, responsive design, preprocessors, and modern CSS frameworks.",
         topics: [
-          { id: "ns-html-syntax", title: "HTML Syntax & Semantics", shortDesc: "Elements, attributes, document outline, semantic tags (header, nav, main, article, section), and best practices.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-selectors", title: "CSS Selectors & Specificity", shortDesc: "Type, class, ID, attribute, pseudo-class, pseudo-element selectors; specificity calculation and the cascade.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-box-model", title: "Box Model & Typography", shortDesc: "Content, padding, border, margin; box-sizing; font properties, line-height, and web font loading.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-layout", title: "Layout (Flexbox, Grid)", shortDesc: "Flex container/item properties, grid template areas, auto-fit/minmax, and combining flex + grid.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-responsive", title: "Responsive Design", shortDesc: "Media queries, mobile-first approach, relative units (rem, em, vw, vh), and container queries.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-animations", title: "Animations & Transitions", shortDesc: "CSS transitions, keyframe animations, transform, easing functions, and performance considerations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-preprocessors", title: "Preprocessors (Sass, PostCSS)", shortDesc: "Variables, nesting, mixins, functions, partials, and Autoprefixer with PostCSS.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-html-forms", title: "Forms & Validation", shortDesc: "Input types, form attributes, constraint validation API, custom validation, and accessible form design.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-css-frameworks", title: "CSS Frameworks (Tailwind, Bootstrap)", shortDesc: "Utility-first vs component-based frameworks, customization, and when to use each approach.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-html-a11y", title: "Accessibility & SEO", shortDesc: "ARIA roles/attributes, keyboard navigation, alt text, meta tags, Open Graph, and structured data (JSON-LD).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        {
+          id: "ns-html-syntax",
+          title: "HTML Syntax & Semantics",
+          shortDesc: "Elements, attributes, document outline, semantic tags (header, nav, main, article, section), and best practices.",
+          difficulty: "foundational",
+          readTimeMin: 12,
+          keyPoints: [
+            "HTML uses opening and closing tags to define elements that structure content on the web.",
+            "Attributes like class, id, src, and href provide additional information to elements.",
+            "A proper document outline requires doctype, html, head, and body with correct heading hierarchy.",
+            "Semantic tags (header, nav, main, article, section) improve accessibility, SEO, and code readability.",
+            "Every opening tag must have a corresponding closing tag to avoid broken layouts.",
+            "Use the W3C validator and follow semantic best practices for cross-browser consistency."
+          ],
+          content: `
+        ## What's This?
+
+        HTML (HyperText Markup Language) is the structural backbone of every web page. It uses tags to mark content, telling the browser "this is a heading," "this is a paragraph," "this is a navigation area." Semantic HTML goes further by using meaningful tags that describe the role of each content block, making pages accessible, search-engine-friendly, and maintainable.
+
+        ## The Big Picture
+
+        A web page is like a tree. The <code><html></code> element is the root trunk. It branches into <code><head></code> (metadata, title, links) and <code><body></code> (visible content). Each of those branches further into nested children. A well-structured HTML page mirrors the logical outline of a document: a single top-level title, sections with subheadings, and supporting content. Screen readers, search engine crawlers, and browser developer tools all rely on this tree structure to interpret and present the page.
+
+        ## Core Ideas
+
+        ### Elements and Tags
+
+        An HTML element consists of an opening tag, optional attributes, content, and a closing tag. Elements are the atoms of HTML.
+
+        \`\`\`html
+        <p class="intro">Hello, world!</p>
+        <!-- ^opening tag  ^attributes  ^content  ^closing tag-->
+        \`\`\`
+
+        Some elements are void (self-closing) — they have no content or closing tag:
+
+        \`\`\`html
+        <img src="photo.jpg" alt="A description">
+        <br>
+        <hr>
+        \`\`\`
+
+        ### Attributes
+
+        Attributes live inside the opening tag and configure the element. They follow the pattern <code>name="value"</code>. Common attributes include <code>class</code> (CSS hook), <code>id</code> (unique identifier), <code>src</code> (source URL for media), and <code>href</code> (link destination).
+
+        \`\`\`html
+        <a href="https://example.com" target="_blank" class="link">
+          Visit Example
+        </a>
+        \`\`\`
+
+        Boolean attributes (<code>disabled</code>, <code>checked</code>, <code>required</code>) don't need a value — their presence alone activates the behavior.
+
+        \`\`\`html
+        <input type="email" required disabled>
+        \`\`\`
+
+        ### Document Outline
+
+        Every HTML document starts with a doctype declaration and wraps content in <code><html></code>, <code><head></code>, and <code><body></code>.
+
+        \`\`\`html
+        <!DOCTYPE html>             <!-- Tells browser: this is HTML5 -->
+        <html lang="en">            <!-- Root element; lang attribute aids accessibility -->
+        <head>
+          <meta charset="UTF-8">   <!-- Declares character encoding -->
+          <title>Page Title</title> <!-- Shown in browser tab -->
+        </head>
+        <body>
+          <!-- All visible content lives here -->
+        </body>
+        </html>
+        \`\`\`
+
+        Heading tags (<code><h1></code> through <code><h6></code>) define a hierarchy. Use exactly one <code><h1></code> per page (the main title). Subheadings should nest without skipping levels — <code><h1></code> followed by <code><h3></code> breaks the outline for assistive technology.
+
+        ### Semantic Structure Tags
+
+        Semantic tags describe the purpose of their content, replacing the generic <code><div></code> and <code><span></code> with meaningful alternatives:
+
+        <code><header></code>: Introductory content — logo, tagline, search bar.
+        <code><nav></code>: Navigation links.
+        <code><main></code>: The dominant content of the <code><body></code>; use exactly once per page.
+        <code><article></code>: A self-contained composition (blog post, news story, comment).
+        <code><section></code>: A thematic group inside a page or article, usually with a heading.
+        <code><aside></code>: Tangentially related content (sidebar, callout).
+        <code><footer></code>: Closing information — copyright, author, sitemap links.
+
+        ### Best Practices
+
+        Always reach for a semantic tag over a generic one. Validate your HTML with the W3C validator. Indent nested elements consistently (2 spaces is standard). Use lowercase for tag and attribute names. Always include <code>alt</code> on images for accessibility. Close every non-void element — unclosed tags cause unpredictable layouts.
+
+        ## Wiring It Together
+
+        Below is a complete, semantic HTML document applying every concept from this section:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Semantic HTML Demo</title>
+        </head>
+        <body>
+
+          <header>
+            <h1>My Website</h1>
+            <nav>
+              <a href="/">Home</a>
+              <a href="/blog">Blog</a>
+            </nav>
+          </header>
+
+          <main>
+            <article>
+              <h2>Article Title</h2>
+              <time datetime="2026-06-01">June 1, 2026</time>
+
+              <section>
+                <h3>Introduction</h3>
+                <p>This is the first section of the article.</p>
+              </section>
+
+              <section>
+                <h3>Details</h3>
+                <p>This is the second section.</p>
+                <aside>
+                  <p>A related note or fact.</p>
+                </aside>
+              </section>
+            </article>
+          </main>
+
+          <footer>
+            <p>&copy; 2026 My Website</p>
+          </footer>
+
+        </body>
+        </html>
+        \`\`\`
+        `,
+          tags: ["html", "semantics", "web fundamentals"]
+        },
+
+{
+          id: "ns-css-selectors",
+          title: "CSS Selectors & Specificity",
+          shortDesc: "Type, class, ID, attribute, pseudo-class, pseudo-element selectors; specificity calculation and the cascade.",
+          difficulty: "foundational",
+          readTimeMin: 14,
+          keyPoints: [
+            "CSS selectors pattern-match elements in the DOM to apply styles.",
+            "Type, class, ID, attribute, pseudo-class, and pseudo-element selectors offer increasing levels of precision.",
+            "Specificity is a four-part weight (inline, ID, class, type) that determines which rule wins in a conflict.",
+            "The cascade considers importance, specificity, then source order to resolve competing declarations.",
+            "Combinators (space, >, +, ~) express relationships between elements.",
+            "Avoid !important — it breaks the cascade and makes debugging difficult."
+          ],
+          content: `
+        ## What's This?
+
+        CSS selectors are patterns that match elements in the DOM, telling the browser which elements to style. Specificity is the algorithm browsers use to resolve conflicting CSS rules. Understanding both is essential for writing predictable, maintainable stylesheets — without them, your CSS will behave mysteriously as your project grows.
+
+        ## The Big Picture
+
+        Imagine writing instructions for painting a house. Some instructions are broad ("paint all walls white"), some are specific ("paint the front door red"), and some are extremely specific ("paint the front door's handle gold"). When instructions conflict, the most specific one wins. CSS selectors and specificity work the same way. The cascade is the system that decides which rule applies when multiple rules target the same element: it considers importance (<code>!important</code>), specificity (how precise the selector is), and source order (the last rule wins if specificity is equal).
+
+        ## Core Ideas
+
+        ### Basic Selectors
+
+        **Type selector** matches elements by their tag name. It has the lowest specificity weight.
+
+        \`\`\`css
+        p {             /* selects every <p> element on the page */
+          color: blue;
+        }
+        \`\`\`
+
+        **Class selector** matches elements with a specific class attribute. Classes are reusable across elements.
+
+        \`\`\`css
+        .highlight {    /* matches <p class="highlight">, <div class="highlight">, etc. */
+          background: yellow;
+        }
+        \`\`\`
+
+        **ID selector** matches a single element by its unique id attribute. IDs must be unique per page.
+
+        \`\`\`css
+        #navbar {       /* matches <nav id="navbar"> — only one per page */
+          border-bottom: 2px solid black;
+        }
+        \`\`\`
+
+        ### Attribute Selectors
+
+        Attribute selectors match elements based on the presence or value of an attribute. They live inside square brackets.
+
+        \`\`\`css
+        [disabled] {                    /* any element with a disabled attribute */
+          opacity: 0.5;
+        }
+        [type="email"] {                /* exact value match */
+          border-color: blue;
+        }
+        [href^="https"] {               /* value starts with "https" */
+          color: green;
+        }
+        [href$=".pdf"] {                /* value ends with ".pdf" */
+          color: red;
+        }
+        [class*="btn"] {                /* value contains "btn" anywhere */
+          font-weight: bold;
+        }
+        \`\`\`
+
+        ### Pseudo-Classes
+
+        Pseudo-classes describe a dynamic state or structural position of an element. They start with a single colon.
+
+        \`\`\`css
+        a:hover {                       /* when the mouse hovers over a link */
+          text-decoration: underline;
+        }
+        li:first-child {                /* first <li> inside its parent */
+          font-weight: bold;
+        }
+        li:nth-child(odd) {             /* odd-indexed <li> elements (1st, 3rd, 5th...) */
+          background: #f0f0f0;
+        }
+        input:focus {                   /* when an input has keyboard focus */
+          outline: 2px solid blue;
+        }
+        \`\`\`
+
+        ### Pseudo-Elements
+
+        Pseudo-elements style specific parts of an element or insert generated content. They use double colons (CSS3 convention).
+
+        \`\`\`css
+        p::first-line {                 /* the first line of every paragraph */
+          font-weight: bold;
+        }
+        .element::before {              /* inserts generated content before the element */
+          content: ">> ";
+          color: gray;
+        }
+        .element::after {               /* inserts generated content after the element */
+          content: " <<";
+          color: gray;
+        }
+        \`\`\`
+
+        ### Combinators
+
+        Combinators join two or more selectors to express a relationship between elements in the DOM tree.
+
+        \`\`\`css
+        /* Descendant combinator (space): matches any descendant at any depth */
+        article p {                     /* any <p> inside an <article>, no matter how deeply nested */
+          line-height: 1.6;
+        }
+
+        /* Child combinator (>): matches direct children only (one level deep) */
+        ul > li {                       /* only <li> that is a direct child of <ul> */
+          list-style: none;
+        }
+
+        /* Adjacent sibling combinator (+): matches the first sibling immediately after */
+        h2 + p {                        /* a <p> that directly follows an <h2> (shares same parent) */
+          margin-top: 0;
+        }
+
+        /* General sibling combinator (~): matches all subsequent siblings */
+        h2 ~ p {                        /* all <p> elements that follow an <h2> and share the same parent */
+          color: gray;
+        }
+        \`\`\`
+
+        ### Specificity Calculation
+
+        Specificity is a four-part value: (inline, ID, class, type). When two rules conflict, the browser compares these columns left to right. The higher value wins.
+
+        - Inline styles (<code>style</code> attribute): 1, 0, 0, 0
+        - ID selector (<code>#foo</code>): 0, 1, 0, 0
+        - Class, attribute, pseudo-class (<code>.bar</code>, <code>[type]</code>, <code>:hover</code>): 0, 0, 1, 0
+        - Type, pseudo-element (<code>div</code>, <code>::before</code>): 0, 0, 0, 1
+
+        \`\`\`css
+        /* specificity: 0, 1, 0, 1 */
+        #sidebar a { color: blue; }
+
+        /* specificity: 0, 0, 1, 1 */
+        .nav a { color: red; }
+
+        /* The #sidebar a rule wins because its ID column (1) beats 0 */
+        \`\`\`
+
+        The universal selector <code>*</code> and combinators (<code>></code>, <code>+</code>, <code>~</code>) contribute nothing to specificity.
+
+        ### The Cascade
+
+        When specificity is equal, source order decides: the last declaration in the stylesheet wins. The full cascade order is:
+
+        1. Origin and importance (browser styles < user styles < author styles; <code>!important</code> reverses this)
+        2. Specificity (higher wins)
+        3. Source order (later wins)
+
+        \`\`\`css
+        /* Both have specificity 0, 0, 1, 0 — second one wins due to source order */
+        .btn { background: blue; }
+        .btn { background: red; }   /* this value is actually applied */
+        \`\`\`
+
+        <code>!important</code> overrides all regular declarations within the same origin. It should be avoided — it breaks the cascade, makes overrides impossible without more <code>!important</code>, and hides specificity bugs.
+
+        ## Wiring It Together
+
+        A complete example applying selectors, combinators, and specificity-aware rules:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <style>
+            /* Type selector — base styles for all elements of this type */
+            body { font-family: sans-serif; line-height: 1.5; }
+
+            /* Class + child combinator — only direct children */
+            .menu > li {
+              display: inline;
+              margin-right: 1rem;
+            }
+
+            /* Pseudo-class + attribute selector — dynamic state */
+            a[href^="https"]:hover {
+              color: green;
+            }
+
+            /* ID selector — high specificity */
+            #featured {
+              border: 2px solid gold;
+              padding: 1rem;
+              background: #fffbe6;
+            }
+
+            /* Pseudo-element — generated content */
+            .note::before {
+              content: "NOTE: ";
+              font-weight: bold;
+              color: #c00;
+            }
+
+            /* Specificity demo: 0,0,1,0 vs 0,0,2,0 */
+            .box { background: lightgray; }         /* loses — specificity 0,0,1,0 */
+            .container .box { background: coral; }  /* wins — specificity 0,0,2,0 */
+          </style>
+        </head>
+        <body>
+
+          <ul class="menu">
+            <li><a href="https://example.com">Secure Link</a></li>
+            <li><a href="/local">Local Link</a></li>
+          </ul>
+
+          <div id="featured">
+            <p>This section has a gold border because #featured targets it by ID.</p>
+          </div>
+
+          <p class="note">This paragraph has "NOTE:" prepended via ::before.</p>
+
+          <div class="container">
+            <div class="box">This box is coral because .container .box is more specific than .box.</div>
+          </div>
+
+        </body>
+        </html>
+        \`\`\`
+        `,
+          tags: ["css", "selectors", "specificity"]
+        },
+
+{
+          id: "ns-css-box-model",
+          title: "Box Model & Typography",
+          shortDesc: "Content, padding, border, margin; box-sizing; font properties, line-height, and web font loading.",
+          difficulty: "foundational",
+          readTimeMin: 13,
+          keyPoints: [
+            "Every element is a box with content, padding, border, and margin layers from inside out.",
+            "box-sizing: border-box includes padding and border in the element's total width, making layout math predictable.",
+            "Vertical margins between adjacent block elements collapse into the larger of the two values.",
+            "rem units scale with the root font-size and respect user accessibility preferences.",
+            "line-height should use a unitless value (e.g., 1.5) for proportional spacing that inherits correctly.",
+            "Web fonts load via @font-face or hosted services; include woff2 for modern browsers and fallbacks for others."
+          ],
+          content: `
+        ## What's This?
+
+        Every element on a web page is a rectangular box. The box model defines how that box's dimensions are calculated from its content, padding, border, and margin. Typography properties control how text looks inside those boxes. Together they form the foundation of visual layout and readable content on the web.
+
+        ## The Big Picture
+
+        Imagine each block element is a framed picture hanging on a wall. The content is the picture itself. Padding is the mat board between the picture and the frame — it keeps the picture from touching the frame. The border is the frame, visible around the edges. Margin is the empty wall space between this frame and the next picture. The <code>box-sizing</code> property decides whether your width measurement includes just the picture (content-box) or the picture, mat, and frame together (border-box). Typography (font-family, font-size, line-height, etc.) controls how text fits and reads inside the content area.
+
+        ## Core Ideas
+
+        ### The Four Box Layers
+
+        Every element has four concentric layers, from inside out:
+
+        \`\`\`css
+        .box {
+          width: 300px;             /* content area width */
+          padding: 20px;            /* space inside the border */
+          border: 2px solid black;  /* visible edge around padding */
+          margin: 15px;             /* space outside the border */
+        }
+        /*
+        Total width (content-box) = 300 + 20*2 + 2*2 = 344px
+        Total height follows the same logic
+        */
+        \`\`\`
+
+        With the default <code>box-sizing: content-box</code>, the <code>width</code> property sets only the content width — padding and border are added on top. This makes math painful when mixing percentage and pixel values.
+
+        ### box-sizing: border-box
+
+        <code>border-box</code> includes padding and border inside the declared width. The content area shrinks to accommodate them. This is far more intuitive for layout.
+
+        \`\`\`css
+        /* Global reset — best practice for all projects */
+        *, *::before, *::after {
+          box-sizing: border-box;
+        }
+
+        .box {
+          width: 300px;             /* total width is exactly 300px */
+          padding: 20px;            /* subtracts 20px from each side */
+          border: 2px solid black;  /* subtracts 2px from each side */
+        }
+        /*
+        Content width = 300 - 20*2 - 2*2 = 256px
+        Total width stays 300px — easier to reason about
+        */
+        \`\`\`
+
+        ### Margin Collapsing
+
+        Adjacent vertical margins between block elements collapse into a single margin equal to the larger of the two. This only affects vertical (top/bottom) margins, never horizontal (left/right).
+
+        \`\`\`css
+        h1 { margin-bottom: 24px; }
+        h2 { margin-top: 16px; }
+        /* The gap between h1 and h2 is max(24, 16) = 24px, not 40px */
+        \`\`\`
+
+        Margin collapsing also happens between parent and first/last child if no border, padding, or inline content separates them.
+
+        ### Font Properties
+
+        <code>font-family</code> specifies the typeface. Provide fallbacks and end with a generic family keyword so the browser always has a valid font.
+
+        \`\`\`css
+        body {
+          font-family: "Helvetica Neue", Arial, sans-serif;
+          font-size: 16px;
+          font-weight: 400;               /* 400 = normal, 700 = bold */
+          font-style: normal;             /* normal, italic, oblique */
+        }
+        \`\`\`
+
+        <code>font-size</code> can use absolute (px) or relative units. Relative units are preferred for accessibility because they respect the user's browser settings.
+
+        \`\`\`css
+        html { font-size: 100%; }            /* user default, typically 16px */
+        h1 { font-size: 2rem; }              /* 2 * root = 32px */
+        p { font-size: 1rem; }               /* 1 * root = 16px */
+        .small { font-size: 0.875rem; }      /* 14px */
+        \`\`\`
+
+        <code>rem</code> is relative to the root (<code><html></code>) font-size. <code>em</code> is relative to the element's own computed font-size — useful for padding that scales with text.
+
+        \`\`\`css
+        .button {
+          font-size: 1rem;
+          padding: 0.5em 1em;       /* padding scales with font-size: 8px 16px at 1rem */
+        }
+        \`\`\`
+
+        ### Line Height
+
+        <code>line-height</code> controls the vertical space between lines of text. A unitless value is best — it is relative to the element's font-size and inherits as a multiplier, not a fixed value.
+
+        \`\`\`css
+        body {
+          line-height: 1.5;          /* 1.5 * 16px = 24px between baselines */
+        }
+        \`\`\`
+
+        ### Web Fonts
+
+        To use a custom font, either link to a hosted service or self-host with <code>@font-face</code>.
+
+        \`\`\`css
+        /* Google Fonts — add this <link> in the HTML <head>:
+           <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+        */
+        body {
+          font-family: "Open Sans", Arial, sans-serif;
+        }
+        \`\`\`
+
+        \`\`\`css
+        /* Self-hosted @font-face */
+        @font-face {
+          font-family: "MyFont";
+          src: url("myfont.woff2") format("woff2"),   /* modern browsers */
+               url("myfont.woff") format("woff");       /* fallback */
+          font-weight: normal;
+          font-style: normal;
+          font-display: swap;     /* show fallback text immediately, swap when font loads */
+        }
+        \`\`\`
+
+        ### Text Alignment and Decoration
+
+        \`\`\`css
+        p {
+          text-align: justify;          /* left, right, center, justify */
+          text-decoration: none;        /* underline, overline, line-through */
+          text-transform: uppercase;    /* uppercase, lowercase, capitalize */
+          letter-spacing: 0.02em;       /* global tracking */
+        }
+        \`\`\`
+
+        ## Wiring It Together
+
+        A card component demonstrating the box model and typography together:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <style>
+            *, *::before, *::after { box-sizing: border-box; }
+
+            /* Base typography */
+            html { font-size: 100%; }
+            body {
+              font-family: Georgia, "Times New Roman", serif;
+              line-height: 1.6;
+              margin: 2rem;
+              color: #222;
+            }
+
+            /* Card — box model in action */
+            .card {
+              width: 340px;                    /* total width with border-box */
+              padding: 1.5rem;                 /* internal spacing */
+              border: 1px solid #ddd;          /* thin border */
+              border-radius: 10px;             /* rounded corners */
+              margin: 1rem 0;                  /* vertical margin collapses */
+              background: #fafafa;
+            }
+
+            /* Card title */
+            .card h2 {
+              font-family: "Helvetica Neue", Arial, sans-serif;
+              font-size: 1.5rem;
+              font-weight: 700;
+              line-height: 1.2;
+              margin: 0 0 0.5rem 0;
+            }
+
+            /* Card metadata */
+            .card .meta {
+              font-family: "Helvetica Neue", Arial, sans-serif;
+              font-size: 0.75rem;
+              color: #666;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              margin-bottom: 0.75rem;
+            }
+
+            /* Card body text */
+            .card p {
+              font-size: 0.9375rem;
+              margin: 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <p class="meta">Design / June 2026</p>
+            <h2>Understanding the Box Model</h2>
+            <p>Every element on a web page is a rectangular box. Padding, border, and margin surround the content in that order.</p>
+          </div>
+        </body>
+        </html>
+        \`\`\`
+
+        The card's width is exactly 340px thanks to <code>border-box</code>. The title uses a sans-serif font at 1.5rem (24px), while the body uses serif at 0.9375rem (15px). The meta text is uppercase with tracking. All font sizes scale with the user's root font-size setting.
+        `,
+          tags: ["css", "box model", "typography", "web fonts"]
+        },
+
+{
+          id: "ns-css-layout",
+          title: "Layout (Flexbox, Grid)",
+          shortDesc: "Flex container/item properties, grid template areas, auto-fit/minmax, and combining flex + grid.",
+          difficulty: "foundational",
+          readTimeMin: 15,
+          keyPoints: [
+            "Flexbox is for one-dimensional layouts (a row OR a column); Grid is for two-dimensional layouts (rows AND columns).",
+            "A flex container controls item alignment along the main axis (justify-content) and cross axis (align-items).",
+            "Flex items can grow (flex-grow), shrink (flex-shrink), and have a starting size (flex-basis).",
+            "Grid uses grid-template-columns and grid-template-rows to define tracks; fr units distribute available space proportionally.",
+            "grid-template-areas maps named regions for visual page layout; auto-fit with minmax creates responsive grids without media queries.",
+            "Use Grid for page-level structure and Flexbox for component-level alignment within grid cells."
+          ],
+          content: `
+        ## What's This?
+
+        Flexbox and Grid are CSS layout modules that distribute space and align content inside containers. Flexbox excels at one-dimensional layouts (a single row OR a single column). Grid handles two-dimensional layouts (rows AND columns simultaneously). Modern web development uses both: Grid for the overall page skeleton and Flexbox for components inside each grid cell.
+
+        ## The Big Picture
+
+        Think of Flexbox as a toolbar where buttons sit in a row. They can be left-aligned, centered, or spread apart. If the toolbar gets too narrow, buttons can wrap to the next line. Each button can grow or shrink to fill available space. Grid is like a spreadsheet or a newspaper layout: you define columns and rows, then place content into cells. Some cells span multiple columns or rows. The <code>auto-fit</code> and <code>minmax()</code> functions make grids automatically adjust the number of columns based on available width — no media queries needed.
+
+        ## Core Ideas
+
+        ### Flexbox: The Container
+
+        Setting <code>display: flex</code> creates a flex container. Its children become flex items arranged along the main axis (horizontal by default).
+
+        \`\`\`css
+        .container {
+          display: flex;              /* enables flexbox layout */
+          flex-direction: row;        /* row (default), column, row-reverse, column-reverse */
+          flex-wrap: wrap;            /* nowrap (default), wrap — items overflow or wrap */
+          justify-content: center;    /* main axis: flex-start, center, space-between, space-around, space-evenly */
+          align-items: center;        /* cross axis: stretch, center, flex-start, flex-end, baseline */
+          gap: 1rem;                  /* gutter space between items (works in both flex and grid) */
+        }
+        \`\`\`
+
+        ### Flexbox: The Items
+
+        Flex items can grow, shrink, and have a preferred starting size. The shorthand <code>flex</code> combines all three.
+
+        \`\`\`css
+        .item {
+          flex: 1 1 0;                /* grow:1, shrink:1, basis:0 — all items share space equally */
+        }
+        .item.wide {
+          flex: 2 1 0;                /* grows twice as much as siblings with flex: 1 1 0 */
+        }
+        .item.fixed {
+          flex: 0 0 200px;            /* no grow, no shrink, always 200px */
+        }
+        \`\`\`
+
+        <code>align-self</code> overrides the container's <code>align-items</code> for an individual item.
+
+        \`\`\`css
+        .item.special {
+          align-self: flex-end;       /* this item alone aligns to the bottom */
+        }
+        \`\`\`
+
+        ### Grid: Defining Tracks
+
+        Set <code>display: grid</code>, then define columns and rows using <code>grid-template-columns</code> and <code>grid-template-rows</code>. The <code>fr</code> unit distributes available space fractionally.
+
+        \`\`\`css
+        .grid {
+          display: grid;
+          grid-template-columns: 1fr 2fr 1fr;  /* three columns: middle is twice as wide */
+          grid-template-rows: auto auto;        /* two rows, height based on content */
+          gap: 1rem;
+        }
+        \`\`\`
+
+        Mix <code>fr</code> with fixed values:
+
+        \`\`\`css
+        .grid {
+          grid-template-columns: 200px 1fr 1fr; /* first column 200px, rest split remaining space */
+        }
+        \`\`\`
+
+        ### Grid: Placing Items
+
+        Items are placed automatically into grid cells in document order. Explicit placement uses line numbers or named areas.
+
+        \`\`\`css
+        /* Placing by line numbers */
+        .item {
+          grid-column: 1 / 3;           /* start at line 1, end at line 3 (span 2 columns) */
+          grid-row: 1 / 2;              /* start at row line 1, end at line 2 (span 1 row) */
+        }
+        \`\`\`
+
+        Named grid areas are ideal for page layout because the visual structure is declared in one place:
+
+        \`\`\`css
+        .page {
+          display: grid;
+          grid-template-columns: 1fr 3fr;
+          grid-template-rows: auto 1fr auto;
+          grid-template-areas:
+            "header  header"
+            "sidebar main"
+            "footer  footer";
+          gap: 1rem;
+          min-height: 100vh;
+        }
+        header { grid-area: header; }
+        aside  { grid-area: sidebar; }
+        main   { grid-area: main; }
+        footer { grid-area: footer; }
+        \`\`\`
+
+        ### Auto-Fit and Minmax
+
+        <code>auto-fit</code> combined with <code>minmax()</code> creates responsive grids that automatically adjust column count based on container width — no media queries required.
+
+        \`\`\`css
+        .responsive-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          /* creates as many columns as fit, each at least 250px wide, expanding equally */
+          gap: 1rem;
+        }
+        \`\`\`
+
+        <code>auto-fit</code> collapses empty tracks when there are fewer items than possible columns. <code>auto-fill</code> preserves empty tracks. Use <code>auto-fit</code> for most layouts.
+
+        ### Combining Flexbox and Grid
+
+        A common and powerful pattern: use Grid for the overall page structure and Flexbox for component alignment within grid cells.
+
+        \`\`\`css
+        /* Page skeleton — Grid */
+        .page {
+          display: grid;
+          grid-template-columns: 250px 1fr;
+          grid-template-areas: "sidebar main";
+          min-height: 100vh;
+        }
+
+        /* Component — Flexbox inside a grid cell */
+        .toolbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 1rem;
+        }
+        \`\`\`
+
+        ## Wiring It Together
+
+        A complete page layout using Grid for structure and Flexbox for components:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <style>
+            *, *::before, *::after { box-sizing: border-box; }
+            body { margin: 0; font-family: system-ui, sans-serif; }
+
+            /* Grid — page skeleton */
+            .page {
+              display: grid;
+              grid-template-columns: 200px 1fr;
+              grid-template-rows: auto 1fr auto;
+              grid-template-areas:
+                "header  header"
+                "sidebar main"
+                "footer  footer";
+              min-height: 100vh;
+              gap: 0;
+            }
+            header { grid-area: header; background: #1a1a2e; color: #fff; padding: 1rem 2rem; }
+            aside  { grid-area: sidebar; background: #f0f0f5; padding: 1.5rem; }
+            main   { grid-area: main; padding: 1.5rem; }
+            footer { grid-area: footer; background: #1a1a2e; color: #fff; padding: 1rem; text-align: center; }
+
+            /* Flexbox — nav links inside header */
+            .nav {
+              display: flex;
+              gap: 2rem;
+              list-style: none;
+              margin: 0;
+              padding: 0;
+            }
+            .nav a { color: #fff; text-decoration: none; }
+            .nav a:hover { text-decoration: underline; }
+
+            /* Flexbox — card grid inside main */
+            .cards {
+              display: flex;
+              flex-wrap: wrap;
+              gap: 1rem;
+            }
+            .card {
+              flex: 1 1 250px;
+              border: 1px solid #ddd;
+              padding: 1rem;
+              border-radius: 8px;
+              background: #fff;
+            }
+
+            /* Flexbox — card footer actions */
+            .card-actions {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-top: 1rem;
+              padding-top: 0.5rem;
+              border-top: 1px solid #eee;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <header>
+              <ul class="nav">
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Articles</a></li>
+                <li><a href="#">About</a></li>
+              </ul>
+            </header>
+            <aside>
+              <h3>Sidebar</h3>
+              <p>Categories, archives, or profile info.</p>
+            </aside>
+            <main>
+              <h1>Articles</h1>
+              <div class="cards">
+                <div class="card">
+                  <h2>Grid Layout</h2>
+                  <p>Two-dimensional layouts made simple.</p>
+                  <div class="card-actions">
+                    <span>Read</span>
+                    <span>4 min</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <h2>Flexbox</h2>
+                  <p>One-dimensional alignment for components.</p>
+                  <div class="card-actions">
+                    <span>Read</span>
+                    <span>3 min</span>
+                  </div>
+                </div>
+                <div class="card">
+                  <h2>Combined</h2>
+                  <p>Using Grid for pages, Flexbox for components.</p>
+                  <div class="card-actions">
+                    <span>Read</span>
+                    <span>5 min</span>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <footer>&copy; 2026 My Site</footer>
+          </div>
+        </body>
+        </html>
+        \`\`\`
+        `,
+          tags: ["css", "flexbox", "grid", "layout"]
+        },
+
+{
+          id: "ns-css-responsive",
+          title: "Responsive Design",
+          shortDesc: "Media queries, mobile-first approach, relative units (rem, em, vw, vh), and container queries.",
+          difficulty: "intermediate",
+          readTimeMin: 14,
+          keyPoints: [
+            "Responsive design uses fluid grids, flexible images, and media queries to adapt to any screen size from a single codebase.",
+            "The mobile-first approach writes base styles for small screens and adds complexity via min-width media queries.",
+            "Relative units (rem, em, vw, vh, %) create fluid layouts that scale with the viewport or parent element.",
+            "clamp() enables fluid typography that scales smoothly between a minimum and maximum value.",
+            "Container queries allow components to respond to their parent container's width rather than the viewport.",
+            "Use auto-fit/minmax in Grid to create responsive columns without any media queries."
+          ],
+          content: `
+        ## What's This?
+
+        Responsive design is the practice of building web pages that adapt to any screen size — from a phone held vertically to a widescreen monitor. It uses fluid grids, flexible images, and media queries so that a single codebase works well on every device instead of maintaining separate mobile and desktop sites.
+
+        ## The Big Picture
+
+        In the early web, designers created fixed-width pages for desktop monitors. Today, users browse on phones, tablets, laptops, TVs, and even car dashboards. Building a separate version for each screen is impractical. Responsive design solves this with three core techniques: a fluid grid (using relative units like %, rem, and vw instead of fixed px), flexible images (setting <code>max-width: 100%</code> so they never overflow their container), and media queries (CSS rules that activate at specific viewport widths). The mobile-first methodology starts with the narrowest screen and adds layout enhancements as the viewport widens, ensuring every device gets a solid baseline experience.
+
+        ## Core Ideas
+
+        ### The Viewport Meta Tag
+
+        Without this tag, mobile browsers render the page at a desktop-width (usually 980px) and then zoom out, forcing the user to pinch-zoom to read content. The viewport meta tag tells the browser to use the device's actual width.
+
+        \`\`\`html
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- width=device-width = use the device's physical width -->
+        <!-- initial-scale=1.0 = no default zoom -->
+        \`\`\`
+
+        ### Relative Units
+
+        Relative units create fluid layouts that adapt without hard-coded pixel values:
+
+        <code>rem</code>: Relative to the root (<code><html></code>) font-size. Best for font sizes and spacing that should respect the user's browser settings.
+
+        <code>em</code>: Relative to the element's own computed font-size. Useful for padding, margins, or width that should scale with the element's text size.
+
+        <code>vw</code>: 1% of viewport width. Good for full-width elements and fluid typography.
+
+        <code>vh</code>: 1% of viewport height. Useful for hero sections that fill the screen.
+
+        \`\`\`css
+        html { font-size: 100%; }                /* user default, typically 16px */
+        h1 { font-size: 2rem; }                  /* 32px, scales if user enlarges root */
+        p { margin-bottom: 1em; }                /* equals the p's font-size */
+        .hero { height: 100vh; }                 /* exactly fills the viewport height */
+        .full-width { width: 100vw; }            /* spans the entire viewport width */
+        \`\`\`
+
+        ### Fluid Typography with clamp()
+
+        The <code>clamp()</code> function accepts three values: minimum, preferred, and maximum. The browser picks the preferred value but never goes below the minimum or above the maximum. This creates typography that scales smoothly between breakpoints.
+
+        \`\`\`css
+        h1 {
+          font-size: clamp(1.5rem, 4vw, 3rem);
+          /* on a 375px phone: 4vw = 15px, clamp to min 1.5rem (24px) */
+          /* on a 768px tablet: 4vw = 30.72px, within range */
+          /* on a 1200px desktop: 4vw = 48px, clamp to max 3rem (48px) */
+        }
+        \`\`\`
+
+        ### Mobile-First Media Queries
+
+        Mobile-first means writing base styles for the narrowest screen (phones), then layering on more complex layouts for larger screens using <code>min-width</code> media queries. This ensures every device gets a usable layout and avoids writing override after override.
+
+        \`\`\`css
+        /* Base: mobile styles — applies everywhere */
+        body { font-size: 16px; }
+        .sidebar { display: none; }                /* hide sidebar on small screens */
+
+        /* Tablet: 768px and wider */
+        @media (min-width: 768px) {
+          body { font-size: 18px; }
+          .sidebar { display: block; width: 250px; }
+        }
+
+        /* Desktop: 1024px and wider */
+        @media (min-width: 1024px) {
+          body { font-size: 20px; }
+          .layout { display: grid; grid-template-columns: 250px 1fr; }
+        }
+        \`\`\`
+
+        Common breakpoint ranges (guide only — let content dictate actual values):
+        - 480px+: large phone / small tablet landscape
+        - 768px+: tablet portrait
+        - 1024px+: desktop
+        - 1200px+: wide desktop
+
+        ### Flexible Images and Media
+
+        Prevent images and embedded media from overflowing their container by capping their width:
+
+        \`\`\`css
+        img, video, iframe {
+          max-width: 100%;         /* never exceed the parent container's width */
+          height: auto;            /* preserve aspect ratio when width changes */
+        }
+        \`\`\`
+
+        ### Responsive Grid with auto-fit/minmax
+
+        This CSS Grid pattern creates responsive columns that automatically adjust their count based on available space — zero media queries required:
+
+        \`\`\`css
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          /* at 320px viewport: 1 column (280px min with gap) */
+          /* at 600px viewport: 2 columns */
+          /* at 900px viewport: 3 columns */
+          gap: 1rem;
+        }
+        \`\`\`
+
+        ### Container Queries
+
+        Container queries let you style an element based on its parent container's size instead of the viewport. This is essential for reusable components that must adapt to different placement contexts — a card component in a narrow sidebar should look different from the same card in a wide main area.
+
+        \`\`\`css
+        /* Step 1: establish a containment context */
+        .card-wrapper {
+          container-type: inline-size;   /* respond to container width changes */
+          container-name: card;          /* optional name for readability */
+        }
+
+        /* Step 2: write styles that query the container */
+        /* Base styles (narrow container) */
+        .card { flex-direction: column; }
+
+        /* When container is 400px or wider */
+        @container card (min-width: 400px) {
+          .card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1rem;
+          }
+        }
+        \`\`\`
+
+        Container queries are especially powerful for design systems and component libraries where the same component appears in multiple contexts.
+
+        ## Wiring It Together
+
+        A fully responsive page using mobile-first methodology, relative units, media queries, and container queries:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Responsive Demo</title>
+          <style>
+            *, *::before, *::after { box-sizing: border-box; }
+            body { margin: 0; font-family: system-ui, sans-serif; }
+            img { max-width: 100%; height: auto; }
+
+            /* Mobile-first: single-column stacked layout */
+            .page {
+              display: flex;
+              flex-direction: column;
+              min-height: 100vh;
+            }
+            header, footer {
+              background: #1a1a2e;
+              color: #fff;
+              padding: 1rem;
+            }
+            main { padding: 1rem; flex: 1; }
+
+            /* Fluid typography */
+            h1 { font-size: clamp(1.5rem, 5vw, 2.5rem); }
+            p { font-size: clamp(0.875rem, 2vw, 1rem); }
+
+            /* Responsive card grid — no media queries */
+            .cards {
+              display: grid;
+              grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+              gap: 1rem;
+            }
+
+            /* Establish container context for cards */
+            .card-wrapper {
+              container-type: inline-size;
+            }
+
+            /* Card default: stacked (narrow container) */
+            .card {
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              padding: 1rem;
+              background: #fff;
+            }
+
+            /* Card in wide container: side-by-side */
+            @container (min-width: 400px) {
+              .card {
+                display: flex;
+                gap: 1rem;
+                align-items: flex-start;
+              }
+              .card img {
+                width: 120px;
+                flex-shrink: 0;
+              }
+            }
+
+            /* Tablet+: two-column page layout */
+            @media (min-width: 768px) {
+              .page {
+                display: grid;
+                grid-template-columns: 200px 1fr;
+                grid-template-rows: auto 1fr auto;
+                grid-template-areas:
+                  "header header"
+                  "sidebar main"
+                  "footer footer";
+              }
+              header { grid-area: header; }
+              aside  { grid-area: sidebar; background: #f4f4f4; padding: 1rem; }
+              main   { grid-area: main; }
+              footer { grid-area: footer; }
+            }
+
+            /* Desktop+: wider main content area */
+            @media (min-width: 1024px) {
+              main { padding: 2rem; }
+              .cards { gap: 1.5rem; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="page">
+            <header>
+              <h1>My Site</h1>
+            </header>
+            <aside>
+              <h2>Sidebar</h2>
+              <p>Navigation, categories, or profile.</p>
+            </aside>
+            <main>
+              <h1>Articles</h1>
+              <div class="cards">
+                <div class="card-wrapper">
+                  <div class="card">
+                    <img src="https://placehold.co/150" alt="Thumbnail">
+                    <div>
+                      <h2>Responsive Design</h2>
+                      <p>One codebase, every screen size. Mobile-first, fluid grids, and container queries make it possible.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-wrapper">
+                  <div class="card">
+                    <img src="https://placehold.co/150" alt="Thumbnail">
+                    <div>
+                      <h2>Fluid Typography</h2>
+                      <p>Using clamp() to create text that scales smoothly between minimum and maximum sizes.</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-wrapper">
+                  <div class="card">
+                    <img src="https://placehold.co/150" alt="Thumbnail">
+                    <div>
+                      <h2>Media Queries</h2>
+                      <p>Conditional CSS that activates at specific viewport widths for targeted layout changes.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </main>
+            <footer>&copy; 2026 My Site</footer>
+          </div>
+        </body>
+        </html>
+        \`\`\`
+        `,
+          tags: ["css", "responsive design", "media queries", "mobile-first"]
+        }
+
+        ,
+        {
+          id: "ns-css-animations",
+          title: "Animations & Transitions",
+          shortDesc: "CSS transitions, keyframe animations, transform, easing functions, and performance considerations.",
+          difficulty: "intermediate",
+          readTimeMin: 14,
+          keyPoints: [
+            "Transitions interpolate between two states; keyframe animations run multi-step sequences",
+            "The <code>transform</code> property moves, scales, rotates, and skews without layout reflow",
+            "Easing functions control acceleration curves; avoid <code>steps()</code> for smooth motion",
+            "Animate only <code>transform</code> and <code>opacity</code> to keep compositing on the GPU"
+          ],
+          tags: ["css", "animations", "transitions", "performance"],
+          content: `## What's This?
+
+        CSS animations and transitions let elements change from one visual state to another smoothly over time instead of snapping instantly. Transitions handle simple A-to-B changes. Keyframe animations handle multi-stop sequences with looping, delays, and reversal.
+
+        ## The Big Picture
+
+        Browsers render frames at 60 fps for smooth motion. Every animated property triggers one of three render phases:
+
+        - **Layout** (reflow): changing <code>width</code>, <code>height</code>, <code>top</code>, <code>left</code> -- expensive, affects siblings
+        - **Paint**: changing <code>color</code>, <code>background</code>, <code>box-shadow</code> -- moderately expensive, redraws pixels
+        - **Composite**: changing <code>transform</code> and <code>opacity</code> -- cheap, GPU-accelerated
+
+        Always prefer composited properties for 60 fps animations.
+
+        ## Core Ideas
+
+        ### Transitions: the <code>transition</code> shorthand
+
+        A transition defines which property animates, how long it takes, what easing curve to use, and an optional delay.
+
+        \`\`\`css
+        /* Trigger: when .box changes property values (via :hover, JS, class toggle) */
+        .box {
+          width: 100px;
+          background: #3498db;
+          /* property duration easing delay */
+          transition: width 0.3s ease 0s, background 0.5s linear 0s;
+        }
+
+        .box:hover {
+          width: 300px;
+          background: #e74c3c;
+        }
+        \`\`\`
+
+        Breakdown:
+
+        - <code>transition-property</code>: which CSS properties to watch (or <code>all</code>)
+        - <code>transition-duration</code>: how long the animation runs (e.g., <code>0.3s</code> or <code>300ms</code>)
+        - <code>transition-timing-function</code>: the acceleration curve (see easing below)
+        - <code>transition-delay</code>: wait time before starting
+
+        ### The <code>transform</code> property
+
+        <code>transform</code> changes an element's geometric shape without affecting document flow. The element keeps its original layout space; the visual is drawn elsewhere.
+
+        \`\`\`css
+        .card {
+          transform: translateX(20px) rotate(45deg) scale(1.1);
+          /* Order matters: right-to-left application */
+          transform-origin: center center; /* pivot point, default is center */
+        }
+        \`\`\`
+
+        Transform functions:
+
+        - <code>translateX(n)</code>, <code>translateY(n)</code>, <code>translate(x, y)</code> -- move by offset
+        - <code>rotate(angle)</code> -- spin around <code>transform-origin</code>
+        - <code>scale(n)</code> -- grow/shrink; <code>scaleX</code>/<code>scaleY</code> for one axis
+        - <code>skew(angle)</code> -- shear distortion
+
+        ### Easing functions: <code>ease</code>, <code>cubic-bezier</code>, <code>steps</code>
+
+        Easing describes how intermediate values are computed over time.
+
+        \`\`\`css
+        /* Built-in keywords */
+        transition-timing-function: ease;     /* fast start, slow end -- default */
+        transition-timing-function: linear;   /* constant speed */
+        transition-timing-function: ease-in;  /* slow start, fast end */
+        transition-timing-function: ease-out; /* fast start, slow end */
+        transition-timing-function: ease-in-out; /* slow both ends */
+
+        /* Custom cubic bezier (x1, y1, x2, y2) */
+        transition-timing-function: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+        /* Step-based -- useful for sprite-sheet animations */
+        transition-timing-function: steps(4, end);
+        animation-timing-function: steps(10);
+        \`\`\`
+
+        Cubic bezier control points define a curve where x is time (0 to 1) and y is progress. Overshoot values like y > 1 produce a bounce effect.
+
+        ### Keyframe animations: <code>@keyframes</code> + <code>animation</code>
+
+        Keyframe animations declare named sequences with intermediate stops (keyframes) using percentage selectors.
+
+        \`\`\`css
+        /* Define the animation sequence */
+        @keyframes slide-in {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          60% {
+            transform: translateX(10%);
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        /* Apply the animation to an element */
+        .element {
+          animation: slide-in 0.8s ease-out 0.2s 1 forwards;
+          /* name duration easing delay iteration-count fill-mode */
+        }
+
+        /* Fill modes control what happens before/after */
+        /* forwards  -- keeps final keyframe values */
+        /* backwards -- applies 0% values during delay */
+        /* both     -- combines backwards + forwards */
+        \`\`\`
+
+        The <code>animation</code> shorthand packs: <code>name</code>, <code>duration</code>, <code>timing-function</code>, <code>delay</code>, <code>iteration-count</code>, <code>direction</code>, <code>fill-mode</code>, <code>play-state</code>.
+
+        \`\`\`css
+        /* Direction: normal | reverse | alternate | alternate-reverse */
+        animation-direction: alternate; /* forward, then backward, repeat */
+        animation-iteration-count: infinite; /* loop forever */
+        animation-play-state: paused; /* pause/resume via JS class toggle */
+        \`\`\`
+
+        ### Performance: <code>will-change</code> and <code>contain</code>
+
+        Hint the browser about upcoming changes so it prepares compositor layers.
+
+        \`\`\`css
+        /* Use sparingly -- too many will-change hints burns memory */
+        .animated-element {
+          will-change: transform, opacity;
+        }
+
+        /* Isolate from surrounding layout */
+        .animated-element {
+          contain: layout style paint;
+        }
+        \`\`\`
+
+        ## Wiring It Together
+
+        A card that slides in, bounces lightly, and shows a hover glow:
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <style>
+            /* ---- card base styles ---- */
+            .card {
+              width: 240px;
+              padding: 1.5rem;
+              background: #fff;
+              border-radius: 12px;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+              /* prepare for smooth transform animations */
+              will-change: transform;
+
+              /* ---- entrance animation ---- */
+              animation: card-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0s 1 both;
+              /*
+                name       : card-enter
+                duration   : 0.6s
+                easing     : cubic-bezier -- overshoots for a bounce feel
+                delay      : 0s
+                iterations : 1
+                fill-mode  : both
+              */
+            }
+
+            /* ---- keyframe: entrance from below with fade ---- */
+            @keyframes card-enter {
+              0% {
+                transform: translateY(40px);
+                opacity: 0;
+              }
+              100% {
+                transform: translateY(0);
+                opacity: 1;
+              }
+            }
+
+            /* ---- hover: lift + glow, using transition ---- */
+            .card {
+              /* only animate transform and box-shadow -- both composite/paint */
+              transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            .card:hover {
+              transform: translateY(-6px);
+              box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h3>Hello, Animation</h3>
+            <p>This card fades in and lifts on hover.</p>
+          </div>
+        </body>
+        </html>
+        \`\`\`
+
+        Click the result: the card enters with a bounce, then responds to hover with a smooth lift. Only <code>transform</code>, <code>opacity</code>, and <code>box-shadow</code> animate -- no layout thrashing.
+        `
+        },
+
+{
+          id: "ns-css-preprocessors",
+          title: "Preprocessors (Sass, PostCSS)",
+          shortDesc: "Variables, nesting, mixins, functions, partials, and Autoprefixer with PostCSS.",
+          difficulty: "intermediate",
+          readTimeMin: 15,
+          keyPoints: [
+            "Sass extends CSS with variables, nesting, mixins, and functions compiled to vanilla CSS",
+            "Partials (underscore-prefixed files) and <code>@use</code> organize stylesheets into modules",
+            "PostCSS is a toolchain: plugins like Autoprefixer and PostCSS Preset Env transform future CSS today",
+            "Sass variables are compile-time; CSS custom properties are runtime (live-updating with JS)",
+            "Mixins accept parameters and generate repetitive rule blocks; <code>@extend</code> shares selectors"
+          ],
+          tags: ["css", "sass", "postcss", "preprocessors"],
+          content: `## What's This?
+
+        CSS preprocessors are tools that extend CSS with programming features -- variables, nesting, loops, functions -- then compile down to plain CSS browsers understand. The two main approaches: Sass (a preprocessor language) and PostCSS (a plugin-based tool that transforms CSS via JavaScript plugins).
+
+        ## The Big Picture
+
+        | Concern | Plain CSS | Sass | PostCSS |
+        |---------|-----------|------|---------|
+        | Variables | <code>--var</code> (runtime) | <code>\$var</code> (compile-time) | passes through or via plugin |
+        | Nesting | not supported (yet) | selectors inside selectors | via postcss-nesting plugin |
+        | Mixins | not supported | <code>@mixin</code> / <code>@include</code> | via postcss-mixins plugin |
+        | Auto-prefixing | manual | manual or Autoprefixer | Autoprefixer plugin |
+        | Future CSS | wait for browsers | not directly | PostCSS Preset Env |
+
+        Sass is a full preprocessor language. PostCSS is a postprocessor: it takes CSS (or SCSS output) and applies JavaScript plugins. Many teams use Sass for authoring and PostCSS for autoprefixing.
+
+        ## Core Ideas
+
+        ### Sass variables, nesting, and <code>@use</code>
+
+        \`\`\`scss
+        // _variables.scss -- partial file (underscore means "don't compile standalone")
+        \$primary: #3498db;
+        \$padding-md: 1rem;
+        \$breakpoint-tablet: 768px;
+
+        // main.scss -- import the partial
+        @use 'variables'; // loads _variables.scss, namespaces as 'variables'
+
+        .nav {
+          // nesting mirrors HTML structure
+          background: variables.\$primary;
+          padding: variables.\$padding-md;
+
+          .nav-item {
+            display: inline-block;
+
+            // & references the parent selector: .nav .nav-item--active
+            &--active {
+              font-weight: bold;
+            }
+
+            &:hover {
+              opacity: 0.8;
+            }
+          }
+
+          // media query nested inside .nav -- output is unscoped
+          @media (min-width: variables.\$breakpoint-tablet) {
+            flex-direction: row;
+          }
+        }
+        \`\`\`
+
+        Compiled CSS:
+
+        \`\`\`css
+        .nav { background: #3498db; padding: 1rem; }
+        .nav .nav-item { display: inline-block; }
+        .nav .nav-item--active { font-weight: bold; }
+        .nav .nav-item:hover { opacity: 0.8; }
+        @media (min-width: 768px) { .nav { flex-direction: row; } }
+        \`\`\`
+
+        Key points:
+
+        - <code>@use</code> replaces old <code>@import</code> (which Sass deprecated). It creates a namespace by default.
+        - Nesting beyond 3 levels deep creates overly specific selectors -- avoid.
+        - The <code>&</code> parent selector lets you append pseudo-classes or modify the current context.
+
+        ### Mixins and functions
+
+        Mixins -- reusable blocks of declarations, optionally parameterized.
+
+        \`\`\`scss
+        // _mixins.scss
+        @use 'variables';
+
+        // ---- mixin: responsive container ----
+        @mixin container(\$max-width: 1200px, \$padding: 1rem) {
+          max-width: \$max-width;
+          margin-left: auto;
+          margin-right: auto;
+          padding-left: \$padding;
+          padding-right: \$padding;
+        }
+
+        // ---- mixin: truncate text ----
+        @mixin truncate(\$lines: 1) {
+          @if \$lines == 1 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          } @else {
+            display: -webkit-box;
+            -webkit-line-clamp: \$lines;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        }
+
+        // ---- use both mixins ----
+        .article-card {
+          @include container(800px, 2rem);
+          @include truncate(3);
+        }
+
+        // ---- Sass function (returns a value, not declarations) ----
+        @function rem(\$px) {
+          @return \$px / 16 * 1rem;
+        }
+
+        .element {
+          font-size: rem(16); // compiles to font-size: 1rem;
+          margin-top: rem(24); // compiles to margin-top: 1.5rem;
+        }
+        \`\`\`
+
+        - Mixins use <code>@mixin</code> + <code>@include</code>. Functions use <code>@function</code> + <code>@return</code>.
+        - Use mixins to avoid repeating declaration groups. Use functions to compute values.
+
+        ### <code>@extend</code> vs mixins
+
+        <code>@extend</code> tells Sass "make this selector inherit the styles of another" by grouping selectors in the output.
+
+        \`\`\`scss
+        // SCSS
+        %button-shared {
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          font-size: 1rem;
+        }
+
+        .btn-primary {
+          @extend %button-shared;
+          background: blue;
+          color: white;
+        }
+
+        .btn-danger {
+          @extend %button-shared;
+          background: red;
+          color: white;
+        }
+        \`\`\`
+
+        Compiled CSS -- selectors are grouped:
+
+        \`\`\`css
+        .btn-primary, .btn-danger {
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          font-size: 1rem;
+        }
+        .btn-primary { background: blue; color: white; }
+        .btn-danger { background: red; color: white; }
+        \`\`\`
+
+        - <code>%placeholder</code> selectors (with <code>%</code>) only exist for <code>@extend</code>; they produce no output on their own.
+        - Prefer mixins over <code>@extend</code>. <code>@extend</code> can produce unexpected selector grouping and bloated output in complex projects.
+
+        ### PostCSS and Autoprefixer
+
+        PostCSS processes CSS through JavaScript plugins. The most common setup uses Autoprefixer to add vendor prefixes.
+
+        \`\`\`javascript
+        // postcss.config.js (Node.js project)
+        module.exports = {
+          plugins: [
+            // add vendor prefixes based on browserslist config
+            require('autoprefixer'),
+            // transpile future CSS features to browser-safe equivalents
+            require('postcss-preset-env')({ stage: 2 }),
+          ],
+        };
+        \`\`\`
+
+        \`\`\`css
+        /* Input -- you write standard CSS */
+        ::placeholder {
+          color: gray;
+        }
+
+        /* Output -- Autoprefixer adds prefixes */
+        ::-webkit-input-placeholder { color: gray; }
+        ::-moz-placeholder { color: gray; }
+        :-ms-input-placeholder { color: gray; }
+        ::placeholder { color: gray; }
+        \`\`\`
+
+        The <code>browserslist</code> config (in <code>package.json</code> or a <code>.browserslistrc</code> file) decides which prefixes are needed:
+
+        \`\`\`json
+        // package.json
+        {
+          "browserslist": [
+            "> 1%",
+            "last 2 versions",
+            "not dead"
+          ]
+        }
+        \`\`\`
+
+        ### PostCSS Preset Env: future CSS today
+
+        Write CSS Nesting, Custom Media Queries, and other Stage 2+ proposals. PostCSS transforms them to browser-safe code.
+
+        \`\`\`css
+        /* Input -- future CSS */
+        .card {
+          background: oklch(0.6 0.15 220);
+
+          & .title {
+            color: rebeccapurple;
+          }
+
+          @media (width >= 768px) {
+            display: grid;
+          }
+        }
+
+        /* Output -- browser-safe CSS */
+        .card { background: rgb(67, 126, 195); }
+        .card .title { color: rebeccapurple; }
+        @media (min-width: 768px) { .card { display: grid; } }
+        \`\`\`
+
+        ## Wiring It Together
+
+        A complete Sass + PostCSS setup: a component library partial, a main stylesheet, and the PostCSS pipeline.
+
+        \`\`\`scss
+        // _config.scss -- Sass partial
+        \$color-brand: #6c5ce7;
+        \$color-bg: #f8f9fa;
+        \$radius: 8px;
+        \$breakpoint-md: 768px;
+
+        // _button.scss -- component partial
+        @use 'config';
+
+        @mixin button(\$bg: config.\$color-brand) {
+          display: inline-block;
+          padding: 0.6rem 1.2rem;
+          border: none;
+          border-radius: config.\$radius;
+          background: \$bg;
+          color: #fff;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background 0.2s ease, transform 0.1s ease;
+
+          &:hover {
+            background: darken(\$bg, 10%);
+          }
+
+          &:active {
+            transform: scale(0.97);
+          }
+        }
+
+        // main.scss
+        @use 'config';
+        @use 'button';
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: system-ui, sans-serif;
+          background: config.\$color-bg;
+          margin: 0;
+          padding: 2rem;
+        }
+
+        .hero {
+          text-align: center;
+          padding: 4rem 1rem;
+
+          h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+          }
+
+          p {
+            color: #666;
+            max-width: 480px;
+            margin: 0 auto 2rem;
+          }
+
+          .cta {
+            @include button.button(#e17055);
+          }
+        }
+        \`\`\`
+
+        Then run the build pipeline:
+
+        \`\`\`bash
+        # 1. Compile Sass to CSS
+        sass main.scss dist/main.css
+
+        # 2. Run PostCSS (autoprefixer + preset-env) on the output
+        npx postcss dist/main.css -o dist/main.css
+        \`\`\`
+
+        Final compiled CSS includes vendor prefixes, nested selectors flattened, and <code>darken()</code> computed as a hex color.
+        `
+        },
+
+{
+          id: "ns-html-forms",
+          title: "Forms & Validation",
+          shortDesc: "Input types, form attributes, constraint validation API, custom validation, and accessible form design.",
+          difficulty: "intermediate",
+          readTimeMin: 16,
+          keyPoints: [
+            "HTML5 input types (<code>email</code>, <code>tel</code>, <code>url</code>, etc.) provide built-in validation and mobile keyboards",
+            "The Constraint Validation API (<code>checkValidity()</code>, <code>reportValidity()</code>, <code>setCustomValidity()</code>) controls validation via JS",
+            "Use <code>:valid</code>, <code>:invalid</code>, and <code>:user-invalid</code> pseudo-classes for styling without JS",
+            "Every input needs an associated <code><label></code> for screen reader accessibility",
+            "Client-side validation is UX only; always validate server-side"
+          ],
+          tags: ["html", "forms", "validation", "accessibility"],
+          content: `## What's This?
+
+        HTML forms are the primary way users send data to a server. HTML5 added input types and attributes that handle basic validation without JavaScript, plus the Constraint Validation API for custom checks. Accessible forms require proper labeling, focus management, and error announcements.
+
+        ## The Big Picture
+
+        A form submission flow:
+
+        1. User fills inputs
+        2. Browser runs built-in validation per input type + attributes
+        3. If invalid: browser shows a validation message and focuses the first error field
+        4. If valid (client-side): data is sent to server
+        5. Server re-validates (always -- client validation is for UX, not security)
+
+        The goal: make validation instant, clear, and screen-reader-friendly.
+
+        ## Core Ideas
+
+        ### HTML5 input types and attributes
+
+        Each input type tells the browser what kind of data to expect, which enables appropriate mobile keyboard, built-in validation, and semantic autocomplete.
+
+        \`\`\`html
+        <form novalidate><!-- turn off default bubbles; we control UX -->
+          <!-- email: validates <email> syntax, shows @ keyboard on mobile -->
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required
+                 placeholder="you@example.com"
+                 autocomplete="email">
+
+          <!-- tel: numeric keyboard on mobile, no built-in pattern validation -->
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" name="phone"
+                 pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+                 placeholder="555-123-4567"
+                 autocomplete="tel">
+
+          <!-- url: validates URL format, shows /.com keyboard -->
+          <label for="website">Website</label>
+          <input type="url" id="website" name="website"
+                 placeholder="https://example.com">
+
+          <!-- number: up/down stepper, validates range -->
+          <label for="age">Age</label>
+          <input type="number" id="age" name="age"
+                 min="13" max="120" step="1">
+
+          <!-- range: slider that pairs with a visual display -->
+          <label for="rating">Rating</label>
+          <input type="range" id="rating" name="rating"
+                 min="0" max="5" step="1" value="3">
+
+          <!-- date: native date picker -->
+          <label for="dob">Date of Birth</label>
+          <input type="date" id="dob" name="dob"
+                 min="1900-01-01" max="2025-12-31">
+
+          <!-- select with optgroup -->
+          <label for="country">Country</label>
+          <select id="country" name="country" required>
+            <option value="">-- Select --</option>
+            <optgroup label="North America">
+              <option value="us">United States</option>
+              <option value="ca">Canada</option>
+            </optgroup>
+          </select>
+
+          <!-- datalist: combobox with free-text + suggestions -->
+          <label for="browser">Browser</label>
+          <input list="browsers" id="browser" name="browser">
+          <datalist id="browsers">
+            <option value="Chrome">
+            <option value="Firefox">
+            <option value="Safari">
+          </datalist>
+        </form>
+        \`\`\`
+
+        Key attributes:
+
+        - <code>required</code> -- field must not be empty
+        - <code>minlength</code> / <code>maxlength</code> -- character count bounds
+        - <code>min</code> / <code>max</code> -- numeric/date ranges
+        - <code>pattern</code> -- regex validation (implicitly anchored: full string must match)
+        - <code>autocomplete</code> -- hints browser's autofill (off, name, email, tel, etc.)
+
+        ### Styling with <code>:valid</code>, <code>:invalid</code>, <code>:user-invalid</code>
+
+        CSS pseudo-classes let you style form fields based on their validation state.
+
+        \`\`\`css
+        /* Default: subtle border */
+        input, select, textarea {
+          border: 2px solid #ccc;
+          padding: 0.5rem;
+          font-size: 1rem;
+          border-radius: 4px;
+        }
+
+        /* Field is valid */
+        input:valid, select:valid {
+          border-color: #2ecc71;
+        }
+
+        /* Field is invalid AND has been interacted with */
+        /* :user-invalid is newer -- check browser support */
+        input:user-invalid,
+        input:focus:invalid {
+          border-color: #e74c3c;
+        }
+
+        /* Show error message only when invalid + focused/touched */
+        .input-group .error-message {
+          display: none;
+          color: #e74c3c;
+          font-size: 0.85rem;
+        }
+        .input-group:has(:user-invalid) .error-message {
+          display: block;
+        }
+        \`\`\`
+
+        ### Constraint Validation API
+
+        JavaScript access to the same validation the browser uses.
+
+        \`\`\`javascript
+        const form = document.getElementById('signup-form');
+        const email = document.getElementById('email');
+        const errorEl = document.getElementById('email-error');
+
+        // ---- checkValidity: returns true/false, does NOT show the browser bubble ----
+        form.addEventListener('submit', (event) => {
+          // Prevent server submit; we validate first
+          event.preventDefault();
+
+          // Validate every field
+          const isValid = Array.from(form.elements).every((el) => {
+            // skip buttons, fieldsets
+            if (el.matches('button, fieldset, input[type="hidden"]')) return true;
+            return el.checkValidity();
+          });
+
+          if (isValid) {
+            // All fields pass client validation -- now send to server
+            form.submit();
+          }
+        });
+
+        // ---- reportValidity: runs check AND shows browser's native tooltip ----
+        email.addEventListener('blur', () => {
+          if (!email.reportValidity()) {
+            // Browser shows its own message -- we can also run custom logic
+            errorEl.textContent = email.validationMessage;
+          }
+        });
+
+        // ---- setCustomValidity: override the validation message or mark invalid ----
+        function validatePasswordMatch() {
+          const pw = document.getElementById('password');
+          const confirm = document.getElementById('confirm-password');
+
+          if (pw.value !== confirm.value) {
+            // Setting a non-empty string makes the field invalid
+            confirm.setCustomValidity('Passwords must match');
+          } else {
+            // Empty string = valid
+            confirm.setCustomValidity('');
+          }
+
+          // Re-check and show error
+          confirm.reportValidity();
+        }
+
+        document.getElementById('confirm-password')
+          .addEventListener('input', validatePasswordMatch);
+        \`\`\`
+
+        The <code>validity</code> object on each element gives granular state:
+
+        \`\`\`javascript
+        const v = input.validity;
+        if (v.valueMissing) { /* required + empty */ }
+        if (v.typeMismatch) { /* email/url format wrong */ }
+        if (v.patternMismatch) { /* doesn't match pattern attr */ }
+        if (v.tooLong || v.tooShort) { /* length violations */ }
+        if (v.rangeUnderflow || v.rangeOverflow) { /* min/max */ }
+        if (v.stepMismatch) { /* step attr */ }
+        if (v.badInput) { /* unparseable (e.g., "abc" in number) */ }
+        if (v.customError) { /* setCustomValidity was set */ }
+        \`\`\`
+
+        ### Accessible form design
+
+        Every form control needs an accessible name. The <code><label></code> element connected via <code>for</code> attribute is the standard method.
+
+        \`\`\`html
+        <!-- Correct: label + for/id pairing -->
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required
+
+        <!-- Correct: wrapping input inside label (no for attribute needed) -->
+        <label>
+          Username
+          <input type="text" name="username" required>
+        </label>
+
+        <!-- Incorrect: no label -- invisible to screen readers -->
+        <input type="text" placeholder="Username">
+        \`\`\`
+
+        Linking errors to inputs for screen readers:
+
+        \`\`\`html
+        <div class="field-group">
+          <label for="email">Email address</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            aria-describedby="email-hint email-error"
+            aria-invalid="false"
+          >
+          <p id="email-hint">We will never share your email.</p>
+          <p id="email-error" role="alert" hidden>
+            Please enter a valid email address.
+          </p>
+        </div>
+        \`\`\`
+
+        \`\`\`javascript
+        // Show/hide error alert on validation
+        email.addEventListener('blur', () => {
+          const error = document.getElementById('email-error');
+          if (!email.checkValidity()) {
+            error.hidden = false;
+            email.setAttribute('aria-invalid', 'true');
+          } else {
+            error.hidden = true;
+            email.setAttribute('aria-invalid', 'false');
+          }
+        });
+        \`\`\`
+
+        The <code>role="alert"</code> makes screen readers announce the error immediately when it appears.
+
+        ## Wiring It Together
+
+        A signup form with real-time validation, custom password-match check, and accessible error messages.
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <style>
+            * { box-sizing: border-box; }
+            body { font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; }
+            .field { margin-bottom: 1rem; }
+            label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+            input { width: 100%; padding: 0.5rem; border: 2px solid #ccc; border-radius: 4px; font-size: 1rem; }
+            input:user-valid { border-color: #2ecc71; }
+            input:user-invalid { border-color: #e74c3c; }
+            .error { color: #e74c3c; font-size: 0.85rem; margin-top: 0.25rem; display: none; }
+            .field:has(:user-invalid) .error { display: block; }
+            button { padding: 0.6rem 1.5rem; font-size: 1rem; cursor: pointer; }
+          </style>
+        </head>
+        <body>
+          <h1>Create Account</h1>
+
+          <form id="signup" novalidate>
+            <!-- Name -->
+            <div class="field">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" name="name" required minlength="2"
+                     autocomplete="name" aria-describedby="name-error">
+              <p class="error" id="name-error" role="alert">Name is required (min 2 chars).</p>
+            </div>
+
+            <!-- Email -->
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" required
+                     autocomplete="email" aria-describedby="email-error">
+              <p class="error" id="email-error" role="alert">Please enter a valid email.</p>
+            </div>
+
+            <!-- Password -->
+            <div class="field">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password"
+                     required minlength="8" autocomplete="new-password"
+                     aria-describedby="pw-error">
+              <p class="error" id="pw-error" role="alert">Password must be 8+ characters.</p>
+            </div>
+
+            <!-- Confirm -->
+            <div class="field">
+              <label for="confirm">Confirm Password</label>
+              <input type="password" id="confirm" name="confirm"
+                     required autocomplete="new-password"
+                     aria-describedby="confirm-error">
+              <p class="error" id="confirm-error" role="alert">Passwords must match.</p>
+            </div>
+
+            <button type="submit">Sign Up</button>
+          </form>
+
+          <script>
+            const form = document.getElementById('signup');
+            const password = document.getElementById('password');
+            const confirm = document.getElementById('confirm');
+            const confirmError = document.getElementById('confirm-error');
+
+            // ---- Real-time password match ----
+            function checkMatch() {
+              if (password.value !== confirm.value) {
+                confirm.setCustomValidity('Passwords must match');
+                confirmError.textContent = 'Passwords must match.';
+                confirmError.hidden = false;
+              } else {
+                confirm.setCustomValidity('');
+                confirmError.hidden = true;
+              }
+            }
+            password.addEventListener('input', checkMatch);
+            confirm.addEventListener('input', checkMatch);
+
+            // ---- Submit handler ----
+            form.addEventListener('submit', (e) => {
+              e.preventDefault();
+              // reportValidity() on all fields fires native bubbles -- we use checkValidity + custom display
+              const valid = Array.from(form.elements).every((el) => {
+                if (el.matches('button, fieldset')) return true;
+                return el.checkValidity();
+              });
+              if (valid) {
+                alert('Form is valid! (Would POST to server)');
+                // form.submit(); // real submission
+              }
+            });
+          </script>
+        </body>
+        </html>
+        \`\`\`
+
+        The form validates on every input, shows styled error messages, announces them to screen readers, and blocks submission until all constraints pass.
+        `
+        },
+
+{
+          id: "ns-css-frameworks",
+          title: "CSS Frameworks (Tailwind, Bootstrap)",
+          shortDesc: "Utility-first vs component-based frameworks, customization, and when to use each approach.",
+          difficulty: "advanced",
+          readTimeMin: 14,
+          keyPoints: [
+            "Bootstrap provides pre-built components (cards, navbars, modals) via class names; customization requires Sass variable overrides",
+            "Tailwind provides low-level utility classes (flex, pt-4, text-center); you compose styles directly in HTML",
+            "Tailwind purges unused CSS at build time, resulting in tiny production bundles",
+            "Bootstrap is ideal for rapid prototyping and teams that prefer consistent, pre-designed components",
+            "Tailwind suits design systems where every pixel is custom and you want full control without writing custom CSS",
+            "Both frameworks compete with modern CSS features (Container Queries, :has(), Grid)"
+          ],
+          tags: ["css", "tailwind", "bootstrap", "frameworks"],
+          content: `## What's This?
+
+        CSS frameworks provide pre-written styles and components so you don't build every button, grid, or navbar from scratch. Two philosophies dominate: **component-based** (Bootstrap -- "here is a styled button class") and **utility-first** (Tailwind -- "here is a padding class, a color class, a border class -- combine them yourself").
+
+        ## The Big Picture
+
+        | Concern | Bootstrap | Tailwind CSS |
+        |---------|-----------|-------------|
+        | Approach | Pre-built components | Utility classes |
+        | HTML size | Fewer classes per element | Many classes per element |
+        | CSS size | Larger (ship all components, even unused) | Smaller after purge (only used utilities) |
+        | Customization | Sass variable overrides, then rebuild | Tailwind config (JS), then rebuild |
+        | Learning curve | Learn component names: <code>.btn-primary</code> | Learn utility semantics: <code>bg-blue-500</code> |
+        | Design output | Looks like Bootstrap unless customized | Looks like whatever you design |
+
+        ## Core Ideas
+
+        ### Bootstrap: component classes, grid, and Sass customization
+
+        Bootstrap marks up HTML with high-level component classes.
+
+        \`\`\`html
+        <!-- Bootstrap card component -->
+        <div class="card" style="width: 18rem;">
+          <img src="..." class="card-img-top" alt="...">
+          <div class="card-body">
+            <h5 class="card-title">Card title</h5>
+            <p class="card-text">Some quick example text.</p>
+            <a href="#" class="btn btn-primary">Go somewhere</a>
+          </div>
+        </div>
+
+        <!-- Bootstrap grid: 12-column responsive layout -->
+        <div class="container">
+          <div class="row">
+            <div class="col-12 col-md-6 col-lg-4">
+              <!-- 12 cols on mobile, 6 on md+, 4 on lg+ -->
+              Column 1
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              Column 2
+            </div>
+            <div class="col-12 col-md-6 col-lg-4">
+              Column 3
+            </div>
+          </div>
+        </div>
+        \`\`\`
+
+        To customize Bootstrap's look, override Sass variables before importing:
+
+        \`\`\`scss
+        // custom-bootstrap.scss
+        // 1. Override Bootstrap variables BEFORE the import
+        \$primary: #6c5ce7;
+        \$border-radius: 12px;
+        \$font-family-sans-serif: 'Inter', system-ui, sans-serif;
+        \$enable-shadows: true;
+
+        // 2. Import Bootstrap
+        @import '~bootstrap/scss/bootstrap';
+
+        // 3. Add any additional overrides after
+        .btn {
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        \`\`\`
+
+        Bootstrap's dependency: you must rebuild the CSS (via Sass compilation) after changing variables. You cannot change colors at runtime via CSS custom properties alone.
+
+        ### Tailwind: utility classes and the config file
+
+        Tailwind provides atomic classes -- each sets exactly one CSS property.
+
+        \`\`\`html
+        <!-- Same card built with Tailwind utilities -->
+        <div class="max-w-sm rounded-xl overflow-hidden shadow-lg bg-white">
+          <img class="w-full h-48 object-cover" src="..." alt="...">
+          <div class="px-6 py-4">
+            <h5 class="font-bold text-xl mb-2 text-gray-900">Card title</h5>
+            <p class="text-gray-700 text-base">
+              Some quick example text.
+            </p>
+          </div>
+          <div class="px-6 pt-4 pb-6">
+            <a href="#" class="inline-block bg-purple-600 hover:bg-purple-700
+                                text-white font-medium py-2 px-4 rounded-lg
+                                transition-colors duration-200">
+              Go somewhere
+            </a>
+          </div>
+        </div>
+        \`\`\`
+
+        Tailwind's naming convention: <code>property-brightness-shade</code>.
+
+        - <code>bg-purple-600</code> -- <code>background-color: hsl(262, 83%, 58%)</code>
+        - <code>px-6</code> -- <code>padding-left: 1.5rem; padding-right: 1.5rem;</code>
+        - <code>text-xl</code> -- <code>font-size: 1.25rem; line-height: 1.75rem;</code>
+        - <code>hover:bg-purple-700</code> -- variant that applies on hover
+        - <code>md:flex</code> -- responsive variant for <code>min-width: 768px</code>
+
+        Customize the design system in <code>tailwind.config.js</code>:
+
+        \`\`\`javascript
+        // tailwind.config.js
+        module.exports = {
+          content: ['./src/**/*.{html,js,jsx}'], // purge paths
+          theme: {
+            extend: {
+              colors: {
+                brand: {
+                  50: '#f0f0ff',
+                  500: '#6c5ce7',
+                  900: '#2d1b69',
+                },
+              },
+              fontFamily: {
+                sans: ['Inter', 'system-ui', 'sans-serif'],
+              },
+              borderRadius: {
+                xl: '0.75rem',
+              },
+            },
+          },
+          plugins: [],
+        };
+        \`\`\`
+
+        Now use <code>bg-brand-500</code>, <code>rounded-xl</code>, <code>font-sans</code> in HTML.
+
+        ### Purging and production builds
+
+        Tailwind scans your content files, finds every class string, and removes unused CSS.
+
+        \`\`\`bash
+        # Build CSS: Tailwind + PurgeCSS
+        npx tailwindcss -i src/input.css -o dist/output.css --minify
+        \`\`\`
+
+        \`\`\`css
+        /* src/input.css -- minimal entry point */
+        @tailwind base;    /* normalize + reset */
+        @tailwind components;  /* component classes if any */
+        @tailwind utilities;   /* all utility classes (purged) */
+        \`\`\`
+
+        Result: <code>dist/output.css</code> contains only the utilities you actually used. A typical production file is 10-30 KB gzipped versus Bootstrap's ~25 KB gzipped for the full library.
+
+        ### Responsive design patterns
+
+        Both frameworks use breakpoint prefixes, but differently:
+
+        \`\`\`html
+        <!-- Bootstrap: column classes per breakpoint -->
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3">...</div>
+
+        <!-- Tailwind: utility variants per breakpoint -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div>...</div>
+        </div>
+        \`\`\`
+
+        Default breakpoints:
+
+        | Name | Bootstrap | Tailwind |
+        |------|-----------|----------|
+        | xs (default) | 0-575px | 0-639px |
+        | sm | >=576px | >=640px |
+        | md | >=768px | >=768px |
+        | lg | >=992px | >=1024px |
+        | xl | >=1200px | >=1280px |
+        | xxl | >=1400px | >=1536px |
+
+        ### When to use which
+
+        Choose Bootstrap when:
+
+        - You need a polished UI fast (admin panels, internal tools, MVPs)
+        - Your team has designers who work from Bootstrap's design language
+        - You want interactive components (modal, dropdown, carousel) without writing JS
+
+        Choose Tailwind when:
+
+        - You need a completely custom visual identity (brand-first, not Bootstrap-looking)
+        - You want to avoid naming CSS classes (no BEM maintenance)
+        - You want the smallest possible CSS bundle in production
+        - You prefer colocation: see all styles in the HTML template
+
+        Many teams use both: Tailwind for the app UI, and a Bootstrap-like set of components built on Tailwind (using <code>@apply</code> or component libraries like DaisyUI).
+
+        ## Wiring It Together
+
+        A responsive pricing page built with Tailwind (demonstrating utilities, responsive variants, and a custom color).
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Pricing -- Tailwind Demo</title>
+          <!-- In production: compiled from tailwind.config.js + purge -->
+          <script src="https://cdn.tailwindcss.com"></script>
+          <script>
+            tailwind.config = {
+              theme: {
+                extend: {
+                  colors: {
+                    brand: { 500: '#6c5ce7', 600: '#5a4bd1' },
+                  },
+                },
+              },
+            };
+          </script>
+        </head>
+        <body class="bg-gray-50 font-sans antialiased">
+          <!-- Header -->
+          <header class="text-center py-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Simple Pricing</h1>
+            <p class="text-gray-600 text-lg">No hidden fees. Upgrade anytime.</p>
+          </header>
+
+          <!-- Pricing cards: 1 col on mobile, 3 on lg+ -->
+          <main class="max-w-6xl mx-auto px-4
+                       grid grid-cols-1 md:grid-cols-3 gap-6 pb-16">
+
+            <!-- Free tier -->
+            <div class="bg-white rounded-2xl shadow-md p-8 flex flex-col">
+              <h2 class="text-xl font-semibold text-gray-900 mb-1">Free</h2>
+              <p class="text-gray-500 mb-4">For individuals getting started</p>
+              <p class="text-4xl font-bold mb-6">
+                \$0 <span class="text-lg font-normal text-gray-500">/mo</span>
+              </p>
+              <ul class="text-gray-700 space-y-2 mb-8">
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 1 project
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 5 GB storage
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> Community support
+                </li>
+              </ul>
+              <a href="#" class="mt-auto block text-center py-3 px-6 rounded-xl
+                                 border border-gray-300 text-gray-700 font-medium
+                                 hover:bg-gray-50 transition-colors">
+                Get Started
+              </a>
+            </div>
+
+            <!-- Pro tier (featured) -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 flex flex-col
+                        ring-2 ring-brand-500 scale-105">
+              <span class="text-xs font-semibold text-brand-500 bg-brand-500/10
+                           px-3 py-1 rounded-full self-start mb-3">
+                Popular
+              </span>
+              <h2 class="text-xl font-semibold text-gray-900 mb-1">Pro</h2>
+              <p class="text-gray-500 mb-4">For professionals and small teams</p>
+              <p class="text-4xl font-bold mb-6">
+                \$29 <span class="text-lg font-normal text-gray-500">/mo</span>
+              </p>
+              <ul class="text-gray-700 space-y-2 mb-8">
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 50 projects
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 100 GB storage
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> Priority support
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> Custom domain
+                </li>
+              </ul>
+              <a href="#" class="mt-auto block text-center py-3 px-6 rounded-xl
+                                 bg-brand-500 text-white font-medium
+                                 hover:bg-brand-600 transition-colors">
+                Start Free Trial
+              </a>
+            </div>
+
+            <!-- Enterprise tier -->
+            <div class="bg-white rounded-2xl shadow-md p-8 flex flex-col">
+              <h2 class="text-xl font-semibold text-gray-900 mb-1">Enterprise</h2>
+              <p class="text-gray-500 mb-4">For large organizations</p>
+              <p class="text-4xl font-bold mb-6">
+                \$99 <span class="text-lg font-normal text-gray-500">/mo</span>
+              </p>
+              <ul class="text-gray-700 space-y-2 mb-8">
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> Unlimited projects
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 1 TB storage
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> 24/7 phone support
+                </li>
+                <li class="flex items-center gap-2">
+                  <span class="text-green-500">&#10003;</span> SSO + audit logs
+                </li>
+              </ul>
+              <a href="#" class="mt-auto block text-center py-3 px-6 rounded-xl
+                                 border border-gray-300 text-gray-700 font-medium
+                                 hover:bg-gray-50 transition-colors">
+                Contact Sales
+              </a>
+            </div>
+          </main>
+        </body>
+        </html>
+        \`\`\`
+
+        The page adapts from a single column (mobile) to three columns (desktop), uses brand colors, and shows a highlighted "Pro" card -- all with utility classes, zero custom CSS.
+        `
+        },
+
+{
+          id: "ns-html-a11y",
+          title: "Accessibility & SEO",
+          shortDesc: "ARIA roles/attributes, keyboard navigation, alt text, meta tags, Open Graph, and structured data (JSON-LD).",
+          difficulty: "advanced",
+          readTimeMin: 17,
+          keyPoints: [
+            "ARIA attributes supplement HTML semantics only when native elements are insufficient; prefer semantic HTML first",
+            "All interactive elements must be keyboard-accessible; use <code>tabindex</code>, <code>role</code>, and visible focus indicators",
+            "Alt text conveys the function/purpose of an image, not a description of the image itself",
+            "Meta tags (title, description, Open Graph) control how pages appear in search and social previews",
+            "JSON-LD structured data helps search engines understand content (articles, products, recipes, FAQ)"
+          ],
+          tags: ["html", "accessibility", "seo", "aria"],
+          content: `## What's This?
+
+        Accessibility (a11y) ensures people using assistive technologies -- screen readers, switch devices, voice control -- can navigate and interact with your site. SEO (search engine optimization) helps search engines understand, rank, and display your content. The two overlap heavily: semantic HTML, descriptive text, and structured data serve both goals.
+
+        ## The Big Picture
+
+        Accessibility and SEO both reward the same practices:
+
+        | Practice | Accessibility Benefit | SEO Benefit |
+        |----------|---------------------|-------------|
+        | Semantic HTML (<code><nav></code>, <code><main></code>) | Screen readers navigate landmarks | Search engines identify content regions |
+        | Descriptive link text | Users know where links go | Keywords in anchor text |
+        | <code><title></code> + <code><meta description></code> | Screen readers announce page purpose | Search result snippets |
+        | Alt text on images | Blind users understand images | Image search ranking |
+        | Logical heading hierarchy | Navigate by headings (h1-h6) | Content structure signals |
+        | Fast, responsive layout | Usable with zoom/magnification | Core Web Vitals ranking |
+
+        ## Core Ideas
+
+        ### Semantic HTML first, ARIA as supplement
+
+        ARIA (Accessible Rich Internet Applications) attributes modify how assistive technologies perceive elements. The first rule: use native HTML semantics before ARIA.
+
+        \`\`\`html
+        <!-- Bad: div as button with ARIA (fragile, no built-in keyboard behavior) -->
+        <div role="button" tabindex="0" class="btn" onclick="submit()">
+          Submit
+        </div>
+
+        <!-- Good: native button (free keyboard handling, form submission, focus) -->
+        <button type="submit" class="btn">Submit</button>
+
+        <!-- ARIA's real job: fill gaps where HTML has no semantic equivalent -->
+        <!-- Example: a loading spinner region -->
+        <div role="status" aria-live="polite" aria-label="Loading results">
+          <span class="spinner"></span>
+        </div>
+
+        <!-- Example: a tab panel pattern (no native HTML tab element) -->
+        <div role="tablist" aria-label="Product info">
+          <button role="tab" aria-selected="true" aria-controls="panel-desc"
+                  id="tab-desc">Description</button>
+          <button role="tab" aria-selected="false" aria-controls="panel-reviews"
+                  id="tab-reviews">Reviews</button>
+        </div>
+        <div role="tabpanel" id="panel-desc" aria-labelledby="tab-desc">...</div>
+        <div role="tabpanel" id="panel-reviews" aria-labelledby="tab-reviews" hidden>...</div>
+        \`\`\`
+
+        Key ARIA attributes:
+
+        - <code>role</code> -- changes the element's semantic role (use sparingly; prefer native HTML)
+        - <code>aria-label</code> -- provides an accessible name when visible text is absent
+        - <code>aria-labelledby</code> -- points to an element id that serves as the label
+        - <code>aria-describedby</code> -- points to an element id with a longer description
+        - <code>aria-hidden="true"</code> -- hides decorative content from assistive technology
+        - <code>aria-live="polite"</code> / <code>"assertive"</code> -- announces dynamic updates
+        - <code>aria-expanded</code>, <code>aria-pressed</code>, <code>aria-selected</code> -- state indicators
+        - <code>aria-controls</code> -- identifies the element controlled by this widget
+
+        ### Keyboard navigation and focus management
+
+        All interactive elements must be reachable and usable via keyboard alone.
+
+        \`\`\`css
+        /* Always provide visible focus indicators -- never just remove outline */
+        *:focus-visible {
+          outline: 3px solid #6c5ce7;
+          outline-offset: 2px;
+        }
+
+        /* For custom components, style focus ring without the default */
+        .custom-toggle:focus-visible {
+          box-shadow: 0 0 0 3px #6c5ce7;
+        }
+
+        /* Skip link: hidden until focused (lets keyboard users skip nav) */
+        .skip-link {
+          position: absolute;
+          top: -40px;
+          left: 0;
+          background: #000;
+          color: #fff;
+          padding: 8px 16px;
+          z-index: 100;
+        }
+        .skip-link:focus {
+          top: 0;
+        }
+        \`\`\`
+
+        \`\`\`html
+        <!-- Skip link as first focusable element -->
+        <a href="#main-content" class="skip-link">Skip to main content</a>
+
+        <nav><!-- site nav --></nav>
+        <main id="main-content"><!-- primary content --></main>
+        \`\`\`
+
+        <code>tabindex</code> controls keyboard focus order:
+
+        - <code>tabindex="0"</code> -- element becomes focusable in natural DOM order
+        - <code>tabindex="-1"</code> -- element is programmatically focusable (via JS <code>.focus()</code>) but not reachable via Tab key
+        - Positive <code>tabindex</code> (e.g., <code>tabindex="5"</code>) -- avoid; it breaks natural order. Use DOM source order instead.
+
+        \`\`\`javascript
+        // Manage focus after a modal opens/closes
+        function openModal(modalEl, triggerEl) {
+          modalEl.style.display = 'block';
+          modalEl.setAttribute('aria-hidden', 'false');
+
+          // Focus the first focusable element inside the modal
+          const firstFocusable = modalEl.querySelector('button, input, [tabindex]:not([tabindex="-1"])');
+          if (firstFocusable) firstFocusable.focus();
+
+          // Store trigger so we can restore focus when closing
+          modalEl._trigger = triggerEl;
+        }
+
+        function closeModal(modalEl) {
+          modalEl.style.display = 'none';
+          modalEl.setAttribute('aria-hidden', 'true');
+
+          // Return focus to the element that opened the modal
+          if (modalEl._trigger) modalEl._trigger.focus();
+        }
+        \`\`\`
+
+        ### Alt text and image accessibility
+
+        Every <code><img></code> must have an <code>alt</code> attribute. The value depends on the image's purpose.
+
+        \`\`\`html
+        <!-- Informative image: alt describes the content or function -->
+        <img src="chart-q4-revenue.png"
+             alt="Bar chart showing Q4 revenue increased 23% over Q3.">
+
+        <!-- Decorative image: alt empty (screen readers skip it) -->
+        <img src="decorative-border.png" alt="" role="presentation">
+
+        <!-- Functional image (icon link): alt describes the action -->
+        <a href="/settings">
+          <img src="gear-icon.svg" alt="Settings">
+        </a>
+
+        <!-- Complex image: brief alt + longer description nearby or via aria-describedby -->
+        <img src="org-chart.png" alt="Company organization chart"
+             aria-describedby="org-desc">
+        <div id="org-desc" hidden>
+          The CEO oversees Engineering, Product, and Sales. Engineering contains
+          Frontend, Backend, and DevOps teams.
+        </div>
+        \`\`\`
+
+        Writing good alt text:
+
+        - Describe the image's function, not its appearance. "Search" not "Magnifying glass."
+        - For data visualizations, convey the data story. "Revenue grew 23% in Q4" not "Red bar chart with upward trend."
+        - Do not start with "Image of" or "Picture of" -- screen readers announce it as an image automatically.
+
+        ### Meta tags and Open Graph
+
+        Meta tags control how search engines and social platforms interpret your page.
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+
+          <!-- Title: appears in search results and browser tab (unique per page) -->
+          <title>Stargazer API Docs | Build with Stars</title>
+
+          <!-- Description: search snippet text (150-160 chars) -->
+          <meta name="description" content="Reference documentation for the Stargazer API. Learn to query star charts, calculate positions, and plot celestial data with REST endpoints.">
+
+          <!-- Viewport: required for responsive + accessibility (allows zoom) -->
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+          <!-- Robots: control crawler behavior -->
+          <meta name="robots" content="index, follow">
+
+          <!-- Canonical: prevents duplicate content penalties -->
+          <link rel="canonical" href="https://example.com/docs/api">
+
+          <!-- Open Graph: social previews (Facebook, LinkedIn, Discord) -->
+          <meta property="og:title" content="Stargazer API Docs">
+          <meta property="og:description" content="Reference documentation for the Stargazer API.">
+          <meta property="og:url" content="https://example.com/docs/api">
+          <meta property="og:type" content="website">
+          <meta property="og:image" content="https://example.com/images/og-card.png">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+
+          <!-- Twitter Card: Twitter/X previews -->
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:site" content="@stargazer">
+        </head>
+        \`\`\`
+
+        Open Graph image best practices: 1200x630 pixels, clear branding, visible text, high contrast. This image is what users see when sharing links. It must represent the page content.
+
+        ### Structured data with JSON-LD
+
+        JSON-LD (JavaScript Object Notation for Linked Data) tells search engines what the page content means in a machine-readable format. Google uses it for rich results (stars, FAQs, recipes, events, products).
+
+        \`\`\`html
+        <!-- JSON-LD for a recipe page (use <script type="application/ld+json">) -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "Recipe",
+          "name": "Classic Sourdough Bread",
+          "author": {
+            "@type": "Person",
+            "name": "Jane Baker"
+          },
+          "datePublished": "2025-11-15",
+          "description": "A step-by-step guide to baking crusty sourdough at home.",
+          "prepTime": "PT30M",
+          "cookTime": "PT45M",
+          "totalTime": "PT1H15M",
+          "recipeYield": "1 loaf",
+          "recipeIngredient": [
+            "500g bread flour",
+            "350g water",
+            "100g sourdough starter",
+            "10g salt"
+          ],
+          "recipeInstructions": [
+            { "@type": "HowToStep", "text": "Mix flour and water..." },
+            { "@type": "HowToStep", "text": "Add starter and salt..." }
+          ],
+          "nutrition": {
+            "@type": "NutritionInformation",
+            "calories": "220 calories per slice"
+          }
+        }
+        </script>
+
+        <!-- JSON-LD for a breadcrumb list -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://example.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Recipes", "item": "https://example.com/recipes" },
+            { "@type": "ListItem", "position": 3, "name": "Sourdough", "item": "https://example.com/recipes/sourdough" }
+          ]
+        }
+        </script>
+
+        <!-- JSON-LD for an FAQ -->
+        <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Do I need a dutch oven for sourdough?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "A dutch oven traps steam and creates a crispy crust. You can use a baking stone with a steam pan instead."
+              }
+            }
+          ]
+        }
+        </script>
+        \`\`\`
+
+        Always validate structured data with Google's Rich Results Test or Schema.org validator. Invalid JSON-LD is silently ignored by crawlers.
+
+        ## Wiring It Together
+
+        An accessible, SEO-optimized article page with ARIA landmarks, skip link, Open Graph, and JSON-LD.
+
+        \`\`\`html
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>How Constellations Form | Stargazer Blog</title>
+          <meta name="description" content="Learn how gravity, gas, and time turn interstellar dust into the constellations we see tonight.">
+          <link rel="canonical" href="https://example.com/blog/how-constellations-form">
+
+          <!-- Open Graph -->
+          <meta property="og:title" content="How Constellations Form">
+          <meta property="og:description" content="Learn how gravity, gas, and time turn interstellar dust into the constellations we see tonight.">
+          <meta property="og:url" content="https://example.com/blog/how-constellations-form">
+          <meta property="og:type" content="article">
+          <meta property="og:image" content="https://example.com/images/constellations-og.png">
+          <meta property="og:image:width" content="1200">
+          <meta property="og:image:height" content="630">
+
+          <!-- Twitter Card -->
+          <meta name="twitter:card" content="summary_large_image">
+          <meta name="twitter:site" content="@stargazer">
+
+          <!-- JSON-LD: Article structured data -->
+          <script type="application/ld+json">
+          {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            "headline": "How Constellations Form",
+            "description": "Learn how gravity, gas, and time turn interstellar dust into the constellations we see tonight.",
+            "author": {
+              "@type": "Person",
+              "name": "Alex Nova"
+            },
+            "datePublished": "2026-03-10",
+            "dateModified": "2026-03-12",
+            "image": "https://example.com/images/constellations-og.png",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Stargazer"
+            }
+          }
+          </script>
+
+          <style>
+            /* ---- Skip link ---- */
+            .skip-link {
+              position: absolute;
+              top: -100%;
+              left: 1rem;
+              background: #222;
+              color: #fff;
+              padding: 0.5rem 1rem;
+              z-index: 1000;
+            }
+            .skip-link:focus {
+              top: 1rem;
+            }
+
+            /* ---- Keyboard focus indicator ---- */
+            *:focus-visible {
+              outline: 3px solid #6c5ce7;
+              outline-offset: 2px;
+            }
+
+            /* ---- Layout ---- */
+            body {
+              font-family: system-ui, sans-serif;
+              line-height: 1.6;
+              max-width: 720px;
+              margin: 0 auto;
+              padding: 1rem;
+            }
+            img { max-width: 100%; height: auto; }
+          </style>
+        </head>
+        <body>
+          <!-- Skip link: first focusable element on the page -->
+          <a href="#main" class="skip-link">Skip to main content</a>
+
+          <!-- Site header with navigation landmark -->
+          <header role="banner">
+            <nav aria-label="Main navigation">
+              <ul style="display:flex; gap:1rem; list-style:none; padding:0;">
+                <li><a href="/">Home</a></li>
+                <li><a href="/blog" aria-current="page">Blog</a></li>
+                <li><a href="/about">About</a></li>
+              </ul>
+            </nav>
+          </header>
+
+          <!-- Main content landmark -->
+          <main id="main">
+            <!-- Breadcrumb -->
+            <nav aria-label="Breadcrumb">
+              <ol style="display:flex; gap:0.5rem; list-style:none; padding:0;">
+                <li><a href="/">Home</a></li>
+                <li aria-hidden="true">/</li>
+                <li><a href="/blog">Blog</a></li>
+                <li aria-hidden="true">/</li>
+                <li aria-current="page">How Constellations Form</li>
+              </ol>
+            </nav>
+
+            <article>
+              <h1>How Constellations Form</h1>
+              <p>By <strong>Alex Nova</strong> | Published <time datetime="2026-03-10">March 10, 2026</time></p>
+
+              <!-- Informative image with alt text -->
+              <figure>
+                <img src="orion-nebula.jpg"
+                     alt="The Orion Nebula: a glowing cloud of gas and dust where new stars are born."
+                     width="800" height="450">
+                <figcaption>The Orion Nebula, a stellar nursery in the constellation Orion.</figcaption>
+              </figure>
+
+              <h2>From Dust to Stars</h2>
+              <p>Constellations begin as molecular clouds -- vast regions of gas and dust scattered across the galaxy. When a shockwave from a nearby supernova passes through, it compresses the cloud until gravity takes over.</p>
+
+              <h2>Nuclear Ignition</h2>
+              <p>As clumps of gas collapse, their cores heat up. Once the core reaches around 10 million Kelvin, hydrogen fusion begins. A star is born. Over millions of years, these young stars drift apart, forming the patterns we recognize as constellations.</p>
+
+              <h2>How Many Stars Are Visible?</h2>
+              <!-- Decorative star image: empty alt -->
+              <img src="star-divider.svg" alt="" role="presentation">
+
+              <p>On a clear, dark night, the unaided human eye can see roughly 2,500 to 3,000 stars across the entire sky. Cities with light pollution reduce that to a few dozen.</p>
+            </article>
+
+            <!-- Complementary sidebar with related links -->
+            <aside aria-label="Related articles">
+              <h2>Related Reads</h2>
+              <ul>
+                <li><a href="/blog/reading-star-maps">A Beginner's Guide to Star Maps</a></li>
+                <li><a href="/blog/light-pollution">What Is Light Pollution?</a></li>
+              </ul>
+            </aside>
+          </main>
+
+          <!-- Footer -->
+          <footer role="contentinfo">
+            <p>&copy; 2026 Stargazer. All rights reserved.</p>
+          </footer>
+        </body>
+        </html>
+        \`\`\`
+
+        This page is navigable by keyboard, announces regions to screen readers, provides a descriptive preview on social media, and tells search engines the article's author, date, and topic via JSON-LD.
+        `
+        }
+
         ],
       },
       // ── SQL ──────────────────────────────────────────────────────────────
@@ -77147,16 +80000,2472 @@ class TodoController {
         title: "SQL",
         description: "SQL from the ground up — queries, joins, aggregation, schema design, indexes, transactions, and database tools.",
         topics: [
-          { id: "ns-sql-basics", title: "SELECT & Basic Queries", shortDesc: "SELECT, FROM, WHERE, ORDER BY, LIMIT, DISTINCT, and column aliases.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-filtering", title: "Filtering, Sorting & Aggregation", shortDesc: "WHERE operators, LIKE, IN, BETWEEN, GROUP BY, HAVING, COUNT, SUM, AVG, MIN, MAX.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-joins", title: "JOINs & Subqueries", shortDesc: "INNER, LEFT, RIGHT, FULL OUTER, CROSS JOINs; correlated and uncorrelated subqueries; CTEs (WITH).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-ddl", title: "DDL (CREATE, ALTER, DROP)", shortDesc: "Creating tables, altering schemas, constraints (PK, FK, UNIQUE, CHECK), and data types.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-dml", title: "DML (INSERT, UPDATE, DELETE)", shortDesc: "Inserting rows, bulk inserts, updating with joins, delete with subqueries, and TRUNCATE.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-indexes", title: "Indexes & Performance", shortDesc: "B-tree indexes, composite indexes, EXPLAIN ANALYZE, query planning, and index-only scans.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-transactions", title: "Transactions & ACID", shortDesc: "BEGIN/COMMIT/ROLLBACK, isolation levels (READ COMMITTED, SERIALIZABLE), locks, and deadlocks.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-window", title: "Window Functions", shortDesc: "ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and frame specifications.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-design", title: "Database Design & Normalization", shortDesc: "ER diagrams, 1NF/2NF/3NF, denormalization trade-offs, and naming conventions.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-sql-tools", title: "Tools & Clients", shortDesc: "psql, DBeaver, pgAdmin, MySQL Workbench, migration tools (Flyway, Prisma Migrate), and ORMs.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+        {
+          id: "ns-sql-basics",
+          title: "SELECT & Basic Queries",
+          shortDesc: "SELECT, FROM, WHERE, ORDER BY, LIMIT, DISTINCT, and column aliases.",
+          difficulty: "foundational",
+          readTimeMin: 10,
+          keyPoints: [
+            "SELECT specifies which columns to retrieve; FROM names the source table.",
+            "WHERE filters rows by a condition; only matching rows reach the output.",
+            "ORDER BY sorts results ascending (ASC) or descending (DESC).",
+            "LIMIT caps the number of returned rows, useful for top-N queries.",
+            "DISTINCT removes duplicate rows from the result set.",
+            "Column aliases (AS) rename a column in the output for clarity."
+          ],
+          tags: ["sql", "queries", "foundational"],
+          content: `## What's This?
+
+        A SELECT statement is how you pull data out of a relational database. You tell it which columns you want, which table holds them, optionally which rows to keep, and optionally how to order the results. The database sends back a result set -- a virtual table of rows and columns.
+
+        Think of it like ordering from a menu: SELECT is the dish name, FROM is the kitchen section, WHERE is your dietary filter, and ORDER BY is how you want the plates arranged on the counter.
+
+        ## The Big Picture
+
+        A relational database stores data in tables (rows = records, columns = fields). SELECT reads those rows without modifying them. The clauses combine in a fixed order:
+
+        <code>SELECT columns FROM table WHERE condition ORDER BY columns LIMIT count;</code>
+
+        SQL evaluates them logically in this sequence: FROM -> WHERE -> SELECT -> ORDER BY -> LIMIT. Understanding this order helps you predict what data flows through each step.
+
+        ## Core Ideas
+
+        ### SELECT and FROM
+
+        Every query needs at least two things: what to grab (SELECT) and where to grab it (FROM).
+
+        \`\`\`sql
+        SELECT first_name, last_name  -- pick these two columns
+        FROM employees;                -- from the employees table
+        \`\`\`
+
+        Use the wildcard <code>*</code> to retrieve every column. Handy for exploration, but avoid in production code because it brings back more data than needed and breaks if the schema changes.
+
+        \`\`\`sql
+        SELECT *   -- all columns (use sparingly)
+        FROM employees;
+        \`\`\`
+
+        You can also write expressions, not just bare column names.
+
+        \`\`\`sql
+        SELECT product_name, price * 1.1  -- price plus 10% markup
+        FROM products;
+        \`\`\`
+
+        ### WHERE
+
+        WHERE filters rows. Only rows where the condition evaluates to true survive.
+
+        \`\`\`sql
+        SELECT product_name, price
+        FROM products
+        WHERE price > 20;  -- discard products that cost 20 or less
+        \`\`\`
+
+        Text values go in single quotes. Comparisons are case-sensitive in most databases (PostgreSQL, MySQL depending on collation).
+
+        \`\`\`sql
+        SELECT title
+        FROM books
+        WHERE author = 'Toni Morrison';  -- exact text match
+        \`\`\`
+
+        Combine conditions with <code>AND</code>, <code>OR</code>, and <code>NOT</code>.
+
+        \`\`\`sql
+        SELECT name, price, stock
+        FROM products
+        WHERE category = 'Electronics'
+          AND price < 100                -- both conditions must be true
+          AND stock > 0;                 -- only show items in stock
+        \`\`\`
+
+        ### ORDER BY
+
+        ORDER BY sorts the result set. <code>ASC</code> (ascending) is the default: letters A-Z, numbers 0-9, dates earliest-first. <code>DESC</code> reverses that.
+
+        \`\`\`sql
+        SELECT name, hire_date
+        FROM employees
+        ORDER BY hire_date DESC;  -- newest hires first
+        \`\`\`
+
+        Sort by multiple columns: the first column determines order, and ties fall through to the second.
+
+        \`\`\`sql
+        SELECT last_name, first_name, salary
+        FROM employees
+        ORDER BY salary DESC, last_name ASC;  -- rich first; alphabetical among tied salaries
+        \`\`\`
+
+        You can sort by a column that is not in the SELECT list, or by a column position number (though positional sorting is fragile).
+
+        ### LIMIT
+
+        LIMIT caps how many rows the query returns. It always runs after sorting, so you get the "top N" or "bottom N" rows.
+
+        \`\`\`sql
+        SELECT product_name, price
+        FROM products
+        ORDER BY price DESC
+        LIMIT 5;  -- the five most expensive products
+        \`\`\`
+
+        Some databases (PostgreSQL, MySQL) support <code>OFFSET</code> to skip rows before starting to count, which enables pagination.
+
+        \`\`\`sql
+        SELECT product_name, price
+        FROM products
+        ORDER BY price DESC
+        LIMIT 5 OFFSET 10;  -- skip the top 10, return rows 11 through 15
+        \`\`\`
+
+        ### DISTINCT
+
+        DISTINCT eliminates duplicate rows. It looks at the entire selected row, not just one column.
+
+        \`\`\`sql
+        SELECT DISTINCT city     -- each city value appears only once
+        FROM customers;
+        \`\`\`
+
+        When you select multiple columns, DISTINCT considers the combination unique.
+
+        \`\`\`sql
+        SELECT DISTINCT city, state  -- every unique city/state pair
+        FROM customers;
+        \`\`\`
+
+        DISTINCT is expensive on large tables because the database must sort or hash all rows. Only use it when you truly need unique rows.
+
+        ### Column Aliases
+
+        An alias renames a column in the output. Use <code>AS</code> (the keyword is optional but recommended for readability).
+
+        \`\`\`sql
+        SELECT first_name AS "First Name",
+               last_name  AS "Last Name",
+               salary     AS "Annual Salary"
+        FROM employees;
+        \`\`\`
+
+        Aliases are mandatory when you compute a value -- the computed column has no name otherwise.
+
+        \`\`\`sql
+        SELECT product_name,
+               price * 0.08 AS tax
+        FROM products;
+        \`\`\`
+
+        Important: you cannot use aliases in the WHERE clause of the same query. WHERE runs before SELECT, so the alias does not exist yet.
+
+        ## Wiring It Together
+
+        A complete query that uses all the pieces. Read the comments to follow the logical flow.
+
+        \`\`\`sql
+        -- Goal: cheapest 5 electronics that cost more than \$50,
+        -- sorted by discounted price.
+        SELECT
+            product_id   AS id,
+            product_name AS name,
+            price * 0.9  AS discounted_price    -- 10 percent off
+        FROM products                           -- 1) start here
+        WHERE category = 'Electronics'          -- 2) keep only electronics
+          AND price > 50                        -- 3) and price over 50
+        ORDER BY discounted_price ASC           -- 4) cheapest first
+        LIMIT 5;                                -- 5) only the top 5
+        \`\`\`
+
+        Logical evaluation order:
+        1. FROM -> reads all rows from products
+        2. WHERE -> discards non-electronics and items at or below 50
+        3. SELECT -> keeps only the three listed columns, computes discount, applies alias
+        4. ORDER BY -> sorts the surviving rows by discounted_price ascending
+        5. LIMIT -> returns the first 5 rows`
+        },
+        {
+          id: "ns-sql-filtering",
+          title: "Filtering, Sorting & Aggregation",
+          shortDesc: "WHERE operators, LIKE, IN, BETWEEN, GROUP BY, HAVING, COUNT, SUM, AVG, MIN, MAX.",
+          difficulty: "foundational",
+          readTimeMin: 12,
+          keyPoints: [
+            "WHERE operators (=, <>, <, >, AND, OR, NOT) build precise row filters.",
+            "LIKE matches patterns with % (any chars) and _ (single char).",
+            "IN and BETWEEN are shorthand for multiple equality and range checks.",
+            "GROUP BY splits rows into groups; aggregate functions (COUNT, SUM, AVG, MIN, MAX) summarize each group.",
+            "HAVING filters groups after aggregation, unlike WHERE which filters rows before.",
+            "ORDER BY sorts the final result set by any column or aggregate."
+          ],
+          tags: ["sql", "aggregation", "filtering"],
+          content: `## What's This?
+
+        Beyond the basic WHERE equals comparison, SQL gives you operators to match patterns, check ranges, and test membership in a list. Then, once you have the right rows, GROUP BY collapses them into summary groups and aggregate functions compute totals, averages, counts, and extremes per group. ORDER BY arranges the final output.
+
+        Think of it as three stages: pick the right rows (WHERE + operators), summarize each bucket (GROUP BY + aggregates), then filter the buckets themselves (HAVING).
+
+        ## The Big Picture
+
+        The full logical flow of a query with all these clauses:
+
+        <code>FROM -> WHERE -> GROUP BY -> HAVING -> SELECT -> ORDER BY -> LIMIT</code>
+
+        Data starts as the raw table. WHERE removes unwanted rows. GROUP BY piles remaining rows into buckets. HAVING discards entire buckets. SELECT picks columns (including aggregate results). ORDER BY sorts. LIMIT truncates.
+
+        ## Core Ideas
+
+        ### WHERE Comparison Operators
+
+        The basic comparison toolbox: <code>=</code> equals, <code><></code> or <code>!=</code> not equals, <code><</code>, <code><=</code>, <code>></code>, <code>>=</code>.
+
+        \`\`\`sql
+        SELECT name, price, stock
+        FROM products
+        WHERE price >= 10          -- \$10 or more
+          AND price <= 50          -- \$50 or less
+          AND stock > 0;           -- must have at least 1 in stock
+        \`\`\`
+
+        <code>AND</code> requires both conditions true. <code>OR</code> requires at least one. <code>NOT</code> flips a boolean. Use parentheses to group logic explicitly.
+
+        \`\`\`sql
+        SELECT title, author, year
+        FROM books
+        WHERE (author = 'Ursula Le Guin' OR author = 'Octavia Butler')
+          AND year > 1980;  -- books by either author, published after 1980
+        \`\`\`
+
+        ### LIKE (Pattern Matching)
+
+        <code>LIKE</code> checks if a text column matches a pattern. Two wildcards: <code>%</code> matches any sequence of characters (including zero), and <code>_</code> matches exactly one character.
+
+        \`\`\`sql
+        SELECT first_name, last_name
+        FROM employees
+        WHERE last_name LIKE 'S%';  -- last names starting with 'S'
+        \`\`\`
+
+        \`\`\`sql
+        SELECT email
+        FROM users
+        WHERE email LIKE '%@company.com';  -- all company email addresses
+        \`\`\`
+
+        The underscore matches a single character.
+
+        \`\`\`sql
+        SELECT code
+        FROM coupons
+        WHERE code LIKE 'SUMMER_2024';  -- underscore matches any one char: SUMMER-2024, SUMMER_2024, etc.
+        \`\`\`
+
+        ### IN and BETWEEN
+
+        <code>IN</code> is shorthand for multiple OR conditions. Checks if a value is in a list.
+
+        \`\`\`sql
+        SELECT name, department
+        FROM employees
+        WHERE department IN ('Engineering', 'Design', 'Product');
+        -- same as: department = 'Engineering' OR department = 'Design' OR department = 'Product'
+        \`\`\`
+
+        <code>BETWEEN</code> is shorthand for a range check with inclusive endpoints.
+
+        \`\`\`sql
+        SELECT name, price
+        FROM products
+        WHERE price BETWEEN 10 AND 50;
+        -- same as: price >= 10 AND price <= 50
+        \`\`\`
+
+        BETWEEN works with dates too.
+
+        \`\`\`sql
+        SELECT order_id, order_date, total
+        FROM orders
+        WHERE order_date BETWEEN '2024-01-01' AND '2024-12-31';
+        -- all orders from the year 2024
+        \`\`\`
+
+        ### GROUP BY
+
+        GROUP BY splits rows into groups. Every row with the same value in the grouped column(s) lands in the same bucket. After grouping, you can run aggregate functions on each bucket.
+
+        \`\`\`sql
+        SELECT department,        -- each unique department becomes a group
+               COUNT(*) AS count  -- number of employees in that department
+        FROM employees
+        GROUP BY department;      -- group rows by department
+        \`\`\`
+
+        Any column in the SELECT list must either appear in GROUP BY or be wrapped in an aggregate function. Otherwise the database does not know which value from the group to show.
+
+        \`\`\`sql
+        SELECT department,
+               AVG(salary) AS avg_salary,   -- average salary per department
+               MAX(salary) AS max_salary    -- highest salary per department
+        FROM employees
+        GROUP BY department;
+        \`\`\`
+
+        ### Aggregate Functions: COUNT, SUM, AVG, MIN, MAX
+
+        These functions take many rows and produce one summary value per group (or per whole table if no GROUP BY).
+
+        - <code>COUNT(*)</code> counts rows. <code>COUNT(column)</code> counts non-null values in that column.
+        - <code>SUM(column)</code> adds up numeric values.
+        - <code>AVG(column)</code> averages numeric values.
+        - <code>MIN(column)</code> finds the smallest value.
+        - <code>MAX(column)</code> finds the largest value.
+
+        \`\`\`sql
+        SELECT COUNT(*)          AS total_orders,
+               SUM(total)        AS revenue,
+               AVG(total)        AS avg_order_value,
+               MIN(total)        AS smallest_order,
+               MAX(total)        AS largest_order
+        FROM orders
+        WHERE order_date >= '2024-01-01';  -- summary for 2024 only
+        \`\`\`
+
+        COUNT(DISTINCT column) counts unique non-null values.
+
+        \`\`\`sql
+        SELECT COUNT(DISTINCT city) AS unique_cities
+        FROM customers;
+        \`\`\`
+
+        ### HAVING
+
+        HAVING filters groups (like WHERE filters rows). WHERE runs before GROUP BY and cannot reference aggregates. HAVING runs after grouping and can reference aggregates.
+
+        \`\`\`sql
+        SELECT department,
+               COUNT(*) AS headcount,
+               AVG(salary) AS avg_salary
+        FROM employees
+        GROUP BY department
+        HAVING COUNT(*) > 5;        -- only departments with more than 5 employees
+        \`\`\`
+
+        You can use HAVING without GROUP BY when the entire table is one implicit group, but that is rare.
+
+        ### Combining All Clauses
+
+        Here is the full pipeline in action.
+
+        \`\`\`sql
+        SELECT
+            department,
+            COUNT(*)         AS headcount,
+            AVG(salary)      AS avg_salary,
+            MAX(salary)      AS max_salary
+        FROM employees
+        WHERE hire_date >= '2020-01-01'          -- 1) keep only recent hires
+        GROUP BY department                       -- 2) group by department
+        HAVING COUNT(*) >= 3                      -- 3) keep only departments with 3+ recent hires
+        ORDER BY avg_salary DESC                  -- 4) sort by average salary descending
+        LIMIT 5;                                  -- 5) top 5 departments
+        \`\`\`
+
+        ## Wiring It Together
+
+        A complete analytics query that uses every concept.
+
+        \`\`\`sql
+        -- Goal: for each product category that had at least 10 orders in 2024,
+        -- show total revenue, average order value, and the cheapest and most
+        -- expensive items sold. Sort by revenue descending.
+
+        SELECT
+            p.category,
+            COUNT(*)           AS orders_count,
+            SUM(oi.quantity * oi.unit_price) AS revenue,
+            AVG(oi.unit_price) AS avg_item_price,
+            MIN(oi.unit_price) AS cheapest_item,
+            MAX(oi.unit_price) AS priciest_item
+        FROM order_items oi
+        JOIN products p ON oi.product_id = p.product_id
+        JOIN orders o   ON oi.order_id = o.order_id
+        WHERE o.order_date BETWEEN '2024-01-01' AND '2024-12-31'
+          AND p.category IN ('Clothing', 'Electronics', 'Home')
+        GROUP BY p.category
+        HAVING COUNT(*) >= 10
+        ORDER BY revenue DESC;
+        \`\`\`
+
+        This query joins three tables, filters to 2024 orders in three target categories, groups by category, calculates five aggregates per group, discards small categories, and presents the biggest-revenue categories first.`
+        },
+        {
+          id: "ns-sql-joins",
+          title: "JOINs & Subqueries",
+          shortDesc: "INNER, LEFT, RIGHT, FULL OUTER, CROSS JOINs; correlated and uncorrelated subqueries; CTEs (WITH).",
+          difficulty: "intermediate",
+          readTimeMin: 16,
+          keyPoints: [
+            "INNER JOIN keeps only rows that match in both tables; unmatched rows are dropped.",
+            "LEFT JOIN keeps all rows from the left table; missing right-side values become NULL.",
+            "RIGHT JOIN is the mirror of LEFT; FULL OUTER JOIN keeps rows from both sides.",
+            "CROSS JOIN pairs every row of table A with every row of table B (cartesian product).",
+            "Uncorrelated subqueries run once and feed a value or set to the outer query; correlated subqueries run once per outer row.",
+            "CTEs (WITH clause) name a subquery for reuse, making complex queries readable."
+          ],
+          tags: ["sql", "joins", "subqueries", "intermediate"],
+          content: `## What's This?
+
+        Real databases split data across multiple tables to avoid duplication (normalization). JOINs reassemble that split data by matching rows between tables on a common key -- like connecting two LEGO bricks by their studs. Subqueries nest one query inside another, letting you ask questions like "which customers bought items that cost more than the average?" CTEs (Common Table Expressions using WITH) let you name a subquery so you can reuse it or build queries step by step.
+
+        ## The Big Picture
+
+        Without JOINs you can only ever query one table at a time. With JOINs you can stitch together customers, orders, products, payments, and shipping into a single coherent view. Subqueries let you use the result of one query as input to another. CTEs make the whole thing readable by giving each intermediate result a name.
+
+        ## Core Ideas
+
+        ### INNER JOIN
+
+        INNER JOIN produces rows only where the join condition finds a match in both tables. Rows in either table that have no match disappear.
+
+        \`\`\`sql
+        SELECT o.order_id, o.order_date, c.first_name, c.last_name
+        FROM orders o
+        INNER JOIN customers c ON o.customer_id = c.customer_id;
+        -- only orders that belong to a known customer (and customers with orders)
+        \`\`\`
+
+        The <code>ON</code> clause specifies how rows relate. Typically you match the foreign key in one table to the primary key in another.
+
+        You can join more than two tables by chaining JOINs.
+
+        \`\`\`sql
+        SELECT o.order_id, c.first_name, p.product_name, oi.quantity
+        FROM orders o
+        JOIN customers c  ON o.customer_id = c.customer_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN products p  ON oi.product_id = p.product_id;
+        -- all orders, with customer names, product names, and quantities
+        \`\`\`
+
+        ### LEFT JOIN (LEFT OUTER JOIN)
+
+        LEFT JOIN keeps every row from the left (first) table. If there is no matching row in the right table, the right-side columns are filled with NULL.
+
+        \`\`\`sql
+        SELECT c.first_name, c.last_name, o.order_id, o.order_date
+        FROM customers c
+        LEFT JOIN orders o ON c.customer_id = o.customer_id;
+        -- every customer, even those who never placed an order (order columns will be NULL)
+        \`\`\`
+
+        Use this to find "which X have no Y" by checking for NULL on the right side.
+
+        \`\`\`sql
+        SELECT c.first_name, c.last_name
+        FROM customers c
+        LEFT JOIN orders o ON c.customer_id = o.customer_id
+        WHERE o.order_id IS NULL;
+        -- customers with zero orders
+        \`\`\`
+
+        ### RIGHT JOIN (RIGHT OUTER JOIN)
+
+        RIGHT JOIN is the mirror of LEFT JOIN: it keeps every row from the right table.
+
+        \`\`\`sql
+        SELECT o.order_id, e.first_name AS handled_by
+        FROM orders o
+        RIGHT JOIN employees e ON o.employee_id = e.employee_id;
+        -- every employee, even those who never handled an order
+        \`\`\`
+
+        Most developers prefer LEFT JOIN for consistency. A RIGHT JOIN can always be rewritten as a LEFT JOIN by swapping the table order.
+
+        ### FULL OUTER JOIN
+
+        FULL OUTER JOIN keeps rows from both sides. Matched rows appear once; unmatched rows from either side are filled with NULL on the opposite side.
+
+        \`\`\`sql
+        SELECT e.first_name AS employee, d.department_name
+        FROM employees e
+        FULL OUTER JOIN departments d ON e.department_id = d.department_id;
+        -- all employees (even with no department) and all departments (even with no employees)
+        \`\`\`
+
+        ### CROSS JOIN
+
+        CROSS JOIN produces the cartesian product: every row from table A paired with every row from table B. No ON clause needed (and if you add one, it behaves like an INNER JOIN).
+
+        \`\`\`sql
+        SELECT sizes.size_name, colors.color_name
+        FROM sizes
+        CROSS JOIN colors;
+        -- if sizes has 3 rows and colors has 5, the result is 15 rows (every combination)
+        \`\`\`
+
+        Useful for generating combinations, like all possible product variants.
+
+        ### Uncorrelated Subqueries (Simple)
+
+        A subquery nested inside another query. An uncorrelated subquery runs once, produces a result, and the outer query uses that result. It does not reference columns from the outer query.
+
+        Subquery in WHERE with IN:
+
+        \`\`\`sql
+        SELECT first_name, last_name
+        FROM customers
+        WHERE customer_id IN (
+            SELECT customer_id           -- list of customer_ids
+            FROM orders                  -- from the orders table
+            WHERE total > 500            -- who placed an order over \$500
+        );
+        -- customers who have ever placed a high-value order
+        \`\`\`
+
+        Subquery in SELECT (scalar subquery):
+
+        \`\`\`sql
+        SELECT
+            product_name,
+            price,
+            (SELECT AVG(price) FROM products) AS avg_price_all,  -- single value
+            price - (SELECT AVG(price) FROM products) AS diff_from_avg
+        FROM products;
+        -- each product with its price, the overall average, and the difference
+        \`\`\`
+
+        Subquery in FROM (derived table):
+
+        \`\`\`sql
+        SELECT dept, avg_salary
+        FROM (
+            SELECT department AS dept,
+                   AVG(salary) AS avg_salary
+            FROM employees
+            GROUP BY department
+        ) AS dept_summary
+        WHERE avg_salary > 70000;
+        -- departments where the average salary exceeds 70k
+        \`\`\`
+
+        ### Correlated Subqueries
+
+        A correlated subquery references a column from the outer query. It runs once FOR EACH ROW of the outer query. That makes it powerful but potentially slow on large tables.
+
+        \`\`\`sql
+        SELECT e1.first_name, e1.salary, e1.department
+        FROM employees e1
+        WHERE e1.salary > (
+            SELECT AVG(e2.salary)
+            FROM employees e2
+            WHERE e2.department = e1.department  -- references outer row's department
+        );
+        -- employees who earn more than the average salary in their own department
+        \`\`\`
+
+        The subquery runs once per employee row. For each employee, it computes the average salary of that employee's department, then checks if the employee beats that average.
+
+        Correlated subqueries with EXISTS:
+
+        \`\`\`sql
+        SELECT c.first_name, c.last_name
+        FROM customers c
+        WHERE EXISTS (
+            SELECT 1
+            FROM orders o
+            WHERE o.customer_id = c.customer_id
+              AND o.total > 1000
+        );
+        -- customers who have at least one order over \$1,000
+        -- EXISTS stops scanning as soon as it finds one match
+        \`\`\`
+
+        ### CTEs (WITH clause)
+
+        A CTE names a subquery so you can reference it like a temporary view. It makes multi-step queries readable and lets you reuse the same subquery in multiple places.
+
+        \`\`\`sql
+        WITH high_value_customers AS (
+            SELECT customer_id, SUM(total) AS lifetime_value
+            FROM orders
+            GROUP BY customer_id
+            HAVING SUM(total) > 10000
+        )
+        SELECT c.first_name, c.last_name, hvc.lifetime_value
+        FROM customers c
+        JOIN high_value_customers hvc ON c.customer_id = hvc.customer_id
+        ORDER BY hvc.lifetime_value DESC;
+        -- customers who spent over \$10k, sorted by total spend
+        \`\`\`
+
+        You can chain multiple CTEs, separating them with commas.
+
+        \`\`\`sql
+        WITH
+        dept_avg AS (
+            SELECT department, AVG(salary) AS avg_sal
+            FROM employees
+            GROUP BY department
+        ),
+        high_performers AS (
+            SELECT e.first_name, e.salary, e.department
+            FROM employees e
+            JOIN dept_avg da ON e.department = da.department
+            WHERE e.salary > da.avg_sal * 1.2  -- 20 percent above department average
+        )
+        SELECT department, COUNT(*) AS above_avg_count
+        FROM high_performers
+        GROUP BY department
+        ORDER BY above_avg_count DESC;
+        -- count of employees earning 20 percent+ above their department average
+        \`\`\`
+
+        ## Wiring It Together
+
+        A realistic query combining JOINs, subqueries, and CTEs to answer a business question.
+
+        \`\`\`sql
+        -- Question: For each product category, which products are in the top 20 percent
+        -- by revenue, and how many such products does each category have?
+
+        -- Step 1: compute total revenue per product
+        WITH product_revenue AS (
+            SELECT
+                p.product_id,
+                p.product_name,
+                p.category,
+                SUM(oi.quantity * oi.unit_price) AS revenue
+            FROM products p
+            JOIN order_items oi ON p.product_id = oi.product_id
+            GROUP BY p.product_id, p.product_name, p.category
+        ),
+
+        -- Step 2: rank products within their category by revenue
+        ranked_products AS (
+            SELECT
+                product_id,
+                product_name,
+                category,
+                revenue,
+                ROW_NUMBER() OVER (
+                    PARTITION BY category
+                    ORDER BY revenue DESC
+                ) AS rank_in_category,
+                COUNT(*) OVER (
+                    PARTITION BY category
+                ) AS total_in_category
+            FROM product_revenue
+        )
+
+        -- Step 3: pick the top 20 percent per category
+        SELECT
+            pr.category,
+            pr.product_name,
+            pr.revenue,
+            ROUND(100.0 * pr.rank_in_category / pr.total_in_category, 1) AS percentile
+        FROM ranked_products pr
+        WHERE pr.rank_in_category <= CEIL(pr.total_in_category * 0.2)
+        ORDER BY pr.category, pr.revenue DESC;
+        \`\`\`
+
+        This query builds two CTEs step by step, uses window functions (a natural companion to JOINs), and answers a complex business question without nesting subqueries more than one level deep.`
+        },
+        {
+          id: "ns-sql-ddl",
+          title: "DDL (CREATE, ALTER, DROP)",
+          shortDesc: "Creating tables, altering schemas, constraints (PK, FK, UNIQUE, CHECK), and data types.",
+          difficulty: "foundational",
+          readTimeMin: 10,
+          keyPoints: [
+            "CREATE TABLE defines a new table with columns, data types, and constraints.",
+            "Data types (INTEGER, VARCHAR, DATE, DECIMAL, BOOLEAN) specify what kind of data each column holds.",
+            "Constraints enforce rules: PRIMARY KEY (unique row ID), FOREIGN KEY (links tables), UNIQUE (no duplicates), CHECK (custom condition).",
+            "ALTER TABLE modifies an existing table: add, drop, or change columns and constraints.",
+            "DROP TABLE permanently removes a table and all its data; use with caution."
+          ],
+          tags: ["sql", "ddl", "schema"],
+          content: `## What's This?
+
+        Data Definition Language (DDL) is the part of SQL that defines the structure of your database -- the blueprint before any data goes in. CREATE builds new tables, ALTER modifies existing ones, and DROP tears them down. Constraints are the rules that keep your data honest: no duplicate IDs, no orphaned references, no impossible values.
+
+        Think of DDL as the architect's plans. The tables are rooms, columns are their dimensions, data types are what you can store in each (bookshelves for books, refrigerators for food), and constraints are building codes that prevent structural problems.
+
+        ## The Big Picture
+
+        You cannot store data until you define a table. The order matters too: you must create referenced tables before the tables that reference them (because a foreign key points to a table that must already exist). ALTER lets you fix mistakes or evolve the schema as requirements change. DROP is the final word -- it deletes both the structure and every row in it.
+
+        ## Core Ideas
+
+        ### CREATE TABLE
+
+        CREATE TABLE defines a new table. You name it, list its columns, give each column a data type, and optionally attach constraints.
+
+        \`\`\`sql
+        CREATE TABLE customers (
+            customer_id INTEGER PRIMARY KEY,  -- unique ID for each row, also the primary key
+            first_name  VARCHAR(100) NOT NULL, -- text up to 100 chars, cannot be missing
+            last_name   VARCHAR(100) NOT NULL,
+            email       VARCHAR(255) UNIQUE,   -- no two customers can share an email
+            birth_date  DATE,                  -- date type (year-month-day)
+            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- defaults to current time if not provided
+        );
+        \`\`\`
+
+        ### Common Data Types
+
+        Each database has its own dialect, but these are the universal categories:
+
+        - <code>INTEGER</code> / <code>INT</code> -- whole numbers (-2^31 to 2^31-1).
+        - <code>BIGINT</code> -- large whole numbers (-2^63 to 2^63-1).
+        - <code>DECIMAL(p, s)</code> / <code>NUMERIC(p, s)</code> -- exact decimal numbers with p total digits and s after the decimal point. Use for money.
+        - <code>VARCHAR(n)</code> -- variable-length text up to n characters.
+        - <code>TEXT</code> -- unlimited-length text (varies by database).
+        - <code>BOOLEAN</code> -- true/false.
+        - <code>DATE</code> -- calendar date (2024-12-25).
+        - <code>TIMESTAMP</code> -- date plus time (2024-12-25 14:30:00).
+
+        \`\`\`sql
+        CREATE TABLE products (
+            product_id   INTEGER PRIMARY KEY,
+            product_name VARCHAR(200) NOT NULL,
+            price        DECIMAL(10, 2) NOT NULL,  -- 10 digits total, 2 after decimal: 12345678.99
+            description  TEXT,                      -- can hold paragraphs
+            is_active    BOOLEAN DEFAULT TRUE,      -- defaults to true
+            created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        \`\`\`
+
+        ### PRIMARY KEY Constraint
+
+        A primary key uniquely identifies each row. It must be unique and not null. Most tables have one. You can define it inline (after the column) or as a table-level constraint.
+
+        \`\`\`sql
+        CREATE TABLE orders (
+            order_id    INTEGER,       -- defined separately
+            customer_id INTEGER NOT NULL,
+            order_date  DATE NOT NULL,
+            total       DECIMAL(10, 2),
+            PRIMARY KEY (order_id)     -- table-level constraint
+        );
+        \`\`\`
+
+        Composite primary keys use multiple columns.
+
+        \`\`\`sql
+        CREATE TABLE order_items (
+            order_id   INTEGER,
+            product_id INTEGER,
+            quantity   INTEGER NOT NULL,
+            unit_price DECIMAL(10, 2) NOT NULL,
+            PRIMARY KEY (order_id, product_id)  -- a pair (order + product) is unique
+        );
+        \`\`\`
+
+        ### FOREIGN KEY Constraint
+
+        A foreign key ensures that a value in one table matches a value in another table's primary key (or unique column). This prevents orphaned references.
+
+        \`\`\`sql
+        CREATE TABLE orders (
+            order_id    INTEGER PRIMARY KEY,
+            customer_id INTEGER NOT NULL,
+            order_date  DATE NOT NULL,
+            total       DECIMAL(10, 2),
+            FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+            -- any value in orders.customer_id must exist in customers.customer_id
+        );
+        \`\`\`
+
+        You can specify what happens when the referenced row is deleted or updated: <code>ON DELETE CASCADE</code> (delete the child rows too), <code>ON DELETE SET NULL</code> (set the foreign key to NULL), or <code>ON DELETE RESTRICT</code> (prevent the parent deletion).
+
+        \`\`\`sql
+        CREATE TABLE order_items (
+            order_id   INTEGER,
+            product_id INTEGER,
+            quantity   INTEGER NOT NULL,
+            FOREIGN KEY (order_id)  REFERENCES orders(order_id)   ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT
+        );
+        \`\`\`
+
+        ### UNIQUE Constraint
+
+        UNIQUE ensures that all values in a column (or combination of columns) are distinct from each other. Unlike PRIMARY KEY, a table can have multiple UNIQUE constraints, and UNIQUE columns can contain NULL (one NULL per column in most databases).
+
+        \`\`\`sql
+        CREATE TABLE users (
+            user_id    INTEGER PRIMARY KEY,
+            username   VARCHAR(50) UNIQUE NOT NULL,  -- no two users can have the same username
+            email      VARCHAR(255) UNIQUE NOT NULL  -- no duplicate emails either
+        );
+        \`\`\`
+
+        ### CHECK Constraint
+
+        CHECK enforces a custom condition on each row. Think of it as a WHERE clause that must be true for every row.
+
+        \`\`\`sql
+        CREATE TABLE employees (
+            employee_id INTEGER PRIMARY KEY,
+            first_name  VARCHAR(100) NOT NULL,
+            salary      DECIMAL(10, 2) NOT NULL,
+            department  VARCHAR(50),
+            hire_date   DATE NOT NULL,
+            CHECK (salary >= 0),                       -- salary cannot be negative
+            CHECK (department IN ('Engineering', 'Sales', 'HR', 'Marketing'))  -- must be one of these
+        );
+        \`\`\`
+
+        ### ALTER TABLE
+
+        ALTER TABLE changes an existing table. You can add, drop, or modify columns; add or drop constraints; and rename things.
+
+        \`\`\`sql
+        -- add a new column
+        ALTER TABLE customers
+        ADD COLUMN phone VARCHAR(20);
+
+        -- drop an existing column (not supported in all databases)
+        ALTER TABLE customers
+        DROP COLUMN birth_date;
+
+        -- modify a column's data type (syntax varies by database)
+        ALTER TABLE products
+        ALTER COLUMN price TYPE DECIMAL(12, 2);
+
+        -- add a constraint
+        ALTER TABLE orders
+        ADD CONSTRAINT fk_customer
+            FOREIGN KEY (customer_id) REFERENCES customers(customer_id);
+
+        -- drop a constraint
+        ALTER TABLE orders
+        DROP CONSTRAINT fk_customer;
+
+        -- rename a table (PostgreSQL / MySQL syntax)
+        ALTER TABLE customers RENAME TO clients;
+        \`\`\`
+
+        ### DROP TABLE
+
+        DROP TABLE removes the table and all its data permanently. Most databases support <code>IF EXISTS</code> to avoid errors if the table does not exist.
+
+        \`\`\`sql
+        DROP TABLE IF EXISTS temp_imports;  -- safe: won't error if table is missing
+        \`\`\`
+
+        <code>DROP TABLE ... CASCADE</code> also drops any objects that depend on the table (like foreign key references or views).
+
+        ## Wiring It Together
+
+        A full schema build for an e-commerce database, creating tables in dependency order so foreign keys always reference existing tables.
+
+        \`\`\`sql
+        -- 1) customers (no dependencies)
+        CREATE TABLE customers (
+            customer_id INTEGER PRIMARY KEY,
+            first_name  VARCHAR(100) NOT NULL,
+            last_name   VARCHAR(100) NOT NULL,
+            email       VARCHAR(255) UNIQUE NOT NULL,
+            phone       VARCHAR(20),
+            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 2) products (no dependencies)
+        CREATE TABLE products (
+            product_id   INTEGER PRIMARY KEY,
+            product_name VARCHAR(200) NOT NULL,
+            category     VARCHAR(50),
+            price        DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+            stock        INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+            is_active    BOOLEAN DEFAULT TRUE,
+            created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 3) orders (depends on customers)
+        CREATE TABLE orders (
+            order_id    INTEGER PRIMARY KEY,
+            customer_id INTEGER NOT NULL,
+            order_date  DATE NOT NULL DEFAULT CURRENT_DATE,
+            status      VARCHAR(20) NOT NULL DEFAULT 'pending',
+            total       DECIMAL(12, 2),
+            FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+                ON DELETE RESTRICT,
+            CHECK (status IN ('pending', 'shipped', 'delivered', 'cancelled'))
+        );
+
+        -- 4) order_items (depends on orders and products)
+        CREATE TABLE order_items (
+            order_id   INTEGER NOT NULL,
+            product_id INTEGER NOT NULL,
+            quantity   INTEGER NOT NULL CHECK (quantity > 0),
+            unit_price DECIMAL(10, 2) NOT NULL CHECK (unit_price >= 0),
+            PRIMARY KEY (order_id, product_id),
+            FOREIGN KEY (order_id)   REFERENCES orders(order_id)   ON DELETE CASCADE,
+            FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE RESTRICT
+        );
+
+        -- verify structure (database-specific, but keeps you honest)
+        -- \\d orders  -- PostgreSQL
+        -- DESCRIBE orders;  -- MySQL
+        -- PRAGMA table_info(orders);  -- SQLite
+        \`\`\``
+        },
+        {
+          id: "ns-sql-dml",
+          title: "DML (INSERT, UPDATE, DELETE)",
+          shortDesc: "Inserting rows, bulk inserts, updating with joins, delete with subqueries, and TRUNCATE.",
+          difficulty: "foundational",
+          readTimeMin: 10,
+          keyPoints: [
+            "INSERT adds new rows; you can insert one row at a time or bulk-insert many rows in one statement.",
+            "UPDATE modifies existing rows; always use a WHERE clause or every row gets changed.",
+            "DELETE removes rows; use WHERE to target specific rows, or omit it to empty the table slowly.",
+            "UPDATE and DELETE can reference other tables via joins or subqueries for precise targeting.",
+            "TRUNCATE is a fast, non-logged way to remove all rows from a table (DDL, not DML in strict terms)."
+          ],
+          tags: ["sql", "dml", "data-manipulation"],
+          content: `## What's This?
+
+        Data Manipulation Language (DML) is how you change the data inside your tables. INSERT creates new rows, UPDATE edits existing ones, DELETE removes them. TRUNCATE is the express lane for clearing a table entirely. Every statement that mutates data should be written carefully -- a missing WHERE clause can ruin your day.
+
+        Think of a table as a spreadsheet. INSERT adds a new row at the bottom. UPDATE finds specific cells and changes their values. DELETE removes entire rows. TRUNCATE clears the whole sheet in one action.
+
+        ## The Big Picture
+
+        DML statements change data permanently (unless they are inside a transaction you roll back). Every INSERT, UPDATE, or DELETE acquires locks on the affected rows, so other queries might wait. Bulk operations can be fast but also generate a lot of transaction log traffic. Always run DML inside a transaction in production so you can roll back if something goes wrong.
+
+        ## Core Ideas
+
+        ### INSERT (Single Row)
+
+        INSERT adds one row to a table. Specify the columns you are setting (optional but recommended) and the values.
+
+        \`\`\`sql
+        INSERT INTO customers (customer_id, first_name, last_name, email)
+        VALUES (101, 'Alice', 'Chen', 'alice@example.com');
+        -- adds one row with the four given values; other columns get defaults or NULL
+        \`\`\`
+
+        If you omit the column list, you must provide values for every column in the order they were defined.
+
+        \`\`\`sql
+        INSERT INTO customers
+        VALUES (102, 'Bob', 'Jones', 'bob@example.com', NULL, DEFAULT);
+        -- fragile: relies on exact column order; always specify columns in production
+        \`\`\`
+
+        ### INSERT (Bulk / Multiple Rows)
+
+        Insert many rows in a single statement. Much faster than individual INSERTs because the database prepares the statement once.
+
+        \`\`\`sql
+        INSERT INTO products (product_id, product_name, category, price, stock)
+        VALUES
+            (201, 'Wireless Mouse',  'Electronics', 29.99,  150),
+            (202, 'USB-C Hub',       'Electronics', 49.99,  80),
+            (203, 'Desk Lamp',       'Home',        39.99,  200),
+            (204, 'Notebook Set',    'Office',      12.99,  500);
+        -- inserts four products in one round-trip to the database
+        \`\`\`
+
+        ### INSERT from SELECT
+
+        You can insert rows that are the result of a query. Useful for archiving, copying data between tables, or populating summary tables.
+
+        \`\`\`sql
+        INSERT INTO archived_orders (order_id, customer_id, order_date, total)
+        SELECT order_id, customer_id, order_date, total
+        FROM orders
+        WHERE order_date < '2023-01-01';
+        -- copies old orders into the archive table in one statement
+        \`\`\`
+
+        ### UPDATE (Basic)
+
+        UPDATE changes column values in existing rows. The WHERE clause determines which rows to modify. Without WHERE, EVERY ROW gets updated.
+
+        \`\`\`sql
+        UPDATE products
+        SET price = 24.99      -- new price
+        WHERE product_id = 201;  -- only this product
+        \`\`\`
+
+        You can update multiple columns at once.
+
+        \`\`\`sql
+        UPDATE products
+        SET price = price * 1.10,   -- 10 percent price increase
+            stock = stock + 50       -- restock
+        WHERE category = 'Electronics' AND is_active = TRUE;
+        -- increases price and stock for all active electronics
+        \`\`\`
+
+        ### UPDATE with Joins
+
+        Sometimes you need values from another table to decide what to update. Different databases handle this differently.
+
+        PostgreSQL / SQLite / MySQL all support a FROM / JOIN syntax:
+
+        \`\`\`sql
+        UPDATE orders o
+        SET o.status = 'shipped'
+        FROM shipments s
+        WHERE o.order_id = s.order_id       -- join condition
+          AND s.shipped_date IS NOT NULL    -- only shipped orders
+          AND o.status = 'pending';         -- that are still marked pending
+        \`\`\`
+
+        SQL Server uses a different syntax:
+
+        \`\`\`sql
+        UPDATE o
+        SET o.status = 'shipped'
+        FROM orders o
+        INNER JOIN shipments s ON o.order_id = s.order_id
+        WHERE s.shipped_date IS NOT NULL AND o.status = 'pending';
+        \`\`\`
+
+        ### UPDATE with Subqueries
+
+        A subquery in the WHERE clause can target rows precisely.
+
+        \`\`\`sql
+        UPDATE products
+        SET is_active = FALSE
+        WHERE product_id IN (
+            SELECT product_id
+            FROM order_items
+            GROUP BY product_id
+            HAVING SUM(quantity) < 10      -- products with fewer than 10 total units ever sold
+        );
+        -- deactivate poorly selling products
+        \`\`\`
+
+        ### DELETE (Basic)
+
+        DELETE removes rows. Like UPDATE, the WHERE clause is your safety net. Without it, every row disappears.
+
+        \`\`\`sql
+        DELETE FROM products
+        WHERE product_id = 204;  -- just this one product
+        \`\`\`
+
+        Delete all inactive products:
+
+        \`\`\`sql
+        DELETE FROM products
+        WHERE is_active = FALSE;
+        \`\`\`
+
+        ### DELETE with Subqueries
+
+        Use a subquery to determine which rows to delete based on data in other tables.
+
+        \`\`\`sql
+        DELETE FROM customers
+        WHERE customer_id IN (
+            SELECT customer_id
+            FROM orders
+            GROUP BY customer_id
+            HAVING MAX(order_date) < '2020-01-01'  -- last order before 2020
+        );
+        -- delete customers who have not ordered since 2020
+        \`\`\`
+
+        Some databases support USING / JOIN in DELETE.
+
+        \`\`\`sql
+        DELETE FROM order_items oi
+        USING products p
+        WHERE oi.product_id = p.product_id
+          AND p.is_active = FALSE;
+        -- remove order_items that reference deactivated products (PostgreSQL-style)
+        \`\`\`
+
+        ### TRUNCATE
+
+        TRUNCATE removes all rows from a table. It is faster than DELETE without a WHERE because it does not scan rows or fire per-row triggers. It is technically DDL (DDL auto-commits in many databases). You cannot use WHERE with TRUNCATE.
+
+        \`\`\`sql
+        TRUNCATE TABLE temp_imports;  -- instantly empties the table, cannot be rolled back in some databases
+        \`\`\`
+
+        TRUNCATE also resets auto-increment counters in most databases. Use it when you need to batch-reload data from scratch.
+
+        ## Wiring It Together
+
+        A realistic workflow: load a CSV-like batch, update matching records, insert new ones, and clean up.
+
+        \`\`\`sql
+        -- Start a transaction so we can roll back if anything fails
+        BEGIN TRANSACTION;
+
+        -- 1) Stage incoming data in a temporary table
+        CREATE TEMP TABLE import_products (
+            product_name VARCHAR(200),
+            category     VARCHAR(50),
+            price        DECIMAL(10, 2),
+            stock        INTEGER
+        );
+
+        -- 2) Bulk insert the new data (simulating a CSV load)
+        INSERT INTO import_products (product_name, category, price, stock)
+        VALUES
+            ('Wireless Keyboard', 'Electronics', 59.99, 100),
+            ('Monitor Stand',     'Office',      34.99, 200),
+            ('LED Strip',         'Home',        19.99, 300);
+
+        -- 3) Update prices for existing products that are in the import
+        UPDATE products p
+        SET price = ip.price,
+            stock = p.stock + ip.stock
+        FROM import_products ip
+        WHERE p.product_name = ip.product_name;
+
+        -- 4) Insert products from the import that do not exist yet
+        INSERT INTO products (product_name, category, price, stock)
+        SELECT ip.product_name, ip.category, ip.price, ip.stock
+        FROM import_products ip
+        WHERE NOT EXISTS (
+            SELECT 1 FROM products p WHERE p.product_name = ip.product_name
+        );
+
+        -- 5) Clean up: drop the temp table
+        DROP TABLE IF EXISTS import_products;
+
+        -- 6) Verify
+        SELECT COUNT(*) AS total_products FROM products;
+
+        -- Commit only if all steps succeeded
+        COMMIT;
+        \`\`\`
+
+        If any step fails (e.g., a constraint violation), the <code>ROLLBACK</code> command undoes all changes made since <code>BEGIN TRANSACTION</code>, leaving the database in its original state.`
+        }
+
+        ,
+        {
+          id: "ns-sql-indexes",
+          title: "Indexes & Performance",
+          shortDesc: "B-tree indexes, composite indexes, EXPLAIN ANALYZE, query planning, and index-only scans.",
+          difficulty: "intermediate",
+          readTimeMin: 14,
+          keyPoints: [
+            "Indexes are sorted copies of columns that accelerate lookups at the cost of write speed and storage",
+            "B-tree indexes support equality, range, sorting, and prefix matching on composite keys",
+            "EXPLAIN ANALYZE reveals actual execution plans with timing and row estimates",
+            "Index-only scans avoid heap lookups when all needed columns are in the index",
+            "Partial indexes on WHERE clauses and covering indexes reduce index size and I/O",
+            "Over-indexing slows INSERT/UPDATE/DELETE; measure before adding indexes"
+          ],
+          tags: ["indexes", "performance-tuning", "query-planning", "sql-tuning"],
+          content: `## What's This?
+
+        An <code>index</code> is a separate data structure -- typically a balanced tree (B-tree) -- that stores a sorted copy of selected columns. The database uses it to find rows without scanning the entire table. Think of the index at the back of a textbook: instead of reading every page to find "B-tree," you jump to the page numbers listed in the index.
+
+        ## The Big Picture
+
+        Without indexes, every query performs a <code>sequential scan</code>: it reads every row from disk, checks the WHERE clause, and discards non-matches. For a 10-million-row table, that is 10 million disk page reads.
+
+        An index trades **write-time overhead** for **read-time speed**. Every INSERT, UPDATE, or DELETE must maintain every index on the table. The goal is to put indexes on columns that appear in WHERE, JOIN, ORDER BY, and sometimes SELECT (covering indexes) -- and nothing else.
+
+        Query performance follows the Pareto principle: 80% of slow queries come from 20% of access patterns. Profile first, index second.
+
+        ## Core Ideas
+
+        ### B-tree Index Structure
+
+        The default index type in every major SQL database is the B-tree (balanced tree). Nodes branch by key range:
+
+        <code>
+        -- Creates a B-tree index on the email column
+        -- PostgreSQL default; MySQL uses BTREE implicitly
+        CREATE INDEX idx_users_email ON users (email);
+        --               index name ^     table ^  ^ column
+        </code>
+
+        Internally, the B-tree stores (email, row-pointer) pairs sorted by email. Searching for 'alice@example.com' traverses ~3-4 levels instead of scanning millions of rows. Height grows logarithmically with row count.
+
+        A B-tree supports:
+
+        - **Equality**: <code>WHERE email = 'a@b.com'</code>
+        - **Range**: <code>WHERE age BETWEEN 20 AND 30</code>
+        - **Prefix**: <code>WHERE name LIKE 'Jon%'</code> (but not <code>'%on%'</code>)
+        - **Sorting**: <code>ORDER BY email</code> (index already sorted)
+
+        ### Composite (Multi-Column) Indexes
+
+        An index on multiple columns follows the **leftmost prefix rule**: the query must use a prefix of the indexed columns from left to right.
+
+        <code>
+        -- Index on (country, city, street)
+        CREATE INDEX idx_address ON addresses (country, city, street);
+
+        -- Uses index fully: filters all three columns
+        SELECT * FROM addresses
+        WHERE country = 'US' AND city = 'Austin' AND street = 'Main';
+
+        -- Uses index partially: filters country+city, rows scanned for street IS NULL
+        SELECT * FROM addresses
+        WHERE country = 'US' AND city = 'Austin' AND street IS NULL;
+
+        -- Uses index partially: filters country only, rows scanned for city IS NULL
+        SELECT * FROM addresses
+        WHERE country = 'US' AND street = 'Main';  -- cannot use city part
+
+        -- Cannot use index at all: skips the leftmost column
+        SELECT * FROM addresses
+        WHERE city = 'Austin';
+        </code>
+
+        Order columns by **selectivity**: put the most discriminating column first. If 1000 countries exist but 10 million cities, <code>(city, country)</code> usually outperforms <code>(country, city)</code> because city filters out more rows earlier.
+
+        ### EXPLAIN and Query Planning
+
+        <code>EXPLAIN ANALYZE</code> runs the query and shows the actual execution plan with timing:
+
+        <code>
+        EXPLAIN ANALYZE SELECT * FROM users WHERE email = 'alice@example.com';
+        </code>
+
+        Output (simplified PostgreSQL):
+
+        <code>
+        Index Scan using idx_users_email on users  (cost=0.42..8.44 rows=1 width=72)
+          Index Cond: (email = 'alice@example.com'::text)
+          Planning Time: 0.123 ms
+          Execution Time: 0.045 ms
+        </code>
+
+        Key parts to read:
+
+        - **Node type**: <code>Seq Scan</code> (bad for large tables), <code>Index Scan</code> (good), <code>Index Only Scan</code> (best)
+        - **Rows**: actual vs. estimated -- large mismatch means stale statistics; run <code>ANALYZE</code>
+        - **Execution Time**: actual wall-clock time
+        - **Cost**: arbitrary unit; first number is startup cost, second is total cost
+
+        Always test with realistic data volumes. An index that works on 1000 rows may be ignored by the planner on 10 million rows.
+
+        ### Index-Only Scans
+
+        If every column needed by the query is present in the index itself, the database never touches the table heap:
+
+        <code>
+        -- Given this index:
+        CREATE INDEX idx_users_email_name ON users (email, name);
+
+        -- This query reads everything from the index, never the table:
+        SELECT email, name FROM users WHERE email = 'alice@example.com';
+        --                    ^         ^ both columns are in the index
+        </code>
+
+        This is called a **covering index** or **index-only scan**. It is the fastest scan type because it reads only the compact index pages. Add columns to indexes that are frequently SELECTed alongside the WHERE column, but beware of index bloat.
+
+        ### Partial and Unique Indexes
+
+        A **partial index** includes only rows matching a WHERE clause, making it smaller:
+
+        <code>
+        -- Index only active orders (99% of rows are 'completed' -- skip them)
+        CREATE INDEX idx_active_orders ON orders (status, created_at)
+        WHERE status IN ('pending', 'shipped');
+        --    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        -- Partial: only rows matching this condition go into the index
+        </code>
+
+        A **unique index** enforces uniqueness and doubles as a standard index:
+
+        <code>
+        CREATE UNIQUE INDEX idx_unique_username ON users (username);
+        -- Prevents duplicate usernames while speeding up lookups
+        </code>
+
+        ### When Indexes Hurt
+
+        Every index adds overhead to writes:
+
+        <code>
+        -- Table with 5 indexes:
+        CREATE TABLE posts (
+          id SERIAL PRIMARY KEY,          -- auto-indexed
+          author_id INT NOT NULL,
+          slug TEXT UNIQUE,               -- creates index
+          title TEXT,
+          created_at TIMESTAMPTZ
+        );
+
+        CREATE INDEX idx_posts_author ON posts (author_id);
+        CREATE INDEX idx_posts_created ON posts (created_at);
+        CREATE INDEX idx_posts_title_search ON posts USING gin (to_tsvector('english', title));
+
+        -- This single INSERT must update 5 B-trees + the heap:
+        INSERT INTO posts (author_id, slug, title) VALUES (1, 'hello-world', 'Hello World');
+        </code>
+
+        On a table with heavy write volume, too many indexes cause contention on index pages and slow down every mutation. Drop indexes that are never used. PostgreSQL's <code>pg_stat_user_indexes</code> shows usage statistics.
+
+        ## Wiring It Together
+
+        A complete workflow: profile, index, verify.
+
+        <code>
+        -- 1. Find slow query from application logs
+        -- SELECT * FROM orders WHERE customer_id = 42 ORDER BY created_at DESC;
+
+        -- 2. Check current plan
+        EXPLAIN ANALYZE SELECT * FROM orders
+        WHERE customer_id = 42 ORDER BY created_at DESC;
+        -- Seq Scan on orders (cost=0.00..23500.00 rows=1 width=120)
+        -- Bad: scanning 23500 cost units for one customer
+
+        -- 3. Create composite index matching the query pattern
+        -- (WHERE column first, ORDER BY column second for sorting)
+        CREATE INDEX idx_orders_customer_created
+        ON orders (customer_id, created_at DESC);
+
+        -- 4. Re-check with EXPLAIN ANALYZE
+        EXPLAIN ANALYZE SELECT * FROM orders
+        WHERE customer_id = 42 ORDER BY created_at DESC;
+        -- Index Scan Backward using idx_orders_customer_created
+        --   (cost=0.28..8.29 rows=1 width=120)
+        --    Index Cond: (customer_id = 42)
+        -- Execution Time: 0.032 ms  (was 235 ms)
+
+        -- 5. If this query runs thousands of times per second, make it a covering index:
+        DROP INDEX idx_orders_customer_created;
+        CREATE INDEX idx_orders_customer_created_cover
+        ON orders (customer_id, created_at DESC) INCLUDE (total, status);
+        -- Now SELECT customer_id, created_at, total, status can use index-only scan
+
+        -- 6. Monitor index usage
+        SELECT schemaname, tablename, indexname, idx_scan, idx_tup_read
+        FROM pg_stat_user_indexes
+        WHERE idx_scan = 0;
+        -- Indexes with zero scans are candidates for removal
+        </code>
+
+        The rule: start with the slowest query in your app, add the most selective composite index that covers WHERE + ORDER BY, verify with EXPLAIN ANALYZE, and remove unused indexes periodically.`
+        },
+
+        {
+          id: "ns-sql-transactions",
+          title: "Transactions & ACID",
+          shortDesc: "BEGIN/COMMIT/ROLLBACK, isolation levels (READ COMMITTED, SERIALIZABLE), locks, and deadlocks.",
+          difficulty: "intermediate",
+          readTimeMin: 15,
+          keyPoints: [
+            "Transactions group multiple operations into an atomic all-or-nothing unit with BEGIN/COMMIT/ROLLBACK",
+            "ACID guarantees: Atomicity (all or nothing), Consistency (valid state), Isolation (concurrent invisibility), Durability (survives crash)",
+            "READ COMMITTED prevents dirty reads; SERIALIZABLE prevents all concurrency anomalies at a performance cost",
+            "Row-level locks in UPDATE prevent lost updates but can cause deadlocks when sessions acquire locks in different orders",
+            "Deadlocks are detected by the database and resolved by killing one transaction; retry logic is essential",
+            "Long transactions hold locks and bloat MVCC snapshots; keep them short"
+          ],
+          tags: ["transactions", "acid", "concurrency", "isolation-levels"],
+          content: `## What's This?
+
+        A <code>transaction</code> is a sequence of database operations executed as a single atomic unit. Either every operation succeeds (COMMIT) or none of them take effect (ROLLBACK). Transactions solve the problem of concurrent access: two users reading and writing the same rows at the same time.
+
+        ## The Big Picture
+
+        Without transactions, real-world applications break. When you transfer $100 from checking to savings, three things must happen: debit checking (-$100), credit savings (+$100), and record the transfer. If the database crashes after step 1, money disappears. If another read happens between steps 1 and 2, the balance sheet is wrong.
+
+        Transactions provide four guarantees, remembered as **ACID**:
+
+        - **Atomicity**: the whole transaction commits or the whole thing rolls back (like a quantum state)
+        - **Consistency**: the database moves from one valid state to another; constraints and rules are preserved
+        - **Isolation**: concurrent transactions do not see each other's uncommitted changes (controlled by isolation level)
+        - **Durability**: once COMMIT returns, the data survives power loss (written to WAL on disk)
+
+        Every SQL statement in PostgreSQL and MySQL implicitly runs inside a transaction. The question is whether you control the boundaries.
+
+        ## Core Ideas
+
+        ### BEGIN, COMMIT, ROLLBACK
+
+        The explicit transaction lifecycle:
+
+        <code>
+        -- Start a transaction block
+        BEGIN;
+
+        -- Subtract from checking
+        UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+
+        -- Add to savings
+        UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+
+        -- If everything looks good, make it permanent
+        COMMIT;
+
+        -- If something went wrong before COMMIT:
+        ROLLBACK;  -- undoes both UPDATEs
+        </code>
+
+        If the session disconnects before COMMIT, the database automatically rolls back. **Always** handle errors and call ROLLBACK explicitly -- otherwise the transaction stays open, holding locks.
+
+        ### Concurrency Anomalies
+
+        Three classic problems that isolation levels address:
+
+        - **Dirty Read**: transaction A reads a row that transaction B has modified but not yet committed. If B rolls back, A saw data that never existed.
+        - **Non-Repeatable Read**: transaction A reads a row twice; between reads, transaction B commits a change to that row. A sees different values on each read.
+        - **Phantom Read**: transaction A runs the same WHERE query twice; between runs, transaction B inserts a new row matching the filter. The second query sees a "phantom" row that was not there before.
+
+        ### Isolation Levels (PostgreSQL)
+
+        PostgreSQL implements four levels from the SQL standard. Each level prevents a superset of the anomalies of the level below:
+
+        <code>
+        -- Default: READ COMMITTED
+        BEGIN;
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+        -- Prevents: dirty reads
+        -- Allows: non-repeatable reads, phantom reads
+        -- Each statement sees only committed data as of the moment the statement starts
+
+        -- Strongest: SERIALIZABLE
+        BEGIN;
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+        -- Prevents: all anomalies including phantoms and serialization anomalies
+        -- Uses: optimistic concurrency control; may fail with "could not serialize"
+        -- Retry on serialization failure
+        </code>
+
+        **READ COMMITTED** (default in PostgreSQL, Oracle, SQL Server):
+        - Each query within the transaction sees a snapshot of committed data as of the moment that query begins
+        - Two SELECTs in the same transaction may see different data if another transaction committed between them
+        - Works for 95% of applications
+
+        **REPEATABLE READ** in PostgreSQL:
+        - Transaction sees a snapshot taken at the first query
+        - Same SELECT always returns the same data within the transaction
+        - Prevents non-repeatable reads; still allows phantom reads in the SQL standard, but PostgreSQL's MVCC prevents phantoms too
+        - Anomaly: a serialization failure can still occur (transaction chosen as loser on conflict)
+
+        **SERIALIZABLE**:
+        - Transactions execute as if they ran one after another
+        - Highest isolation, highest overhead
+        - May abort with <code>40001</code> serialization failure on conflicts
+        - Application **must retry** on serialization failure
+
+        <code>
+        -- Example: SERIALIZABLE retry loop (pseudocode)
+        WHILE true:
+          BEGIN;
+          SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+          SELECT balance FROM accounts WHERE id = 1;
+          -- ... business logic ...
+          UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+          result = COMMIT;
+          if result == success: break;
+          if result == serialization_failure: continue;  -- retry
+        </code>
+
+        ### Locking Mechanisms
+
+        Databases use locks to implement isolation. The two main types:
+
+        **Row-level locks** (explicit or implicit):
+
+        <code>
+        -- Implicit row lock: UPDATE acquires an exclusive row lock
+        BEGIN;
+        UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+        -- No other transaction can UPDATE or DELETE this row until COMMIT
+        -- Other transactions can still SELECT it (they see the old committed version via MVCC)
+        COMMIT;
+
+        -- Explicit row lock: lock without modifying
+        BEGIN;
+        SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;
+        -- FOR UPDATE locks the row like an UPDATE would
+        -- FOR NO KEY UPDATE: weaker lock, allows concurrent key updates
+        -- FOR SHARE: shared read lock, blocks UPDATE/DELETE but allows other shared locks
+        </code>
+
+        **Table-level locks** (rarely needed manually):
+
+        <code>
+        LOCK TABLE accounts IN ACCESS EXCLUSIVE MODE;
+        -- Blocks all reads and writes. Heavy-handed. Avoid in normal operations.
+        </code>
+
+        ### Deadlocks
+
+        A deadlock occurs when two transactions each hold a lock the other needs:
+
+        <code>
+        -- Transaction A:
+        BEGIN;
+        UPDATE accounts SET balance = balance - 100 WHERE id = 1;  -- locks row 1
+        UPDATE accounts SET balance = balance + 100 WHERE id = 2;  -- waits for B's lock on row 2
+
+        -- Transaction B (concurrent):
+        BEGIN;
+        UPDATE accounts SET balance = balance - 50 WHERE id = 2;   -- locks row 2
+        UPDATE accounts SET balance = balance + 50 WHERE id = 1;   -- waits for A's lock on row 1
+        </code>
+
+        A waits for B; B waits for A. The database's deadlock detector notices the cycle and kills one transaction (usually the one that accumulated the least work). The killed transaction receives an error like <code>deadlock detected</code> and rolls back. The survivor proceeds.
+
+        **Prevention**: always acquire locks in the same order across all transactions. If every transaction touches rows by ascending ID, deadlocks are impossible.
+
+        ### Savepoints
+
+        Partial rollback within a transaction:
+
+        <code>
+        BEGIN;
+        INSERT INTO audit_log (action) VALUES ('start transfer');
+
+        SAVEPOINT before_debit;
+        UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+
+        -- Oops, insufficient funds? Roll back to before the debit, keep the audit
+        ROLLBACK TO SAVEPOINT before_debit;
+
+        INSERT INTO audit_log (action) VALUES ('debit failed');
+        COMMIT;  -- commits the audit rows, never applied the debit
+        </code>
+
+        Savepoints are useful for batch processing where one failure should not abort the entire batch.
+
+        ## Wiring It Together
+
+        Money transfer with proper error handling, SERIALIZABLE isolation, and retry:
+
+        <code>
+        -- Application code (conceptual, language-agnostic)
+
+        -- Transaction 1: Transfer funds
+        BEGIN;
+        SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+
+        -- Read source account
+        SELECT balance FROM accounts WHERE id = 1 FOR UPDATE;
+        -- balance = 500
+
+        -- Read destination account
+        SELECT balance FROM accounts WHERE id = 2 FOR UPDATE;
+        -- balance = 300
+
+        -- Validate: sufficient funds?
+        -- if balance < 100: rollback and return error
+
+        -- Execute transfer
+        UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+        UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+
+        INSERT INTO transfers (from_id, to_id, amount)
+        VALUES (1, 2, 100);
+
+        COMMIT;
+        -- If serialization failure, retry from BEGIN
+
+
+        -- Transaction 2 (concurrent): Another transfer from account 1
+        -- Because we used FOR UPDATE on both accounts,
+        -- Transaction 2 waits until Transaction 1 commits.
+        -- No lost update, no inconsistent read, no overdraft.
+
+
+        -- Checking consistency after transfer:
+        -- No connection needed: ACID guarantees state is correct.
+        -- Atomicity: both accounts updated or neither.
+        -- Consistency: sum of balances unchanged (500+300 = 400+400).
+        -- Isolation: no other session saw intermediate state.
+        -- Durability: after COMMIT, data is on disk.
+        </code>
+
+        Transactions are the backbone of data integrity. Use them for any multi-row update, enforce lock ordering to prevent deadlocks, and keep transactions short to minimize contention. For most applications, READ COMMITTED is sufficient; reach for SERIALIZABLE only when financial or inventory correctness demands it, and always pair it with retry logic.`
+        },
+
+        {
+          id: "ns-sql-window",
+          title: "Window Functions",
+          shortDesc: "ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, SUM OVER, and frame specifications.",
+          difficulty: "advanced",
+          readTimeMin: 17,
+          keyPoints: [
+            "Window functions compute values across a set of rows related to the current row without collapsing them into a group",
+            "OVER (PARTITION BY) divides rows into groups; ORDER BY within the window controls ordering for ranking and framing",
+            "ROW_NUMBER, RANK, and DENSE_RANK assign different numbering strategies for ties",
+            "LAG and LEAD access adjacent rows without self-joins",
+            "Window frames (ROWS/RANGE BETWEEN) define the sliding window for aggregates like running totals",
+            "Window functions execute after WHERE and GROUP BY but before ORDER BY in the query lifecycle"
+          ],
+          tags: ["window-functions", "analytics", "advanced-sql", "olap"],
+          content: `## What's This?
+
+        A <code>window function</code> performs a calculation across a set of rows that are related to the current row -- like a GROUP BY that does not collapse rows. Each row keeps its identity while gaining an aggregate, ranking, or offset value computed from its "window" of neighboring rows.
+
+        ## The Big Picture
+
+        Before window functions, common analytics required complex self-joins, subqueries, or application-level processing. Want a running total per customer? You needed a correlated subquery that re-aggregated for every row. Want row numbers? There was no standard way.
+
+        Window functions solve an entire class of problems in one clean syntax:
+
+        <code>
+        -- Without window functions (painful):
+        SELECT id, amount,
+          (SELECT SUM(amount) FROM sales s2
+           WHERE s2.customer_id = s1.customer_id
+           AND s2.created_at <= s1.created_at) AS running_total
+        FROM sales s1;
+
+        -- With window function (clean):
+        SELECT id, amount,
+          SUM(amount) OVER (PARTITION BY customer_id ORDER BY created_at) AS running_total
+        FROM sales;
+        </code>
+
+        The OVER clause defines the window. Every row retains its original columns plus the windowed computation.
+
+        ## Core Ideas
+
+        ### OVER and PARTITION BY
+
+        The <code>OVER</code> clause opens a window. <code>PARTITION BY</code> divides the result set into groups (like GROUP BY, but without collapsing):
+
+        <code>
+        SELECT
+          department,
+          employee_name,
+          salary,
+          AVG(salary) OVER (PARTITION BY department) AS dept_avg
+        FROM employees;
+
+        -- Result:
+        -- Engineering  Alice   120000  115000  (avg of Engineering)
+        -- Engineering  Bob     110000  115000
+        -- Sales        Carol   90000   95000   (avg of Sales)
+        -- Sales        Dave    100000  95000
+        -- Each row keeps its identity but also shows the department average
+        </code>
+
+        Without PARTITION BY, the window is the entire result set:
+
+        <code>
+        SELECT
+          employee_name,
+          salary,
+          SUM(salary) OVER () AS total_payroll
+        FROM employees;
+        -- Every row shows the grand total alongside their individual salary
+        </code>
+
+        ### Ranking Functions: ROW_NUMBER, RANK, DENSE_RANK
+
+        These assign a number to each row within a partition, ordered by the ORDER BY clause:
+
+        <code>
+        SELECT
+          student_name,
+          subject,
+          score,
+          ROW_NUMBER() OVER (PARTITION BY subject ORDER BY score DESC) AS row_num,
+          RANK()       OVER (PARTITION BY subject ORDER BY score DESC) AS rank,
+          DENSE_RANK() OVER (PARTITION BY subject ORDER BY score DESC) AS dense_rank
+        FROM exam_scores;
+
+        -- Subject   Student  Score  Row_Num  Rank  Dense_Rank
+        -- Math      Alice    100    1        1     1
+        -- Math      Bob       95    2        2     2
+        -- Math      Carol     95    3        2     2       (tied with Bob)
+        -- Math      Dave      90    4        4     3       (rank skips 3, dense_rank does not)
+        </code>
+
+        Key difference:
+        - <code>ROW_NUMBER</code>: unique number per row, even for ties (tie-breaking is arbitrary without a tiebreaker column)
+        - <code>RANK</code>: equal values get the same rank; next rank skips ahead (gaps)
+        - <code>DENSE_RANK</code>: equal values get the same rank; next rank is consecutive (no gaps)
+
+        ### LAG and LEAD: Accessing Adjacent Rows
+
+        <code>LAG(column, offset, default)</code> looks backward; <code>LEAD</code> looks forward:
+
+        <code>
+        SELECT
+          created_at,
+          amount,
+          LAG(amount, 1, 0) OVER (ORDER BY created_at) AS prev_amount,
+          amount - LAG(amount, 1, 0) OVER (ORDER BY created_at) AS diff_from_prev,
+          LEAD(amount, 1)   OVER (ORDER BY created_at) AS next_amount
+        FROM daily_sales
+        ORDER BY created_at;
+
+        -- created_at   amount  prev_amount  diff_from_prev  next_amount
+        -- 2024-01-01   100     0            100             150
+        -- 2024-01-02   150     100          50              120
+        -- 2024-01-03   120     150          -30             NULL
+        </code>
+
+        This replaces self-joins for "previous row" and "next row" patterns. The default value avoids NULL for the first row.
+
+        ### Aggregate Window Functions and Running Totals
+
+        Any aggregate function (SUM, AVG, COUNT, MIN, MAX) works as a window function with OVER:
+
+        <code>
+        SELECT
+          order_id,
+          customer_id,
+          amount,
+          SUM(amount)   OVER (PARTITION BY customer_id ORDER BY order_date) AS running_total,
+          AVG(amount)   OVER (PARTITION BY customer_id ORDER BY order_date) AS running_avg,
+          COUNT(*)      OVER (PARTITION BY customer_id ORDER BY order_date) AS orders_so_far
+        FROM orders
+        ORDER BY customer_id, order_date;
+
+        -- Running total: each new order adds to the previous sum
+        -- Running avg: average up to the current row
+        -- orders_so_far: 1, 2, 3, ...
+        </code>
+
+        ### Frame Specifications (ROWS, RANGE, GROUPS)
+
+        The default frame when ORDER BY is present is <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>. You can control the window boundaries explicitly:
+
+        <code>
+        SELECT
+          date,
+          revenue,
+          -- Last 3 rows (including current)
+          SUM(revenue) OVER (
+            ORDER BY date
+            ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+          ) AS moving_avg_3day,
+
+          -- All rows from start to current (same as default)
+          SUM(revenue) OVER (
+            ORDER BY date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+          ) AS running_total,
+
+          -- Previous row + current + next row (centered moving average)
+          AVG(revenue) OVER (
+            ORDER BY date
+            ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING
+          ) AS centered_avg,
+
+          -- Current and all future rows
+          SUM(revenue) OVER (
+            ORDER BY date
+            ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+          ) AS remaining_total
+        FROM daily_revenue;
+        </code>
+
+        Frame modes:
+        - <code>ROWS</code>: counts physical rows (most common, most performant)
+        - <code>RANGE</code>: rows with the same ORDER BY value are treated as peers; default with ORDER BY
+        - <code>GROUPS</code>: groups of peers (like RANGE but with different boundary semantics)
+
+        ### FIRST_VALUE, LAST_VALUE, NTH_VALUE
+
+        Access specific positions in the window:
+
+        <code>
+        SELECT
+          department,
+          employee_name,
+          salary,
+          FIRST_VALUE(employee_name) OVER (
+            PARTITION BY department ORDER BY salary DESC
+          ) AS top_earner,
+          LAST_VALUE(employee_name) OVER (
+            PARTITION BY department ORDER BY salary DESC
+            ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+          ) AS lowest_earner,
+          NTH_VALUE(employee_name, 2) OVER (
+            PARTITION BY department ORDER BY salary DESC
+          ) AS second_highest
+        FROM employees;
+        </code>
+
+        Note: <code>LAST_VALUE</code> defaults to frame end at CURRENT ROW, so you must specify <code>UNBOUNDED FOLLOWING</code> to get the true last value.
+
+        ### NTILE: Bucketing
+
+        Divides rows into N roughly equal buckets:
+
+        <code>
+        SELECT
+          student_name,
+          score,
+          NTILE(4) OVER (ORDER BY score DESC) AS quartile
+        FROM exam_scores;
+
+        -- Top 25% get quartile 1, next 25% get quartile 2, etc.
+        -- Useful for percentile-based grading or data segmentation
+        </code>
+
+        ### Execution Order
+
+        Window functions execute after WHERE, GROUP BY, and HAVING, but before ORDER BY and LIMIT:
+
+        <code>
+        SELECT
+          department,
+          AVG(salary) AS avg_salary,
+          RANK() OVER (ORDER BY AVG(salary) DESC) AS rank  -- allowed: runs after GROUP BY
+        FROM employees
+        WHERE salary > 50000
+        GROUP BY department
+        HAVING COUNT(*) > 5
+        ORDER BY rank;
+        -- Execution order:
+        -- 1. FROM + WHERE (filter rows)
+        -- 2. GROUP BY + HAVING (aggregate)
+        -- 3. Window functions (compute rank over aggregated results)
+        -- 4. ORDER BY (sort final output)
+        </code>
+
+        This means you cannot put a window function in WHERE -- use a subquery or CTE instead.
+
+        ## Wiring It Together
+
+        Employee analytics: rank, running total, year-over-year comparison, and departmental quartiles.
+
+        <code>
+        WITH employee_metrics AS (
+          SELECT
+            department,
+            employee_name,
+            salary,
+            hire_date,
+
+            -- Rank employees by salary within their department
+            DENSE_RANK() OVER (
+              PARTITION BY department ORDER BY salary DESC
+            ) AS salary_rank,
+
+            -- Running total of salaries in order of hire
+            SUM(salary) OVER (
+              PARTITION BY department ORDER BY hire_date
+            ) AS cumulative_payroll,
+
+            -- Salary compared to previous hire in the same department
+            salary - LAG(salary, 1, 0) OVER (
+              PARTITION BY department ORDER BY hire_date
+            ) AS salary_diff_from_prev_hire,
+
+            -- Department average for comparison
+            AVG(salary) OVER (
+              PARTITION BY department
+            ) AS dept_avg_salary,
+
+            -- Quartile across entire company
+            NTILE(4) OVER (ORDER BY salary DESC) AS company_quartile
+
+          FROM employees
+        )
+        SELECT
+          department,
+          employee_name,
+          salary,
+          salary_rank,
+          cumulative_payroll,
+          salary_diff_from_prev_hire,
+          CASE
+            WHEN salary > dept_avg_salary THEN 'above_avg'
+            ELSE 'below_avg'
+          END AS vs_dept_avg,
+          company_quartile
+        FROM employee_metrics
+        WHERE company_quartile <= 3  -- exclude bottom quartile
+        ORDER BY department, salary_rank;
+
+        -- This single query replaces:
+        --   * A GROUP BY subquery for department averages
+        --   * A self-join for "previous hire" comparison
+        --   * Application-level ranking logic
+        --   * A separate quartile computation
+        -- All in one pass through the data.
+        </code>
+
+        Window functions are the Swiss Army knife of analytical SQL. Master them, and you eliminate dozens of complex patterns. The key is always: what is the PARTITION (group), what is the ORDER (sequence), and what is the frame (range of participation)?`
+        },
+
+        {
+          id: "ns-sql-design",
+          title: "Database Design & Normalization",
+          shortDesc: "ER diagrams, 1NF/2NF/3NF, denormalization trade-offs, and naming conventions.",
+          difficulty: "intermediate",
+          readTimeMin: 14,
+          keyPoints: [
+            "Entity-relationship modeling separates conceptual design (entities, relationships) from physical design (tables, foreign keys)",
+            "First normal form (1NF): each cell holds one value, rows are unique, columns are atomic",
+            "Second normal form (2NF): 1NF + every non-key column depends on the whole primary key, not part of it",
+            "Third normal form (3NF): 2NF + no transitive dependency (non-key column depends on another non-key column)",
+            "Denormalization trades write anomaly risk for read speed; use it deliberately on read-heavy hot paths",
+            "Consistent naming conventions (snake_case, singular table names, explicit FK names) prevent confusion"
+          ],
+          tags: ["database-design", "normalization", "er-diagrams", "data-modeling"],
+          content: `## What's This?
+
+        <code>Database design</code> is the process of structuring data into tables, columns, and relationships so that the database is easy to query, maintain, and extend. <code>Normalization</code> is a systematic method for eliminating data redundancy and preventing update anomalies.
+
+        ## The Big Picture
+
+        A poorly designed database repeats data in multiple places. Repeating data leads to three anomalies:
+
+        - **Update anomaly**: change the customer address in one row but forget the other nine -- now the data contradicts itself
+        - **Insert anomaly**: cannot create a new course because no student has enrolled yet -- the course info is tied to enrollment
+        - **Delete anomaly**: delete the last student and lose the course information entirely
+
+        Normalization breaks data into smaller, related tables linked by foreign keys. Each fact lives in exactly one place. The cost: queries need JOINs. The benefit: data integrity is guaranteed by structure, not by application discipline.
+
+        The design process typically has three stages:
+        1. **Conceptual**: draw an ER diagram showing entities and their relationships
+        2. **Logical**: define tables, columns, and keys in a schema (normalized)
+        3. **Physical**: decide indexes, data types, partitioning, and storage settings
+
+        ## Core Ideas
+
+        ### Entity-Relationship (ER) Diagrams
+
+        An ER diagram uses boxes for entities (nouns: Customer, Order) and diamonds for relationships (verbs: places, contains). Relationships have cardinality:
+
+        <code>
+        -- Conceptual model (drawn as boxes, text representation below):
+        --
+        --  Customer 1 ---< places >--- * Order
+        --    |                              |
+        --    |                              | contains
+        --    |                              v
+        --    +-------------------------- * OrderItem * ---> 1 Product
+        --
+        -- Notation: 1---< means one-to-many
+        --           *---* means many-to-many (resolved by junction table)
+        </code>
+
+        Cardinality types:
+        - **One-to-One (1:1)**: User has one Profile (rare; usually merge into one table)
+        - **One-to-Many (1:N)**: Customer has many Orders (most common)
+        - **Many-to-Many (M:N)**: Student takes many Courses, Course has many Students (requires a junction table)
+
+        Attributes (columns) are listed inside each entity box. Keys are underlined.
+
+        ### First Normal Form (1NF)
+
+        A table is in 1NF when:
+
+        1. Each column holds atomic (indivisible) values -- no arrays or comma-separated lists
+        2. Each row is unique (has a primary key)
+        3. Each column contains values of the same type
+
+        <code>
+        -- VIOLATES 1NF: multi-valued column
+        CREATE TABLE courses (
+          student_name TEXT,
+          courses_enrolled TEXT  -- contains "Math,Physics,Chem"
+        );
+
+        -- VIOLATES 1NF: repeating groups of columns
+        CREATE TABLE courses (
+          student_name TEXT,
+          course1 TEXT, course2 TEXT, course3 TEXT  -- fixed array of columns
+        );
+
+        -- SATISFIES 1NF: one value per cell, one row per enrollment
+        CREATE TABLE enrollments (
+          student_name TEXT,
+          course_name  TEXT,
+          PRIMARY KEY (student_name, course_name)
+        );
+        </code>
+
+        Most modern table designs start in 1NF automatically. The main trap is storing JSON or arrays in a single column when you need to query individual items.
+
+        ### Second Normal Form (2NF)
+
+        A table is in 2NF when:
+
+        1. It satisfies 1NF
+        2. Every non-key column depends on the **entire** primary key, not just part of it
+
+        2NF only matters for tables with composite primary keys (two or more columns).
+
+        <code>
+        -- VIOLATES 2NF: composite PK (student_id, course_id)
+        CREATE TABLE enrollments (
+          student_id   INT,
+          course_id    INT,
+          student_name TEXT,      -- depends only on student_id, not on course_id
+          course_name  TEXT,      -- depends only on course_id, not on student_id
+          grade        TEXT,      -- depends on BOTH student_id and course_id (OK)
+          PRIMARY KEY (student_id, course_id)
+        );
+
+        -- FIX: split into three tables
+        CREATE TABLE students (
+          student_id   INT PRIMARY KEY,
+          student_name TEXT
+        );
+
+        CREATE TABLE courses (
+          course_id    INT PRIMARY KEY,
+          course_name  TEXT
+        );
+
+        CREATE TABLE enrollments (
+          student_id   INT REFERENCES students(student_id),
+          course_id    INT REFERENCES courses(course_id),
+          grade        TEXT,
+          PRIMARY KEY (student_id, course_id)
+        );
+        </code>
+
+        The rule: if a column does not depend on the whole key, move it to its own table. Student name depends on student alone; course name depends on course alone. Grade depends on both (the student in the course).
+
+        ### Third Normal Form (3NF)
+
+        A table is in 3NF when:
+
+        1. It satisfies 2NF
+        2. No transitive dependency: a non-key column does not depend on another non-key column
+
+        <code>
+        -- VIOLATES 3NF: transitive dependency
+        CREATE TABLE orders (
+          order_id      INT PRIMARY KEY,
+          customer_id   INT,
+          customer_name TEXT,       -- depends on customer_id, not on order_id
+          customer_addr TEXT,       -- depends on customer_id, not on order_id
+          order_date    DATE
+        );
+
+        -- customer_name depends on customer_id, which is not the PK.
+        -- If customer changes address, every order row must be updated.
+        -- This is the update anomaly.
+
+        -- FIX: extract customer into its own table
+        CREATE TABLE customers (
+          customer_id   INT PRIMARY KEY,
+          customer_name TEXT,
+          customer_addr TEXT
+        );
+
+        CREATE TABLE orders (
+          order_id      INT PRIMARY KEY,
+          customer_id   INT REFERENCES customers(customer_id),
+          order_date    DATE
+        );
+        </code>
+
+        The rule: every non-key column must describe **the key (the whole key, and nothing but the key)**. If a column describes something other than the PK, put that something in its own table.
+
+        ### Beyond 3NF: Boyce-Codd and Higher
+
+        BCNF (Boyce-Codd Normal Form) is a stricter version of 3NF. 4NF handles multi-valued dependencies. In practice, 3NF is sufficient for 99% of applications. Beyond 3NF, the design becomes progressively fragmented, and the JOIN cost usually outweighs the redundancy benefit.
+
+        ### Denormalization: When to Break the Rules
+
+        Denormalization means intentionally reintroducing redundancy to avoid JOINs on read-heavy queries. Use it when:
+
+        - You have measured a query as the bottleneck
+        - The read:write ratio is very high (e.g., 1000 reads per write)
+        - The redundant data changes infrequently
+
+        <code>
+        -- Denormalized example: store department name directly on employee
+        -- (normalized would be department_id -> departments table)
+        CREATE TABLE employees (
+          employee_id     INT PRIMARY KEY,
+          employee_name   TEXT,
+          department_id   INT,
+          department_name TEXT  -- denormalized: also in departments table
+        );
+        -- Risk: if dept name changes, every employee row must be updated
+        -- Trade-off: avoids JOIN on every employee listing query
+
+        -- Safer denormalization: materialized view refreshed periodically
+        CREATE MATERIALIZED VIEW employee_dept AS
+        SELECT e.*, d.department_name
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id;
+        -- Refresh on a schedule instead of per-write
+        </code>
+
+        Common denormalization patterns:
+        - **Precomputed aggregates** (total sales in a summary table)
+        - **Cached lookups** (department name on employee)
+        - **Array of related IDs** (product_ids on an order, avoiding junction JOIN)
+
+        ### Naming Conventions
+
+        Consistent naming prevents confusion across a team:
+
+        <code>
+        -- Tables: plural snake_case (represents a collection)
+        CREATE TABLE users (...);
+        CREATE TABLE order_items (...);
+
+        -- Columns: singular snake_case
+        CREATE TABLE users (
+          user_id       INT PRIMARY KEY,  -- explicit, not just "id"
+          email_address TEXT,
+          created_at    TIMESTAMPTZ
+        );
+
+        -- Foreign key: references table_pk
+        order_id INT REFERENCES orders(order_id);
+
+        -- Join/junction table: two singular table names
+        CREATE TABLE course_student (  -- alphabetically ordered
+          course_id  INT REFERENCES courses(course_id),
+          student_id INT REFERENCES students(student_id),
+          PRIMARY KEY (course_id, student_id)
+        );
+
+        -- Indexes: idx_tablename_columnname
+        CREATE INDEX idx_users_email ON users (email);
+
+        -- Constraints: fk_source_target
+        ALTER TABLE orders ADD CONSTRAINT fk_orders_customers
+          FOREIGN KEY (customer_id) REFERENCES customers(customer_id);
+        </code>
+
+        ## Wiring It Together
+
+        Design a simple e-commerce database from concept to 3NF.
+
+        <code>
+        -- Step 1: Conceptual ER model
+        -- Customer 1---< Order 1---< OrderItem >---1 Product
+
+        -- Step 2: Logical model (3NF)
+        -- customer_id is PK in customers, FK in orders
+        -- order_id is PK in orders, FK in order_items
+        -- product_id is PK in products, FK in order_items
+
+        CREATE TABLE customers (
+          customer_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          customer_name TEXT NOT NULL,
+          email         TEXT NOT NULL UNIQUE,
+          address       TEXT,
+          created_at    TIMESTAMPTZ DEFAULT now()
+        );
+
+        CREATE TABLE orders (
+          order_id      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          customer_id   INT NOT NULL REFERENCES customers(customer_id),
+          order_date    TIMESTAMPTZ DEFAULT now(),
+          status        TEXT DEFAULT 'pending'
+            CHECK (status IN ('pending', 'shipped', 'delivered', 'cancelled'))
+        );
+
+        CREATE TABLE products (
+          product_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          product_name  TEXT NOT NULL,
+          price         NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+          category      TEXT
+        );
+
+        CREATE TABLE order_items (
+          order_id      INT NOT NULL REFERENCES orders(order_id),
+          product_id    INT NOT NULL REFERENCES products(product_id),
+          quantity      INT NOT NULL CHECK (quantity > 0),
+          unit_price    NUMERIC(10, 2) NOT NULL,
+          PRIMARY KEY (order_id, product_id)
+        );
+        -- unit_price is stored here (not looked up from products)
+        -- so price changes in products do not affect historical order records
+
+        -- Step 3: Verify normalization
+        -- 1NF: every cell is atomic, rows have PKs
+        -- 2NF: order_items has composite PK (order_id, product_id);
+        --      quantity and unit_price depend on the full pair -- OK
+        -- 3NF: no transitive dependencies; customer address
+        --      depends only on customer_id (same table, it is the key)
+
+        -- Step 4: Query the normalized schema
+        SELECT
+          c.customer_name,
+          o.order_date,
+          p.product_name,
+          oi.quantity,
+          oi.unit_price,
+          oi.quantity * oi.unit_price AS line_total
+        FROM customers c
+        JOIN orders o      ON c.customer_id = o.customer_id
+        JOIN order_items oi ON o.order_id = oi.order_id
+        JOIN products p    ON oi.product_id = p.product_id
+        WHERE o.status = 'shipped'
+        ORDER BY o.order_date DESC;
+
+        -- Step 5: Denormalize only if measured bottleneck
+        -- If this dashboard query runs 10,000 times/day:
+        -- CREATE MATERIALIZED VIEW order_summary AS
+        -- SELECT ... same JOIN above ...;
+        -- Refresh every 5 minutes. No JOINs for the dashboard.
+        </code>
+
+        Normalization up to 3NF gives you a stable, non-redundant foundation. Denormalize only after measurement. Design the conceptual model first, then translate to tables. Use consistent naming. And always ask: "If I change this value, how many rows must I update?" If the answer is more than one, the design is probably denormalized.`
+        },
+
+        {
+          id: "ns-sql-tools",
+          title: "Tools & Clients",
+          shortDesc: "psql, DBeaver, pgAdmin, MySQL Workbench, migration tools (Flyway, Prisma Migrate), and ORMs.",
+          difficulty: "intermediate",
+          readTimeMin: 10,
+          keyPoints: [
+            "psql is the PostgreSQL CLI with \d commands, EXPLAIN formatting, and scripting for automation",
+            "GUI tools like DBeaver, pgAdmin, and MySQL Workbench provide visual schema design, query builders, and connection management",
+            "Migration tools version-control schema changes so every environment stays in sync with repeatable, scripted migrations",
+            "ORMs map tables to objects but can hide query costs; always check the SQL they generate",
+            "Know when to use each layer: raw SQL for complex queries, migration tool for schema changes, ORM for simple CRUD"
+          ],
+          tags: ["tools", "psql", "orms", "migrations", "gui-clients"],
+          content: `## What's This?
+
+        SQL databases are accessed through a stack of tools: command-line clients for direct querying, GUI clients for visual exploration, migration tools for version-controlled schema changes, and ORMs for in-code database access. Each layer has strengths and trade-offs.
+
+        ## The Big Picture
+
+        You interact with a database through one of three interfaces:
+
+        1. **CLI client** (psql, mysql): fastest for ad-hoc queries, scripting, and administration
+        2. **GUI client** (DBeaver, pgAdmin, MySQL Workbench): visual schema browsing, query building, and result exploration
+        3. **Programmatic access** (library or ORM): in-app database communication
+
+        Schema changes require special tooling. Running ALTER TABLE manually on production is risky. **Migration tools** turn schema changes into version-controlled, repeatable scripts -- same process as code deployments.
+
+        ORMs (Object-Relational Mappers) let you write database code in your application language. They handle 80% of use cases but can generate horrible SQL for the other 20%.
+
+        ## Core Ideas
+
+        ### psql: The PostgreSQL CLI
+
+        psql is the terminal client for PostgreSQL. It is lightweight, scriptable, and universally available:
+
+        <code>
+        # Connect and basic navigation
+        psql -h localhost -U alice -d mydb
+        # Flags: -h host, -U user, -d database (defaults to OS user name)
+
+        # Common meta-commands (backslash commands):
+        \\l          -- list all databases
+        \\c mydb     -- connect to database 'mydb'
+        \\dt         -- list all tables
+        \\d users    -- describe table 'users' (columns, types, indexes, constraints)
+        \\di         -- list all indexes
+        \\du         -- list all roles/users
+        \\x          -- toggle expanded display (rows as vertical key-value pairs)
+        \\timing     -- toggle query execution timing
+        \\e          -- open last query in external editor ($$VISUAL or $$EDITOR)
+        \\q          -- quit psql
+
+        # Query formatting:
+        EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT * FROM users;
+        -- BUFFERS shows cache hit/miss, JSON format for machine parsing
+
+        # Scripting:
+        psql -h localhost -U alice -d mydb -f migrations/001_create_users.sql
+        # -f executes a file of SQL statements, non-interactively
+
+        psql -h localhost -U alice -d mydb -c "SELECT count(*) FROM users;"
+        # -c runs a single command, outputs result, exits
+        </code>
+
+        psql's <code>\\d</code> commands are faster than any GUI for quick schema inspection. The <code>\\watch</code> command reruns a query every N seconds for monitoring.
+
+        ### GUI Clients
+
+        **DBeaver** (cross-platform, supports all major databases):
+
+        - Universal client with consistent UI across PostgreSQL, MySQL, SQLite, Oracle, etc.
+        - ER diagram viewer: right-click a table > View Diagram
+        - Query builder: drag tables, auto-generates JOINs
+        - Data export/import in CSV, JSON, Excel
+        - SSH tunneling for remote databases
+
+        **pgAdmin** (PostgreSQL-specific, web-based):
+
+        - Built-in query tool with auto-complete and EXPLAIN visualization
+        - Dashboard for server activity, locks, and connections
+        - Backup/restore wizard wrapping pg_dump and pg_restore
+        - Heavier than DBeaver; uses more memory
+
+        **MySQL Workbench** (MySQL-specific):
+
+        - Visual schema designer: draw ER diagrams, forward-engineer to SQL
+        - Query profiler with execution plan visualization
+        - Server administration: user management, logs, configuration
+        - Migration wizard: convert other databases to MySQL schema
+
+        ### Migration Tools
+
+        A **migration** is a version-controlled script that changes the database schema. Migrations are numbered sequentially and applied in order:
+
+        <code>
+        -- File: migrations/V001__create_users.sql
+        CREATE TABLE users (
+          user_id  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          email    TEXT NOT NULL UNIQUE,
+          name     TEXT NOT NULL
+        );
+
+        -- File: migrations/V002__add_phone_to_users.sql
+        ALTER TABLE users ADD COLUMN phone TEXT;
+
+        -- File: migrations/V003__create_orders.sql
+        CREATE TABLE orders (
+          order_id    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+          user_id     INT NOT NULL REFERENCES users(user_id),
+          amount      NUMERIC(10, 2),
+          created_at  TIMESTAMPTZ DEFAULT now()
+        );
+        </code>
+
+        **Flyway** (Java-based but works with any JVM or CLI):
+
+        <code>
+        # Apply all pending migrations
+        flyway -url=jdbc:postgresql://localhost/mydb migrate
+
+        # Check status (which migrations have been applied)
+        flyway info
+
+        # Undo the last migration (if using undo migrations)
+        flyway undo
+        </code>
+
+        Flyway tracks applied migrations in a table called <code>flyway_schema_history</code>. Each migration is checksummed to detect tampering. Migrations must never be modified after they are applied -- create a new migration to fix issues.
+
+        **Prisma Migrate** (TypeScript/Node.js ecosystem):
+
+        <code>
+        // schema.prisma -- declarative schema
+        model User {
+          user_id Int     @id @default(autoincrement())
+          email   String  @unique
+          name    String
+          orders  Order[]
+        }
+
+        model Order {
+          order_id   Int     @id @default(autoincrement())
+          user_id    Int
+          user       User    @relation(fields: [user_id], references: [user_id])
+          amount     Float
+          created_at DateTime @default(now())
+        }
+
+        // Generate and apply migration:
+        // npx prisma migrate dev --name add_user_phone
+        // Creates: migrations/20240101_add_user_phone/migration.sql
+        </code>
+
+        Prisma generates the SQL from the Prisma schema file. The workflow: edit schema, run migrate dev, review the generated SQL, apply.
+
+        ### ORMs (Object-Relational Mappers)
+
+        ORMs let you work with database rows as objects in your programming language:
+
+        <code>
+        // Prisma (TypeScript)
+        const user = await prisma.user.create({
+          data: { email: 'alice@example.com', name: 'Alice' }
+        });
+
+        const orders = await prisma.order.findMany({
+          where: { user_id: user.user_id },
+          include: { user: true }
+        });
+
+        // SQL generated (roughly):
+        // INSERT INTO users (email, name) VALUES ('alice@example.com', 'Alice');
+        // SELECT * FROM orders WHERE user_id = 1;
+        // SELECT * FROM users WHERE user_id = 1;  -- for the included relation
+        </code>
+
+        ORMs trade control for convenience. The hidden cost is query quality:
+
+        - **N+1 problem**: loop over 100 users and access <code>user.orders</code> each iteration; ORM runs 101 queries instead of one JOIN
+        - **Invisible indexing needs**: the ORM generates WHERE clauses you may not have indexed
+        - **Complex query escape hatch**: most ORMs let you write raw SQL for the 20% of queries they handle poorly
+
+        <code>
+        // Prisma raw query for a complex report (escape hatch):
+        const results = await prisma.\$queryRaw\`
+          SELECT
+            DATE_TRUNC('month', created_at) AS month,
+            COUNT(*) AS order_count,
+            SUM(amount) AS revenue
+          FROM orders
+          WHERE status = 'completed'
+          GROUP BY month
+          ORDER BY month
+        \`;
+        </code>
+
+        An ORM is the right choice for CRUD-heavy applications with simple queries. For analytics, reporting, or complex data transformations, write raw SQL or use a query builder like Knex.js that gives you more control.
+
+        ## Wiring It Together
+
+        A complete workflow from schema creation to application query:
+
+        <code>
+        # Step 1: Create database
+        psql -h localhost -U postgres -c "CREATE DATABASE shop;"
+
+        # Step 2: Apply migrations with Flyway
+        flyway -url=jdbc:postgresql://localhost/shop migrate
+        # Applies V001__create_users.sql, V002__add_phone_to_users.sql
+
+        # Step 3: Explore schema in DBeaver
+        # Connect, right-click tables > View Diagram
+        # See users -> orders relationship visually
+
+        # Step 4: Ad-hoc query in psql
+        psql -d shop
+        > \\dt
+        > \\d users
+        > SELECT * FROM users WHERE email LIKE '%@example.com';
+
+        # Step 5: Application code with Prisma ORM
+        // prisma/schema.prisma -- add the Order model
+        // npx prisma migrate dev --name create_orders
+
+        // Application code:
+        async function getCustomerReport(userId: number) {
+          // Simple CRUD via ORM
+          const user = await prisma.user.findUnique({
+            where: { user_id: userId },
+            include: { orders: true }
+          });
+
+          // Complex analytics via raw SQL
+          const monthlyStats = await prisma.\$queryRaw\`
+            SELECT
+              DATE_TRUNC('month', created_at) AS month,
+              COUNT(*) AS order_count,
+              SUM(amount) AS total_spent
+            FROM orders
+            WHERE user_id = \${userId}
+            GROUP BY month
+            ORDER BY month DESC
+            LIMIT 12
+          \`;
+
+          return { user, monthlyStats };
+        }
+
+        # Step 6: Production monitoring
+        psql -d shop -c "SELECT * FROM pg_stat_activity;"
+        # Check for long-running queries or blocking locks
+        </code>
+
+        The tool stack pyramid: psql for direct access, GUI for exploration, migrations for schema versioning, ORM for application code. Master the CLI first -- it is the fastest path to diagnosis and the foundation everything else builds on.`
+        }
+
         ],
       },
       // ── C / C++ ──────────────────────────────────────────────────────────
