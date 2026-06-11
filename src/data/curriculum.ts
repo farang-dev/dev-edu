@@ -87361,16 +87361,2828 @@ class TodoController {
         title: "C / C++",
         description: "C and C++ from the ground up — pointers, memory management, OOP, the STL, build systems, and popular frameworks.",
         topics: [
-          { id: "ns-c-syntax", title: "C Syntax & Basics", shortDesc: "Data types, operators, control flow, functions, arrays, strings, and the compilation pipeline (gcc/clang).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-c-pointers", title: "Pointers & Memory Management", shortDesc: "Pointer arithmetic, malloc/calloc/realloc/free, stack vs heap, function pointers, and void pointers.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-c-stdlib", title: "C Standard Library", shortDesc: "stdio, stdlib, string, math, time, assert, and POSIX I/O (open, read, write, close).", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-basics", title: "C++ Basics & Classes", shortDesc: "cin/cout, references, const, default arguments, function overloading, class definition, and access specifiers.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-oop", title: "OOP in C++", shortDesc: "Inheritance, virtual functions, polymorphism, abstract base classes, multiple inheritance, and virtual destructors.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-stl", title: "STL (Containers, Algorithms, Iterators)", shortDesc: "vector, map, set, unordered_map, algorithm (sort, find, accumulate), and iterator categories.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-raii", title: "RAII & Smart Pointers", shortDesc: "unique_ptr, shared_ptr, weak_ptr, move semantics, rvalue references (&&), and std::move.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-modern", title: "Modern C++ (C++11/14/17/20/23)", shortDesc: "auto, range-for, lambda, constexpr, concepts, ranges, coroutines, and modules.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-build", title: "Build Systems (CMake, Make)", shortDesc: "CMakeLists.txt, targets, dependencies, generators, vcpkg/conan, and cross-compilation.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-cpp-frameworks", title: "Popular Frameworks (Qt, Boost, Unreal)", shortDesc: "Qt widgets/QML, Boost libraries, Unreal Engine scripting, and embedded (Arduino, Zephyr).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-c-syntax",
+            title: "C Syntax & Basics",
+            shortDesc: "Data types, operators, control flow, functions, arrays, strings, and the compilation pipeline (gcc/clang).",
+            difficulty: "foundational",
+            readTimeMin: 15,
+            keyPoints: [
+              "C is a compiled, statically-typed language that exposes memory directly through pointers.",
+              "Variables must be declared with a type before use; basic types include int, char, float, and double.",
+              "Control flow constructs (if/else, for, while, switch) follow a familiar C-like syntax.",
+              "Functions are declared with prototypes and defined separately; parameters are passed by value.",
+              "Arrays and strings are low-level: arrays are contiguous memory, strings are null-terminated char arrays.",
+              "The compilation pipeline transforms source code through four stages: preprocessing, compilation, assembly, and linking.",
+            ],
+            content: `## What's This?\n\nC is a compiled, statically-typed programming language created by Dennis Ritchie at Bell Labs in 1972. It gives the programmer direct control over memory through pointers, manual allocation, and a thin abstraction layer over the hardware. C is the lingua franca of systems programming: operating systems (Linux, Windows kernel), embedded firmware, databases, and virtually every programming language runtime (Python, Ruby, Node.js) are written in C or its descendant C++.\n\nThink of C as a power drill with no safety guards. You can drive a screw, but you can also drill through your foot if you are careless. The language trusts you to manage memory, avoid buffer overflows, and respect pointer boundaries. This is why C code is fast -- there is no runtime checking -- and also why C bugs are often security vulnerabilities.\n\nC's longevity is due to its minimal runtime: a C program has no garbage collector, no virtual machine, and no hidden allocations. What you write is almost exactly what the CPU executes.\n\n## The Big Picture\n\nC sits at the boundary between high-level logic and hardware. It builds on an understanding of how a CPU works: registers, memory addresses, the stack, and instruction execution. C syntax (semicolons, braces, types, functions) influenced nearly every language that followed: C++, Java, C#, JavaScript, and Go.\n\nAfter mastering C syntax, the natural next steps are pointers and memory management (the hardest part of C), the C standard library, and then systems programming concepts like file I/O, processes, sockets, and concurrency.\n\n## Core Ideas\n\n### Variables and Basic Data Types\n\nA variable is a named storage location in memory. In C, every variable must be declared with a type before it is used. The type tells the compiler how much memory to reserve and how to interpret the bits stored there.\n\n| Type | Size (typical) | Range | Use Case |\n|------|----------------|-------|----------|\n| <code>int</code> | 4 bytes | -2^31 to 2^31-1 | Whole numbers (counters, indices) |\n| <code>char</code> | 1 byte | -128 to 127 or 0-255 | Single characters, small integers |\n| <code>float</code> | 4 bytes | ~1.2E-38 to 3.4E+38 | Decimal numbers (limited precision) |\n| <code>double</code> | 8 bytes | ~2.2E-308 to 1.8E+308 | High-precision decimals |\n| <code>void</code> | 0 bytes | — | Represents "no type" (used with pointers and function returns) |\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int age = 30;               // declare an int variable named age, initialize to 30\n    char grade = 'A';            // declare a char variable holding a single letter\n    float temperature = 98.6f;    // declare a float; the f suffix marks it as float not double\n    double pi = 3.1415926535;     // declare a double with more precision\n\n    printf("Age: %d\\n", age);    // %d prints an int\n    printf("Grade: %c\\n", grade); // %c prints a char\n    printf("Temp: %f\\n", temperature); // %f prints a float\n    printf("Pi: %lf\\n", pi);     // %lf prints a double\n\n    return 0;                    // exit the program successfully\n}\n\`\`\`\n\n### Basic Operators\n\nOperators are symbols that perform computations on values. C has arithmetic operators for math, comparison operators for testing relationships, and logical operators for combining boolean conditions.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int a = 10, b = 3;\n\n    // Arithmetic operators\n    int sum = a + b;       // 10 + 3 = 13\n    int diff = a - b;      // 10 - 3 = 7\n    int product = a * b;   // 10 * 3 = 30\n    int quotient = a / b;  // 10 / 3 = 3 (integer division truncates)\n    int remainder = a % b; // 10 % 3 = 1 (modulo gives remainder)\n\n    // Comparison operators (result is 1 for true, 0 for false)\n    int isEqual = (a == b);        // 0, because 10 is not 3\n    int isNotEqual = (a != b);     // 1, they are different\n    int isGreater = (a > b);       // 1, 10 is greater than 3\n    int isLessOrEqual = (a <= b);  // 0, 10 is not <= 3\n\n    // Logical operators (work on true/false values)\n    int andResult = (a > 0) && (b > 0); // 1, both sides are true\n    int orResult = (a < 0) || (b > 0);  // 1, at least one side is true\n    int notResult = !(a == b);          // 1, negates the false result\n\n    printf("%d %d %d\\n", sum, quotient, andResult); // 13 3 1\n    return 0;\n}\n\`\`\`\n\n### Control Flow: if/else, for, while, switch\n\nControl flow statements let you decide which code to execute and how many times to repeat a block. Without them, every program would just run from top to bottom with no decisions.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int score = 85;\n\n    // if/else: execute one branch based on a condition\n    if (score >= 90) {\n        printf("Grade: A\\n");     // runs when score is 90 or above\n    } else if (score >= 80) {\n        printf("Grade: B\\n");     // runs when score is 80-89\n    } else {\n        printf("Grade: C or lower\\n"); // runs otherwise\n    }\n\n    // for loop: repeat a known number of times\n    for (int i = 0; i < 3; i++) {\n        printf("Count: %d\\n", i); // prints 0, then 1, then 2\n    }\n\n    // while loop: repeat while a condition holds\n    int remaining = 3;\n    while (remaining > 0) {\n        printf("T-minus %d\\n", remaining); // prints 3, 2, 1\n        remaining--;                        // decrement each iteration\n    }\n\n    // switch: choose one of many branches based on an integer value\n    int day = 2;\n    switch (day) {\n        case 1: printf("Monday\\n"); break;   // if day == 1\n        case 2: printf("Tuesday\\n"); break;  // if day == 2\n        case 3: printf("Wednesday\\n"); break;\n        default: printf("Unknown\\n");        // runs if no case matched\n    }\n\n    return 0;\n}\n\`\`\`\n\n### Functions: Declaration, Definition, Parameters, Return\n\nA function is a reusable block of code that takes inputs (parameters), performs work, and optionally returns a value. C requires a function declaration (prototype) before the function is used, so the compiler knows its signature.\n\n\`\`\`c\n#include <stdio.h>\n\n// Function declaration (prototype): tells the compiler this function exists\nint add(int x, int y);\n\n// Function definition: provides the actual implementation\nint add(int x, int y) {\n    return x + y;            // return the sum to the caller\n}\n\n// void means the function returns nothing\nvoid greet(const char *name) {\n    printf("Hello, %s!\\n", name); // prints a greeting\n}\n\nint main() {\n    int result = add(5, 3);  // call add with 5 and 3, store the returned value\n    printf("5 + 3 = %d\\n", result); // prints "5 + 3 = 8"\n\n    greet("Alice");          // call greet; no return value\n    return 0;\n}\n\`\`\`\n\n### Arrays and Strings\n\nAn array is a contiguous block of memory that holds multiple values of the same type. A string in C is just an array of <code>char</code> terminated by a null character (<code>\\0</code>), which marks the end of the string.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    // Declare an array of 5 integers; indices go from 0 to 4\n    int numbers[5] = {10, 20, 30, 40, 50};\n\n    printf("First element: %d\\n", numbers[0]); // access element at index 0\n    numbers[2] = 99;                            // change the third element to 99\n\n    // A string is a null-terminated char array\n    char name[] = "Alice";  // compiler automatically adds \\0 at the end\n    // name is stored as: 'A' 'l' 'i' 'c' 'e' '\\0'\n\n    printf("Name: %s\\n", name);         // %s prints characters until \\0\n    printf("Third char: %c\\n", name[2]); // prints 'i'\n\n    // String literals and manual char arrays\n    char greeting[6] = {'H', 'e', 'l', 'l', 'o', '\\0'}; // explicit null terminator\n    printf("%s\\n", greeting);           // prints "Hello"\n\n    return 0;\n}\n\`\`\`\n\n### The Compilation Pipeline with gcc\n\nSource code (.c files) does not become a running program in one step. The compiler runs four distinct stages, each transforming the code into a different representation. Using <code>gcc</code>, you can stop after each stage to inspect the output.\n\n| Stage | Input | Output | gcc flag | What happens |\n|-------|-------|--------|----------|--------------|\n| Preprocessing | <code>hello.c</code> | <code>hello.i</code> | <code>-E</code> | Expands <code>#include</code>, <code>#define</code>, and other directives; removes comments |\n| Compilation | <code>hello.i</code> | <code>hello.s</code> | <code>-S</code> | Translates C to assembly language (human-readable machine instructions) |\n| Assembly | <code>hello.s</code> | <code>hello.o</code> | <code>-c</code> | Converts assembly into machine code (relocatable object file, binary) |\n| Linking | <code>hello.o</code> + libraries | <code>a.out</code> (or <code>hello</code>) | (no flag) | Resolves function calls (e.g., <code>printf</code> from libc) and produces an executable |\n\n\`\`\`bash\n# Stage 1: Preprocessing\n# Expands #include <stdio.h> to ~30,000 lines of declarations\ngcc -E hello.c -o hello.i\n\n# Stage 2: Compilation (C to assembly)\n# Produces hello.s containing x86-64 assembly\ngcc -S hello.i -o hello.s\n\n# Stage 3: Assembly (assembly to machine code)\n# Produces hello.o, a binary object file\ngcc -c hello.s -o hello.o\n\n# Stage 4: Linking (combine with libraries into executable)\n# Produces a.out (default name)\ngcc hello.o -o hello\n\n# Or do it all in one command:\ngcc hello.c -o hello\n./hello\n\`\`\`\n\n## Wiring It Together\n\nThis complete program reads two integers from the user, adds them using a function, stores the result in an array, prints the array, and demonstrates the full lifecycle of a C program.\n\n\`\`\`c\n#include <stdio.h>  // for printf, scanf\n\n// Function declaration: tells the compiler sumTwo exists and takes two ints\nint sumTwo(int a, int b);\n\nint main() {\n    // Declare variables\n    int x, y;                // uninitialized, will hold user input\n    int results[3];          // array to store multiple sums\n\n    // Prompt the user and read two integers\n    printf("Enter two numbers: ");\n    scanf("%d %d", &x, &y);  // &x means "address of x", needed by scanf\n\n    // Call the sum function and store the result\n    int total = sumTwo(x, y);\n    printf("Sum: %d\\n", total);\n\n    // Fill the array with some values\n    results[0] = total;       // first element is the sum\n    results[1] = total * 2;   // second element is double\n    results[2] = total * 3;   // third element is triple\n\n    // Loop through the array and print each element\n    printf("Results array: ");\n    for (int i = 0; i < 3; i++) {\n        printf("%d ", results[i]); // print each element\n    }\n    printf("\\n");\n\n    // Check if the total is even or odd\n    if (total % 2 == 0) {\n        printf("The sum is even.\\n");\n    } else {\n        printf("The sum is odd.\\n");\n    }\n\n    return 0;  // signal success to the operating system\n}\n\n// Function definition: the actual implementation of sumTwo\nint sumTwo(int a, int b) {\n    return a + b;  // compute and send the result back to the caller\n}\n\`\`\`\n`,
+            tags: ["C", "Systems Programming", "Compiled Languages"],
+          },
+          {
+            id: "ns-c-pointers",
+            title: "Pointers & Memory Management",
+            shortDesc: "Pointer arithmetic, malloc/calloc/realloc/free, stack vs heap, function pointers, and void pointers.",
+            difficulty: "foundational",
+            readTimeMin: 18,
+            keyPoints: [
+              "A pointer is a variable that holds the memory address of another value, not the value itself.",
+              "The * operator declares a pointer and dereferences it; & takes the address of a variable.",
+              "Pointer arithmetic moves the pointer by the size of the pointed-to type, enabling array traversal.",
+              "Stack memory is automatically managed (local variables); heap memory is manually allocated with malloc/calloc/realloc and freed with free.",
+              "Function pointers store the address of a function, enabling callbacks and dynamic dispatch.",
+              "Common pointer bugs include null pointer dereference, dangling pointers, buffer overflows, and memory leaks.",
+            ],
+            content: `## What's This?\n\nA pointer is a variable that stores the memory address of another variable rather than storing a value directly. Instead of saying "this box contains the number 42," a pointer says "this box contains the location of another box that contains the number 42." Pointers are the feature that makes C powerful and dangerous: they let you manipulate memory directly, build dynamic data structures (linked lists, trees), and avoid copying large amounts of data.\n\nThink of pointers like a house address. You can either carry the actual house (the value) around with you, or you can carry the address (the pointer) and go to the house when you need it. The address is small and easy to copy; the house is not. Pointers also let you modify data in one place and have every reference to that address see the change.\n\nC gives you unfiltered access to memory through pointers. There is no bounds checking, no null safety, and no garbage collection. This is why pointer bugs -- segmentation faults, buffer overflows, use-after-free -- are the most common source of C security vulnerabilities.\n\n## The Big Picture\n\nPointers are the bridge between C syntax and how the CPU actually works. Every variable lives at some memory address; pointers let you work with addresses directly. Pointers build on an understanding of C's type system (each pointer type specifies what kind of data lives at the address) and C's memory model (stack vs heap).\n\nAfter mastering pointers, the next topics are dynamic data structures (linked lists, trees, hash maps), the C standard library's memory functions, and lower-level systems concepts like memory-mapped I/O, shared memory between processes, and writing your own memory allocator.\n\n## Core Ideas\n\n### What Is a Pointer? (Memory Address vs Value)\n\nEvery variable in a running program occupies some bytes in the computer's RAM. Those bytes have an address -- a number that identifies their location. Normally you work with the value stored at that address. A pointer lets you work with the address itself.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int x = 42;                // an ordinary int variable with value 42\n    int *ptr = &x;             // ptr stores the ADDRESS of x, not the value 42\n\n    printf("Value of x: %d\\n", x);   // prints 42 (the value at x)\n    printf("Address of x: %p\\n", &x); // prints something like 0x7ffeefbff4ac\n    printf("Value of ptr: %p\\n", ptr); // prints the same address\n    printf("Dereference ptr: %d\\n", *ptr); // *ptr follows the address and reads the value: 42\n\n    return 0;\n}\n\`\`\`\n\n### Pointer Syntax: Declaration, Dereference, Address-Of\n\nC uses two operators for pointer work. The <code>*</code> symbol has two meanings depending on context: in a declaration it means "pointer to," and in an expression it means "dereference" (follow the pointer to get the value). The <code>&</code> operator always means "address of."\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int value = 100;\n\n    // Declaration: int *ptr means "ptr is a pointer to an int"\n    int *ptr;                 // ptr is uninitialized -- points to random memory\n    ptr = &value;             // now ptr holds the address of value\n\n    // Dereference: *ptr means "get the value at the address stored in ptr"\n    printf("%d\\n", *ptr);     // prints 100\n\n    // Dereference for writing: change the value at the pointed-to address\n    *ptr = 200;               // changes value from 100 to 200\n    printf("%d\\n", value);    // prints 200 -- value was changed through ptr\n\n    // The & operator takes the address of any variable\n    int *ptr2 = &value;       // ptr2 now also points to value\n\n    return 0;\n}\n\`\`\`\n\n### Pointer Arithmetic\n\nWhen you add 1 to a pointer, C does NOT simply add 1 to the address. It adds the size of the pointed-to type. This lets you walk through arrays without knowing the type's byte size.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int arr[4] = {10, 20, 30, 40};\n    int *p = arr;              // arr decays to a pointer to the first element\n\n    printf("%d\\n", *p);        // 10, the first element\n    p++;                       // p now points to arr[1] (address advanced by sizeof(int) = 4 bytes)\n    printf("%d\\n", *p);        // 20\n\n    p += 2;                    // skip two ints forward (8 bytes)\n    printf("%d\\n", *p);        // 40, which is arr[3]\n\n    // Array indexing is syntactic sugar for pointer arithmetic\n    // arr[i] is equivalent to *(arr + i)\n    printf("%d %d %d\\n", arr[0], *(arr + 1), *(arr + 2)); // 10 20 30\n\n    return 0;\n}\n\`\`\`\n\n### Stack vs Heap Memory\n\nC programs use two main regions of memory for storing data. The stack is automatic and fast but limited in size; the heap is manual and flexible but requires explicit allocation and freeing.\n\n| Feature | Stack | Heap |\n|---------|-------|------|\n| Allocation | Automatic when a function is called | Manual via <code>malloc</code> / <code>calloc</code> / <code>realloc</code> |\n| Deallocation | Automatic when a function returns | Manual via <code>free</code> |\n| Size limit | Small (typically 1-8 MB per thread) | Large (limited by system RAM) |\n| Speed | Very fast (just move stack pointer) | Slower (must find free block) |\n| Lifetime | Tied to function scope | Until explicitly freed or program ends |\n| Use case | Local variables, function call frames | Large data, dynamic structures, data that outlives the function |\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // Stack allocation: automatically managed\n    int stackVar = 10;          // allocated on the stack when main() runs\n    // stackVar is automatically freed when main() returns\n\n    // Heap allocation: manually managed\n    int *heapVar = malloc(sizeof(int)); // allocate space for one int on the heap\n    if (heapVar == NULL) {              // malloc returns NULL if allocation fails\n        return 1;                       // bail out if no memory\n    }\n\n    *heapVar = 20;                      // store 20 in the heap-allocated int\n    printf("Stack: %d, Heap: %d\\n", stackVar, *heapVar);\n\n    free(heapVar);                      // MUST free heap memory when done\n    // heapVar is now a dangling pointer -- do NOT dereference it\n\n    return 0;\n}\n\`\`\`\n\n### malloc, calloc, realloc, free\n\nThe <code>stdlib.h</code> library provides four functions for heap memory management. <code>malloc</code> allocates uninitialized memory, <code>calloc</code> allocates and zero-initializes, <code>realloc</code> resizes an existing allocation, and <code>free</code> returns memory to the system.\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>\n\nint main() {\n    // malloc: allocate memory for 5 ints (20 bytes on most systems)\n    int *arr = malloc(5 * sizeof(int));\n    if (arr == NULL) return 1;   // always check malloc return value\n\n    arr[0] = 1;                  // use the memory as a normal array\n    arr[1] = 2;\n\n    // calloc: allocate and zero-initialize memory for 5 ints\n    int *zeros = calloc(5, sizeof(int));\n    // zeros[0] through zeros[4] are all 0\n\n    // realloc: resize existing allocation to hold 10 ints\n    int *bigger = realloc(arr, 10 * sizeof(int));\n    if (bigger == NULL) {        // realloc can fail; arr is still valid\n        free(arr);               // free the original allocation\n        free(zeros);\n        return 1;\n    }\n    arr = bigger;                // use the new (possibly moved) allocation\n\n    free(arr);                   // free the heap memory\n    free(zeros);                 // free all allocations when done\n\n    return 0;\n}\n\`\`\`\n\n### Function Pointers\n\nA function pointer stores the address of a function instead of the address of data. You can call a function through its pointer, pass functions as arguments to other functions (callbacks), and build dispatch tables.\n\n\`\`\`c\n#include <stdio.h>\n\n// Two functions with the same signature: both take two ints and return int\nint add(int a, int b) { return a + b; }\nint multiply(int a, int b) { return a * b; }\n\n// A function that takes a function pointer as a parameter\n// The parameter is: int (*operation)(int, int)\nint compute(int x, int y, int (*operation)(int, int)) {\n    return operation(x, y);  // call the function through the pointer\n}\n\nint main() {\n    // Declare a function pointer and point it to add\n    int (*funcPtr)(int, int) = &add;  // & is optional for function names\n\n    // Call through the function pointer\n    int result = funcPtr(5, 3);       // calls add(5, 3) = 8\n    printf("Result: %d\\n", result);   // 8\n\n    // Pass function pointers to another function\n    printf("%d\\n", compute(5, 3, add));      // 8\n    printf("%d\\n", compute(5, 3, multiply)); // 15\n\n    // Array of function pointers (dispatch table)\n    int (*operations[2])(int, int) = {add, multiply};\n    for (int i = 0; i < 2; i++) {\n        printf("%d\\n", operations[i](10, 2)); // 12, then 20\n    }\n\n    return 0;\n}\n\`\`\`\n\n### void Pointers\n\nThe <code>void*</code> type is a generic pointer that can point to any data type without specifying what type it points to. You cannot dereference a void pointer directly because the compiler does not know the size of the pointed-to data. You must cast it to a typed pointer first.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    int x = 42;\n    double y = 3.14;\n\n    void *ptr;                   // a generic pointer, can hold any address\n\n    ptr = &x;                    // point to an int\n    printf("%d\\n", *(int *)ptr); // cast to int* before dereferencing\n\n    ptr = &y;                    // now point to a double\n    printf("%f\\n", *(double *)ptr); // cast to double* before dereferencing\n\n    return 0;\n}\n\`\`\`\n\n### Common Pointer Bugs\n\nPointer bugs are among the hardest to debug because the symptoms (crashes, corruption) often appear far from the cause. Here are the four most common categories.\n\n| Bug | What Happens | How to Avoid |\n|-----|-------------|--------------|\n| Null pointer dereference | Calling <code>*ptr</code> when <code>ptr == NULL</code> crashes with segfault | Always check malloc return; set freed pointers to NULL |\n| Dangling pointer | Using a pointer after the memory was freed (use-after-free) | Set pointer to NULL after free; use a strict ownership model |\n| Buffer overflow | Writing past the end of an allocated array, corrupting adjacent memory | Always track buffer sizes; use bounds-checked functions like <code>strncpy</code> |\n| Memory leak | Forgetting to call <code>free</code>; program memory grows until OOM | Free every allocation; use tools like Valgrind |\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\nint main() {\n    // Null pointer dereference\n    int *np = NULL;\n    // *np = 5;  // CRASH: segmentation fault (commented out to not crash)\n\n    // Dangling pointer\n    int *dp = malloc(sizeof(int));\n    free(dp);                    // memory is freed\n    // *dp = 10;                 // BUG: use-after-free, undefined behavior\n    dp = NULL;                   // good practice: mark as freed\n\n    // Buffer overflow\n    char buf[4];\n    // strcpy(buf, "too long");  // BUG: writes past the end of buf (undefined behavior)\n    strncpy(buf, "too", 3);      // correct: limit to buffer size\n    buf[3] = '\\0';               // ensure null termination\n\n    // Memory leak\n    for (int i = 0; i < 1000; i++) {\n        int *leak = malloc(1024); // allocate 1 KB each iteration\n        // forgot to free(leak) -- memory grows unbounded\n        free(leak);               // correct: free before losing the pointer\n    }\n\n    return 0;\n}\n\`\`\`\n\n## Wiring It Together\n\nThis program builds a dynamic array of integers on the heap, resizes it, sorts it using a function pointer comparison, and prints the result -- exercising pointers, heap allocation, and function pointers together.\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>  // for malloc, free, qsort\n\n// Comparison function for qsort (matches the required int (*)(const void*, const void*) signature)\nint compareInts(const void *a, const void *b) {\n    int ia = *(const int *)a;   // cast void pointer to int pointer, then dereference\n    int ib = *(const int *)b;\n    return ia - ib;             // negative if a < b, positive if a > b, zero if equal\n}\n\nint main() {\n    // Step 1: allocate heap memory for 3 integers\n    int *numbers = malloc(3 * sizeof(int));\n    if (numbers == NULL) {\n        return 1;               // allocation failed, exit early\n    }\n\n    // Step 2: store values using pointer arithmetic\n    *(numbers + 0) = 42;         // equivalent to numbers[0]\n    *(numbers + 1) = 7;          // numbers[1]\n    *(numbers + 2) = 99;         // numbers[2]\n\n    // Step 3: resize the array to hold 5 integers\n    int *bigger = realloc(numbers, 5 * sizeof(int));\n    if (bigger == NULL) {\n        free(numbers);           // free the original if realloc fails\n        return 1;\n    }\n    numbers = bigger;            // point to the resized block\n    numbers[3] = 1;              // add more elements\n    numbers[4] = 55;\n\n    // Step 4: sort the array using qsort with a function pointer\n    // qsort takes: array, count, element size, comparison function pointer\n    qsort(numbers, 5, sizeof(int), compareInts);\n\n    // Step 5: print the sorted array using pointer arithmetic\n    printf("Sorted: ");\n    for (int *p = numbers; p < numbers + 5; p++) {\n        printf("%d ", *p);      // dereference the current pointer\n    }\n    printf("\\n");              // output: "Sorted: 1 7 42 55 99"\n\n    // Step 6: clean up -- free the heap allocation\n    free(numbers);\n    numbers = NULL;              // mark as freed to prevent dangling use\n\n    return 0;\n}\n\`\`\`\n`,
+            tags: ["C", "Memory Management", "Pointers"],
+          },
+          {
+            id: "ns-c-stdlib",
+            title: "C Standard Library",
+            shortDesc: "stdio, stdlib, string, math, time, assert, and POSIX I/O (open, read, write, close).",
+            difficulty: "foundational",
+            readTimeMin: 14,
+            keyPoints: [
+              "stdio.h provides buffered I/O: printf/scanf for formatted I/O and fopen/fclose/fgets/fputs for file operations.",
+              "stdlib.h provides memory management (malloc/free), random numbers (rand/srand), sorting (qsort), and program control (exit).",
+              "string.h provides string manipulation: strlen, strcpy/strncpy, strcmp, strcat, strstr, and memory operations (memset, memcpy).",
+              "math.h provides mathematical functions: sin, cos, sqrt, pow, floor, ceil.",
+              "time.h provides time-related functions: time, clock, difftime, localtime, strftime.",
+              "assert.h provides the assert macro for debugging invariants; POSIX I/O (open/read/write/close) provides lower-level unbuffered file access.",
+            ],
+            content: `## What's This?\n\nThe C Standard Library is a collection of header files and functions that ship with every C compiler. Unlike higher-level languages where "the standard library" includes data structures, networking, and file system abstractions, the C standard library is intentionally minimal. It covers basic I/O, string handling, math, time, memory allocation, and a few utilities. The core headers -- <code>stdio.h</code>, <code>stdlib.h</code>, <code>string.h</code>, <code>math.h</code>, <code>time.h</code>, and <code>assert.h</code> -- provide the building blocks for almost every C program.\n\nPOSIX I/O (<code>open</code>, <code>read</code>, <code>write</code>, <code>close</code>) is not part of the C standard but is part of the POSIX standard that Unix-like systems follow. It provides lower-level, unbuffered access to files, which is useful for systems programming. Understanding both the standard library and POSIX I/O lets you choose the right level of abstraction for your task.\n\n## The Big Picture\n\nThe C standard library builds on the language fundamentals (types, pointers, control flow) and provides the essential services that every program needs: reading input, writing output, manipulating strings, performing math, tracking time, and managing memory. It does NOT provide containers, networking, threading, or filesystem traversal -- those come from platform-specific APIs or third-party libraries.\n\nAfter mastering the standard library, the next step is systems programming with POSIX APIs (processes, signals, sockets, file descriptors) and then connecting C to other languages or building higher-level abstractions on top.\n\n## Core Ideas\n\n### stdio.h: printf, scanf, FILE*, fopen/fclose, fgets/fputs, fprintf/fscanf\n\nThe <code>stdio.h</code> header provides buffered input/output functions. "Buffered" means data is accumulated in memory and flushed to the device in batches for efficiency. The central type is <code>FILE*</code>, a pointer to a struct that represents an open file or stream.\n\n\`\`\`c\n#include <stdio.h>\n\nint main() {\n    // printf: formatted output to stdout\n    printf("Hello, %s! You are %d years old.\\n", "Alice", 30);\n    // %s prints a string, %d prints an int, %f prints a float, %c prints a char\n\n    // scanf: formatted input from stdin\n    int age;\n    char name[50];\n    printf("Enter your name and age: ");\n    scanf("%s %d", name, &age);  // note: name (array) does NOT need &, age does\n\n    // fopen/fclose: open and close files\n    FILE *fp = fopen("data.txt", "w");  // "w" = write mode (creates or truncates)\n    if (fp != NULL) {\n        fprintf(fp, "Name: %s, Age: %d\\n", name, age); // write to file\n        fclose(fp);                                  // close the file, flushing buffers\n    }\n\n    // fgets: read a line from a file into a buffer (safe, bounded read)\n    fp = fopen("data.txt", "r");\n    if (fp != NULL) {\n        char line[256];\n        while (fgets(line, sizeof(line), fp) != NULL) {\n            printf("Read: %s", line);  // fgets includes the newline character\n        }\n        fclose(fp);\n    }\n\n    // fputs: write a string to a file (no automatic newline)\n    fp = fopen("log.txt", "a");  // "a" = append mode\n    if (fp != NULL) {\n        fputs("Program started\\n", fp);\n        fclose(fp);\n    }\n\n    return 0;\n}\n\`\`\`\n\n### stdlib.h: malloc/free, atoi, rand/srand, qsort, exit\n\nThe <code>stdlib.h</code> header is a grab bag of essential utilities: memory management, string-to-number conversion, random numbers, sorting, and program control.\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>\n#include <time.h>\n\nint compare(const void *a, const void *b) {\n    return (*(int *)a - *(int *)b);\n}\n\nint main() {\n    // malloc/free: heap memory allocation\n    int *arr = malloc(5 * sizeof(int));  // allocate space for 5 ints\n    if (arr == NULL) return 1;\n    for (int i = 0; i < 5; i++) arr[i] = i * 10;\n    free(arr);                           // return memory to the system\n\n    // atoi: convert string to integer\n    int num = atoi("42");                // returns 42\n    printf("Parsed: %d\\n", num);\n\n    // rand/srand: pseudo-random numbers\n    srand(time(NULL));                   // seed the generator with current time\n    int r = rand() % 100;                // random number between 0 and 99\n    printf("Random: %d\\n", r);\n\n    // qsort: sort an array using a comparison function\n    int values[] = {42, 3, 17, 8, 99};\n    qsort(values, 5, sizeof(int), compare);  // pass comparison function as pointer\n    for (int i = 0; i < 5; i++) printf("%d ", values[i]); // 3 8 17 42 99\n    printf("\\n");\n\n    // exit: terminate the program immediately\n    if (num == 42) {\n        exit(0);  // 0 means success; exit() does NOT return\n    }\n\n    return 0;\n}\n\`\`\`\n\n### string.h: strlen, strcpy/strncpy, strcmp, strcat, strstr, memset, memcpy\n\nThe <code>string.h</code> header provides functions for manipulating arrays of characters (strings) and raw memory blocks. The <code>str</code> functions work on null-terminated strings; the <code>mem</code> functions work on arbitrary memory with an explicit length.\n\n\`\`\`c\n#include <stdio.h>\n#include <string.h>\n\nint main() {\n    char src[] = "Hello, World!";\n    char dest[50];\n\n    // strlen: get the length of a string (excluding null terminator)\n    size_t len = strlen(src);              // 13\n    printf("Length: %zu\\n", len);\n\n    // strcpy: copy a string (UNSAFE if dest is too small)\n    strcpy(dest, src);                     // copy "Hello, World!" into dest\n\n    // strncpy: bounded copy (safer)\n    strncpy(dest, src, sizeof(dest) - 1);  // copy at most 49 chars + null\n    dest[sizeof(dest) - 1] = '\\0';         // ensure null termination\n\n    // strcmp: compare two strings (0 = equal, negative = first < second)\n    if (strcmp(dest, src) == 0) {\n        printf("Strings are equal\\n");\n    }\n\n    // strcat: concatenate (append second string to end of first)\n    char greeting[100] = "Hello";\n    strcat(greeting, ", ");                // greeting = "Hello, "\n    strcat(greeting, "World!");            // greeting = "Hello, World!"\n\n    // strstr: find a substring (returns pointer to first occurrence or NULL)\n    char *found = strstr(greeting, "World");\n    if (found != NULL) {\n        printf("Found at: %s\\n", found);  // prints "World!"\n    }\n\n    // memset: fill a memory block with a byte value\n    int arr[5];\n    memset(arr, 0, 5 * sizeof(int));       // set all bytes to 0 (zeroes the array)\n\n    // memcpy: copy a memory block (no null-termination, uses explicit length)\n    int srcArr[3] = {1, 2, 3};\n    int dstArr[3];\n    memcpy(dstArr, srcArr, 3 * sizeof(int)); // copy 3 ints worth of bytes\n\n    printf("%d %d %d\\n", dstArr[0], dstArr[1], dstArr[2]); // 1 2 3\n\n    return 0;\n}\n\`\`\`\n\n### math.h: sin, cos, sqrt, pow, floor/ceil\n\nThe <code>math.h</code> header declares mathematical functions. On most systems you must link the math library explicitly with <code>-lm</code> when compiling.\n\n\`\`\`c\n#include <stdio.h>\n#include <math.h>  // link with -lm: gcc prog.c -o prog -lm\n\nint main() {\n    double x = 2.0;\n\n    double root = sqrt(x);               // square root: 1.414...\n    double power = pow(x, 3);            // x raised to 3: 8.0\n    double sine = sin(3.14159 / 2);      // sine of pi/2 radians: ≈ 1.0\n    double cosine = cos(0.0);            // cosine of 0: 1.0\n    double floorVal = floor(3.7);        // round down: 3.0\n    double ceilVal = ceil(3.2);          // round up: 4.0\n\n    printf("sqrt(2)=%f, 2^3=%f, sin(pi/2)=%f\\n", root, power, sine);\n\n    return 0;\n}\n\`\`\`\n\n### time.h: time, clock, difftime, localtime, strftime\n\nThe <code>time.h</code> header provides functions for working with calendar time and processor time.\n\n\`\`\`c\n#include <stdio.h>\n#include <time.h>\n\nint main() {\n    // time: get current calendar time as time_t (seconds since epoch)\n    time_t now = time(NULL);             // NULL means "store it in the return value"\n    printf("Seconds since epoch: %ld\\n", now);\n\n    // clock: get processor time used by the program (clock_t)\n    clock_t start = clock();\n    for (volatile int i = 0; i < 100000000; i++); // busy wait\n    clock_t end = clock();\n    double seconds = (double)(end - start) / CLOCKS_PER_SEC;\n    printf("Loop took: %f seconds\\n", seconds);\n\n    // difftime: difference between two time_t values in seconds\n    time_t later = time(NULL);\n    double elapsed = difftime(later, now);\n    printf("Elapsed: %f seconds\\n", elapsed);\n\n    // localtime: convert time_t to a struct tm (broken-down time)\n    struct tm *local = localtime(&now);\n    printf("Year: %d, Month: %d, Day: %d\\n",\n           local->tm_year + 1900,  // tm_year is years since 1900\n           local->tm_mon + 1,       // tm_mon is 0-based (0 = January)\n           local->tm_mday);\n\n    // strftime: format time as a string\n    char buf[100];\n    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", local);\n    printf("Formatted: %s\\n", buf);  // e.g., "2026-06-11 15:30:00"\n\n    return 0;\n}\n\`\`\`\n\n### assert.h: The assert Macro\n\nThe <code>assert.h</code> header provides a single macro, <code>assert</code>, that checks a condition at runtime. If the condition is false (or 0), the program prints an error message and aborts. Assertions are typically disabled in release builds by defining <code>NDEBUG</code>.\n\n\`\`\`c\n#include <stdio.h>\n#include <assert.h>  // for assert\n\nint divide(int a, int b) {\n    assert(b != 0);          // crash with a message if b is 0\n    return a / b;\n}\n\nint main() {\n    printf("%d\\n", divide(10, 2));  // 5, fine\n    printf("%d\\n", divide(5, 0));   // assertion fails: "a.out: prog.c:5: divide: Assertion \`b != 0' failed. Aborted"\n    return 0;\n}\n\`\`\`\n\n### POSIX I/O: open, read, write, close\n\nPOSIX I/O functions (<code>open</code>, <code>read</code>, <code>write</code>, <code>close</code>) are lower-level than the C standard library's <code>FILE*</code> functions. They work with file descriptors (integers) instead of <code>FILE*</code> pointers, and they are unbuffered -- every call goes directly to the kernel. They are part of POSIX, not ISO C, so they may not be available on non-POSIX systems (e.g., Windows without Cygwin).\n\n| Aspect | stdio.h (FILE*) | POSIX I/O (fd) |\n|--------|----------------|----------------|\n| Type | <code>FILE*</code> | <code>int</code> (file descriptor) |\n| Buffering | Automatic (user-space buffer) | Unbuffered (each call hits the kernel) |\n| Formatted I/O | <code>fprintf</code>, <code>fscanf</code> | Not directly supported |\n| Portability | ISO C standard | POSIX standard (Unix-like systems) |\n| Use case | Everyday file reading/writing | Systems programming, pipes, sockets |\n\n\`\`\`c\n#include <stdio.h>\n#include <fcntl.h>    // for open flags: O_RDONLY, O_WRONLY, O_CREAT\n#include <unistd.h>   // for read, write, close\n\nint main() {\n    // open: open a file, get a file descriptor (int)\n    // O_WRONLY = write-only, O_CREAT = create if not exist, O_TRUNC = truncate to zero length\n    int fd = open("posix.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);\n    if (fd == -1) {\n        perror("open failed");  // perror prints the system error message\n        return 1;\n    }\n\n    // write: write bytes to a file descriptor\n    const char *msg = "Hello from POSIX I/O!\\n";\n    ssize_t bytesWritten = write(fd, msg, strlen(msg));\n    // write returns the number of bytes written, or -1 on error\n\n    // close: close the file descriptor\n    close(fd);\n\n    // open again for reading\n    fd = open("posix.txt", O_RDONLY);\n    if (fd == -1) return 1;\n\n    // read: read bytes from a file descriptor into a buffer\n    char buffer[128];\n    ssize_t bytesRead = read(fd, buffer, sizeof(buffer) - 1);\n    buffer[bytesRead] = '\\0';          // manually null-terminate\n    printf("Read: %s", buffer);        // "Hello from POSIX I/O!"\n\n    close(fd);\n\n    return 0;\n}\n\`\`\`\n\n## Wiring It Together\n\nThis program reads a list of numbers from a file using POSIX I/O, parses them into integers using stdlib functions, computes the sum and square roots using math functions, measures elapsed time with time.h, and writes the results to another file. It uses assertions to validate inputs.\n\n\`\`\`c\n#include <stdio.h>\n#include <stdlib.h>   // for malloc, atoi\n#include <string.h>   // for strtok, strlen\n#include <math.h>     // for sqrt\n#include <time.h>     // for clock, CLOCKS_PER_SEC\n#include <assert.h>   // for assert\n#include <fcntl.h>    // for open flags\n#include <unistd.h>   // for read, write, close\n\nint main() {\n    // Step 1: open the input file using POSIX I/O\n    int inFd = open("numbers.txt", O_RDONLY);\n    assert(inFd != -1 && "Could not open input file");  // crash if file missing\n\n    // Step 2: read the entire file content into a buffer\n    char buffer[4096];\n    ssize_t bytesRead = read(inFd, buffer, sizeof(buffer) - 1);\n    assert(bytesRead > 0 && "File is empty or read failed");\n    buffer[bytesRead] = '\\0';         // null-terminate so string functions work\n    close(inFd);\n\n    // Step 3: count numbers by parsing tokens with strtok (string.h)\n    int capacity = 100;\n    int *numbers = malloc(capacity * sizeof(int));\n    assert(numbers != NULL && "malloc failed");\n\n    int count = 0;\n    const char *delim = " \\t\\n";     // tokens separated by space, tab, or newline\n    char *token = strtok(buffer, delim);\n    clock_t start = clock();          // start timing\n\n    while (token != NULL) {\n        numbers[count] = atoi(token); // convert string to int (stdlib.h)\n        count++;\n        if (count >= capacity) {      // grow the array if needed\n            capacity *= 2;\n            numbers = realloc(numbers, capacity * sizeof(int));\n            assert(numbers != NULL);\n        }\n        token = strtok(NULL, delim);  // continue tokenizing\n    }\n\n    clock_t end = clock();\n    double parseTime = (double)(end - start) / CLOCKS_PER_SEC;\n\n    // Step 4: compute sum and square roots (math.h)\n    int sum = 0;\n    for (int i = 0; i < count; i++) {\n        sum += numbers[i];\n    }\n    double avg = (count > 0) ? (double)sum / count : 0.0;\n    double avgSqrt = sqrt(avg);       // square root of the average (math.h)\n\n    // Step 5: write results to an output file using POSIX I/O\n    int outFd = open("results.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);\n    assert(outFd != -1 && "Could not open output file");\n\n    char outBuf[512];\n    int len = snprintf(outBuf, sizeof(outBuf),\n        "Numbers read: %d\\n"\n        "Sum: %d\\n"\n        "Average: %.2f\\n"\n        "Sqrt of average: %.2f\\n"\n        "Parse time: %.6f seconds\\n",\n        count, sum, avg, avgSqrt, parseTime);\n\n    write(outFd, outBuf, len);\n    close(outFd);\n\n    // Step 6: clean up\n    free(numbers);\n\n    printf("Done. Wrote results to results.txt\\n");\n    return 0;\n}\n\`\`\`\n`,
+            tags: ["C", "Standard Library", "POSIX"],
+          },
+          {
+            id: "ns-cpp-basics",
+            title: "C++ Basics & Classes",
+            shortDesc: "cin/cout, references, const, default arguments, function overloading, class definition, and access specifiers.",
+            difficulty: "foundational",
+            readTimeMin: 16,
+            keyPoints: [
+              "C++ adds type-safe I/O (cin/cout), references, function overloading, and default arguments on top of C.",
+              "References (&) are aliases for existing variables — unlike pointers, they cannot be null and cannot be reseated.",
+              "const protects values from modification; const methods promise not to modify the object.",
+              "Function overloading lets multiple functions share a name if their parameter lists differ.",
+              "Classes encapsulate data and behavior; access specifiers (private, protected, public) control visibility.",
+              "Constructors initialize objects; the member initializer list is more efficient than assignment in the body.",
+            ],
+            content: `## What's This?
+
+C++ is an extension of C that adds object-oriented programming, type-safe I/O, references, function overloading, and a rich standard library. Created by Bjarne Stroustrup at Bell Labs in 1985, C++ keeps C's performance and direct memory access while adding higher-level abstractions. The philosophy is "you don't pay for what you don't use" -- features like virtual functions, exceptions, and RTTI only incur cost when you actually use them.
+
+Think of C++ as C with a toolbelt strapped on. You can still write raw pointer code exactly like C, but you can also write high-level code with classes, templates, and the Standard Template Library (STL). This makes C++ a "multi-paradigm" language: you can write procedural, object-oriented, generic, or functional code, whichever suits the problem.
+
+C++ has been through multiple standardization rounds: C++98 (the classic), C++11 (a major modernization), C++14/17 (incremental improvements), C++20 (concepts, ranges, coroutines, modules), and C++23 (the latest). Modern C++ looks quite different from "C with classes" -- it emphasizes RAII, smart pointers, and compile-time evaluation.
+
+## The Big Picture
+
+C++ builds directly on C syntax and concepts. A C program is almost always a valid C++ program (with minor differences). C++ adds features that let you express intent more clearly and write safer code: references instead of pointers for aliasing, classes for bundling data with operations, templates for generic code, and the STL for common data structures and algorithms.
+
+After mastering C++ basics, the next topics are OOP (inheritance, polymorphism), RAII and smart pointers (automatic resource management), the STL in depth, and then modern C++ features (lambdas, move semantics, concepts, coroutines).
+
+## Core Ideas
+
+### cin/cout: Type-Safe I/O
+
+C++ provides <code>cin</code> (character input) and <code>cout</code> (character output) in the <code>iostream</code> header. Unlike C's <code>printf</code>/<code>scanf</code>, they are type-safe -- the compiler knows the type at compile time, so you do not need format specifiers like <code>%d</code> or <code>%s</code>.
+
+\`\`\`cpp
+#include <iostream>   // for cin, cout
+#include <string>     // for std::string
+
+int main() {
+    int age;
+    std::string name;
+
+    std::cout << "Enter your name: ";   // << inserts data into the output stream
+    std::cin >> name;                    // >> extracts data from the input stream into name
+
+    std::cout << "Enter your age: ";
+    std::cin >> age;
+
+    std::cout << "Hello, " << name      // chained output: prints all in one line
+              << "! You are " << age
+              << " years old." << std::endl;  // endl adds a newline and flushes
+
+    return 0;
+}
+\`\`\`
+
+### References
+
+A <b>reference</b> is an alias for an existing variable. Once bound, it always refers to the same variable and cannot be made to refer to something else. Unlike a pointer, a reference cannot be null and does not need explicit dereferencing with <code>*</code>.
+
+\`\`\`cpp
+#include <iostream>
+
+int main() {
+    int x = 10;
+    int &ref = x;          // ref is a reference to x (an alias)
+
+    std::cout << ref;      // prints 10 (no dereference needed)
+    ref = 20;              // changes x to 20 through the reference
+    std::cout << x;        // prints 20
+
+    // References as function parameters (pass by reference)
+    // The parameter 'n' is a reference to the caller's variable
+    auto increment = [](int &n) { n++; };
+
+    increment(x);          // x becomes 21
+    std::cout << x;        // prints 21
+
+    // Unlike pointers, references cannot be null or reseated:
+    // int &bad;            // ERROR: must be initialized
+    // int &other = ...;    // ERROR: cannot rebind a reference
+
+    int *ptr = &x;         // pointer equivalent: can be null, can be reseated
+    ptr = nullptr;         // valid, but &ref = nullptr is impossible
+
+    return 0;
+}
+\`\`\`
+
+### The const Keyword
+
+<code>const</code> means "this value will not change." The compiler enforces this -- any attempt to modify a <code>const</code> value causes a compile error. <code>const</code> can apply to variables, function parameters, return values, and member functions.
+
+\`\`\`cpp
+#include <iostream>
+
+class Circle {
+    double radius;
+public:
+    Circle(double r) : radius(r) {}
+
+    // const method: promises NOT to modify the object
+    double area() const {
+        // radius = 0;  // ERROR: cannot modify member in const method
+        return 3.14159 * radius * radius;
+    }
+
+    // Non-const method: CAN modify the object
+    void setRadius(double r) {
+        radius = r;
+    }
+};
+
+int main() {
+    const double PI = 3.14159;    // const variable: cannot be changed
+    // PI = 3.0;                   // ERROR: assignment to const
+
+    const Circle c(5.0);           // const object: can only call const methods
+    std::cout << c.area();        // OK: area() is const
+    // c.setRadius(10.0);          // ERROR: setRadius is not const
+
+    Circle c2(3.0);                // non-const object
+    c2.setRadius(4.0);             // OK: can call any method
+
+    // Const parameters protect the caller's data
+    auto printArea = [](const Circle &circ) {
+        // circ is a const reference -- cannot modify the original
+        std::cout << circ.area();
+    };
+
+    return 0;
+}
+\`\`\`
+
+### Default Arguments
+
+You can specify default values for function parameters. If the caller omits that argument, the default value is used. Default arguments must appear after all non-default parameters.
+
+\`\`\`cpp
+#include <iostream>
+
+// Default arguments: greeting defaults to "Hello" if not provided
+void greet(const std::string &name, const std::string &greeting = "Hello") {
+    std::cout << greeting << ", " << name << "!" << std::endl;
+}
+
+int main() {
+    greet("Alice");              // uses default greeting: "Hello, Alice!"
+    greet("Bob", "Hi");          // explicit greeting: "Hi, Bob!"
+    greet("Charlie", "Hey");     // "Hey, Charlie!"
+    return 0;
+}
+\`\`\`
+
+### Function Overloading
+
+C++ lets you define multiple functions with the same name as long as their parameter lists differ (different number of parameters, different types, or both). The compiler picks the right one based on the arguments at the call site. This is called <b>function overloading</b>.
+
+\`\`\`cpp
+#include <iostream>
+
+// Three overloads of the 'print' function — same name, different parameters
+void print(int i) {
+    std::cout << "Integer: " << i << std::endl;
+}
+
+void print(double d) {
+    std::cout << "Double: " << d << std::endl;
+}
+
+void print(const std::string &s) {
+    std::cout << "String: " << s << std::endl;
+}
+
+int main() {
+    print(42);           // calls print(int)
+    print(3.14);         // calls print(double)
+    print("hello");      // calls print(const string &)
+    // The compiler matches by argument type — no format specifiers needed
+    return 0;
+}
+\`\`\`
+
+### Classes and Access Specifiers
+
+A <b>class</b> bundles data (member variables) and functions (member functions / methods) into a single unit. <b>Access specifiers</b> control who can see and use each member:
+
+| Specifier | Access | Analogy |
+|-----------|--------|---------|
+| <code>private</code> | Only this class's methods | Your personal diary |
+| <code>protected</code> | This class and derived classes | Family heirlooms |
+| <code>public</code> | Everyone | A storefront window |
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+
+class BankAccount {
+private:                       // only methods of this class can access these
+    std::string ownerName;
+    double balance;
+
+public:                        // anyone can call these methods
+    // Constructor: called automatically when an object is created
+    // Member initializer list: : ownerName(name), balance(0) — more efficient
+    BankAccount(const std::string &name) : ownerName(name), balance(0) {}
+
+    void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;  // can access private balance from inside the class
+        }
+    }
+
+    void withdraw(double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+        }
+    }
+
+    double getBalance() const {  // const method: read-only access
+        return balance;
+    }
+
+    std::string getOwner() const {
+        return ownerName;
+    }
+};
+
+int main() {
+    BankAccount acc("Alice");   // constructor runs: ownerName = "Alice", balance = 0
+
+    acc.deposit(1000);          // public method call
+    acc.withdraw(250);          // public method call
+    // acc.balance = 9999;      // ERROR: balance is private
+
+    std::cout << acc.getOwner() << " has $" << acc.getBalance() << std::endl;
+    // Output: "Alice has $750"
+
+    return 0;
+}
+\`\`\`
+
+### Constructors, Destructors, and the Member Initializer List
+
+A <b>constructor</b> is a special method called automatically when an object is created. A <b>destructor</b> is called when the object is destroyed. The <b>member initializer list</b> (the <code>: member1(val1), member2(val2)</code> syntax after the constructor signature) initializes members before the constructor body runs, which is more efficient than assignment inside the body.
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+
+class Logger {
+    std::string name;
+    int logCount;
+
+public:
+    // Constructor with member initializer list
+    Logger(const std::string &logName)
+        : name(logName), logCount(0) {     // initialize BEFORE body
+        std::cout << name << " logger started." << std::endl;
+    }
+
+    // Destructor: called when the object is destroyed
+    ~Logger() {
+        std::cout << name << " logger shut down. Logged " << logCount << " messages."
+                  << std::endl;
+    }
+
+    void log(const std::string &msg) {
+        logCount++;
+        std::cout << "[" << name << "] " << msg << std::endl;
+    }
+};
+
+int main() {
+    Logger logger("App");       // constructor runs
+
+    logger.log("User logged in");   // logCount becomes 1
+    logger.log("File saved");       // logCount becomes 2
+
+    return 0;                       // logger goes out of scope → destructor runs
+}
+\`\`\`
+
+### The this Pointer
+
+Inside a member function, <code>this</code> is a pointer to the object on which the function was called. It is used to distinguish member variables from parameters with the same name and to return the object itself from a method.
+
+\`\`\`cpp
+#include <iostream>
+
+class Point {
+    int x, y;
+
+public:
+    Point(int x, int y) : x(x), y(y) {}   // this->x = x (parameter names match members)
+
+    // this is used implicitly by the compiler for member access
+    void print() const {
+        std::cout << "(" << this->x << ", " << this->y << ")" << std::endl;
+        // this->x is equivalent to just x inside the class
+    }
+
+    // Return *this to enable method chaining
+    Point &moveBy(int dx, int dy) {
+        this->x += dx;   // explicitly using this
+        this->y += dy;
+        return *this;    // return the current object by reference
+    }
+};
+
+int main() {
+    Point p(1, 2);
+
+    // Method chaining: each call returns *this, so we can chain
+    p.moveBy(3, 4).moveBy(-1, -1).print();   // prints "(3, 5)"
+
+    return 0;
+}
+\`\`\`
+
+## Wiring It Together
+
+This program defines a <code>Student</code> class with private data, public accessors, a const method, overloaded constructors, and a destructor. It reads student data using <code>cin</code>/<code>cout</code> and demonstrates references and const.
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+#include <vector>
+
+class Student {
+    std::string name;
+    int id;
+    std::vector<int> grades;       // dynamic array of grades
+
+public:
+    // Constructor with initializer list
+    Student(const std::string &name, int id)
+        : name(name), id(id) {     // const reference avoids copying the string
+        std::cout << "Enrolled: " << name << std::endl;
+    }
+
+    // Destructor: called when Student object is destroyed
+    ~Student() {
+        std::cout << "Dropped: " << name << std::endl;
+    }
+
+    // Const accessor: promises not to modify the object
+    std::string getName() const {
+        return name;
+    }
+
+    int getId() const {
+        return id;
+    }
+
+    // Add a grade
+    void addGrade(int grade) {
+        if (grade >= 0 && grade <= 100) {
+            grades.push_back(grade);
+        }
+    }
+
+    // Calculate average (const: does not modify the object)
+    double getAverage() const {
+        if (grades.empty()) return 0.0;
+        double sum = 0;
+        for (int g : grades) {
+            sum += g;
+        }
+        return sum / grades.size();
+    }
+
+    // Overload: print student info
+    void print() const {
+        std::cout << "Student: " << name << " (ID: " << id << ")"
+                  << " Avg: " << getAverage() << std::endl;
+    }
+};
+
+int main() {
+    std::vector<Student> students;
+
+    // Read student data using cin/cout
+    std::cout << "Enter student count: ";
+    int count;
+    std::cin >> count;
+
+    for (int i = 0; i < count; i++) {
+        std::string name;
+        int id;
+
+        std::cout << "Enter name and ID for student " << (i + 1) << ": ";
+        std::cin >> name >> id;
+
+        students.emplace_back(name, id);   // construct Student in-place
+
+        std::cout << "Enter 3 grades for " << name << ": ";
+        for (int j = 0; j < 3; j++) {
+            int grade;
+            std::cin >> grade;
+            students.back().addGrade(grade);
+        }
+    }
+
+    // Print all students using const reference (no copying)
+    std::cout << "\n--- Student Report ---" << std::endl;
+    for (const auto &s : students) {    // const reference: read-only access
+        s.print();                       // calling const method on const reference
+    }
+
+    return 0;
+}
+\`\`\`
+`,
+            tags: ["C++", "Object-Oriented Programming", "Classes"],
+          },
+          {
+            id: "ns-cpp-oop",
+            title: "OOP in C++",
+            shortDesc: "Inheritance, virtual functions, polymorphism, abstract base classes, multiple inheritance, and virtual destructors.",
+            difficulty: "intermediate",
+            readTimeMin: 18,
+            keyPoints: [
+              "Inheritance lets a derived class reuse and extend a base class's members; access specifiers control which members are inherited.",
+              "Virtual functions enable dynamic dispatch — the correct function is called based on the object's actual type at runtime.",
+              "Polymorphism lets you treat derived objects through a base class pointer or reference.",
+              "Pure virtual functions (= 0) make a class abstract — it cannot be instantiated and serves as an interface.",
+              "Multiple inheritance lets a class derive from multiple bases; the diamond problem is resolved with virtual inheritance.",
+              "Virtual destructors ensure the correct destructor runs when deleting a derived object through a base pointer.",
+            ],
+            content: `## What's This?
+
+Object-Oriented Programming (OOP) is a paradigm that organizes code around "objects" — bundles of data and the functions that operate on that data. C++ implements OOP through classes, inheritance, virtual functions, and polymorphism. The core idea is that you model real-world entities (a Dog, a BankAccount, a Button) as objects that have state (member variables) and behavior (member functions), and you organize related objects into hierarchies through inheritance.
+
+Think of OOP as building with prefabricated parts. A "Vehicle" base class defines common features (speed, weight). "Car" and "Bicycle" derive from Vehicle, inheriting the common features and adding their own specializations (Car has an engine, Bicycle has pedals). You can write code that works with any Vehicle without knowing whether it is a Car or Bicycle — this is polymorphism.
+
+C++ implements OOP differently from languages like Java or C#. In C++, virtual functions are opt-in (you mark them <code>virtual</code> explicitly) rather than the default. This reflects the "you don't pay for what you don't use" philosophy: non-virtual function calls are direct (like C function calls), while virtual calls go through a vtable (indirection, slightly slower).
+
+## The Big Picture
+
+OOP builds on classes (encapsulation of data and methods). The key new concepts are inheritance (reusing and extending classes), polymorphism (treating different types uniformly), and virtual functions (dynamic dispatch). These are the foundation of most C++ design patterns and frameworks.
+
+After mastering OOP, the next topics are RAII and smart pointers (managing resources through object lifetime), the STL (using templates for generic containers and algorithms), and design patterns like Strategy, Observer, and Factory.
+
+## Core Ideas
+
+### Inheritance: Base and Derived Classes
+
+<b>Inheritance</b> lets a derived class inherit members from a base class. The derived class adds its own members and can override (replace) base class methods. Access specifiers in the inheritance list control how inherited members are exposed.
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+
+class Animal {                     // base class
+protected:
+    std::string name;
+
+public:
+    Animal(const std::string &name) : name(name) {}
+
+    void eat() const {
+        std::cout << name << " is eating." << std::endl;
+    }
+};
+
+// Dog inherits from Animal (public inheritance)
+class Dog : public Animal {        // public: Animal's public members stay public in Dog
+public:
+    // Dog's constructor calls Animal's constructor in the initializer list
+    Dog(const std::string &name) : Animal(name) {}
+
+    void bark() const {
+        std::cout << name << " says Woof!" << std::endl;
+    }
+};
+
+int main() {
+    Dog dog("Buddy");
+    dog.eat();                      // inherited from Animal
+    dog.bark();                     // defined in Dog
+    return 0;
+}
+\`\`\`
+
+### Virtual Functions and the Vtable
+
+A <b>virtual function</b> is a member function that can be overridden in a derived class. When you call a virtual function through a base class pointer or reference, C++ uses <b>dynamic dispatch</b>: it looks up the actual function to call at runtime using a <b>vtable</b> (virtual table), a table of function pointers attached to each object.
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+
+class Animal {
+protected:
+    std::string name;
+
+public:
+    Animal(const std::string &name) : name(name) {}
+
+    // virtual: allows derived classes to override this
+    virtual void speak() const {
+        std::cout << name << " makes a sound." << std::endl;
+    }
+};
+
+class Dog : public Animal {
+public:
+    Dog(const std::string &name) : Animal(name) {}
+
+    // override: tells the compiler we intend to override a virtual function (C++11)
+    void speak() const override {
+        std::cout << name << " says Woof!" << std::endl;
+    }
+};
+
+class Cat : public Animal {
+public:
+    Cat(const std::string &name) : Animal(name) {}
+
+    void speak() const override {
+        std::cout << name << " says Meow!" << std::endl;
+    }
+};
+
+int main() {
+    Dog dog("Buddy");
+    Cat cat("Whiskers");
+
+    // Polymorphism: same function call, different behavior
+    Animal *animals[] = {&dog, &cat};  // array of base class pointers
+
+    for (auto *animal : animals) {
+        animal->speak();               // dynamic dispatch: calls Dog::speak, then Cat::speak
+    }
+    // Output:
+    // Buddy says Woof!
+    // Whiskers says Meow!
+
+    return 0;
+}
+\`\`\`
+
+### Polymorphism
+
+<b>Polymorphism</b> (Greek: "many forms") lets you treat objects of different derived types uniformly through a base class interface. The same function call produces different behavior depending on the actual object type. This is the heart of OOP.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <memory>
+
+class Shape {
+public:
+    // Virtual function with a default implementation
+    virtual double area() const {
+        return 0;
+    }
+
+    // Pure virtual function (see next section)
+    virtual void draw() const = 0;
+
+    virtual ~Shape() = default;  // virtual destructor for safe polymorphic deletion
+};
+
+class Circle : public Shape {
+    double radius;
+public:
+    Circle(double r) : radius(r) {}
+
+    double area() const override {
+        return 3.14159 * radius * radius;
+    }
+
+    void draw() const override {
+        std::cout << "Drawing a circle" << std::endl;
+    }
+};
+
+class Rectangle : public Shape {
+    double w, h;
+public:
+    Rectangle(double w, double h) : w(w), h(h) {}
+
+    double area() const override {
+        return w * h;
+    }
+
+    void draw() const override {
+        std::cout << "Drawing a rectangle" << std::endl;
+    }
+};
+
+int main() {
+    std::vector<Shape *> shapes;
+    shapes.push_back(new Circle(5));
+    shapes.push_back(new Rectangle(3, 4));
+
+    for (auto *shape : shapes) {
+        shape->draw();                             // polymorphic call
+        std::cout << "Area: " << shape->area() << std::endl;
+    }
+
+    for (auto *shape : shapes) delete shape;      // virtual destructor called correctly
+    return 0;
+}
+\`\`\`
+
+### Pure Virtual Functions and Abstract Base Classes
+
+A <b>pure virtual function</b> is declared with <code>= 0</code> and has no implementation in the base class. A class with at least one pure virtual function is <b>abstract</b> — you cannot create instances of it. Derived classes MUST provide an implementation, or they remain abstract themselves. This is how C++ defines interfaces.
+
+\`\`\`cpp
+#include <iostream>
+
+// Abstract base class: cannot instantiate directly
+class Printable {
+public:
+    virtual void print() const = 0;   // pure virtual: no body in base
+    virtual ~Printable() = default;
+};
+
+class Document : public Printable {
+    std::string text;
+public:
+    Document(const std::string &t) : text(t) {}
+
+    void print() const override {      // MUST implement or Document is also abstract
+        std::cout << "Document: " << text << std::endl;
+    }
+};
+
+class Image : public Printable {
+    std::string filename;
+public:
+    Image(const std::string &f) : filename(f) {}
+
+    void print() const override {
+        std::cout << "Image: " << filename << std::endl;
+    }
+};
+
+int main() {
+    // Printable p;                     // ERROR: cannot instantiate abstract class
+
+    Document doc("Hello, world!");
+    Image img("photo.jpg");
+
+    Printable *items[] = {&doc, &img};  // polymorphism through abstract base
+    for (auto *item : items) {
+        item->print();
+    }
+
+    return 0;
+}
+\`\`\`
+
+### Multiple Inheritance and the Diamond Problem
+
+C++ allows a class to inherit from multiple base classes. This is more powerful than single-inheritance languages (Java, C#), but it introduces the <b>diamond problem</b>: if B and C both inherit from A, and D inherits from both B and C, D contains two copies of A's members. <b>Virtual inheritance</b> (<code>virtual public A</code>) solves this by ensuring only one copy of A exists.
+
+\`\`\`cpp
+#include <iostream>
+
+class Animal {
+public:
+    int age = 0;
+};
+
+// Virtual inheritance: only one copy of Animal in the final derived class
+class Bird : virtual public Animal {
+public:
+    void fly() { std::cout << "Flying" << std::endl; }
+};
+
+class Horse : virtual public Animal {
+public:
+    void gallop() { std::cout << "Galloping" << std::endl; }
+};
+
+// Pegasus inherits from both Bird and Horse — without virtual, there would be two Animal copies
+class Pegasus : public Bird, public Horse {
+public:
+    void show() {
+        age = 5;                 // unambiguous: only one Animal subobject
+        fly();
+        gallop();
+    }
+};
+
+int main() {
+    Pegasus p;
+    p.show();
+    return 0;
+}
+\`\`\`
+
+| Inheritance Style | Copies of Base | When to Use |
+|------------------|---------------|-------------|
+| <code>public Base</code> | 1 per path | Single inheritance or non-conflicting bases |
+| <code>virtual public Base</code> | 1 total | Diamond hierarchy (D inherits from B and C, both deriving from A) |
+
+### Virtual Destructors
+
+A <b>virtual destructor</b> ensures that the correct destructor runs when you delete a derived object through a base class pointer. Without it, only the base destructor runs, and the derived part of the object leaks resources.
+
+\`\`\`cpp
+#include <iostream>
+
+class Base {
+public:
+    Base() { std::cout << "Base constructed" << std::endl; }
+
+    virtual ~Base() {           // virtual: ensures derived destructor is called
+        std::cout << "Base destroyed" << std::endl;
+    }
+};
+
+class Derived : public Base {
+    int *data;
+public:
+    Derived() : data(new int[100]) {  // allocate 100 ints on the heap
+        std::cout << "Derived constructed" << std::endl;
+    }
+
+    ~Derived() override {            // override: this destructor runs first
+        delete[] data;                // free the heap memory
+        std::cout << "Derived destroyed" << std::endl;
+    }
+};
+
+int main() {
+    Base *ptr = new Derived();
+    delete ptr;                     // virtual dispatch: calls ~Derived() then ~Base()
+    // Without virtual: would only call ~Base(), leaking the int[100] array
+    return 0;
+}
+\`\`\`
+
+### The override and final Specifiers
+
+<code>override</code> (C++11) makes the compiler check that you are actually overriding a virtual function. <code>final</code> (C++11) prevents further overriding in derived classes.
+
+\`\`\`cpp
+#include <iostream>
+
+class Base {
+public:
+    virtual void func() { std::cout << "Base::func" << std::endl; }
+    virtual void oldName() { std::cout << "Base::oldName" << std::endl; }
+};
+
+class Derived : public Base {
+public:
+    // void func() override;       // ERROR: misspelled as "funk" — compiler catches it
+    void func() override {         // OK: actually overrides
+        std::cout << "Derived::func" << std::endl;
+    }
+};
+
+class MoreDerived : public Derived {
+public:
+    // void func() override { }    // OK: Derived::func is not final (yet)
+};
+
+class FinalClass final : public Base {  // final class: cannot be inherited from
+public:
+    void oldName() final {              // final method: cannot be overridden further
+        std::cout << "FinalClass::oldName" << std::endl;
+    }
+};
+
+// class Fail : public FinalClass { };  // ERROR: FinalClass is final
+\`\`\`
+
+## Wiring It Together
+
+This program models a zoo with animals. It uses an abstract base class, virtual functions for polymorphic behavior, virtual inheritance for a flying-mammal hybrid, and virtual destructors for safe cleanup.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <string>
+
+class Animal {                       // abstract base class
+protected:
+    std::string name;
+    int age;
+public:
+    Animal(const std::string &name, int age)
+        : name(name), age(age) {}
+
+    virtual void makeSound() const = 0;    // pure virtual: each animal defines its sound
+    virtual std::string type() const = 0;  // pure virtual: returns species name
+
+    virtual ~Animal() {                    // virtual destructor: safe deletion via base ptr
+        std::cout << type() << " " << name << " removed from zoo." << std::endl;
+    }
+};
+
+class Mammal : virtual public Animal {     // virtual inheritance for diamond
+public:
+    Mammal(const std::string &name, int age) : Animal(name, age) {}
+    void feedMilk() const {
+        std::cout << name << " feeds milk to babies." << std::endl;
+    }
+};
+
+class Bird : virtual public Animal {       // virtual inheritance for diamond
+public:
+    Bird(const std::string &name, int age) : Animal(name, age) {}
+    void layEgg() const {
+        std::cout << name << " laid an egg." << std::endl;
+    }
+};
+
+class Lion : public Mammal {
+public:
+    Lion(const std::string &name, int age) : Animal(name, age), Mammal(name, age) {}
+
+    void makeSound() const override {
+        std::cout << name << " roars!" << std::endl;
+    }
+
+    std::string type() const override { return "Lion"; }
+};
+
+class Parrot : public Bird {
+public:
+    Parrot(const std::string &name, int age) : Animal(name, age), Bird(name, age) {}
+
+    void makeSound() const override {
+        std::cout << name << " squawks!" << std::endl;
+    }
+
+    std::string type() const override { return "Parrot"; }
+};
+
+// Bat: inherits from both Mammal and Bird (virtual avoids diamond)
+class Bat : public Mammal, public Bird {
+public:
+    Bat(const std::string &name, int age)
+        : Animal(name, age), Mammal(name, age), Bird(name, age) {}
+
+    void makeSound() const override {
+        std::cout << name << " clicks (echolocation)!" << std::endl;
+    }
+
+    std::string type() const override { return "Bat"; }
+};
+
+int main() {
+    // Polymorphic container: vector of base class pointers
+    std::vector<Animal *> zoo;
+
+    zoo.push_back(new Lion("Simba", 5));
+    zoo.push_back(new Parrot("Polly", 2));
+    zoo.push_back(new Bat("Bruce", 3));
+
+    // Polymorphic loop: same interface, different behavior
+    for (const auto &animal : zoo) {
+        std::cout << animal->type() << ": ";
+        animal->makeSound();                // virtual dispatch
+    }
+
+    // Bat can call both Mammal and Bird methods
+    Bat *bat = dynamic_cast<Bat *>(zoo[2]);  // downcast to access specific methods
+    if (bat) {
+        bat->feedMilk();                     // Mammal method
+        bat->layEgg();                       // Bird method
+    }
+
+    // Cleanup: virtual destructors ensure correct destruction order
+    for (auto &animal : zoo) {
+        delete animal;                       // calls ~Bat(), ~Parrot(), or ~Lion()
+    }
+
+    return 0;
+}
+\`\`\`
+`,
+            tags: ["C++", "Object-Oriented Programming", "Polymorphism"],
+          },
+          {
+            id: "ns-cpp-stl",
+            title: "STL (Containers, Algorithms, Iterators)",
+            shortDesc: "vector, map, set, unordered_map, algorithm (sort, find, accumulate), and iterator categories.",
+            difficulty: "intermediate",
+            readTimeMin: 18,
+            keyPoints: [
+              "The STL has three core components: containers (data structures), algorithms (operations), and iterators (glue between them).",
+              "Sequence containers (vector, deque, list, array) store elements in linear order; vector is the most commonly used.",
+              "Associative containers (set, map, multiset, multimap) store sorted key-value pairs; unordered variants use hash tables.",
+              "Algorithms (sort, find, accumulate, count_if, transform) operate on iterator ranges, not containers directly.",
+              "Iterator categories (input, output, forward, bidirectional, random access) define what operations each iterator supports.",
+              "Range-based for loops and lambda expressions make STL code concise and readable.",
+            ],
+            content: `## What's This?
+
+The Standard Template Library (STL) is a collection of C++ template classes and functions that provide common data structures (containers), algorithms, and iterators. It is the standard library's crown jewel, designed by Alexander Stepanov in the 1990s. The STL is not just a library of utilities — it embodies a powerful philosophy: separate data structures from algorithms and connect them through iterators.
+
+Think of the STL as a well-organized toolbox. Containers are the drawers (vector, map, set). Algorithms are the tools (sort, find, transform). Iterators are your hands reaching into any drawer to use any tool. Because of this separation, you can sort a vector, a deque, a list, or even a plain C array using the same <code>std::sort</code> algorithm — as long as you provide the right iterators.
+
+The STL is entirely template-based, which means it is compiled at compile time for each type you use. This gives performance comparable to hand-written C code while providing a high-level, type-safe API.
+
+## The Big Picture
+
+The STL builds on C++ templates (generic programming) and operator overloading (iterators use <code>++</code>, <code>*</code>, <code>!=</code>). It replaces the manual data structures and algorithms you would write in C with reusable, tested, and optimized components.
+
+After mastering the STL, the next topics are RAII and smart pointers (managing STL container lifetimes), modern C++ features (range adaptors, std::span, std::string_view), and then applying STL in real-world projects.
+
+## Core Ideas
+
+### Containers Overview
+
+The STL containers are divided into three categories:
+
+| Category | Containers | Ordering | Lookup | When to Use |
+|----------|-----------|----------|--------|-------------|
+| Sequence | <code>vector</code>, <code>deque</code>, <code>list</code>, <code>array</code>, <code>forward_list</code> | Insertion order | O(n) (linear search) | You care about element position |
+| Associative (ordered) | <code>set</code>, <code>map</code>, <code>multiset</code>, <code>multimap</code> | Sorted by key | O(log n) (tree) | You need sorted iteration or range queries |
+| Associative (unordered) | <code>unordered_set</code>, <code>unordered_map</code> | Hash order | O(1) average (hash table) | You need fast lookup by key |
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <deque>
+#include <list>
+#include <map>
+#include <set>
+#include <unordered_map>
+#include <string>
+
+int main() {
+    // vector: dynamic array — contiguous memory, fast random access
+    std::vector<int> vec = {1, 2, 3};
+    vec.push_back(4);               // append to end: O(1) amortized
+
+    // deque: double-ended queue — fast insertion at both ends
+    std::deque<int> deq = {2, 3, 4};
+    deq.push_front(1);              // insert at front: O(1)
+    deq.push_back(5);               // insert at back: O(1)
+
+    // list: doubly-linked list — fast insertion/removal anywhere (but no random access)
+    std::list<int> lst = {1, 2, 3};
+    lst.push_front(0);              // O(1)
+    lst.push_back(4);               // O(1)
+
+    // set: sorted unique elements (red-black tree)
+    std::set<int> s = {3, 1, 4, 1, 5};  // stores: 1, 3, 4, 5 (sorted, no duplicates)
+
+    // map: sorted key-value pairs (red-black tree)
+    std::map<std::string, int> ages;
+    ages["Alice"] = 30;              // insert or update by key: O(log n)
+    ages["Bob"] = 25;
+
+    // unordered_map: hash table — no ordering, but O(1) average lookup
+    std::unordered_map<std::string, int> fastAges;
+    fastAges["Alice"] = 30;          // O(1) average
+    fastAges["Bob"] = 25;
+
+    return 0;
+}
+\`\`\`
+
+### vector in Depth
+
+<code>std::vector</code> is the most widely-used STL container. It is a dynamic array that grows automatically. Elements are stored contiguously in memory, so access by index is O(1) and it is cache-friendly.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<int> v;             // empty vector
+
+    v.push_back(10);                 // add element at end: O(1)
+    v.push_back(20);
+    v.push_back(30);                 // v = [10, 20, 30]
+
+    std::cout << v.size();          // 3 (number of elements)
+    std::cout << v.capacity();      // 4 (allocated memory, may be > size)
+
+    v[1] = 25;                      // random access via []: O(1)
+    std::cout << v.at(1);           // bounds-checked access: throws std::out_of_range
+
+    v.pop_back();                   // remove last element: O(1), v = [10, 25]
+
+    v.reserve(100);                 // pre-allocate for 100 elements (avoids reallocations)
+    v.resize(5);                    // change size to 5 (new elements are value-initialized)
+
+    for (int x : v) {               // range-based for loop
+        std::cout << x << " ";
+    }
+
+    // Insert at position (slower than push_back: O(n))
+    v.insert(v.begin() + 1, 99);    // insert 99 at index 1
+
+    // Erase at position (O(n))
+    v.erase(v.begin());              // erase first element
+
+    return 0;
+}
+\`\`\`
+
+### map and unordered_map
+
+<code>std::map</code> stores key-value pairs sorted by key (implemented as a red-black tree). <code>std::unordered_map</code> stores key-value pairs in a hash table — no ordering, but O(1) average lookup.
+
+\`\`\`cpp
+#include <iostream>
+#include <map>
+#include <unordered_map>
+#include <string>
+
+int main() {
+    // std::map: ordered by key (sorted iteration)
+    std::map<std::string, int> scores;
+    scores["Alice"] = 95;            // insert O(log n)
+    scores["Bob"] = 87;
+    scores["Charlie"] = 92;
+
+    // Iteration is in key order: Alice, Bob, Charlie
+    for (const auto &[name, score] : scores) {
+        std::cout << name << ": " << score << std::endl;
+    }
+
+    // Lookup
+    auto it = scores.find("Alice");
+    if (it != scores.end()) {
+        std::cout << "Found: " << it->second;  // 95
+    }
+
+    // std::unordered_map: hash-based, no ordering
+    std::unordered_map<std::string, int> phonebook;
+    phonebook["Alice"] = 5551234;    // insert O(1) average
+    phonebook["Bob"] = 5555678;
+
+    std::cout << phonebook["Alice"];  // O(1) average lookup
+
+    // Iteration order is undefined (hash-based)
+    for (const auto &[name, number] : phonebook) {
+        std::cout << name << ": " << number << std::endl;
+    }
+
+    return 0;
+}
+\`\`\`
+
+### Algorithms: sort, find, accumulate, count_if, for_each, transform
+
+STL algorithms operate on iterator ranges, not containers directly. Most are in <code><algorithm></code> and <code><numeric></code>. They take pairs of iterators (begin, end) and a function (often a lambda).
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>     // for sort, find, for_each, count_if, transform
+#include <numeric>       // for accumulate
+
+int main() {
+    std::vector<int> v = {5, 2, 8, 1, 9, 3, 7};
+
+    // sort: in-place sort, O(n log n)
+    std::sort(v.begin(), v.end());       // v = [1, 2, 3, 5, 7, 8, 9]
+
+    // find: linear search, returns iterator to first match (or end())
+    auto it = std::find(v.begin(), v.end(), 8);
+    if (it != v.end()) {
+        std::cout << "Found: " << *it;    // 8
+    }
+
+    // accumulate: sum elements (from <numeric>)
+    int sum = std::accumulate(v.begin(), v.end(), 0);   // sum = 35
+    std::cout << "Sum: " << sum;
+
+    // count_if: count elements matching a predicate
+    int evens = std::count_if(v.begin(), v.end(),
+        [](int n) { return n % 2 == 0; });              // lambda: returns true if n is even
+    std::cout << "Evens: " << evens;                     // 2 (2 and 8)
+
+    // for_each: apply a function to each element
+    std::for_each(v.begin(), v.end(), [](int &n) { n *= 2; });
+    // v is now [2, 4, 6, 10, 14, 16, 18]
+
+    // transform: apply a function and store result in another range
+    std::vector<int> doubled(v.size());
+    std::transform(v.begin(), v.end(), doubled.begin(),
+        [](int n) { return n * 2; });
+    // doubled = [4, 8, 12, 20, 28, 32, 36]
+
+    return 0;
+}
+\`\`\`
+
+### Iterator Categories
+
+<b>Iterators</b> are objects that point to elements in a container. They behave like pointers: you can advance them (<code>++</code>), dereference them (<code>*</code>), and compare them (<code>!=</code>, <code>==</code>). Different containers support different iterator capabilities.
+
+| Category | Operations | Example Containers | Example Algorithm |
+|----------|-----------|-------------------|-------------------|
+| Input | Read once, <code>++</code>, <code>*</code>, <code>!=</code> | <code>istream_iterator</code> | <code>std::find</code> |
+| Output | Write once, <code>++</code>, <code>*</code> | <code>ostream_iterator</code> | <code>std::copy</code> |
+| Forward | Read/write multiple passes | <code>forward_list</code>, <code>unordered_set</code> | <code>std::replace</code> |
+| Bidirectional | <code>++</code> and <code>--</code> | <code>list</code>, <code>set</code>, <code>map</code> | <code>std::reverse</code> |
+| Random Access | <code>+</code>, <code>-</code>, <code>[]</code>, <code><</code> | <code>vector</code>, <code>deque</code>, <code>array</code> | <code>std::sort</code> |
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <list>
+#include <iterator>    // for std::distance, std::advance
+
+int main() {
+    std::vector<int> vec = {10, 20, 30, 40, 50};
+
+    // vector iterators are random access: can add/subtract offsets
+    auto it = vec.begin();
+    it += 2;                         // random access: skip 2 positions
+    std::cout << *it;                // 30
+    bool less = (vec.begin() < vec.end());  // random access: comparison works
+
+    // std::advance: advance iterator by n (works with ANY iterator category)
+    std::list<int> lst = {1, 2, 3, 4, 5};
+    auto lit = lst.begin();
+    std::advance(lit, 3);            // advances 3 positions (loops internally for list)
+    std::cout << *lit;               // 4
+
+    // std::distance: number of steps between two iterators
+    auto dit = std::distance(vec.begin(), vec.end());  // 5
+
+    // Iterator invalidation: operations that make iterators invalid
+    std::vector<int> v = {1, 2, 3};
+    auto vit = v.begin();
+    v.push_back(4);                  // MAY invalidate vit (reallocation)
+    // *vit;                         // UNDEFINED BEHAVIOR if reallocation occurred
+
+    return 0;
+}
+\`\`\`
+
+### Lambda Expressions with Algorithms
+
+<b>Lambda expressions</b> (C++11) are anonymous functions that you can define inline. They are the preferred way to pass custom behavior to STL algorithms, replacing function objects (functors).
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+int main() {
+    std::vector<int> v = {3, 1, 4, 1, 5, 9, 2, 6};
+
+    // Lambda syntax: [capture](params) -> return_type { body }
+    // Sort in descending order
+    std::sort(v.begin(), v.end(), [](int a, int b) {
+        return a > b;                // true if a should come before b
+    });                              // v = [9, 6, 5, 4, 3, 2, 1, 1]
+
+    // Capture variables by value [=] or by reference [&]
+    int threshold = 4;
+    auto count = std::count_if(v.begin(), v.end(),
+        [threshold](int n) {         // captures threshold by value
+            return n > threshold;
+        });
+    std::cout << count;              // 3 (elements > 4: 9, 6, 5)
+
+    // Modify elements using reference in lambda
+    std::for_each(v.begin(), v.end(), [](int &n) {
+        n = n * 10;                  // v becomes [90, 60, 50, 40, 30, 20, 10, 10]
+    });
+
+    // Generalized capture with initializer (C++14)
+    auto it = std::find_if(v.begin(), v.end(),
+        [target = 50](int n) {       // capture with initializer
+            return n == target;
+        });
+
+    return 0;
+}
+\`\`\`
+
+## Wiring It Together
+
+This program reads words from a string, counts their frequencies using a map, sorts them by frequency using vector and sort with a lambda, and prints the top results.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <sstream>     // for std::istringstream
+#include <string>
+
+int main() {
+    std::string text = "the quick brown fox jumps over the lazy dog the quick fox jumps";
+
+    // Step 1: tokenize and count word frequencies using map
+    std::map<std::string, int> freq;
+    std::istringstream stream(text);
+    std::string word;
+
+    while (stream >> word) {
+        freq[word]++;                // increment count for this word
+    }
+
+    // Step 2: copy map entries into a vector of pairs for sorting
+    std::vector<std::pair<std::string, int>> sorted(freq.begin(), freq.end());
+
+    // Step 3: sort by frequency descending using a lambda
+    std::sort(sorted.begin(), sorted.end(),
+        [](const auto &a, const auto &b) {
+            return a.second > b.second;  // sort by count, highest first
+        });
+
+    // Step 4: print top 5 words
+    std::cout << "Top 5 words:" << std::endl;
+    int count = 0;
+    for (const auto &[word, freq] : sorted) {
+        if (count >= 5) break;
+        std::cout << "  " << word << ": " << freq << std::endl;
+        count++;
+    }
+
+    // Step 5: calculate total words using accumulate
+    std::vector<int> counts;
+    std::transform(sorted.begin(), sorted.end(),
+        std::back_inserter(counts),
+        [](const auto &pair) { return pair.second; });
+    int total = std::accumulate(counts.begin(), counts.end(), 0);
+    std::cout << "Total words: " << total << std::endl;
+
+    return 0;
+}
+\`\`\`
+`,
+            tags: ["C++", "STL", "Containers", "Algorithms"],
+          },
+          {
+            id: "ns-cpp-raii",
+            title: "RAII & Smart Pointers",
+            shortDesc: "unique_ptr, shared_ptr, weak_ptr, move semantics, rvalue references (&&), and std::move.",
+            difficulty: "intermediate",
+            readTimeMin: 17,
+            keyPoints: [
+              "RAII binds resource lifetime to object lifetime: acquire in constructor, release in destructor — resources are freed automatically.",
+              "unique_ptr enforces exclusive ownership; cannot be copied, only moved (transfer of ownership).",
+              "shared_ptr uses reference counting for shared ownership; the resource is freed when the last shared_ptr is destroyed.",
+              "weak_ptr observes a shared_ptr without extending its lifetime; breaks circular references that cause memory leaks.",
+              "Move semantics transfer resources instead of copying them, using rvalue references (&&) and std::move.",
+              "std::move unconditionally casts to an rvalue reference, enabling move operations; it does not move anything by itself.",
+            ],
+            content: `## What's This?
+
+RAII (Resource Acquisition Is Initialization) is a C++ programming technique where resource lifetime is tied to object lifetime. You acquire a resource (heap memory, file handle, mutex lock, database connection) in a constructor and release it in the destructor. When the object goes out of scope, the destructor fires automatically, and the resource is freed. This eliminates manual resource management and prevents leaks.
+
+Smart pointers (<code>std::unique_ptr</code>, <code>std::shared_ptr</code>, <code>std::weak_ptr</code>) are RAII wrappers around raw pointers. They automatically call <code>delete</code> when the smart pointer object is destroyed. They were introduced in C++11 and are part of the <code><memory></code> header. Modern C++ code should almost never use raw pointers for ownership — smart pointers should be the default.
+
+Think of RAII like a hotel room key. You get the key when you check in (constructor), you hold it during your stay, and the front desk automatically cancels it when you check out (destructor). You cannot forget to return the key. Smart pointers are like a key that also cleans the room when you leave — the memory is freed automatically.
+
+## The Big Picture
+
+RAII builds on constructors and destructors, which you learned in C++ basics. It is the single most important C++ pattern — it replaces try/finally blocks, garbage collection, and manual cleanup code with a mechanism that is automatic, exception-safe, and deterministic.
+
+After mastering RAII and smart pointers, the next topics are move semantics (how ownership is transferred efficiently), custom deleters for smart pointers, and applying RAII to resources beyond memory (files, sockets, locks).
+
+## Core Ideas
+
+### RAII: The Fundamental Pattern
+
+<b>Resource Acquisition Is Initialization</b> means: every resource should be owned by an object. The object's constructor acquires the resource, and its destructor releases it. Because destructors run automatically when objects go out of scope (even if an exception is thrown), resources are guaranteed to be released.
+
+\`\`\`cpp
+#include <iostream>
+#include <fstream>    // for std::ofstream (RAII file handle)
+#include <string>
+
+class Logger {
+    std::ofstream file;     // RAII wrapper: acquires file in constructor, releases in destructor
+
+public:
+    Logger(const std::string &filename) : file(filename) {
+        if (!file.is_open()) {
+            throw std::runtime_error("Cannot open file");
+        }
+        std::cout << "File opened: " << filename << std::endl;
+    }
+
+    void log(const std::string &msg) {
+        file << msg << std::endl;
+    }
+
+    // Destructor is called automatically when Logger goes out of scope
+    // std::ofstream's destructor closes the file — no manual close() needed
+};
+
+int main() {
+    try {
+        Logger logger("app.log");    // acquires file resource
+        logger.log("Application started");
+        logger.log("Processing data");
+        // logger goes out of scope → ~Logger() → ~ofstream() → file closed
+    } catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+    }
+
+    return 0;
+}
+\`\`\`
+
+### unique_ptr: Exclusive Ownership
+
+<code>std::unique_ptr</code> owns a pointer exclusively. It cannot be copied (no two unique_ptrs can own the same pointer), but it can be moved (transferring ownership). When the unique_ptr is destroyed, it calls <code>delete</code> on the owned pointer.
+
+\`\`\`cpp
+#include <iostream>
+#include <memory>      // for std::unique_ptr, std::make_unique
+
+class Resource {
+public:
+    Resource() { std::cout << "Resource acquired" << std::endl; }
+    ~Resource() { std::cout << "Resource released" << std::endl; }
+    void work() { std::cout << "Working..." << std::endl; }
+};
+
+int main() {
+    // Create a unique_ptr using make_unique (preferred, exception-safe)
+    std::unique_ptr<Resource> ptr = std::make_unique<Resource>();
+    ptr->work();                         // access like a raw pointer
+
+    // std::unique_ptr<Resource> ptr2 = ptr;  // ERROR: cannot copy unique_ptr
+    std::unique_ptr<Resource> ptr2 = std::move(ptr);  // OK: transfer ownership via move
+
+    // After move, ptr is null (owns nothing)
+    if (!ptr) {
+        std::cout << "ptr is now null" << std::endl;
+    }
+
+    ptr2->work();                        // ptr2 now owns the Resource
+
+    // When ptr2 goes out of scope, ~Resource() runs automatically
+    return 0;
+}
+\`\`\`
+
+### shared_ptr: Shared Ownership
+
+<code>std::shared_ptr</code> uses <b>reference counting</b> to manage shared ownership. Multiple shared_ptrs can own the same object. The object is deleted when the last shared_ptr owning it is destroyed (reference count reaches zero).
+
+\`\`\`cpp
+#include <iostream>
+#include <memory>
+
+class Task {
+public:
+    Task(int id) : id(id) { std::cout << "Task " << id << " created" << std::endl; }
+    ~Task() { std::cout << "Task " << id << " destroyed" << std::endl; }
+    void execute() { std::cout << "Executing task " << id << std::endl; }
+
+private:
+    int id;
+};
+
+int main() {
+    std::shared_ptr<Task> sp1 = std::make_shared<Task>(1);
+    std::cout << "Ref count: " << sp1.use_count() << std::endl;  // 1
+
+    {
+        std::shared_ptr<Task> sp2 = sp1;    // copy: both sp1 and sp2 now own the Task
+        std::cout << "Ref count: " << sp1.use_count() << std::endl;  // 2
+
+        sp2->execute();
+    }   // sp2 goes out of scope: ref count drops to 1
+
+    std::cout << "Ref count: " << sp1.use_count() << std::endl;  // 1
+
+    // sp1 goes out of scope: ref count drops to 0 → Task 1 is destroyed
+    return 0;
+}
+\`\`\`
+
+### weak_ptr: Breaking Circular References
+
+<code>std::weak_ptr</code> is a non-owning observer of a shared_ptr. It does NOT increase the reference count. Its main use is breaking <b>circular references</b>, where two shared_ptrs point to each other, preventing either from ever being freed.
+
+\`\`\`cpp
+#include <iostream>
+#include <memory>
+
+struct Node {
+    int value;
+    std::shared_ptr<Node> next;        // shared ownership: creates a cycle
+    std::weak_ptr<Node> prev;          // weak: does NOT increase ref count
+
+    Node(int v) : value(v) {
+        std::cout << "Node " << value << " created" << std::endl;
+    }
+
+    ~Node() {
+        std::cout << "Node " << value << " destroyed" << std::endl;
+    }
+};
+
+int main() {
+    // Without weak_ptr, this would leak both nodes
+    auto n1 = std::make_shared<Node>(1);
+    auto n2 = std::make_shared<Node>(2);
+
+    n1->next = n2;                      // n2's ref count: 2 (n1->next + n2)
+    n2->prev = n1;                      // weak_ptr: does NOT increase n1's ref count
+
+    // Access weak_ptr: must lock() to get a shared_ptr
+    if (auto shared = n2->prev.lock()) {  // lock() returns shared_ptr if object still alive
+        std::cout << "Prev value: " << shared->value << std::endl;  // 1
+    }
+
+    // n1 and n2 go out of scope: both destroyed because no cycle
+    return 0;
+}
+\`\`\`
+
+### Move Semantics
+
+<b>Move semantics</b> (C++11) allow transferring resources from one object to another without copying. This is critical for performance (e.g., moving a <code>std::vector</code> instead of copying it) and for unique ownership (<code>unique_ptr</code>).
+
+The key language feature is the <b>rvalue reference</b> (<code>&&</code>), which binds to temporary objects (rvalues). Move constructors and move assignment operators take rvalue references and "steal" the source's resources.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <string>
+
+class Buffer {
+    int *data;
+    size_t size;
+
+public:
+    // Constructor: allocates memory
+    Buffer(size_t s) : size(s), data(new int[s]) {
+        std::cout << "Allocated " << s << " ints" << std::endl;
+    }
+
+    // Destructor: frees memory
+    ~Buffer() {
+        delete[] data;
+        std::cout << "Freed memory" << std::endl;
+    }
+
+    // Copy constructor: deep copy (expensive)
+    Buffer(const Buffer &other) : size(other.size), data(new int[other.size]) {
+        std::copy(other.data, other.data + size, data);
+        std::cout << "Copied " << size << " ints (deep copy)" << std::endl;
+    }
+
+    // Move constructor: steal the resource (cheap)
+    Buffer(Buffer &&other) noexcept
+        : data(other.data), size(other.size) {
+        other.data = nullptr;         // leave the source in a valid empty state
+        other.size = 0;
+        std::cout << "Moved " << size << " ints (no copy)" << std::endl;
+    }
+
+    // Copy assignment
+    Buffer &operator=(const Buffer &other) { /* ... */ return *this; }
+
+    // Move assignment
+    Buffer &operator=(Buffer &&other) noexcept { /* ... */ return *this; }
+};
+
+int main() {
+    Buffer buf1(100);                  // constructor: allocate 100 ints
+
+    Buffer buf2 = buf1;                // copy: allocates new memory, copies all ints
+
+    Buffer buf3 = std::move(buf1);     // move: steals buf1's pointer
+    // buf1 is now empty (data = nullptr)
+    // buf3 owns the original allocation — no allocation, no copying
+
+    return 0;
+}
+\`\`\`
+
+### std::move and Rvalue References
+
+<code>std::move</code> does NOT move anything. It is just a cast that converts its argument to an rvalue reference, enabling move operations. It tells the compiler: "you are allowed to pilfer this object's resources."
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+#include <vector>
+
+int main() {
+    std::vector<int> v1 = {1, 2, 3, 4, 5};
+    std::vector<int> v2;
+
+    std::cout << "v1 size: " << v1.size() << std::endl;  // 5
+
+    // std::move casts v1 to an rvalue reference, triggering vector's move assignment
+    v2 = std::move(v1);
+
+    std::cout << "v2 size: " << v2.size() << std::endl;  // 5 (v2 now has the data)
+    std::cout << "v1 size: " << v1.size() << std::endl;  // 0 (v1 is now empty)
+
+    // Practical use: avoid copies when returning large objects
+    auto makeVector = []() -> std::vector<int> {
+        std::vector<int> result = {1, 2, 3, 4, 5};
+        return result;                 // move is automatic for local variables in return
+    };
+
+    std::vector<int> v3 = makeVector();  // no copy — move is implicit
+
+    // Move into a container (e.g., vector of strings)
+    std::vector<std::string> names;
+    std::string name = "Alexander the Great";
+    names.push_back(std::move(name));    // move string into vector
+    // name is now empty
+
+    return 0;
+}
+\`\`\`
+
+### Comparison: Owning Pointers vs Raw Pointers
+
+| Feature | Raw Pointer | unique_ptr | shared_ptr | weak_ptr |
+|---------|-------------|------------|------------|----------|
+| Ownership | None (must manage manually) | Exclusive | Shared | None (observer) |
+| Copyable | Yes | No (move-only) | Yes (increments ref count) | Yes (no ref count change) |
+| Movable | Yes | Yes | Yes | Yes |
+| Automatic deletion | No | Yes | Yes (when ref count hits 0) | No |
+| Overhead | None | None (same size as raw pointer) | Two pointers (control block) | Two pointers (control block) |
+| Use case | Non-owning observation | Owning a single object | Shared ownership | Breaking cycles, caching |
+
+## Wiring It Together
+
+This program builds a linked list using unique_ptr for exclusive ownership of nodes and weak_ptr for back references. It demonstrates move semantics when inserting nodes and RAII for automatic cleanup.
+
+\`\`\`cpp
+#include <iostream>
+#include <memory>
+
+template <typename T>
+class LinkedList {
+    struct Node {
+        T value;
+        std::unique_ptr<Node> next;      // exclusive ownership of the next node
+        Node *prev;                       // raw pointer: non-owning back reference
+
+        Node(const T &val) : value(val), prev(nullptr) {}
+    };
+
+    std::unique_ptr<Node> head;          // owns the first node
+    Node *tail = nullptr;                // non-owning pointer to the last node
+    size_t count = 0;
+
+public:
+    ~LinkedList() {
+        // unique_ptr destructors fire automatically, deleting all nodes
+        std::cout << "LinkedList destroyed (" << count << " nodes freed)" << std::endl;
+    }
+
+    // Insert at the end (move semantics for the value)
+    void push_back(const T &value) {
+        auto newNode = std::make_unique<Node>(value);
+        newNode->prev = tail;
+
+        if (tail) {
+            tail->next = std::move(newNode);  // move ownership into tail->next
+            tail = tail->next.get();          // update tail pointer
+        } else {
+            tail = newNode.get();
+            head = std::move(newNode);        // move ownership into head
+        }
+        count++;
+    }
+
+    // Remove the last element (move semantics to transfer ownership)
+    void pop_back() {
+        if (!tail) return;
+
+        if (tail->prev) {
+            Node *newTail = tail->prev;
+            newTail->next = nullptr;          // destroy the last node
+            tail = newTail;                   // tail->next's destructor fires here
+        } else {
+            head.reset();                      // delete the only node
+            tail = nullptr;
+        }
+        count--;
+    }
+
+    void print() const {
+        Node *current = head.get();
+        while (current) {
+            std::cout << current->value;
+            if (current->next) std::cout << " -> ";
+            current = current->next.get();     // get raw pointer from unique_ptr
+        }
+        std::cout << " (count=" << count << ")" << std::endl;
+    }
+};
+
+int main() {
+    LinkedList<int> list;
+
+    list.push_back(10);
+    list.push_back(20);
+    list.push_back(30);
+    list.print();                        // 10 -> 20 -> 30 (count=3)
+
+    list.pop_back();
+    list.print();                        // 10 -> 20 (count=2)
+
+    // Move the entire list into another list (transfer ownership)
+    LinkedList<int> otherList = std::move(list);  // move constructor (implicit)
+    otherList.print();                   // 10 -> 20 (count=2)
+
+    // list is now empty — its head is null
+    // When otherList goes out of scope, all nodes are freed automatically (RAII)
+
+    return 0;
+}
+\`\`\`
+`,
+            tags: ["C++", "RAII", "Smart Pointers", "Memory Management"],
+          },
+          {
+            id: "ns-cpp-modern",
+            title: "Modern C++ (C++11/14/17/20/23)",
+            shortDesc: "auto, range-for, lambda, constexpr, concepts, ranges, coroutines, and modules.",
+            difficulty: "advanced",
+            readTimeMin: 18,
+            keyPoints: [
+              "C++11 was a major modernization: auto, lambdas, move semantics, smart pointers, range-for, and constexpr.",
+              "C++14 added generic lambdas, relaxed constexpr, and variable templates.",
+              "C++17 introduced structured bindings, if constexpr, std::optional, std::variant, and string_view.",
+              "C++20 is the largest standard since C++11: concepts, ranges, coroutines, modules, and calendars.",
+              "C++23 adds std::expected, multidimensional subscript, and deducing this.",
+              "Modern C++ emphasizes compile-time computation (constexpr/consteval), type safety, and expressiveness over raw performance.",
+            ],
+            content: `## What's This?
+
+Modern C++ refers to the language evolution from C++11 through C++23, with each standard adding features that fundamentally change how C++ code is written. C++11 (2011) was a watershed moment — it transformed C++ from "C with classes" into a modern language with type inference, lambdas, move semantics, and smart pointers. Subsequent standards (C++14, C++17, C++20, C++23) built on this foundation with compile-time programming, concepts, ranges, coroutines, and modules.
+
+Think of C++ standards like iPhone generations. C++98 was the original iPhone (revolutionary for its time). C++11 was the iPhone 4 (a complete redesign). C++14 is the iPhone 4S (polish). C++17 is the iPhone X (major new features). C++20 is the iPhone 14 Pro (everything modern). Each generation adds capabilities that make code safer, faster, and more expressive.
+
+## The Big Picture
+
+Modern C++ builds on everything that came before: classes, templates, the STL. The evolution is toward safer code (smart pointers replace raw pointers), faster code (move semantics, compile-time computation), and more expressive code (lambdas, ranges, coroutines).
+
+After mastering Modern C++, you should apply these features in all new code: use auto, range-for, smart pointers, lambdas with algorithms, and constexpr where possible. The "Effective Modern C++" book by Scott Meyers is the definitive guide to these features.
+
+## Core Ideas
+
+### C++11: The Modern Foundation
+
+C++11 was a massive update (over 100 new features). The key additions:
+
+| Feature | Syntax | What It Does |
+|---------|--------|-------------|
+| <code>auto</code> | <code>auto x = expr;</code> | Deduces type from initializer |
+| Range-for | <code>for (auto x : container)</code> | Iterates over all elements |
+| Lambda | <code>[](){}</code> | Inline anonymous function |
+| <code>nullptr</code> | <code>int *p = nullptr;</code> | Type-safe null pointer (not 0 or NULL) |
+| <code>constexpr</code> | <code>constexpr int f()</code> | Compile-time evaluation |
+| Move semantics | <code>T(T &&other)</code> | Transfer resources without copying |
+| Smart pointers | <code>unique_ptr</code>, <code>shared_ptr</code> | Automatic memory management |
+| <code>override</code>/<code>final</code> | <code>void f() override;</code> | Explicit virtual control |
+| <code>enum class</code> | <code>enum class Color { Red };</code> | Scoped, type-safe enums |
+| <code>static_assert</code> | <code>static_assert(cond, msg);</code> | Compile-time assertions |
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <string>
+
+int main() {
+    // auto: type deduction
+    auto x = 42;                    // int
+    auto name = std::string("Alice");  // std::string (not const char*)
+    auto vec = std::vector<int>{1, 2, 3};  // std::vector<int>
+
+    // Range-based for: iterate without indices
+    for (auto v : vec) {
+        std::cout << v << " ";
+    }
+
+    // Lambda: inline function
+    auto sum = [](int a, int b) { return a + b; };
+    std::cout << sum(3, 4);         // 7
+
+    // nullptr: type-safe null
+    int *ptr = nullptr;              // not NULL or 0
+
+    // scoped enum (enum class)
+    enum class Status { Ok, Error };
+    Status s = Status::Ok;
+    // if (s == 0) {}  // ERROR: no implicit conversion to int
+
+    // static_assert: compile-time check
+    static_assert(sizeof(int) == 4, "Expected 4-byte ints");
+
+    return 0;
+}
+\`\`\`
+
+### C++14: Refinements
+
+C++14 was a smaller, incremental release. The key additions:
+
+\`\`\`cpp
+#include <iostream>
+#include <memory>
+
+// C++14: Generic lambdas (auto parameters)
+auto adder = [](auto a, auto b) {    // parameters deduced at call site
+    return a + b;
+};
+
+// C++14: Relaxed constexpr (loops, if, switch allowed)
+constexpr int factorial(int n) {
+    int result = 1;
+    for (int i = 2; i <= n; i++) {   // loops allowed in constexpr since C++14
+        result *= i;
+    }
+    return result;
+}
+static_assert(factorial(5) == 120);   // evaluated at compile time
+
+// C++14: Variable templates
+template <typename T>
+constexpr T PI = T(3.14159265358979323846);  // PI<int> = 3, PI<double> = 3.14159...
+
+// C++14: std::make_unique
+auto ptr = std::make_unique<int>(42);   // make_unique was C++11 missing, added in C++14
+
+int main() {
+    std::cout << adder(3, 4);          // 7 (deduces int)
+    std::cout << adder(2.5, 1.5);      // 4.0 (deduces double)
+    std::cout << factorial(5);         // 120
+    std::cout << PI<double>;           // 3.14159...
+    return 0;
+}
+\`\`\`
+
+### C++17: Major Quality-of-Life
+
+C++17 added features that make everyday code cleaner and safer:
+
+\`\`\`cpp
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <optional>
+#include <variant>
+#include <string_view>
+
+int main() {
+    // Structured bindings: unpack tuples/pairs/structs
+    std::map<std::string, int> scores = {{"Alice", 95}, {"Bob", 87}};
+    for (const auto &[name, score] : scores) {   // C++17 structured binding
+        std::cout << name << ": " << score << std::endl;
+    }
+
+    // if constexpr: compile-time branching in templates
+    template <typename T>
+    auto getValue(T t) {
+        if constexpr (std::is_pointer_v<T>) {
+            return *t;                // only compiled when T is a pointer
+        } else {
+            return t;                 // only compiled when T is not a pointer
+        }
+    }
+
+    // std::optional: may or may not contain a value
+    std::optional<int> maybeValue = 42;
+    if (maybeValue.has_value()) {
+        std::cout << maybeValue.value();  // 42
+    }
+    std::optional<int> empty = std::nullopt;  // no value
+
+    // std::variant: type-safe union
+    std::variant<int, double, std::string> v = 42;
+    v = 3.14;                         // now holds a double
+    v = "hello";                      // now holds a string
+
+    // std::visit: apply a visitor to the active variant member
+    std::visit([](auto &&arg) {
+        std::cout << arg;
+    }, v);
+
+    // std::string_view: non-owning string reference (avoids copies)
+    std::string full = "Hello, World!";
+    std::string_view view(full.c_str(), 5);  // views "Hello" without copying
+    std::cout << view;                       // "Hello"
+
+    // [[fallthrough]], [[maybe_unused]], [[nodiscard]] attributes
+    [[maybe_unused]] int unused = 42;         // suppresses compiler warning
+
+    return 0;
+}
+\`\`\`
+
+### C++20: The New Standard
+
+C++20 is the largest standard since C++11, adding major language features:
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <ranges>      // C++20 ranges
+#include <concepts>    // C++20 concepts
+#include <chrono>      // C++20 calendar and timezone
+
+// Concepts: constraints on template parameters
+template <typename T>
+concept Numeric = std::is_arithmetic_v<T>;
+
+// Use concept to constrain a template
+template <Numeric T>
+T add(T a, T b) {
+    return a + b;
+}
+
+// Alternative: abbreviated function template with auto
+Numeric auto multiply(Numeric auto a, Numeric auto b) {
+    return a * b;
+}
+
+// Ranges: composable, lazy operations on collections
+void demonstrate_ranges() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    // Old way: manual loops
+    for (auto n : numbers) {
+        if (n % 2 == 0) std::cout << n * 2 << " ";
+    }
+
+    // C++20 ranges: composable pipeline (lazy — no intermediate vectors)
+    auto result = numbers
+        | std::views::filter([](int n) { return n % 2 == 0; })   // keep evens
+        | std::views::transform([](int n) { return n * 2; });    // double them
+
+    for (auto n : result) {
+        std::cout << n << " ";  // 4 8 12 16 20
+    }
+}
+
+// Coroutines (C++20): functions that can suspend and resume
+// Requires a compiler that supports them and the <coroutine> header
+// Simplified example (actual coroutine types need more boilerplate)
+
+// Calendar and timezone (C++20 chrono)
+void demonstrate_chrono() {
+    using namespace std::chrono;
+
+    auto now = system_clock::now();
+    auto today = floor<days>(now);
+    auto ymd = year_month_day{today};  // C++20: convert to year/month/day
+
+    std::cout << "Year: " << ymd.year() << std::endl;
+}
+
+int main() {
+    std::cout << add(3, 4);             // 7 — constrained by Numeric concept
+    // std::cout << add("hello", " ");  // ERROR: string does not satisfy Numeric
+
+    std::cout << multiply(2.5, 3.0);    // 7.5 — abbreviated concept syntax
+    demonstrate_ranges();
+    return 0;
+}
+\`\`\`
+
+### C++23: The Latest
+
+C++23 is a smaller, incremental release:
+
+| Feature | Description |
+|---------|-------------|
+| <code>std::expected</code> | Error handling with expected value or error (like Rust's <code>Result</code>) |
+| <code>deducing this</code> | Deduce the object type in member functions (removes CRTP boilerplate) |
+| <code>std::print</code> | Python-style <code>print("{}\n", value)</code> |
+| <code>std::mdspan</code> | Multidimensional array view |
+| <code>if consteval</code> | Check if in constant-evaluated context |
+| <code>import std</code> (partial) | Import the standard library as a module |
+
+\`\`\`cpp
+#include <iostream>
+#include <expected>   // C++23
+
+// std::expected: return a value or an error (like Rust's Result)
+std::expected<int, std::string> divide(int a, int b) {
+    if (b == 0) {
+        return std::unexpected("Division by zero");
+    }
+    return a / b;
+}
+
+// Deducing this (C++23): simplify CRTP and const/non-const overloads
+struct MyType {
+    // Before C++23: needed two overloads (const and non-const)
+    // C++23: self parameter deduces the caller's type
+    void print(this auto &self) {
+        std::cout << "MyType object" << std::endl;
+    }
+};
+
+int main() {
+    auto result = divide(10, 2);
+    if (result) {
+        std::cout << *result;              // 5
+    }
+
+    auto error = divide(10, 0);
+    if (!error) {
+        std::cout << error.error();        // "Division by zero"
+    }
+
+    return 0;
+}
+\`\`\`
+
+## Wiring It Together
+
+This program uses Modern C++ features from every standard: auto, lambdas, unique_ptr, structured bindings, optional, string_view, concepts, ranges, and constexpr — all in a single coherent example.
+
+\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <ranges>
+#include <algorithm>
+#include <numeric>
+
+// C++20 concept: any type that can be compared with <
+template <typename T>
+concept LessComparable = requires(T a, T b) { a < b; };
+
+// C++14 relaxed constexpr: compute fibonacci at compile time
+constexpr int fibonacci(int n) {
+    if (n <= 1) return n;             // C++14: allowed in constexpr
+    int a = 0, b = 1;
+    for (int i = 2; i <= n; i++) {    // C++14: loops allowed in constexpr
+        int next = a + b;
+        a = b;
+        b = next;
+    }
+    return b;
+}
+static_assert(fibonacci(10) == 55);    // verified at compile time
+
+// C++20 constrained template: only for LessComparable types
+template <LessComparable T>
+class SortedContainer {
+    std::unique_ptr<std::vector<T>> data;     // C++11: unique_ptr
+
+public:
+    SortedContainer() : data(std::make_unique<std::vector<T>>()) {}
+
+    void add(const T &value) {
+        data->push_back(value);
+    }
+
+    // C++11: range-for, auto
+    // C++17: structured binding for the min/max result
+    void print() const {
+        if (data->empty()) return;
+
+        using namespace std::views;
+        // C++20: ranges pipeline — filter, transform, take
+        auto processed = *data
+            | filter([](const T &v) { return v > T{}; })    // positive values only
+            | transform([](const T &v) { return v * 2; });  // double them
+
+        for (auto v : processed) {
+            std::cout << v << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    // C++17: optional return type (may be empty)
+    std::optional<T> min() const {
+        if (data->empty()) return std::nullopt;
+        return *std::min_element(data->begin(), data->end());
+    }
+};
+
+// C++17: string_view — efficient parameter type for reading strings
+void processName(std::string_view name) {  // no copy, just a view
+    std::cout << "Processing: " << name << std::endl;
+}
+
+int main() {
+    // Compile-time fibonacci
+    std::cout << "fib(10) = " << fibonacci(10) << std::endl;
+
+    // Modern container with unique_ptr and concepts
+    SortedContainer<int> container;
+    container.add(5);
+    container.add(-1);
+    container.add(3);
+    container.add(8);
+    container.add(0);
+    container.print();                       // filter out negatives/zero, double positives
+
+    // optional result
+    auto minVal = container.min();
+    if (minVal) {
+        std::cout << "Min: " << *minVal << std::endl;   // 3 (after filter)
+    }
+
+    // C++17 structured binding with map
+    std::vector<std::pair<std::string, int>> entries = {{"Alice", 95}, {"Bob", 87}};
+    for (const auto &[name, score] : entries) {
+        processName(name);                   // string_view parameter
+        std::cout << score << std::endl;
+    }
+
+    // C++11 lambda + auto
+    auto multiplier = [](auto a, auto b) { return a * b; };
+    std::cout << multiplier(3, 4) << std::endl;      // 12
+    std::cout << multiplier(2.5, 3.0) << std::endl;   // 7.5
+
+    return 0;
+}
+\`\`\`
+`,
+            tags: ["C++", "Modern C++", "C++20", "C++11"],
+          },
+          {
+            id: "ns-cpp-build",
+            title: "Build Systems (CMake, Make)",
+            shortDesc: "CMakeLists.txt, targets, dependencies, generators, vcpkg/conan, and cross-compilation.",
+            difficulty: "advanced",
+            readTimeMin: 16,
+            keyPoints: [
+              "Make is a classic build tool that uses Makefiles with targets, dependencies, and shell commands to build projects.",
+              "CMake is a meta-build system that generates build files (Makefiles, Ninja, Xcode projects) from CMakeLists.txt.",
+              "A CMake target (add_executable, add_library) is the fundamental unit; targets have properties, dependencies, and link interfaces.",
+              "Modern CMake emphasizes target-centric design: use target_include_directories, target_link_libraries instead of global commands.",
+              "Package managers (vcpkg, Conan) handle third-party dependencies declaratively, integrating with CMake via find_package or cmake_args.",
+              "Cross-compilation tells CMake about the target platform via toolchain files, setting the compiler, sysroot, and architecture.",
+            ],
+            content: `## What's This?
+
+Build systems automate the process of compiling and linking source code into executables and libraries. Make (1977) is the classic Unix tool: it reads a Makefile describing targets (what to build), dependencies (what each target needs), and recipes (shell commands to build them). CMake (2000) is a meta-build system: you write a CMakeLists.txt describing your project, and CMake generates build files for your platform (Makefiles on Linux, Ninja files, Xcode projects on macOS, Visual Studio solutions on Windows).
+
+Think of Make as a smart shell script that only rebuilds what changed. Think of CMake as a project description language — you say "I have a library called math and an executable called app that depends on it," and CMake figures out the compiler flags, include paths, and linker commands for your specific platform. Modern C++ projects almost always use CMake; raw Makefiles are rare outside of small or legacy projects.
+
+## The Big Picture
+
+Build systems sit between your source code and the compiler. They solve the problem of incremental builds (only recompiling changed files), dependency management (finding and linking libraries), and platform portability (different compilers, flags, and linkers on different OSes).
+
+After mastering build systems, the next topics are package managers (vcpkg, Conan for managing third-party dependencies), CI/CD (GitHub Actions, GitLab CI for automated building and testing), and cross-compilation (building for ARM from an x86 machine).
+
+## Core Ideas
+
+### Make: The Classic Build Tool
+
+A Makefile consists of rules: <code>target: dependencies</code> followed by a recipe (shell commands indented with tabs). Make checks timestamps: if a dependency is newer than the target, the recipe runs.
+
+\`\`\`makefile
+# Makefile — simple C++ project
+# Variables
+CXX := g++
+CXXFLAGS := -std=c++20 -Wall -O2
+LDFLAGS :=
+SRCS := main.cpp math.cpp
+OBJS := $(SRCS:.cpp=.o)
+TARGET := app
+
+# Default target (first in file)
+all: $(TARGET)
+
+# Link object files into executable
+$(TARGET): $(OBJS)
+        $(CXX) $(LDFLAGS) -o $@ $^
+
+# Compile .cpp to .o (pattern rule)
+%.o: %.cpp
+        $(CXX) $(CXXFLAGS) -c -o $@ $<
+
+# Clean build artifacts
+clean:
+        rm -f $(OBJS) $(TARGET)
+
+# PHONY tells Make these targets don't represent files
+.PHONY: all clean
+\`\`\`
+
+\`\`\`bash
+# Build the project
+make            # runs the 'all' target (builds app)
+make clean      # removes object files and executable
+make -j4        # build with 4 parallel jobs (faster on multi-core)
+\`\`\`
+
+### CMakeLists.txt: The Modern Approach
+
+CMake reads <code>CMakeLists.txt</code> files and generates build files for your platform. A project has a root CMakeLists.txt and optionally subdirectory ones.
+
+\`\`\`cmake
+# CMakeLists.txt — minimal project
+cmake_minimum_required(VERSION 3.20)   # require CMake 3.20+
+
+project(MathApp VERSION 1.0.0 LANGUAGES CXX)  # project name, version, language
+
+set(CMAKE_CXX_STANDARD 20)             # use C++20
+set(CMAKE_CXX_STANDARD_REQUIRED ON)    # fail if compiler doesn't support C++20
+
+# Create an executable target from source files
+add_executable(app main.cpp math.cpp)
+\`\`\`
+
+\`\`\`bash
+# Build with CMake (out-of-source build: keep source tree clean)
+mkdir build && cd build     # create separate build directory
+cmake ..                    # configure: generate build files (Makefiles)
+cmake --build .             # build: runs make/ninja
+./app                       # run the executable
+\`\`\`
+
+### Targets: The Core of Modern CMake
+
+Modern CMake is target-centric. A <b>target</b> is created by <code>add_executable</code> or <code>add_library</code>. You attach properties (include directories, compile definitions, linked libraries) to targets using <code>target_*</code> commands. This is superior to global commands like <code>include_directories()</code> because it enforces encapsulation.
+
+\`\`\`cmake
+cmake_minimum_required(VERSION 3.20)
+project(MyApp)
+
+# Library target: reusable unit
+add_library(math_lib STATIC math.cpp)     # STATIC = .a file, SHARED = .so, OBJECT = .o
+target_include_directories(math_lib PUBLIC include)
+# PUBLIC: consumers of math_lib also get this include directory
+# PRIVATE: only math_lib itself gets this include directory
+# INTERFACE: consumers get it, but math_lib itself doesn't need it
+
+# Executable target
+add_executable(app main.cpp)
+
+# Link app to math_lib: app inherits math_lib's PUBLIC includes
+target_link_libraries(app PRIVATE math_lib)
+# app can #include "math.h" because math_lib exported its include directory
+
+# Add compile definitions per target
+target_compile_definitions(app PRIVATE APP_VERSION=1.0)
+
+# Specify C++ standard per target
+set_target_properties(app PROPERTIES CXX_STANDARD 20)
+\`\`\`
+
+### Generators
+
+CMake is a meta-build system: it generates files for different build tools. The <b>generator</b> determines which build tool CMake produces files for.
+
+| Generator | Build Tool | Platform | Typical Use |
+|-----------|-----------|----------|-------------|
+| <code>Unix Makefiles</code> | <code>make</code> | Linux/macOS | Default on Unix |
+| <code>Ninja</code> | <code>ninja</code> | All | Faster than Make (parallel by default) |
+| <code>Visual Studio 17 2022</code> | MSBuild | Windows | IDE integration |
+| <code>Xcode</code> | xcodebuild | macOS | IDE integration |
+
+\`\`\`bash
+# Choose a generator with -G
+cmake -G Ninja ..                     # use Ninja instead of Make
+cmake -G "Visual Studio 17 2022" ..   # Visual Studio solution
+
+# Build (works with any generator)
+cmake --build .                       # calls make/ninja/msbuild as appropriate
+cmake --build . --parallel 4          # build with 4 parallel jobs
+cmake --build . --target clean        # run the 'clean' target
+\`\`\`
+
+### Package Managers: vcpkg and Conan
+
+Third-party libraries (Boost, fmt, spdlog, OpenCV) need to be found and linked. Package managers automate this.
+
+\`\`\`cmake
+# Option A: vcpkg (Microsoft) — manifest mode
+# vcpkg.json in your project:
+# {
+#   "name": "my-app",
+#   "version": "1.0",
+#   "dependencies": [ "fmt", "boost-algorithm" ]
+# }
+
+# CMakeLists.txt — vcpkg provides the toolchain file
+cmake_minimum_required(VERSION 3.20)
+project(MyApp)
+
+# find_package finds and configures the package
+find_package(fmt CONFIG REQUIRED)       # REQUIRED: fail if not found
+find_package(Boost REQUIRED COMPONENTS algorithm)
+
+add_executable(app main.cpp)
+target_link_libraries(app PRIVATE fmt::fmt Boost::algorithm)
+\`\`\`
+
+\`\`\`bash
+# Building with vcpkg
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build build
+\`\`\`
+
+\`\`\`cmake
+# Option B: Conan (JFrog) — conanfile.txt
+# [requires]
+# fmt/10.1.0
+# boost/1.83.0
+#
+# [generators]
+# CMakeDeps
+# CMakeToolchain
+
+# Then in CMakeLists.txt:
+find_package(fmt CONFIG REQUIRED)
+find_package(Boost REQUIRED COMPONENTS algorithm)
+\`\`\`
+
+\`\`\`bash
+# Building with Conan
+conan install . --output-folder=build --build=missing
+cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake
+cmake --build .
+\`\`\`
+
+### Cross-Compilation
+
+<b>Cross-compilation</b> means building on one platform (e.g., x86 Linux) for another (e.g., ARM Linux). CMake uses a <b>toolchain file</b> that tells it about the target compiler, flags, and system root.
+
+\`\`\`cmake
+# toolchain-arm.cmake — toolchain file for ARM cross-compilation
+set(CMAKE_SYSTEM_NAME Linux)                  # target OS
+set(CMAKE_SYSTEM_PROCESSOR arm)               # target architecture
+
+set(CMAKE_C_COMPILER arm-linux-gnueabihf-gcc)
+set(CMAKE_CXX_COMPILER arm-linux-gnueabihf-g++)
+
+set(CMAKE_SYSROOT /path/to/arm/sysroot)       # target's root filesystem
+set(CMAKE_FIND_ROOT_PATH \${CMAKE_SYSROOT})
+
+# Only search for libraries and headers in the sysroot (not the host system)
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+\`\`\`
+
+\`\`\`bash
+# Cross-compile using the toolchain file
+cmake -B build-arm -S . -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake
+cmake --build build-arm
+# Produces an ARM executable — copy it to the ARM device and run
+\`\`\`
+
+## Wiring It Together
+
+This CMake project builds a library and an executable, uses vcpkg for dependencies, and is configured for both native and cross-compilation.
+
+\`\`\`cmake
+# CMakeLists.txt — complete project
+cmake_minimum_required(VERSION 3.20)
+
+# Project declaration
+project(ImageProcessor
+    VERSION 1.0.0
+    DESCRIPTION "Image processing library and CLI"
+    LANGUAGES CXX
+)
+
+# ── C++ Standard ──────────────────────────────────────────────────────
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# ── Dependencies (vcpkg) ──────────────────────────────────────────────
+find_package(fmt CONFIG REQUIRED)           # string formatting library
+find_package(stb REQUIRED)                  # image loading library
+
+# ── Library target ─────────────────────────────────────────────────────
+add_library(imgproc STATIC
+    src/filter.cpp
+    src/resize.cpp
+    src/color.cpp
+)
+
+# Library's public headers
+target_include_directories(imgproc PUBLIC include)
+
+# Library's private dependencies (only used during library compilation)
+target_link_libraries(imgproc PRIVATE stb::stb)
+
+# Library's public dependencies (inherited by consumers)
+target_link_libraries(imgproc PUBLIC fmt::fmt)
+
+# ── Executable target ──────────────────────────────────────────────────
+add_executable(imgedit src/main.cpp)
+
+# Link executable to the library (also gets fmt via imgproc's PUBLIC link)
+target_link_libraries(imgedit PRIVATE imgproc)
+
+# Executable-specific compile definitions
+target_compile_definitions(imgedit PRIVATE
+    APP_VERSION="\${PROJECT_VERSION}"
+    $<$<CONFIG:Debug>:DEBUG_BUILD>          # generator expression: Debug only
+)
+
+# ── Install rules ──────────────────────────────────────────────────────
+install(TARGETS imgproc imgedit
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+)
+install(DIRECTORY include/ DESTINATION include)
+
+# ── Testing ────────────────────────────────────────────────────────────
+if(BUILD_TESTING)
+    enable_testing()
+    add_executable(tests test/test_filter.cpp)
+    target_link_libraries(tests PRIVATE imgproc Catch2::Catch2)
+    add_test(NAME filter_tests COMMAND tests)
+endif()
+\`\`\`
+
+\`\`\`bash
+# Build the project
+cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build build
+./build/imgedit input.jpg output.jpg
+
+# Cross-compile for ARM
+cmake -B build-arm -S . \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain-arm.cmake \
+    -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build build-arm
+
+# Run tests
+cd build && ctest
+\`\`\`
+`,
+            tags: ["C++", "CMake", "Build Systems"],
+          },
+          {
+            id: "ns-cpp-frameworks",
+            title: "Popular Frameworks (Qt, Boost, Unreal)",
+            shortDesc: "Qt widgets/QML, Boost libraries, Unreal Engine scripting, and embedded (Arduino, Zephyr).",
+            difficulty: "advanced",
+            readTimeMin: 15,
+            keyPoints: [
+              "Qt is a cross-platform GUI framework with widgets (desktop-style) and QML (declarative, JavaScript-like UI).",
+              "Boost is a collection of peer-reviewed, high-quality C++ libraries — many became part of the C++ standard (smart_ptr, regex, filesystem).",
+              "Unreal Engine uses C++ for game logic with a reflective macro system (UFUNCTION, UPROPERTY) and Blueprints visual scripting.",
+              "Arduino uses a simplified C++ with setup()/loop() for embedded microcontroller programming.",
+              "Zephyr is a professional RTOS for embedded systems with proper C++ support and Linux-like device drivers.",
+              "These frameworks demonstrate C++'s versatility across desktop, gaming, and embedded domains.",
+            ],
+            content: `## What's This?
+
+C++ frameworks extend the language for specific domains. Qt provides cross-platform GUI applications (desktop, mobile, embedded). Boost offers production-quality general-purpose libraries. Unreal Engine uses C++ for high-performance game development. On the embedded side, Arduino simplifies microcontroller programming, while Zephyr provides a professional RTOS (Real-Time Operating System) for IoT devices.
+
+Think of these frameworks as domain-specific power tools. C++ is the motor (fast, reliable, low-level), and each framework is an attachment that makes it useful for a specific job: Qt for windows and buttons, Boost for algorithms and data structures, Unreal for 3D rendering and physics, Arduino for blinking LEDs, and Zephyr for industrial IoT.
+
+## The Big Picture
+
+These frameworks build on core C++: classes, templates, RAII, the STL. They add domain-specific abstractions (QWidget for GUI, AActor for game objects, GPIO pin for embedded). Understanding one framework helps you learn others because they follow C++ idioms (RAII for resource management, signals/slots for communication).
+
+After this overview, choose the framework relevant to your goal: Qt for desktop/mobile apps, Unreal for games, Boost for general-purpose C++ work, Zephyr/Arduino for embedded.
+
+## Core Ideas
+
+### Qt: Cross-Platform GUI
+
+Qt is a full-featured framework for building cross-platform applications with native look and feel. It has two UI technologies: <b>Qt Widgets</b> (traditional, desktop-style) and <b>Qt Quick / QML</b> (declarative, JavaScript-like, suitable for mobile and modern UIs).
+
+Key concepts:
+- <b>Signals and slots</b>: type-safe communication between objects (Qt's own observer pattern, not C++ standard)
+- <b>QObject</b>: base class for all Qt objects (enables signals/slots, object tree with parent-child ownership)
+- <b>MOC</b> (Meta-Object Compiler): preprocesses Qt macros (Q_OBJECT, signals, slots) to generate reflection code
+
+\`\`\`cpp
+#include <QApplication>     // Qt Widgets GUI application
+#include <QPushButton>      // clickable button widget
+#include <QVBoxLayout>      // vertical layout manager
+#include <QLabel>           // text label
+#include <QLineEdit>        // single-line text input
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);          // creates the Qt application (event loop)
+
+    QWidget window;                        // main window widget
+    window.setWindowTitle("Hello Qt");
+
+    QVBoxLayout *layout = new QVBoxLayout(&window);  // layout arranges children vertically
+
+    QLabel *label = new QLabel("Enter your name:");
+    QLineEdit *input = new QLineEdit;      // text input field
+    QPushButton *button = new QPushButton("Greet");
+
+    layout->addWidget(label);
+    layout->addWidget(input);
+    layout->addWidget(button);
+
+    // Connect button click to a lambda (C++11 lambda used as a slot)
+    QObject::connect(button, &QPushButton::clicked, [&]() {
+        label->setText("Hello, " + input->text() + "!");
+    });
+
+    window.show();                          // make the window visible
+    return app.exec();                      // start the event loop
+}
+\`\`\`
+
+### QML: Declarative UI
+
+QML is a JSON-like declarative language for UI design. It integrates with C++ backend logic.
+
+\`\`\`qml
+// main.qml — QML declarative UI
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+
+ApplicationWindow {
+    visible: true
+    width: 400
+    height: 300
+    title: "QML Demo"
+
+    Column {
+        anchors.centerIn: parent
+        spacing: 10
+
+        TextField {
+            id: nameInput
+            placeholderText: "Enter your name"
+        }
+
+        Button {
+            text: "Greet"
+            onClicked: {
+                greeting.text = "Hello, " + nameInput.text + "!"
+            }
+        }
+
+        Text {
+            id: greeting
+            text: ""
+            font.pixelSize: 18
+        }
+    }
+}
+\`\`\`
+
+### Boost: Production-Quality Libraries
+
+Boost is a collection of over 160 libraries that extend C++'s capabilities. Many Boost libraries were later adopted into the C++ standard: <code>smart_ptr</code>, <code>regex</code>, <code>filesystem</code>, <code>thread</code>, <code>asio</code>, <code>bidirectional_map</code> (bimap), and more.
+
+| Boost Library | What It Does | Became Standard? |
+|--------------|-------------|------------------|
+| <code>Boost.Asio</code> | Networking and asynchronous I/O | Partially (std::net in C++26) |
+| <code>Boost.Beast</code> | HTTP and WebSocket built on Asio | No (but popular) |
+| <code>Boost.Filesystem</code> | File system operations | Yes (std::filesystem in C++17) |
+| <code>Boost.Regex</code> | Regular expressions | Yes (std::regex in C++11) |
+| <code>Boost.SmartPtr</code> | Shared_ptr, weak_ptr, intrusive_ptr | Yes (std::shared_ptr in C++11) |
+| <code>Boost.Bimap</code> | Bidirectional map (lookup by key or value) | No |
+| <code>Boost.MultiIndex</code> | Containers with multiple indexes | No |
+| <code>Boost.Optional</code> | Optional value (may or may not exist) | Yes (std::optional in C++17) |
+| <code>Boost.Variant</code> | Type-safe union | Yes (std::variant in C++17) |
+| <code>Boost.Asio</code> | Networking I/O | In progress (std::executors) |
+
+\`\`\`cpp
+#include <boost/asio.hpp>            // networking library
+#include <boost/beast.hpp>           // HTTP/WebSocket on top of Asio
+#include <boost/filesystem.hpp>      // filesystem operations (similar to std::filesystem)
+#include <boost/bimap.hpp>           // bidirectional map
+#include <iostream>
+
+namespace fs = boost::filesystem;
+namespace asio = boost::asio;
+
+int main() {
+    // Boost.Filesystem: cross-platform file operations
+    fs::path p = "/home/user/docs/report.txt";
+    std::cout << "Parent: " << p.parent_path() << std::endl;   // /home/user/docs
+    std::cout << "Stem: " << p.stem() << std::endl;            // report
+    std::cout << "Extension: " << p.extension() << std::endl;  // .txt
+
+    if (fs::exists(p)) {
+        std::cout << "File size: " << fs::file_size(p) << std::endl;
+    }
+
+    // Boost.Bimap: look up by either key or value
+    boost::bimap<std::string, int> phonebook;
+    phonebook.insert({"Alice", 123});
+    phonebook.insert({"Bob", 456});
+
+    auto keyIt = phonebook.left.find("Alice");
+    if (keyIt != phonebook.left.end()) {
+        std::cout << keyIt->second;    // 123 (look up by name)
+    }
+
+    auto valIt = phonebook.right.find(456);
+    if (valIt != phonebook.right.end()) {
+        std::cout << valIt->second;    // "Bob" (look up by number)
+    }
+
+    return 0;
+}
+\`\`\`
+
+### Unreal Engine: Game Development
+
+Unreal Engine uses C++ as its primary scripting language, extended with a <b>reflective macro system</b>. The engine compiles macro annotations into metadata that enables garbage collection, serialization, and Blueprint (visual scripting) integration.
+
+Key concepts:
+- <b>AActor</b>: base class for anything that can be placed in the world
+- <b>UPROPERTY</b>: marks a member variable for reflection, garbage collection, and Blueprint exposure
+- <b>UFUNCTION</b>: marks a function for reflection and Blueprint exposure
+- <b>UCLASS</b>: marks a class for reflection
+- <b>Blueprint</b>: visual scripting system that compiles to C++
+
+\`\`\`cpp
+// MyCharacter.h — Unreal Engine C++ header
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "MyCharacter.generated.h"
+
+// UCLASS marks this class for Unreal's reflection system
+UCLASS()
+class MYGAME_API AMyCharacter : public ACharacter {
+    GENERATED_BODY()    // required macro for UObject-based classes
+
+public:
+    // UPROPERTY: exposed to reflection, Blueprint read/write, garbage collection
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float Health = 100.0f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+    float MaxHealth = 100.0f;
+
+    // UFUNCTION: callable from Blueprint
+    UFUNCTION(BlueprintCallable, Category = "Actions")
+    void TakeDamage(float DamageAmount);
+
+    // BlueprintNativeEvent: can be overridden in Blueprint
+    UFUNCTION(BlueprintNativeEvent, Category = "Actions")
+    void Die();
+};
+
+// MyCharacter.cpp — implementation
+#include "MyCharacter.h"
+
+void AMyCharacter::TakeDamage(float DamageAmount) {
+    Health -= DamageAmount;
+    if (Health <= 0) {
+        Die();                      // calls C++ or Blueprint override
+    }
+}
+
+void AMyCharacter::Die_Implementation() {   // _Implementation for BlueprintNativeEvent
+    // Default behavior (can be overridden in Blueprint)
+    Destroy();
+}
+\`\`\`
+
+### Arduino: Embedded Made Simple
+
+<b>Arduino</b> is an open-source electronics platform. The programming environment is a simplified C++ with two mandatory functions: <code>setup()</code> (runs once at startup) and <code>loop()</code> (runs repeatedly). The Arduino core library provides functions like <code>digitalWrite</code>, <code>analogRead</code>, and <code>delay</code>.
+
+\`\`\`cpp
+// Arduino sketch — blinks an LED and reads a temperature sensor
+const int LED_PIN = 13;          // built-in LED pin
+const int SENSOR_PIN = A0;       // analog input pin for temperature sensor
+
+void setup() {
+    pinMode(LED_PIN, OUTPUT);     // configure LED_PIN as an output
+    Serial.begin(9600);           // initialize serial communication at 9600 baud
+}
+
+void loop() {
+    digitalWrite(LED_PIN, HIGH);  // turn LED on (HIGH = 5V)
+    delay(500);                   // wait 500 milliseconds
+
+    digitalWrite(LED_PIN, LOW);   // turn LED off (LOW = 0V)
+    delay(500);                   // wait 500 milliseconds
+
+    // Read analog sensor (0-1023) and convert to voltage
+    int sensorValue = analogRead(SENSOR_PIN);
+    float voltage = sensorValue * (5.0f / 1023.0f);
+    float temperature = voltage * 100.0f;  // LM35: 10mV per degree C
+
+    Serial.print("Temperature: ");
+    Serial.println(temperature);
+
+    // delay(1000);  // uncomment to slow down sensor readings
+}
+\`\`\`
+
+### Zephyr: Professional Embedded RTOS
+
+<b>Zephyr</b> is a scalable, secure Real-Time Operating System (RTOS) for IoT devices. It supports C++ applications with threads, semaphores, device drivers, and networking. Unlike Arduino, Zephyr is designed for production embedded systems with multiple tasks and complex hardware.
+
+\`\`\`cpp
+// Zephyr C++ application — blinks LED and reads sensor using a work queue
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(main);            // set up logging
+
+// Thread stack (allocate memory for the sensor thread)
+#define STACK_SIZE 1024
+K_THREAD_STACK_DEFINE(sensor_stack, STACK_SIZE);
+
+// Thread data structure
+struct k_thread sensor_thread_data;
+
+// Sensor thread function
+void sensor_thread(void *, void *, void *) {
+    const struct device *dev = DEVICE_DT_GET(DT_NODELABEL(sensor));
+    if (!device_is_ready(dev)) {
+        LOG_ERR("Sensor not ready");
+        return;
+    }
+
+    while (1) {
+        int val;
+        // Read sensor (driver-specific API)
+        // val = read_sensor(dev);
+        LOG_INF("Sensor value: %d", val);
+        k_sleep(K_SECONDS(1));      // sleep for 1 second
+    }
+}
+
+int main() {
+    const struct device *led_dev;
+    led_dev = DEVICE_DT_GET(DT_NODELABEL(led0));
+    gpio_pin_configure(led_dev, 0, GPIO_OUTPUT);
+
+    // Start the sensor thread
+    k_thread_create(&sensor_thread_data, sensor_stack, STACK_SIZE,
+                    sensor_thread, NULL, NULL, NULL,
+                    5, 0, K_NO_WAIT);   // priority=5, no delay
+
+    while (1) {
+        gpio_pin_set(led_dev, 0, 1);    // LED on
+        k_sleep(K_MSEC(500));
+        gpio_pin_set(led_dev, 0, 0);    // LED off
+        k_sleep(K_MSEC(500));
+    }
+
+    return 0;
+}
+\`\`\`
+
+### Framework Comparison
+
+| Framework | Domain | Key Abstraction | Build System | Typical Project Size |
+|-----------|--------|----------------|--------------|---------------------|
+| Qt | Desktop, Mobile, Embedded | QObject, signals/slots | CMake + qmake | Medium to large |
+| Boost | General-purpose | Header/template libraries | Boost.Build or CMake | Small (library) |
+| Unreal Engine | Games, Simulation | AActor, UPROPERTY, Blueprints | UnrealBuildTool | Large to very large |
+| Arduino | Hobbyist Embedded | setup()/loop(), pinMode/digitalWrite | Arduino IDE / PlatformIO | Tiny to small |
+| Zephyr | Professional Embedded | k_thread, device driver model | CMake + west | Medium to large |
+
+## Wiring It Together
+
+This example connects Qt (GUI) with Boost (networking) to build a simple chat client that sends messages over a WebSocket connection. It demonstrates how C++ frameworks compose together.
+
+\`\`\`cpp
+#include <QApplication>
+#include <QMainWindow>
+#include <QTextEdit>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <boost/beast.hpp>        // HTTP/WebSocket
+#include <boost/asio.hpp>
+#include <iostream>
+#include <string>
+
+namespace asio = boost::asio;
+namespace beast = boost::beast;
+using tcp = boost::asio::ip::tcp;
+
+class ChatWindow : public QMainWindow {
+    Q_OBJECT                      // Qt meta-object macro
+
+    QTextEdit *chatLog;
+    QLineEdit *messageInput;
+    QPushButton *sendButton;
+
+    asio::io_context io_context;
+    tcp::resolver resolver;
+    beast::websocket::stream<tcp::socket> ws;
+
+public:
+    ChatWindow() : QMainWindow(),
+        resolver(io_context),
+        ws(io_context) {
+
+        setWindowTitle("C++ Chat Client");
+        resize(400, 500);
+
+        QWidget *central = new QWidget(this);
+        setCentralWidget(central);
+
+        QVBoxLayout *layout = new QVBoxLayout(central);
+
+        chatLog = new QTextEdit;
+        chatLog->setReadOnly(true);
+        layout->addWidget(chatLog);
+
+        messageInput = new QLineEdit;
+        messageInput->setPlaceholderText("Type a message...");
+        layout->addWidget(messageInput);
+
+        sendButton = new QPushButton("Send");
+        layout->addWidget(sendButton);
+
+        // Qt signal-slot: connect UI events to handlers
+        connect(sendButton, &QPushButton::clicked, this, &ChatWindow::sendMessage);
+        connect(messageInput, &QLineEdit::returnPressed, this, &ChatWindow::sendMessage);
+
+        // Connect to WebSocket server
+        connectToServer("localhost", "8080");
+    }
+
+    void connectToServer(const std::string &host, const std::string &port) {
+        try {
+            auto endpoints = resolver.resolve(host, port);
+            asio::connect(ws.next_layer(), endpoints);
+            ws.handshake(host, "/chat");
+            chatLog->append("Connected to chat server.");
+        } catch (const std::exception &e) {
+            chatLog->append("Connection failed: " + QString(e.what()));
+        }
+    }
+
+    void sendMessage() {
+        std::string text = messageInput->text().toStdString();
+        if (text.empty()) return;
+
+        try {
+            ws.write(asio::buffer(text));
+            chatLog->append("You: " + QString::fromStdString(text));
+            messageInput->clear();
+        } catch (const std::exception &e) {
+            chatLog->append("Send failed: " + QString(e.what()));
+        }
+    }
+
+    ~ChatWindow() {
+        if (ws.is_open()) {
+            ws.close(beast::websocket::close_code::normal);
+        }
+    }
+};
+
+int main(int argc, char *argv[]) {
+    QApplication app(argc, argv);
+    ChatWindow window;
+    window.show();
+    return app.exec();
+}
+\`\`\`
+`,
+            tags: ["C++", "Qt", "Boost", "Unreal Engine"],
+          },
         ],
       },
       // ── Ruby / Rails ─────────────────────────────────────────────────────
@@ -87379,16 +90191,176 @@ class TodoController {
         title: "Ruby / Rails",
         description: "Ruby from syntax to Rails — blocks, metaprogramming, MVC, Active Record, testing, and deployment.",
         topics: [
-          { id: "ns-rb-syntax", title: "Ruby Syntax & Basics", shortDesc: "Variables, data types, strings, symbols, arrays, hashes, puts/gets, and irb.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-control-flow", title: "Control Flow & Methods", shortDesc: "if/unless/case, loops, method definitions, splat arguments, and implicit return values.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-oop", title: "Objects & Classes", shortDesc: "Class definition, initialize, attr_accessor, inheritance, modules, mixins, and self.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-blocks", title: "Blocks, Procs & Lambdas", shortDesc: "Blocks with do/end and {}, yield, Proc.new, lambda, and closures.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-enumerable", title: "Enumerable & Collections", shortDesc: "each, map, select, reduce, sort_by, group_by, chaining, and lazy enumerators.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-gems", title: "Gems & Bundler", shortDesc: "Gemfile, bundler, gem creation, RubyGems.org, and versioning (semver).", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-rails-mvc", title: "Rails MVC Basics", shortDesc: "Project structure, rails generate, routes, controllers, views, and the request lifecycle.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-activerecord", title: "Active Record & Migrations", shortDesc: "Models, associations, validations, callbacks, query interface, and schema migrations.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-testing", title: "Testing (RSpec, Minitest)", shortDesc: "describe/it, let, subject, factories (FactoryBot), mocking, and system tests.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-rb-deploy", title: "Deployment & Tooling", shortDesc: "Capistrano, Docker, Render/Heroku, RubyMine, RuboCop, and security (Brakeman).", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          {
+            id: "ns-rb-syntax",
+            title: "Ruby Syntax & Basics",
+            shortDesc: "Variables, data types, strings, symbols, arrays, hashes, puts/gets, and irb.",
+            difficulty: "foundational",
+            readTimeMin: 14,
+            keyPoints: [
+              "Ruby is a dynamically-typed, interpreted language designed for programmer happiness and readability.",
+              "Variables do not need type declarations; local variables start with a lowercase letter or underscore.",
+              "Strings support interpolation (#{expr}) and multiple quoting styles; symbols (:name) are immutable, interned identifiers.",
+              "Arrays are dynamically-sized, can hold mixed types; hashes are key-value stores with default values.",
+              "puts prints with a newline, gets reads input, gets.chomp removes the trailing newline.",
+              "irb (Interactive Ruby) is the REPL for experimenting with Ruby code interactively.",
+            ],
+            content: `## What's This?\n\nRuby is a dynamic, object-oriented programming language created by Yukihiro "Matz" Matsumoto in 1995. It was designed to make programmers productive and happy — the language reads almost like English. Everything in Ruby is an object, including numbers and strings. There are no primitives, no static types, and no compile step. You write your code and run it directly.\n\nThink of Ruby as a conversation with the computer. Instead of telling it "int x = 5;", you say "x = 5". Instead of "System.out.println(...)", you say "puts ...". The language tries to get out of your way and let you express ideas clearly. This philosophy, called "Matz's Principle," is summed up as: "Ruby is designed to make programmers happy."\n\nRuby runs on its virtual machine (YARV — Yet Another Ruby VM) and is most famous for powering Ruby on Rails, one of the most influential web frameworks ever created.\n\n## The Big Picture\n\nRuby syntax builds on the idea that everything is an object. Unlike C or Java, there are no primitive types — even <code>5</code> is an instance of <code>Integer</code>. This means you can call methods on literals: <code>5.times { puts "hi" }</code>. The language uses <b>duck typing</b>: if it walks like a duck and quacks like a duck, it is a duck. You don't check types; you check whether an object responds to a method.\n\nAfter mastering syntax basics, the natural next steps are control flow (if/unless/case, loops), objects and classes, and then Ruby's unique features: blocks, Procs, and lambdas.\n\n## Core Ideas\n\n### Variables and Naming Conventions\n\nRuby variables do not need type declarations. The naming convention tells you the scope and purpose of the variable.\n\n| Kind | Example | Scope |\n|------|---------|-------|\n| Local variable | <code>name</code>, <code>count</code> | Available within the current block/method |\n| Instance variable | <code>@name</code> | Belongs to an object (visible to all methods of the object) |\n| Class variable | <code>@@count</code> | Shared across all instances of a class and its subclasses |\n| Global variable | <code>$debug</code> | Available everywhere (use sparingly) |\n| Constant | <code>MAX_SIZE</code> | Starts with capital letter; warns if reassigned |\n\n\`\`\`ruby\nname = "Alice"          # local variable\n@age = 30               # instance variable\n@@total_users = 100     # class variable\n$debug_mode = true      # global variable\nPI = 3.14159            # constant (warning if reassigned)\n\`\`\`\n\n### Data Types\n\nEverything in Ruby is an object. Here are the fundamental types:\n\n\`\`\`ruby\n# Numbers\ncount = 42              # Integer\nprice = 19.99           # Float (double-precision)\nlarge = 1_000_000       # underscores are ignored — makes large numbers readable\n\n# String\nname = "Alice"          # double-quoted string (interpolation works)\nchar = 'A'              # single-quoted string (no interpolation)\n\n# Symbol (immutable, interned identifier)\nstatus = :active        # symbol — like a lightweight string, used for keys and identifiers\n\n# Boolean\nis_admin = true         # TrueClass\nis_active = false       # FalseClass\nnothing = nil           # NilClass (represents absence of value)\n\n# Array (ordered collection)\ncolors = ["red", "green", "blue"]\n\n# Hash (key-value pairs)\nuser = { "name" => "Alice", "age" => 30 }    # hash rocket syntax\nuser = { name: "Alice", age: 30 }             # symbol key syntax (JSON-like)\n\`\`\`\n\n### Strings and Interpolation\n\nRuby strings are powerful and flexible. Double-quoted strings support <b>interpolation</b>: embedding expressions with <code>#{expr}</code>.\n\n\`\`\`ruby\nname = "Alice"\nage = 30\n\n# String interpolation: #{expression} is replaced with its value\nmessage = "Hello, #{name}! You are #{age} years old."\nputs message  # prints: Hello, Alice! You are 30 years old.\n\n# Single-quoted strings do NOT interpolate\nliteral = 'Hello, #{name}!'  # literal text: Hello, #{name}!\n\n# Multiline strings (heredoc)\ntext = <<~TEXT\n  This is a multiline\n  string in Ruby.\nTEXT\n\n# Common string methods\nputs "hello".upcase          # "HELLO"\nputs "HELLO".downcase        # "hello"\nputs "hello".capitalize      # "Hello"\nputs "hello".length          # 5\nputs "hello".reverse         # "olleh"\nputs "hello".include?("ll")  # true (methods ending in ? return boolean)\n\`\`\`\n\n### Symbols\n\nA <b>symbol</b> is an immutable, reusable identifier. Think of it as a lightweight string that is stored only once in memory. Symbols are commonly used as hash keys and for referencing method names.\n\n\`\`\`ruby\n# Symbols vs Strings\n:name.object_id == :name.object_id    # true (same object — interned)\n"name".object_id == "name".object_id  # false (different objects)\n\n# Symbols as hash keys (preferred over strings)\nuser = { name: "Alice", age: 30 }    # keys are symbols :name and :age\nputs user[:name]                       # access by symbol, not string\n\n# Converting between strings and symbols\n"hello".to_sym    # :hello\n:hello.to_s       # "hello"\n\`\`\`\n\n### Arrays\n\nArrays are ordered, integer-indexed collections that can hold any type of object. They grow and shrink dynamically.\n\n\`\`\`ruby\n# Creating arrays\nfruits = ["apple", "banana", "cherry"]\nmixed = [1, "hello", :sym, 3.14]      # arrays can hold mixed types\nempty = []\n\n# Accessing elements\nputs fruits[0]        # "apple" (index starts at 0)\nputs fruits[-1]       # "cherry" (negative index counts from the end)\nputs fruits.first     # "apple"\nputs fruits.last      # "cherry"\n\n# Adding and removing\nfruits << "date"      # append: ["apple", "banana", "cherry", "date"]\nfruits.push("elderberry")  # also append\nfruits.pop            # remove and return the last element\nfruits.unshift("apricot")  # prepend\nfruits.shift          # remove and return the first element\n\n# Common array methods\nputs fruits.length    # number of elements\nputs fruits.include?("banana")  # true\nputs fruits.sort      # sorted copy\nputs fruits.reverse   # reversed copy\n\`\`\`\n\n### Hashes\n\nA hash is a collection of key-value pairs. Ruby hashes preserve insertion order (since Ruby 1.9).\n\n\`\`\`ruby\n# Creating hashes\nuser = {\n  "name" => "Alice",\n  "age" => 30,\n  "admin" => true\n}\n\n# Symbol key syntax (preferred)\nuser = {\n  name: "Alice",\n  age: 30,\n  admin: true\n}\n\n# Accessing values\nputs user[:name]      # "Alice"\nputs user[:missing]   # nil (returns nil for missing keys)\n\n# Default value for missing keys\ncounts = Hash.new(0)  # default value is 0 (instead of nil)\ncounts[:apples] += 1  # works: counts[:apples] was 0, now 1\n\n# Adding and updating\nuser[:email] = "alice@example.com"  # add new key\nuser[:age] = 31                      # update existing key\n\n# Iterating over hashes\nuser.each do |key, value|\n  puts \"#{key}: #{value}\"\nend\n\`\`\`\n\n### puts/gets: Basic I/O\n\n<code>puts</code> prints output followed by a newline. <code>gets</code> reads a line from standard input (including the trailing newline). <code>gets.chomp</code> removes the newline.\n\n\`\`\`ruby\nputs "Hello, world!"    # prints "Hello, world!" with a newline\n\nprint "Enter your name: "   # print without newline\nname = gets                  # reads a line: "Alice\\n"\nname = name.chomp            # remove trailing newline: "Alice"\n\n# Idiomatic Ruby: chained call\nname = gets.chomp\n\nputs "Hello, #{name}!"\n\`\`\`\n\n### irb: Interactive Ruby\n\n<b>irb</b> (Interactive Ruby) is the Ruby REPL (Read-Eval-Print Loop). It reads your Ruby expressions, evaluates them, and prints the result. It is essential for experimenting with code.\n\n\`\`\`bash\n$ irb\nirb(main):001:0> name = "Alice"\n=> \"Alice\"\nirb(main):002:0> name.upcase\n=> \"ALICE\"\nirb(main):003:0> 5.times { print \"hi \" }\nhi hi hi hi hi => 5\nirb(main):004:0> exit\n\`\`\`\n\n## Wiring It Together\n\nThis program asks for user information, stores it in a hash, and prints a formatted report using arrays, strings, symbols, and interpolation.\n\n\`\`\`ruby\nputs "=== User Registration ===\\n\\n"\n\n# Collect user input\nprint "Enter your name: "\nname = gets.chomp\n\nprint "Enter your age: "\nage = gets.chomp.to_i      # chomp then convert to integer\n\nprint "Enter your favorite color: "\nfavorite_color = gets.chomp\n\n# Store in a hash with symbol keys (data storage)\nuser = {\n  name: name,\n  age: age,\n  favorite_color: favorite_color,\n  created_at: Time.now     # current timestamp\n}\n\n# Array of interests (collection example)\ninterests = []\nprint "Enter an interest (or press Enter to skip): "\ninterest = gets.chomp\nif !interest.empty?\n  interests << interest\nend\n\n# Add interests to the user hash\nuser[:interests] = interests\n\n# Generate a report using string interpolation\nputs \"\\n=== User Report ===\"\nputs \"Name: #{user[:name]}\"\nputs \"Age: #{user[:age]}\"\nputs \"Color: #{user[:favorite_color]}\"\nputs \"Registered: #{user[:created_at]}\"\n\n# Use array methods to display interests\nif user[:interests].any?            # check if array has elements\n  puts \"Interests: #{user[:interests].join(', ')}\"\nelse\n  puts \"No interests listed.\"\nend\n\n# Symbol vs string demonstration\nputs \"\\nKey types:\"\nuser.each_key do |key|\n  puts \"  #{key} is a #{key.class}\"   # shows all keys are Symbol\nend\n\`\`\`\n`,
+            tags: ["Ruby", "Scripting", "Dynamic Languages"],
+          },
+          {
+            id: "ns-rb-control-flow",
+            title: "Control Flow & Methods",
+            shortDesc: "if/unless/case, loops, method definitions, splat arguments, and implicit return values.",
+            difficulty: "foundational",
+            readTimeMin: 14,
+            keyPoints: [
+              "if/unless/elsif/else control conditional execution; unless is the opposite of if (runs when condition is false).",
+              "case/when is Ruby's switch statement — more flexible than C/Java, supports ranges and multiple values per when.",
+              "Loops: while, until, times, each, loop with break/next/redo control iteration.",
+              "Methods are defined with def/end; the last expression evaluated is returned implicitly (no explicit return needed).",
+              "Splat (*args) captures multiple arguments into an array; double splat (**kwargs) captures keyword arguments into a hash.",
+              "Methods can take default arguments, keyword arguments, and blocks — making Ruby's method system very flexible.",
+            ],
+            content: `## What's This?\n\nControl flow determines the order in which code executes. Ruby provides the usual suspects (if/else, loops) but also adds unique constructs like <code>unless</code> (the opposite of if), <code>until</code> (the opposite of while), and <code>case</code> with pattern matching. Methods in Ruby are defined with <code>def</code> and have a distinctive feature: the last expression evaluated in a method is automatically returned — no explicit <code>return</code> needed.\n\nThink of control flow as the decision-making and repetition machinery of your program. If statements are forks in the road. Loops are roundabouts that you go around until you reach your exit. Methods are subroutines — you write a recipe once and call it from anywhere.\n\nRuby's approach to control flow emphasizes readability. Instead of "if not," you write "unless." Instead of "while not," you write "until." These make the code read like English: "do this unless it is raining" is clearer than "do this if it is not raining."\n\n## The Big Picture\n\nControl flow and methods build on Ruby's syntax basics (variables, types, expressions). They are the tools that turn simple variable assignments into real programs that make decisions and repeat work.\n\nAfter mastering control flow and methods, the next topics are objects and classes (wrapping methods into reusable components), blocks and Procs (passing behavior as arguments), and then Enumerable (the powerful iteration module).\n\n## Core Ideas\n\n### if, elsif, else, unless\n\nThe <code>if</code> statement executes a block when a condition is true. <code>unless</code> is its inverse: it executes when the condition is false. Both can be used as <b>modifiers</b> at the end of a line for concise code.\n\n\`\`\`ruby\n# Standard if/elsif/else\nscore = 85\n\nif score >= 90\n  grade = "A"\nelsif score >= 80\n  grade = "B"\nelsif score >= 70\n  grade = "C"\nelse\n  grade = "F"\nend\n\nputs grade   # "B"\n\n# unless: execute when condition is FALSE\ntemperature = 30\nputs "It is cold" unless temperature > 20\n# prints "It is cold" (30 > 20 is true, so unless does NOT execute)\n\n# Unless with else (less common but possible)\nunless temperature > 20\n  puts "It is cold"\nelse\n  puts "It is warm"\nend\n\n# if/unless as modifiers (inline syntax)\nputs "High score!" if score > 80      # prints: High score!\nputs "Freezing" unless temperature > 0  # does not print\n\`\`\`\n\n### case/when\n\n<code>case</code> is Ruby's multi-branch conditional. It is more flexible than C's <code>switch</code>: you can use ranges, multiple values, and even a case expression that returns a value.\n\n\`\`\`ruby\n# Basic case\ncolor = "red"\n\nresult = case color\nwhen "red"\n  "Stop"\nwhen "yellow"\n  "Caution"\nwhen "green"\n  "Go"\nelse\n  "Unknown color"\nend\n\nputs result   # "Stop"\n\n# Case with ranges\nage = 25\n\ngeneration = case age\nwhen 0..12 then "Child"    # range: 0 to 12 inclusive\nwhen 13..19 then "Teenager"\nwhen 20..64 then "Adult"\nelse "Senior"\nend\n\n# Multiple values per when\nday = "tuesday"\nweekend = case day\nwhen "saturday", "sunday"   # matches either value\n  true\nelse\n  false\nend\n\n# Case without expression (syntax sugar for if/elsif)\nsound = case\nwhen age < 13\n  "Play"\nwhen age < 18\n  "Permission required"\nelse\n  "Allowed"\nend\n\`\`\`\n\n### while, until, for, loop\n\nRuby has several looping constructs. <code>while</code> runs while a condition is true. <code>until</code> runs while a condition is false (the opposite of while). <code>loop</code> runs forever unless you break out of it.\n\n\`\`\`ruby\n# while loop: runs while condition is true\ncount = 3\nwhile count > 0\n  puts "Countdown: #{count}"\n  count -= 1\nend\n# prints: Countdown: 3, Countdown: 2, Countdown: 1\n\n# until loop: runs while condition is FALSE (inverse of while)\ntimer = 0\nuntil timer == 3\n  puts "Timer: #{timer}"\n  timer += 1\nend\n# prints: Timer: 0, Timer: 1, Timer: 2\n\n# for loop (less idiomatic in Ruby — each is preferred)\nfor i in 1..3\n  puts i\nend\n\n# loop with control keywords: break, next, redo\ncount = 0\nloop do\n  count += 1\n  next if count == 3        # skip this iteration, go to next\n  puts "Count: #{count}"\n  break if count >= 5       # exit the loop entirely\nend\n# prints: Count: 1, Count: 2, Count: 4, Count: 5\n# (3 is skipped, 5 exits)\n\n# Integer#times — idiomatic Ruby for fixed repetition\n3.times { puts "Ruby!" }    # prints "Ruby!" three times\n\`\`\`\n\n### Method Definitions\n\nMethods are defined with <code>def</code>, take parameters (optionally with defaults), and return the value of the last expression.\n\n\`\`\`ruby\n# Basic method with implicit return\ndef greet(name)\n  "Hello, #{name}!"\nend\nputs greet("Alice")        # "Hello, Alice!"\n\n# Method with explicit return (use sparingly)\ndef max(a, b)\n  return a if a > b\n  b                        # implicit return when a <= b\nend\n\n# Default arguments\ndef multiply(a, b = 1)     # b defaults to 1 if not provided\n  a * b\nend\nputs multiply(5)           # 5 (b defaults to 1)\nputs multiply(5, 3)        # 15\n\n# Multiple parameters\ndef describe_person(name, age, city = "Unknown")\n  "#{name} is #{age} years old from #{city}."\nend\n\n# Predicate methods (ending in ?) return boolean\ndef even?(n)\n  n % 2 == 0\nend\n\`\`\`\n\n### Splat Arguments\n\n<b>Splat</b> (<code>*args</code>) captures a variable number of arguments into an array. You can also use splat to destructure arrays.\n\n\`\`\`ruby\n# Splat in method definition: captures extra args as an array\ndef sum(*numbers)\n  numbers.sum               # numbers is an array of all passed values\nend\n\nputs sum(1, 2, 3)           # 6\nputs sum(10, 20)            # 30\nputs sum(5)                 # 5\n\n# Splat in method call: expands an array into individual args\ens = [1, 2, 3]\nputs sum(*nums)             # same as sum(1, 2, 3)\n\n# Double splat (**): captures keyword arguments as a hash\ndef configure(**options)\n  puts options.inspect       # {:host=>"localhost", :port=>3000}\nend\n\nconfigure(host: "localhost", port: 3000)\n\n# Combined: positional, splat, keyword, block\ndef complex(a, b, *middle, c:, **opts, &block)\n  puts a, b, middle, c, opts\n  block.call if block\nend\n\ncomplex(1, 2, 3, 4, c: 5, debug: true) do\n  puts "done"\nend\n\`\`\`\n\n### Keyword Arguments\n\nRuby allows named arguments with default values. They make method calls self-documenting and let you omit arguments you do not need.\n\n\`\`\`ruby\ndef create_user(name:, age: 18, admin: false)\n  { name: name, age: age, admin: admin }\nend\n\n# Keyword arguments are passed by name (order does not matter)\nuser1 = create_user(name: "Alice", age: 30)\nuser2 = create_user(name: "Bob", admin: true)  # age defaults to 18\n\nputs user1    # {:name=>"Alice", :age=>30, :admin=>false}\nputs user2    # {:name=>"Bob", :age=>18, :admin=>true}\n\`\`\`\n\n### Implicit Return and Guard Clauses\n\nThe last expression in a method is automatically returned. This leads to a style called <b>guard clauses</b>: early returns for edge cases, with the main logic at the end.\n\n\`\`\`ruby\ndef factorial(n)\n  return 1 if n <= 1       # guard clause: handle edge case early\n  n * factorial(n - 1)     # main logic (implicit return)\nend\n\nputs factorial(5)           # 120\n\ndef classify_temperature(temp)\n  return "freezing" if temp <= 0\n  return "cold" if temp < 15\n  return "warm" if temp < 25\n  "hot"                      # implicit return for remaining case\nend\n\`\`\`\n\n## Wiring It Together\n\nThis program models a simple bank account system using methods with splat, keyword arguments, default values, and guard clauses — all connected through control flow.\n\n\`\`\`ruby\ndef validate_transaction(amount:, type: :withdrawal, balance: 0)\n  # Guard clauses for invalid cases\n  return [:error, "Amount must be positive"] if amount <= 0\n  return [:error, "Insufficient funds"] if type == :withdrawal && amount > balance\n  [:ok, nil]                 # implicit return for valid case\nend\n\n# Splat: process multiple transactions\ndef process_transactions(balance, *transactions)\n  history = []\n\n  transactions.each do |txn|\n    # txn is a hash with keyword-like structure\n    amount = txn[:amount]\n    type = txn[:type] || :withdrawal\n\n    status, message = validate_transaction(\n      amount: amount,\n      type: type,\n      balance: balance\n    )\n\n    if status == :ok\n      case type\n      when :deposit\n        balance += amount\n      when :withdrawal\n        balance -= amount\n      end\n      history << { type: type, amount: amount, new_balance: balance }\n    else\n      puts "Transaction failed: #{message}"\n      break unless continue_on_error\n    end\n  end\n\n  { balance: balance, history: history }\nend\n\n# Keyword argument method with defaults\ndef print_statement(name:, transactions:, initial_balance: 0)\n  puts \"\\n=== Statement for #{name} ===\"\n  puts \"Initial balance: $#{initial_balance}\\n\\n\"\n\n  total_deposits = 0\n  total_withdrawals = 0\n\n  transactions.each do |txn|\n  type = txn[:type] || :withdrawal\n  amount = txn[:amount]\n\n    sign = case type\n    when :deposit\n      total_deposits += amount\n      "+"\n    when :withdrawal\n      total_withdrawals += amount\n      "-"\n    else\n      " "\n    end\n\n    puts \"  #{sign}$#{amount} (#{type})\"\n  end\n\n  puts "\\n  Deposits: $#{total_deposits}"\n  puts "  Withdrawals: $#{total_withdrawals}"\n  puts "  Final balance: $#{initial_balance + total_deposits - total_withdrawals}"\nend\n\n# ── Usage ────────────────────────────────────────────────────────────\ninitial = 1000\n\n# Splat: pass multiple transactions\ntxns = [\n  { type: :withdrawal, amount: 200 },\n  { type: :deposit, amount: 500 },\n  { type: :withdrawal, amount: 100 },\n  { type: :withdrawal, amount: 9999 }  # will fail (insufficient funds)\n]\n\nresult = process_transactions(initial, *txns)\nputs "Final balance: $#{result[:balance]}"\n\n# Keyword argument gives clear, self-documenting call\nprint_statement(\n  name: "Alice",\n  transactions: result[:history],\n  initial_balance: initial\n)\n\`\`\`\n`,
+            tags: ["Ruby", "Control Flow", "Methods"],
+          },
+          {
+            id: "ns-rb-oop",
+            title: "Objects & Classes",
+            shortDesc: "Class definition, initialize, attr_accessor, inheritance, modules, mixins, and self.",
+            difficulty: "foundational",
+            readTimeMin: 16,
+            keyPoints: [
+              "A class is a blueprint for objects; use class/end to define one, and new to create instances.",
+              "initialize is the constructor — called automatically when an object is created with ClassName.new.",
+              "attr_accessor, attr_reader, attr_writer create getter/setter methods automatically.",
+              "Inheritance (<) lets a subclass get all methods from its superclass; Ruby supports single inheritance.",
+              "Modules (module/end) provide namespacing and mixins (include, extend, prepend) — Ruby's alternative to multiple inheritance.",
+              "self refers to the current object; its value changes depending on the context (instance method, class method, module).",
+            ],
+            content: `## What's This?\n\nIn Ruby, everything is an object — numbers, strings, classes, even <code>nil</code>. A <b>class</b> is a blueprint for creating objects (instances). It defines the methods and data that instances will have. Ruby's object model is simple but powerful: classes are open (you can reopen and modify any class at any time), objects are deeply introspectable, and the entire system is built on message passing (you send messages to objects, and objects respond with methods).\n\nThink of a class like a cookie cutter. The class defines the shape (methods and data). Each cookie (object instance) has that shape but can have different fillings (instance variable values). You can also modify the cookie cutter while cookies are being made — Ruby classes are "open," meaning you can add methods to any class at runtime, even built-in ones like <code>String</code> or <code>Integer</code>.\n\nRuby does NOT support multiple inheritance (a class having two parents). Instead, it uses <b>modules</b> and <b>mixins</b>: modules define methods that can be "mixed in" to any class, giving you the benefits of multiple inheritance without the complexity (the diamond problem).\n\n## The Big Picture\n\nObjects and classes build on Ruby's core concept: everything is an object. Previously you learned about data types — those are all objects too. Now you will learn to create your own objects with custom behavior.\n\nAfter mastering classes, the next topics are blocks and Procs (passing behavior to methods), modules as mixins (sharing behavior across classes), and then Ruby's metaprogramming capabilities (method_missing, define_method, and the eigenclass).\n\n## Core Ideas\n\n### Defining a Class\n\nA class is defined with <code>class ClassName</code> and ends with <code>end</code>. Class names must start with a capital letter (constant). Instance variables start with <code>@</code> and belong to each object.\n\n\`\`\`ruby\nclass Dog\n  def initialize(name, breed)\n    @name = name        # @name is an instance variable (belongs to this object)\n    @breed = breed\n  end\n\n  def bark\n    "#{@name} says Woof!\"\n  end\n\n  def info\n    \"#{@name} is a #{@breed}\"\n  end\nend\n\n# Create instances with .new\ndog1 = Dog.new("Buddy", "Golden Retriever")\ndog2 = Dog.new("Max", "Beagle")\n\nputs dog1.bark       # "Buddy says Woof!"\nputs dog2.info       # "Max is a Beagle"\n\`\`\`\n\n### initialize: The Constructor\n\nThe <code>initialize</code> method is called automatically when you call <code>ClassName.new</code>. It is Ruby's constructor. Any arguments you pass to <code>.new</code> are forwarded to <code>initialize</code>.\n\n\`\`\`ruby\nclass Book\n  def initialize(title, author, pages = 0)\n    @title = title\n    @author = author\n    @pages = pages\n    @read = false\n  end\n\n  def mark_as_read!\n    @read = true\n  end\n\n  def read?\n    @read\n  end\nend\n\nbook = Book.new("1984", "George Orwell", 328)\nputs book.read?             # false\nbook.mark_as_read!\nputs book.read?             # true\n\`\`\`\n\n### attr_accessor, attr_reader, attr_writer\n\nInstance variables are private by default. To expose them, you need <b>getter</b> and <b>setter</b> methods. Ruby provides macros that generate these automatically.\n\n| Macro | Generates |\n|-------|-----------|\n| <code>attr_reader :name</code> | <code>def name; @name; end</code> (read only) |\n| <code>attr_writer :name</code> | <code>def name=(val); @name = val; end</code> (write only) |\n| <code>attr_accessor :name</code> | Both reader and writer |\n\n\`\`\`ruby\nclass Person\n  attr_reader :name         # generates getter: name\n  attr_writer :age          # generates setter: age=\n  attr_accessor :email      # generates both getter and setter\n\n  def initialize(name, age, email)\n    @name = name\n    @age = age\n    @email = email\n  end\nend\n\nperson = Person.new("Alice", 30, "alice@example.com")\nputs person.name            # "Alice" (getter from attr_reader)\nperson.email = "new@example.com\"  # setter from attr_accessor\nperson.age = 31             # setter from attr_writer\n# puts person.age           # ERROR: no getter for age!\n\`\`\`\n\n### Inheritance\n\nA class can inherit from one other class using the <code><</code> operator. The subclass gets all methods from the superclass and can override them.\n\n\`\`\`ruby\nclass Animal\n  def initialize(name)\n    @name = name\n  end\n\n  def speak\n    \"#{@name} makes a sound\"\n  end\nend\n\n# Cat inherits from Animal (gets all Animal methods)\nclass Cat < Animal\n  def speak              # overrides the parent method\n    \"#{@name} says Meow!\"\n  end\nend\n\nclass Dog < Animal\n  def speak\n    \"#{@name} says Woof!\"\n  end\nend\n\ncat = Cat.new("Whiskers")\ndog = Dog.new("Buddy")\n\nputs cat.speak           # "Whiskers says Meow!"\nputs dog.speak           # "Buddy says Woof!"\n\`\`\`\n\n### super: Calling the Parent\n\n<code>super</code> calls the same-named method in the parent class. This lets you extend the parent's behavior rather than replacing it entirely.\n\n\`\`\`ruby\nclass Vehicle\n  def initialize(make, model, year)\n    @make = make\n    @model = model\n    @year = year\n  end\n\n  def start\n    \"Engine starting\"\n  end\nend\n\nclass Car < Vehicle\n  def initialize(make, model, year, doors)\n    super(make, model, year)   # calls Vehicle's initialize\n    @doors = doors\n  end\n\n  def start\n    \"#{super} and doors locking\"  # calls Vehicle#start, then extends it\n  end\nend\n\ncar = Car.new("Toyota", "Camry", 2020, 4)\nputs car.start   # "Engine starting and doors locking"\n\`\`\`\n\n### Modules and Mixins\n\nA <b>module</b> is a collection of methods and constants. Unlike classes, modules cannot be instantiated (you cannot do <code>MyModule.new</code>). Modules serve two purposes: <b>namespacing</b> (grouping related methods) and <b>mixins</b> (sharing methods across classes).\n\n<b>include</b> adds module methods as instance methods. <b>extend</b> adds them as class methods. <b>prepend</b> adds them before the class's own methods (so the module overrides the class).\n\n\`\`\`ruby\n# Namespacing module: groups related classes/constants\nmodule Vehicles\n  class Car\n    def drive\n      "Driving a car"\n    end\n  end\n\n  class Truck\n    def drive\n      "Driving a truck"\n    end\n  end\nend\n\ncar = Vehicles::Car.new     # :: accesses the Car class inside the Vehicles module\nputs car.drive              # "Driving a car"\n\n# Mixin module: adds behavior to any class\nmodule Swimmable\n  def swim\n    "#{@name} is swimming!\"\n  end\nend\n\nclass Fish\n  include Swimmable    # adds swim as an instance method\n\n  def initialize(name)\n    @name = name\n  end\nend\n\nclass Duck\n  include Swimmable\n\n  def initialize(name)\n    @name = name\n  end\nend\n\nnemo = Fish.new("Nemo")\ndonald = Duck.new("Donald")\n\nputs nemo.swim         # "Nemo is swimming!"\nputs donald.swim       # "Donald is swimming!"\n\n# You can include multiple modules — this is Ruby's substitute for multiple inheritance\nmodule Flyable\n  def fly\n    "#{@name} is flying!\"\n  end\nend\n\nclass Duck\n  include Flyable       # now Duck has both swim and fly\nend\n\nputs donald.fly         # "Donald is flying!"\n\`\`\`\n\n### self\n\n<code>self</code> is a special variable that always refers to the current object. Its value depends on context:\n\n| Context | What self refers to |\n|---------|-------------------|\n| Inside an instance method | The object that called the method |\n| Inside a class definition (outside methods) | The class itself |\n| Inside a class method (using <code>self.method</code>) | The class |\n| At the top level (outside any class) | <code>main</code> (a special object) |\n\n\`\`\`ruby\nclass Counter\n  attr_reader :count\n\n  def initialize\n    @count = 0\n  end\n\n  def increment\n    @count += 1\n    self                      # return self to enable method chaining\n  end\n\n  # Class method (defined with self.method_name)\n  def self.description\n    "A Counter tracks how many times something happens"\n  end\nend\n\nc = Counter.new\nc.increment.increment.increment   # chaining works because increment returns self\nputs c.count                       # 3\nputs Counter.description           # class method called on the class itself\n\`\`\`\n\n## Wiring It Together\n\nThis program builds a simple library system with classes, modules, inheritance, and attr_accessor — demonstrating all core OOP concepts together.\n\n\`\`\`ruby\n# Module: adds printable behavior to any class\nmodule Printable\n  def to_s\n    members = self.instance_variables.map do |var|\n      "#{var}: #{instance_variable_get(var)}\"\n    end\n    "#{self.class}: #{members.join(', ')}\"\n  end\nend\n\n# Base class\nclass Item\n  include Printable\n\n  attr_reader :title, :year\n\n  def initialize(title, year)\n    @title = title\n    @year = year\n    @checked_out = false\n  end\n\n  def check_out\n    if @checked_out\n      false                    # already checked out\n    else\n      @checked_out = true\n      true\n    end\n  end\n\n  def check_in\n    @checked_out = false\n  end\n\n  def available?\n    !@checked_out\n  end\nend\n\n# Book inherits from Item\nclass Book < Item\n  attr_reader :author, :pages\n\n  def initialize(title, author, year, pages)\n    super(title, year)         # calls Item's initialize\n    @author = author\n    @pages = pages\n  end\nend\n\n# DVD inherits from Item\nclass DVD < Item\n  attr_reader :director, :runtime\n\n  def initialize(title, director, year, runtime)\n    super(title, year)\n    @director = director\n    @runtime = runtime\n  end\nend\n\n# Module: adds search capability\nmodule Searchable\n  def search(query)\n    @items.select { |item| item.title.downcase.include?(query.downcase) }\n  end\nend\n\n# Library uses a module to add search\nclass Library\n  include Searchable\n\n  attr_reader :name\n\n  def initialize(name)\n    @name = name\n    @items = []\n  end\n\n  def add_item(item)\n    @items << item\n  end\n\n  def checkout(title)\n    item = @items.find { |i| i.title == title && i.available? }\n    if item\n      item.check_out\n      \"Checked out: #{title}\"\n    else\n      \"Not available: #{title}\"\n    end\n  end\n\n  def return_item(title)\n    item = @items.find { |i| i.title == title }\n    if item\n      item.check_in\n      \"Returned: #{title}\"\n    else\n      "Item not found: #{title}\"\n    end\n  end\n\n  def available_items\n    @items.select(&:available?)  # using Symbol#to_proc shorthand\n  end\nend\n\n# ── Usage ────────────────────────────────────────────────────────────\nlibrary = Library.new("City Library")\n\nlibrary.add_item(Book.new("1984", "George Orwell", 1949, 328))\nlibrary.add_item(Book.new("To Kill a Mockingbird", "Harper Lee", 1960, 281))\nlibrary.add_item(DVD.new("Inception", "Christopher Nolan", 2010, 148))\nlibrary.add_item(DVD.new("The Matrix", "Wachowskis", 1999, 136))\n\nputs library.search("the\").map(&:to_s)  # search by title\n\nputs library.checkout(\"1984\")\nputs library.available_items.map(&:to_s)\nputs library.return_item(\"1984\")\nputs library.available_items.map(&:to_s)\n\`\`\`\n`,
+            tags: ["Ruby", "Object-Oriented Programming", "Classes"],
+          },
+          {
+            id: "ns-rb-blocks",
+            title: "Blocks, Procs & Lambdas",
+            shortDesc: "Blocks with do/end and {}, yield, Proc.new, lambda, and closures.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "A block is a chunk of code passed to a method, enclosed in do/end (multi-line) or {} (single-line).",
+              "yield calls the block from inside a method; block_given? checks if a block was provided.",
+              "Proc.new converts a block to an object; &block captures a block as a named parameter.",
+              "lambda is like a Proc but checks argument count and returns from the lambda itself (not the enclosing method).",
+              "Both Procs and lambdas are closures: they capture the surrounding variables at the time of creation.",
+              "Symbol#to_proc (&:method) is a shorthand for creating blocks that call a method on each element.",
+            ],
+            content: `## What's This?\n\nBlocks are one of Ruby's most distinctive features. A <b>block</b> is a chunk of code that you can pass to a method — like an anonymous function but with special syntax. Blocks are everywhere in Ruby: <code>array.each { |x| puts x }</code>, <code>File.open("file.txt") { |f| f.read }</code>, <code>3.times { puts "hi" }</code>. They enable a style called "internal iteration" where the method controls the loop and you just provide the logic.\n\nThink of blocks as sticky notes that you hand to a method. The sticky note says "when you find something interesting, do this." The method decides when and how many times to execute the note. The block does not run immediately — it is stored and called later using <code>yield</code>.\n\nProcs and lambdas are blocks turned into objects. They can be stored in variables, passed between methods, and called like methods. They are <b>closures</b>, meaning they capture and remember the variables from the surrounding scope where they were created, even if that scope no longer exists.\n\n## The Big Picture\n\nBlocks build on Ruby's method system. They are the foundation of Ruby's most powerful features: iteration (each, map, select), resource management (File.open with a block ensures the file is closed), and callbacks.\n\nAfter mastering blocks, Procs, and lambdas, the next topics are Enumerable (the module that makes all collection operations possible through blocks), and then metaprogramming (using blocks and closures for DSLs and callbacks).\n\n## Core Ideas\n\n### Blocks with do/end and {}\n\nA block is code enclosed in <code>do...end</code> (for multi-line) or <code>{...}</code> (for single-line). It is passed to a method and called by that method.\n\n\`\`\`ruby\n# Multi-line block with do/end\n[1, 2, 3].each do |n|\n  puts n * 2\nend\n\n# Single-line block with {}\n[1, 2, 3].each { |n| puts n * 2 }\n\n# Convention: use {} for single-line, do/end for multi-line\n# Also use {} for functional blocks (map, select) and do/end for side-effects (each)\n\`\`\`\n\n### yield: Calling the Block\n\nInside a method, <code>yield</code> calls the block that was passed. You can pass arguments to <code>yield</code>, and <code>yield</code> returns the block's result.\n\n\`\`\`ruby\ndef greet\n  puts "Before block"\n  yield if block_given?    # call the block only if one was given\n  puts "After block"\nend\n\ngreet { puts "Hello from the block!\" }\n# Output:\n# Before block\n# Hello from the block!\n# After block\n\n# Passing arguments to yield\ndef repeat(n)\n  n.times { |i| yield(i) }  # calls the block n times, passing the index\nend\n\nrepeat(3) { |i| puts \"Index: #{i}\" }\n# Index: 0\n# Index: 1\n# Index: 2\n\n# yield returns the block's result\ndef with_timing\n  start = Time.now\n  result = yield               # capture the block's return value\n  elapsed = Time.now - start\n  [result, elapsed]\nend\n\nresult, time = with_timing do\n  sleep(0.5)\n  "Done"\nend\nputs result   # "Done"\nputs time     # ~0.5\n\`\`\`\n\n### block_given? and &block\n\n<code>block_given?</code> checks whether the caller passed a block. <code>&block</code> captures the block as a Proc object (named parameter).\n\n\`\`\`ruby\ndef process(data)\n  if block_given?\n    yield(data)\n  else\n    "No block given"\n  end\nend\n\nputs process([1, 2, 3]) { |arr| arr.map { |x| x * 2 } }  # [2, 4, 6]\nputs process([1, 2, 3])                                    # "No block given"\n\n# Capturing a block as a named parameter with &\ndef logger(&block)\n  puts "Logging started"\n  result = block.call("INFO", "Processing...\")  # explicit .call on the Proc\n  puts "Logging finished: #{result}\"\nend\n\nlogger do |level, msg|\n  puts "[#{level}] #{msg}\"\n  "Logged successfully\"\nend\n\`\`\`\n\n### Proc.new: Block to Object\n\n<code>Proc.new</code> creates a Proc object from a block. Procs do not check argument count (missing arguments become <code>nil</code>), and <code>return</code> in a Proc returns from the enclosing method (not just the Proc).\n\n\`\`\`ruby\n# Creating a Proc\nsquare = Proc.new { |x| x * x }\ndouble = proc { |x| x * 2 }       # Kernel#proc is equivalent to Proc.new\n\nputs square.call(5)   # 25  (explicit .call)\nputs double[3]        # 6   (using [] is another way to call)\nputs square.(4)       # 16  (using .() is another way)\nputs double === 7     # 14  (using === is another way)\n\n# Proc does NOT check argument count\np = proc { |a, b| [a, b] }\nputs p.call(1).inspect         # [1, nil] — b becomes nil\nputs p.call(1, 2, 3).inspect   # [1, 2] — extra arg is ignored\n\n# return in a Proc returns from the ENCLOSING method\ndef test_proc_return\n  p = proc { return \"early return\" }  # this returns from test_proc_return!\n  p.call\n  "This never runs"\nend\n\nputs test_proc_return   # "early return"\n\`\`\`\n\n### lambda: Strict Proc\n\n<code>lambda</code> creates a Lambda, which is stricter than a Proc: it checks argument count, and <code>return</code> returns from the lambda itself, not the enclosing method.\n\n\`\`\`ruby\n# Creating a lambda\nsquare = lambda { |x| x * x }\nsquare = ->(x) { x * x }           # stabby lambda syntax (preferred)\n\nputs square.call(5)   # 25\nputs square.(4)       # 16\n\n# Lambda checks argument count\nadd = ->(a, b) { a + b }\nputs add.call(1, 2)   # 3\n# add.call(1)         # ArgumentError: wrong number of arguments (given 1, expected 2)\n# add.call(1, 2, 3)   # ArgumentError: wrong number of arguments\n\n# return in a lambda returns from the lambda ONLY\ndef test_lambda_return\n  l = -> { return \"from lambda\" }   # this returns from the lambda\n  result = l.call\n  "Lambda returned: #{result}\"       # this runs!\nend\n\nputs test_lambda_return   # "Lambda returned: from lambda"\n\`\`\`\n\n### Proc vs Lambda: Key Differences\n\n| Feature | Proc | Lambda |\n|---------|------|--------|\n| Argument checking | None (missing = nil, extras ignored) | Strict (wrong count = ArgumentError) |\n| Behavior of <code>return</code> | Returns from enclosing method | Returns from the lambda itself |\n| Creation syntax | <code>proc { }</code> or <code>Proc.new { }</code> | <code>lambda { }</code> or <code>->() { }</code> |\n| Common use | Callbacks, iterator bodies | Stricter function objects, when argument validation matters |\n\`\`\`ruby\n# Practical difference\ndef check(what)\n  p = proc { return \"proc escaped!\" }\n  l = lambda { return \"lambda returns here\" }\n\n  if what == :proc\n    result = p.call\n    return result       # never reached\n  else\n    result = l.call     # lambda returns here\n    result               # implicit return\n  end\nend\n\nputs check(:proc)      # "proc escaped!" (return escapes)\nputs check(:lambda)    # "lambda returns here" (return stays in lambda)\n\`\`\`\n\n### Closures\n\nBoth Procs and lambdas are <b>closures</b>: they capture and remember the variables from the scope where they were created. This is their most powerful feature — a block can "close over" local variables and carry them around.\n\n\`\`\`ruby\ndef make_counter\n  count = 0\n  # This Proc captures 'count' from the surrounding scope\n  proc { count += 1 }   # returns the Proc object\nend\n\ncounter = make_counter\nputs counter.call   # 1\nputs counter.call   # 2\nputs counter.call   # 3\n\n# Each call to make_counter creates a new closure with its own 'count'\ncounter2 = make_counter\nputs counter2.call  # 1 (independent from counter)\n\n# Practical: configure a greeting with a closure\ndef greeter(greeting)\n  ->(name) { \"#{greeting}, #{name}!\" }  # lambda captures 'greeting'\nend\n\nhello = greeter(\"Hello\")\nhi = greeter(\"Hi\")\n\nputs hello.call(\"Alice\")   # "Hello, Alice!\"\nputs hi.call(\"Bob\")         # "Hi, Bob!\"\n\`\`\`\n\n### Symbol#to_proc (&:method)\n\nThe <code>&:method</code> shorthand converts a symbol to a Proc that calls that method on its argument. It is extremely common in idiomatic Ruby.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5]\n\n# Without &: shorthand\nputs numbers.map { |n| n.to_s }               # ["1", "2", "3\", "4", \"5\"]\nputs numbers.select { |n| n.even? }            # [2, 4]\n\n# With &: shorthand (when you call one method on each element)\nputs numbers.map(&:to_s)                       # ["1", \"2\", \"3\", \"4\", \"5\"]\nputs numbers.select(&:even?)                    # [2, 4]\nputs numbers.reduce(&:+)\\\n# Also works with chained accessor methods\nwords = ["hello\", \"world\"]\nputs words.map(&:upcase)                       # [\"HELLO\", \"WORLD\"]\nputs words.map(&:reverse)                      # [\"olleh\", \"dlrow\"]\nputs words.map(&:length)                       # [5, 5]\n\`\`\`\n\n## Wiring It Together\n\nThis program implements a simple event system using blocks for callbacks, lambdas for configuration, and Procs for event handlers. It demonstrates closures, yields, and the differences between Proc and lambda.\n\n\`\`\`ruby\nclass EventEmitter\n  def initialize\n    @handlers = {}\n  end\n\n  # Block-based event registration: yield the event data\n  def on(event, &handler)\n    @handlers[event] ||= []\n    @handlers[event] << handler  # store the block as a Proc\n  end\n\n  # Trigger all handlers for an event\n  def emit(event, *args)\n    return unless @handlers[event]\n    @handlers[event].each do |handler|\n      handler.call(*args)        # call each stored Proc with arguments\n    end\n  end\n\n  # Lambda-based: collects emitted data into an array\n  def collect(event)\n    results = []\n    on(event) do |*args|\n      results << yield(*args)    # transform the event data via block\n    end\n    results                      # closure: this array persists\n  end\nend\n\n# ── Usage ────────────────────────────────────────────────────────────\nemitter = EventEmitter.new\n\n# Register event handlers with blocks (do/end style)\nemitter.on(:user_login) do |username|\n  puts \"Log: User #{username} logged in\"\nend\n\nemitter.on(:user_login) do |username|\n  # In a real app, this would send an email\n  puts \"Email: Welcome back, #{username}!\"\nend\n\n# Register a lambda that validates arguments\nemitter.on(:purchase) do |user:, amount:, item:|\n  if amount > 0\n    puts \"Purchase: #{user} bought #{item} for $#{amount}\"\n  else\n    puts \"Error: Invalid purchase amount\"\n  end\nend\n\n# Use a lambda for configuration (strict argument checking)\nconfig = ->(key, value) { { key => value } }\nputs config.call(:theme, \"dark\").inspect       # {:theme=>\"dark\"}\n# config.call(:only_key)                         # ArgumentError (strict)\n\n# Closures in action: counter\nlogin_count = 0\nemitter.on(:user_login) do |_username|\n  login_count += 1           # closure: captures login_count\nend\n\n# Emit events\nemitter.emit(:user_login, \"alice\")\nemitter.emit(:user_login, \"bob\")\nemitter.emit(:purchase, user: \"alice\", amount: 29.99, item: \"Book\")\n\nputs \"Total logins: #{login_count}\"  # 2 (closure preserved the count)\n\n# Demonstrate Proc vs lambda difference\nproc_check = proc { |a, b| \"proc: #{a}, #{b}\" }\nlambda_check = ->(a, b) { \"lambda: #{a}, #{b}\" }\n\nputs proc_check.call(1)              # works: b is nil\n# puts lambda_check.call(1)           # ArgumentError: wrong number of arguments\n\`\`\`\n`,
+            tags: ["Ruby", "Blocks", "Procs", "Lambdas"],
+          },
+          {
+            id: "ns-rb-enumerable",
+            title: "Enumerable & Collections",
+            shortDesc: "each, map, select, reduce, sort_by, group_by, chaining, and lazy enumerators.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "The Enumerable module is mixed into Array, Hash, Range, and many other classes — it provides all the collection methods.",
+              "each is the fundamental iteration method; all other Enumerable methods are built on top of each.",
+              "map (collect) transforms each element and returns a new array; select (filter) keeps elements matching a condition.",
+              "reduce (inject) accumulates a value across all elements; sort_by sorts by a computed attribute.",
+              "Chaining combines multiple Enumerable calls into a pipeline (each call returns a new Enumerator).",
+              "Lazy enumerators (lazy) defer computation until values are needed — useful for infinite sequences and large data.",
+            ],
+            content: `## What's This?\n\nEnumerable is a Ruby module that provides over 50 methods for traversing, searching, sorting, and transforming collections. It is mixed into Array, Hash, Range, Set, and any custom class that implements <code>each</code>. If a class provides <code>each</code>, it gets all Enumerable methods for free — this is the power of Ruby's mixin system.\n\nThink of Enumerable as a universal remote for collections. No matter what kind of collection you have (array, hash, range, file lines), you use the same methods: <code>map</code>, <code>select</code>, <code>reduce</code>, <code>sort_by</code>. The underlying iteration mechanism is hidden behind the <code>each</code> method that each collection provides.\n\nRuby's Enumerable is considered one of the most elegant collection APIs in any language. It emphasizes a functional style: instead of mutating variables in loops, you describe transformations with method calls and blocks.\n\n## The Big Picture\n\nEnumerable builds on blocks — every Enumerable method takes a block that describes "what to do with each element." It builds on the Array and Hash basics you learned in Ruby syntax.\n\nAfter mastering Enumerable, the next topics are: creating your own Enumerable classes (implement <code>each</code> and include Enumerable), lazy enumerators for large datasets, and then Rails' extensions to Ruby collections (ActiveSupport).\n\n## Core Ideas\n\n### each: The Foundation\n\n<code>each</code> is the most basic iteration method. Every Enumerable method ultimately calls <code>each</code>. Understanding <code>each</code> means understanding all of Enumerable.\n\n\`\`\`ruby\n# Array#each: yields each element\n[1, 2, 3].each { |n| puts n * 2 }\n\n# Hash#each: yields key-value pairs\n{ a: 1, b: 2 }.each { |key, value| puts \"#{key}: #{value}\" }\n\n# Range#each: yields each value in the range\n(1..5).each { |n| puts n }\n\`\`\`\n\n### map (collect): Transform Elements\n\n<code>map</code> transforms each element using the block and returns a new array of the results. The original collection is unchanged.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5]\n\nsquared = numbers.map { |n| n * n }\nputs squared.inspect       # [1, 4, 9, 16, 25]\n\n# map with &: shorthand\nwords = [\"hello\", \"world\"]\nputs words.map(&:upcase).inspect    # [\"HELLO\", \"WORLD\"]\n\n# map on a hash: yields key-value pairs\nhash = { a: 1, b: 2, c: 3 }\nresult = hash.map { |k, v| \"#{k}=#{v}\" }\nputs result.inspect                # [\"a=1\", \"b=2\", \"c=3\"]\n\`\`\`\n\n### select and reject: Filter Elements\n\n<code>select</code> returns a new array containing elements for which the block returns true. <code>reject</code> is the opposite.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5, 6]\n\nevens = numbers.select { |n| n.even? }\nputs evens.inspect          # [2, 4, 6]\n\nodds = numbers.reject { |n| n.even? }\nputs odds.inspect           # [1, 3, 5]\n\n# select on a hash\ngrades = { Alice: 92, Bob: 78, Charlie: 85, Diana: 63 }\npassing = grades.select { |_, grade| grade >= 70 }\nputs passing.inspect        # {:Alice=>92, :Bob=>78, :Charlie=>85}\n\`\`\`\n\n### reduce (inject): Accumulate Values\n\n<code>reduce</code> takes an initial value and accumulates across all elements using the block. The block receives the accumulator (<code>memo</code>) and each element.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5]\n\n# Sum all numbers (initial value 0)\nsum = numbers.reduce(0) { |memo, n| memo + n }\nputs sum                     # 15\n\n# Sum without explicit initial value (uses first element as memo)\nsum = numbers.reduce { |memo, n| memo + n }\nputs sum                     # 15\n\n# Product of all numbers\nproduct = numbers.reduce(1) { |memo, n| memo * n }\nputs product                 # 120\n\n# Reduce with &: shorthand for simple operations\nputs numbers.reduce(&:+)     # 15\nputs numbers.reduce(&:*)     # 120\n\n# More complex: build a hash from an array\nfruits = [\"apple\", \"banana\", \"cherry\"]\nfruit_lengths = fruits.reduce({}) { |hash, fruit| hash[fruit] = fruit.length; hash }\nputs fruit_lengths.inspect   # {\"apple\"=>5, \"banana\"=>6, \"cherry\"=>6}\n\`\`\`\n\n### sort_by: Sort by a Computed Value\n\n<code>sort_by</code> sorts a collection by the value returned by the block for each element.\n\n\`\`\`ruby\nwords = [\"apple\", \"kiwi\", \"banana\", \"pear\", \"strawberry\"]\n\n# Sort by word length\nsorted = words.sort_by { |w| w.length }\nputs sorted.inspect          # [\"kiwi\", \"pear\", \"apple\", \"banana\", \"strawberry\"]\n\n# Sort by last character\nsorted = words.sort_by { |w| w[-1] }\nputs sorted.inspect          # [\"banana\", \"apple\", \"pear\", \"kiwi\", \"strawberry\"]\n\n# Sort hashes by value\ngrades = { Alice: 92, Bob: 78, Charlie: 85, Diana: 63 }\nsorted = grades.sort_by { |_, grade| grade }\nputs sorted.inspect          # [[:Diana, 63], [:Bob, 78], [:Charlie, 85], [:Alice, 92]]\n# Note: sort_by on a hash returns an array of key-value pairs\n\`\`\`\n\n### group_by: Group Elements\n\n<code>group_by</code> returns a hash where keys are the block results and values are arrays of elements that produced that key.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5, 6]\n\ngroups = numbers.group_by { |n| n.even? ? \"even\" : \"odd\" }\nputs groups.inspect          # {\"odd\"=>[1, 3, 5], \"even\"=>[2, 4, 6]}\n\nwords = [\"apple\", \"banana\", \"apricot\", \"blueberry\", \"cherry\"]\ngroups = words.group_by { |w| w[0] }  # group by first letter\nputs groups.inspect          # {\"a\"=>[\"apple\", \"apricot\"], \"b\"=>[\"banana\", \"blueberry\"], \"c\"=>[\"cherry\"]}\n\`\`\`\n\n### Chaining\n\nMost Enumerable methods return a new array, so you can chain them together in a pipeline. Each step transforms the collection.\n\n\`\`\`ruby\nnumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n\n# Chain map, select, and take\nresult = numbers\n  .select { |n| n.even? }         # [2, 4, 6, 8, 10]\n  .map    { |n| n * 10 }          # [20, 40, 60, 80, 100]\n  .take(3)                        # [20, 40, 60]  (first 3)\n\nputs result.inspect               # [20, 40, 60]\n\n# Complex chain: group, sort, map\nwords = [\"cat\", \"dog\", \"elephant\", \"fox\", \"bear\", \"ant\"]\n\nresult = words\n  .select { |w| w.length >= 3 }   # keep words with 3+ letters\n  .sort_by { |w| w.length }       # sort by length\n  .map(&:upcase)                   # upcase each\n  .each_with_index                 # get index-numbered pairs\n  .map { |w, i| \"#{i + 1}. #{w}\" }  # format as numbered list\n\nputs result\n# 1. CAT\n# 2. DOG\n# 3. FOX\n# 4. BEAR\n# 5. ANT\n# 6. ELEPHANT\n\`\`\`\n\n### each_with_index and with_index\n\n<code>each_with_index</code> iterates with an index. <code>with_index</code> can be called on any Enumerator to add indices.\n\n\`\`\`ruby\ncolors = [\"red\", \"green\", \"blue\"]\n\ncolors.each_with_index do |color, i|\n  puts \"#{i}: #{color}\"\nend\n# 0: red\n# 1: green\n# 2: blue\n\n# with_index works on any Enumerable method's result\nresult = colors.map.with_index { |c, i| \"#{i + 1}. #{c.capitalize}\" }\nputs result.inspect  # [\"1. Red\", \"2. Green\", \"3. Blue\"]\n\`\`\`\n\n### Lazy Enumerators\n\nBy default, Enumerable methods are <b>eager</b>: they process the entire collection immediately. <code>lazy</code> makes them <b>lazy</b>: values are computed only as needed. This is essential for infinite sequences and large datasets.\n\n\`\`\`ruby\n# Without lazy: infinite loop!\n# (1..Float::INFINITY).select { |n| n.even? }.first(10)  # hangs forever\n\n# With lazy: works because it only processes until 10 matches are found\nresult = (1..Float::INFINITY).lazy\n  .select { |n| n.even? }         # lazy filter\n  .map    { |n| n * 10 }           # lazy transform\n  .first(10)                       # EAGER: pulls 10 values\n\nputs result.inspect                # [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]\n\n# Lazy file processing: read only what you need\n# File.foreach(\"huge.txt\").lazy.select { |line| line.include?(\"error\") }.first(10)\n\`\`\`\n\n### Other Useful Enumerable Methods\n\n| Method | What It Does | Example |\n|--------|-------------|---------|\n| <code>any?</code> | True if block returns true for any element | <code>[1, 2, 3].any?(&:even?) # true</code> |\n| <code>all?</code> | True if block returns true for all elements | <code>[2, 4, 6].all?(&:even?) # true</code> |\n| <code>none?</code> | True if block returns false for all elements | <code>[1, 3, 5].none?(&:even?) # true</code> |\n| <code>find</code> / <code>detect</code> | Returns first element where block is true | <code>[1, 2, 3].find(&:even?) # 2</code> |\n| <code>count</code> | Count elements matching block | <code>[1, 2, 3].count(&:even?) # 1</code> |\n| <code>first</code> / <code>take</code> | Get first N elements | <code>[1, 2, 3].first(2) # [1, 2]</code> |\n| <code>drop</code> | Skip first N elements | <code>[1, 2, 3].drop(2) # [3]</code> |\n| <code>uniq</code> | Remove duplicates | <code>[1, 1, 2].uniq # [1, 2]</code> |\n| <code>flatten</code> | Flatten nested arrays | <code>[[1], [2, [3]]].flatten # [1, 2, 3]</code> |\n| <code>zip</code> | Combine arrays element-by-element | <code>[1, 2].zip([3, 4]) # [[1, 3], [2, 4]]</code> |\n| <code>partition</code> | Split into two arrays (true / false) | <code>[1, 2, 3].partition(&:even?) # [[2], [1, 3]]</code> |\n\`\`\`\n\n## Wiring It Together\n\nThis program reads a log file, parses entries, groups them by date, computes statistics, and formats a report — using Enumerable methods exclusively without explicit loops.\n\n\`\`\`ruby\n# Simulated log entries (in a real app, read from a file)\nlog_entries = [\n  { date: \"2026-01-15\", level: \"INFO\", user: \"alice\", action: \"login\" },\n  { date: \"2026-01-15\", level: \"INFO\", user: \"bob\", action: \"view_page\" },\n  { date: \"2026-01-15\", level: \"WARN\", user: \"alice\", action: \"slow_query\" },\n  { date: \"2026-01-16\", level: \"INFO\", user: \"charlie\", action: \"login\" },\n  { date: \"2026-01-16\", level: \"ERROR\", user: \"bob\", action: \"timeout\" },\n  { date: \"2026-01-16\", level: \"INFO\", user: \"alice\", action: \"purchase\" },\n  { date: "2026-01-17\", level: \"ERROR\", user: \"diana\", action: \"crash\" },\n  { date: \"2026-01-17\", level: \"INFO\", user: \"bob\", action: \"logout\" },\n]\n\n# ── 1. Filter: only ERROR and WARN entries\nproblems = log_entries.select { |e| e[:level] == \"ERROR\" || e[:level] == \"WARN\" }\nputs \"Problems: #{problems.size}\"\n\n# ── 2. Group by date\ndaily = log_entries.group_by { |e| e[:date] }\ndaily.each do |date, entries|\n  puts \"#{date}: #{entries.size} entries\"\nend\n\n# ── 3. Stats per date using map + transform\ndaily_stats = daily.map do |date, entries|\n  counts = entries.group_by { |e| e[:level] }\n  {\n    date: date,\n    total: entries.size,\n    errors: counts.fetch(\"ERROR\", []).size,\n    warns: counts.fetch(\"WARN\", []).size,\n    users: entries.map { |e| e[:user] }.uniq.sort\n  }\nend\n\n# ── 4. Sort by error count (descending)\ndaily_stats.sort_by! { |s| -s[:errors] }\n\n# ── 5. Generate report using map + join\nreport_lines = daily_stats.map do |stat|\n  \"#{stat[:date]} - #{stat[:total]} entries, \" \\\n    \"#{stat[:errors]} errors, #{stat[:warns]} warns - \" \\\n    \"Users: #{stat[:users].join(', ')}\"\nend\n\nputs \"\\n=== Daily Report ===\"\nputs report_lines.join(\"\\n\")\n\n# ── 6. Overall stats using reduce\noverall = log_entries.reduce({ total: 0, errors: 0, warns: 0, users: Set.new }) do |acc, entry|\n  acc[:total] += 1\n  acc[:errors] += 1 if entry[:level] == \"ERROR\"\n  acc[:warns] += 1 if entry[:level] == \"WARN\"\n  acc[:users] << entry[:user]\n  acc\nend\n\nputs \"\\n=== Overall ===\"\nputs \"Total: #{overall[:total]}\"\nputs \"Errors: #{overall[:errors]}\"\nputs \"Warns: #{overall[:warns]}\"\nputs \"Unique users: #{overall[:users].size}\"\n\n# ── 7. Lazy: find first 3 ERROR entries\nfirst_errors = log_entries.lazy\n  .select { |e| e[:level] == \"ERROR\" }\n  .map    { |e| \"[#{e[:date]}] #{e[:user]}: #{e[:action]}\" }\n  .first(3)\n\nputs \"\\nFirst 3 errors:\"\nputs first_errors.join(\"\\n\")\n\`\`\`\n`,
+            tags: ["Ruby", "Enumerable", "Collections"],
+          },
+          {
+            id: "ns-rb-gems",
+            title: "Gems & Bundler",
+            shortDesc: "Gemfile, bundler, gem creation, RubyGems.org, and versioning (semver).",
+            difficulty: "intermediate",
+            readTimeMin: 14,
+            keyPoints: [
+              "A gem is a packaged Ruby library or application; gems are distributed via RubyGems.org.",
+              "Gemfile lists your project's gem dependencies; Bundler installs them and manages versions with Gemfile.lock.",
+              "Semantic versioning (MAJOR.MINOR.PATCH): MAJOR breaks compatibility, MINOR adds features, PATCH fixes bugs.",
+              "bundle exec runs a command in the context of the Gemfile's locked versions, avoiding version conflicts.",
+              "Creating a gem uses 'bundle gem' to scaffold the directory structure, then gemspec to define metadata.",
+              "Common gem commands: gem install, gem list, gem search, gem push, gem build.",
+            ],
+            content: `## What's This?\n\n<b>RubyGems</b> is Ruby's package manager. A <b>gem</b> is a self-contained package of Ruby code, documentation, and metadata (name, version, dependencies). Gems are distributed through <b>RubyGems.org</b>, the central repository with over 200,000 gems. <b>Bundler</b> is a dependency manager that reads your <b>Gemfile</b> (a list of required gems) and installs the exact versions needed, generating a <b>Gemfile.lock</b> that locks versions for reproducibility.\n\nThink of gems like Lego bricks for Ruby. Each gem is a pre-built piece of functionality — authentication, database access, HTTP requests, testing. Instead of writing everything from scratch, you find the right gem, add it to your Gemfile, and Bundler handles the rest. The Gemfile.lock is like a receipt that records exactly which versions were installed, so every developer and every deployment uses the same code.\n\nRubyGems was one of the first language package managers (2004), predating npm, pip, and Cargo. It pioneered the concept of semantic versioning and dependency resolution in the Ruby ecosystem.\n\n## The Big Picture\n\nGems and Bundler sit between your code and the Ruby ecosystem. You write your application code, and you declare your dependencies in a Gemfile. Bundler resolves all transitive dependencies (gems that your gems depend on), installs them, and locks the versions.\n\nAfter mastering gems and Bundler, the next topics are: creating and publishing your own gems, using Rails generators that create Gemfiles automatically, and understanding version conflicts and how to resolve them.\n\n## Core Ideas\n\n### What Is a Gem?\n\nA gem is a directory of Ruby files with a specific structure and a <code>.gemspec</code> file that describes it.\n\n\`\`\`\nExample gem structure:\nmy_gem/\n  my_gem.gemspec       # gem metadata (name, version, author, dependencies)\n  lib/\n    my_gem.rb          # main entry point\n    my_gem/\n      version.rb       # VERSION constant\n      something.rb     # other source files\n  test/                # tests\n  README.md\n  LICENSE.txt\n\`\`\`\n\n### Gemfile and Bundler\n\nThe <b>Gemfile</b> declares your project's dependencies. Bundler reads it and installs the gems.\n\n\`\`\`ruby\n# Gemfile — declare dependencies for your application\nsource "https://rubygems.org\"   # where to find gems\n\n# Specify the Ruby version (optional but recommended)\nruby "3.2.0"\n\n# Gems without a version constraint: install whatever is latest compatible\ngem "sinatra"\n\n# With version constraints (semver operators)\ngem "rails", "~> 7.1.0\"       # >= 7.1.0 and < 7.2.0 (pessimistic version)\ngem "pg", ">= 1.5\"            # version 1.5 or higher\ngem "puma", \"6.4.2\"           # exact version only\n\n# Gems only for specific environments\ngroup :development, :test do\n  gem "rspec-rails"\n  gem "pry"\n  gem "factory_bot_rails"\nend\n\ngroup :production do\n  gem "newrelic_rpm"\nend\n\n# Gems from Git repositories\ngem "my_private_gem", git: "https://github.com/me/my_private_gem.git", tag: "v1.0"\n\n# Gems from local path (development)\ngem "my_local_gem\", path: \"/path/to/gem\"\n\`\`\`\n\n\`\`\`bash\n# Install gems from Gemfile\nbundle install\n# Creates Gemfile.lock with the exact versions\n\n# Update specific gems (respects version constraints in Gemfile)\nbundle update rails\n\n# Run a command with the bundled gems\nbundle exec ruby app.rb\nbundle exec rspec\n\`\`\`\n\n### Gemfile.lock: The Lock File\n\n<b>Gemfile.lock</b> is automatically generated by <code>bundle install</code>. It records the exact version of every gem and its dependencies. You should commit it to version control to ensure consistency across environments.\n\n\`\`\`\nGemfile.lock (excerpt):\nGEM\n  remote: https://rubygems.org/\n  specs:\n    actioncable (7.1.0)\n      actionpack (= 7.1.0)\n      activesupport (= 7.1.0)\n    actionmailbox (7.1.0)\n      actionpack (= 7.1.0)\n      activejob (= 7.1.0)\n    ...\n\nPLATFORMS\n  arm64-darwin-22\n  x86_64-linux\n\nDEPENDENCIES\n  rails (~> 7.1.0)\n  rspec-rails\n\nBUNDLED WITH\n   2.4.10\n\`\`\`\n\n### Semantic Versioning (SemVer)\n\nRubyGems uses <b>semantic versioning</b>: MAJOR.MINOR.PATCH. This communicates the impact of each release.\n\n| Change | Example | Meaning |\n|--------|---------|---------|\n| MAJOR | 2.0.0 | Breaking changes (your code may need changes) |\n| MINOR | 1.3.0 | New features (backward-compatible) |\n| PATCH | 1.2.4 | Bug fixes (backward-compatible) |\n| Pre-release | 2.0.0.beta1 | Not stable, use with caution |\n\n\`\`\`ruby\n# Version constraint operators in Gemfile:\n# gem \"name\", \">= 1.0\"       — version 1.0 or higher\n# gem \"name\", \"~> 1.2\"        — >= 1.2 and < 2.0 (pessimistic, allows minor bumps)\n# gem \"name\", \"~> 1.2.3\"      — >= 1.2.3 and < 1.3.0 (pessimistic, patch-safe)\n# gem \"name\", \">= 1.0\", \"< 2.0\"  — range\n\`\`\`\n\n### Common Gem Commands\n\n\`\`\`bash\n# Search and discover gems\ngem search rails\n\n# Install a gem globally (not recommended; use Bundler)\ngem install rails\n\n# List installed gems\ngem list\n\n# Build a gem from a gemspec\ngem build my_gem.gemspec\n# Produces my_gem-1.0.0.gem\n\n# Publish a gem to RubyGems.org\ngem push my_gem-1.0.0.gem\n\n# Yank (remove) a version from RubyGems.org\ngem yank my_gem -v 1.0.0\n\`\`\`\n\n### Creating a Gem\n\n\`\`\`bash\n# Scaffold a new gem using Bundler\nbundle gem my_gem\n# Creates the gem skeleton with:\n#   lib/my_gem.rb\n#   lib/my_gem/version.rb\n#   my_gem.gemspec\n#   Gemfile\n#   test/test_helper.rb\n\`\`\`\n\n\`\`\`ruby\n# my_gem.gemspec — gem specification\nrequire_relative "lib/my_gem/version\"\n\nGem::Specification.new do |spec|\n  spec.name          = \"my_gem\"\n  spec.version       = MyGem::VERSION\n  spec.authors       = [\"Your Name\"]\n  spec.email         = [\"you@example.com\"]\n  spec.summary       = \"A short summary of my gem\"\n  spec.description   = \"A longer description of what this gem does\"\n  spec.homepage      = \"https://github.com/you/my_gem\"\n  spec.license       = \"MIT\"\n\n  # Exclude files from the packaged gem\n  spec.files         = Dir[\"lib/**/*\", \"LICENSE.txt\", \"README.md\"]\n\n  # Runtime dependencies (required to use the gem)\n  spec.add_dependency \"httparty\", \"~> 0.21\"\n\n  # Development dependencies (not needed by consumers)\n  spec.add_development_dependency \"rspec\", \"~> 3.12\"\n  spec.add_development_dependency \"pry\"\nend\n\`\`\`\n\n\`\`\`ruby\n# lib/my_gem.rb — main entry point\nrequire_relative "my_gem/version\"\n\nmodule MyGem\n  class Error < StandardError; end\n\n  def self.hello(name)\n    \"Hello from MyGem, #{name}!\"\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/my_gem_spec.rb — tests\nrequire \"spec_helper\"\n\nRSpec.describe MyGem do\n  it \"greets by name\" do\n    expect(MyGem.hello(\"World\")).to eq(\"Hello from MyGem, World!\")\n  end\nend\n\`\`\`\n\n### Essential Gems for Ruby Development\n\n| Category | Gem | Purpose |\n|----------|-----|---------|\n| Web framework | <code>rails</code>, <code>sinatra</code> | Full-stack / lightweight web apps |\n| Database | <code>pg</code>, <code>mysql2</code>, <code>sqlite3</code> | Database drivers |\n| ORM | <code>activerecord</code>, <code>sequel</code> | Database access and ORM |\n| Testing | <code>rspec</code>, <code>minitest</code>, <code>factory_bot</code> | Testing frameworks |\n| Quality | <code>rubocop</code>, <code>brakeman</code> | Linting and security |\n| Web server | <code>puma</code>, <code>unicorn</code>, <code>thin</code> | HTTP servers |\n| CLI | <code>thor</code>, <code>tty-prompt</code> | Command-line app building |\n| Background jobs | <code>sidekiq</code>, <code>good_job</code> | Async job processing |\n\`\`\`ruby\n# Example: a simple Gemfile-based project\n# Gemfile\nsource \"https://rubygems.org\"\n\ngem \"sinatra\"\ngem \"httparty\"\ngem \"puma\"\n\ngroup :test do\n  gem \"rspec\"\n  gem \"rack-test\"\nend\n\`\`\`\n\n\`\`\`ruby\n# app.rb\nrequire \"sinatra\"\nrequire \"httparty\"\n\nget \"/\" do\n  response = HTTParty.get(\"https://api.github.com/users/#{params[:user]}\")\n  content_type :json\n  response.body\nend\n\`\`\`\n\n## Wiring It Together\n\nThis complete example creates a simple gem (a weather forecast fetcher), writes tests for it, and publishes it. It demonstrates the full lifecycle: Gemfile, gemspec, development, testing, and distribution.\n\n\`\`\`bash\n# Step 1: Create the gem scaffold\nbundle gem weather_forecast\ncd weather_forecast\n\`\`\`\n\n\`\`\`ruby\n# weather_forecast.gemspec\nrequire_relative \"lib/weather_forecast/version\"\n\nGem::Specification.new do |spec|\n  spec.name = \"weather_forecast\"\n  spec.version = WeatherForecast::VERSION\n  spec.authors = [\"Ruby Developer\"]\n  spec.email = [\"dev@example.com\"]\n  spec.summary = \"Fetches weather forecasts from OpenWeatherMap\"\n  spec.description = \"A Ruby gem that provides current weather and 5-day forecast data using the OpenWeatherMap API\"\n  spec.homepage = \"https://github.com/example/weather_forecast\"\n  spec.license = \"MIT\"\n\n  spec.required_ruby_version = \">= 3.0\"\n\n  spec.files = Dir[\"lib/**/*\", \"LICENSE.txt\", \"README.md\"]\n\n  spec.add_dependency \"httparty\", \"~> 0.21\"\n\n  spec.add_development_dependency \"rspec\", \"~> 3.12\"\n  spec.add_development_dependency \"webmock\", \"~> 3.19\"  # mock HTTP requests in tests\n  spec.add_development_dependency \"vcr\", \"~> 6.2\"       # record/replay HTTP interactions\nend\n\`\`\`\n\n\`\`\`ruby\n# lib/weather_forecast.rb\nrequire_relative \"weather_forecast/version\"\nrequire \"httparty\"\n\nmodule WeatherForecast\n  class Client\n    BASE_URL = \"https://api.openweathermap.org/data/2.5\"\n\n    attr_reader :api_key\n\n    def initialize(api_key)\n      @api_key = api_key\n      raise ArgumentError, \"API key required\" if api_key.nil? || api_key.empty?\n    end\n\n    def current(city:)\n      response = HTTParty.get(\"#{BASE_URL}/weather\",\n        query: { q: city, appid: api_key, units: \"metric\" }\n      )\n\n      if response.success?\n        parse_current(response.parsed_response)\n      else\n        raise ApiError, \"API error: #{response.code}\"\n      end\n    end\n\n    def forecast(city:, days: 5)\n      response = HTTParty.get(\"#{BASE_URL}/forecast\",\n        query: { q: city, appid: api_key, units: \"metric\", cnt: days * 8 }\n      )\n\n      if response.success?\n        parse_forecast(response.parsed_response)\n      else\n        raise ApiError, \"API error: #{response.code}\"\n      end\n    end\n\n    private\n\n    def parse_current(data)\n      {\n        city: data[\"name\"],\n        temperature: data[\"main\"][\"temp\"],\n        humidity: data[\"main\"][\"humidity\"],\n        description: data[\"weather\"].first[\"description\"],\n        wind_speed: data[\"wind\"][\"speed\"]\n      }\n    end\n\n    def parse_forecast(data)\n      data[\"list\"].map do |entry|\n        {\n          time: entry[\"dt_txt\"],\n          temperature: entry[\"main\"][\"temp\"],\n          description: entry[\"weather\"].first[\"description\"]\n        }\n      end\n    end\n  end\n\n  class ApiError < StandardError; end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/weather_forecast_spec.rb\nrequire \"spec_helper\"\n\nRSpec.describe WeatherForecast::Client do\n  let(:client) { WeatherForecast::Client.new(\"test_key_123\") }\n\n  describe \"#current\" do\n    it \"returns weather data for a city\", :vcr do\n      result = client.current(city: \"London,UK\")\n\n      expect(result).to include(\n        city: be_a(String),\n        temperature: be_a(Numeric),\n        description: be_a(String)\n      )\n    end\n\n    it \"raises an error without an API key\" do\n      expect { WeatherForecast::Client.new(nil) }\n        .to raise_error(ArgumentError, \"API key required\")\n    end\n  end\nend\n\`\`\`\n\n\`\`\`bash\n# Step 2: Install dependencies\nbundle install\n\n# Step 3: Run tests\nbundle exec rspec\n\n# Step 4: Build the gem\nbundle exec gem build weather_forecast.gemspec\n# Produces: weather_forecast-0.1.0.gem\n\n# Step 5: (Optional) Publish to RubyGems.org\ngem push weather_forecast-0.1.0.gem\n\`\`\`\n`,
+            tags: ["Ruby", "RubyGems", "Bundler", "Packaging"],
+          },
+          {
+            id: "ns-rb-rails-mvc",
+            title: "Rails MVC Basics",
+            shortDesc: "Project structure, rails generate, routes, controllers, views, and the request lifecycle.",
+            difficulty: "intermediate",
+            readTimeMin: 16,
+            keyPoints: [
+              "Rails follows the Model-View-Controller (MVC) pattern: Models handle data, Views handle presentation, Controllers handle logic.",
+              "rails generate (scaffold, model, controller, migration) creates boilerplate code following Rails conventions.",
+              "Routes (config/routes.rb) map HTTP requests (GET /articles) to controller actions (ArticlesController#index).",
+              "Controllers receive requests, interact with models, and render views (or return JSON).",
+              "Views use ERB (Embedded Ruby) to mix HTML with Ruby code; layouts provide the outer page template.",
+              "The request lifecycle: Rack -> Router -> Controller -> Model -> View -> HTTP Response.",
+            ],
+            content: `## What's This?\n\nRuby on Rails (often just "Rails") is a full-stack web application framework written in Ruby. It follows the <b>Model-View-Controller (MVC)</b> architectural pattern: Models manage data and business logic, Views handle the user interface (HTML, JSON), and Controllers orchestrate the flow between them. Rails was created by David Heinemeier Hansson (DHH) in 2004 and introduced groundbreaking ideas like <b>convention over configuration</b> (sensible defaults instead of endless config files) and <b>don't repeat yourself</b> (DRY — write each piece of knowledge once).\n\nThink of MVC as a restaurant kitchen. The Controller is the waiter: they take the request (order) from the customer (browser). The Model is the recipe database and ingredients: it knows what data exists and how to retrieve/store it. The View is the chef's plating: it presents the data beautifully. The waiter (Controller) brings the order to the kitchen, gets the ingredients from the Model, hands them to the chef for plating (View), and serves the result to the customer.\n\nRails introduced many conventions that became standard in web development: database migrations, RESTful routing, asset pipeline, and the "scaffold" generator for rapid prototyping.\n\n## The Big Picture\n\nRails MVC builds on Ruby classes and modules. A controller is a Ruby class, a model is a Ruby class that inherits from ActiveRecord::Base, and a view is an ERB template (HTML with embedded Ruby).\n\nAfter mastering Rails MVC basics, the next topics are: Active Record (database models, associations, queries, migrations), Rails testing (RSpec, system tests), and deployment (Capistrano, Docker, Render/Heroku).\n\n## Core Ideas\n\n### Project Structure\n\nA new Rails project has a standard directory layout:\n\n\`\`\`\nmy_app/\n  app/\n    controllers/     # Controller classes (handles HTTP requests)\n    models/          # Model classes (business logic and data)\n    views/           # ERB templates (presentation)\n    helpers/         # View helper methods\n    assets/         # CSS, JavaScript, images\n  config/\n    routes.rb        # URL-to-controller mappings\n    database.yml     # Database configuration\n  db/\n    migrate/         # Database migration files\n    schema.rb        # Snapshot of the current database structure\n  Gemfile            # Ruby dependencies\n  Gemfile.lock       # Locked dependency versions\n\`\`\`\n\n### rails generate: Scaffolding\n\nThe <code>rails generate</code> command creates boilerplate code following Rails conventions. The most powerful generator is <code>scaffold</code>, which creates a model, controller, views, routes, and migration for a resource.\n\n\`\`\`bash\n# Generate a full Article resource (model, controller, views, routes, migration)\nrails generate scaffold Article title:string body:text published:boolean\n\n# This creates:\n#   app/models/article.rb\n#   app/controllers/articles_controller.rb\n#   app/views/articles/ (index, show, new, edit, _form)\n#   db/migrate/20240101000001_create_articles.rb\n#   config/routes.rb (adds resources :articles)\n\`\`\`\n\n\n### Routes: config/routes.rb\n\nRoutes map HTTP requests to controller actions. Rails uses <b>RESTful routing</b>: each resource has a standard set of routes.\n\n\`\`\`ruby\n# config/routes.rb\nRails.application.routes.draw do\n  # RESTful routes for articles\n  resources :articles\n  # Generates 7 routes:\n  #   GET    /articles          => articles#index  (list all)\n  #   GET    /articles/:id      => articles#show   (show one)\n  #   GET    /articles/new      => articles#new    (new form)\n  #   GET    /articles/:id/edit => articles#edit   (edit form)\n  #   POST   /articles          => articles#create (create)\n  #   PATCH  /articles/:id      => articles#update (update)\n  #   DELETE /articles/:id      => articles#destroy (delete)\n\n  # Root route: the homepage\n  root "articles#index\"\n\n  # Non-RESTful custom route\n  get "/search\", to: \"articles#search\"\n\n  # Nested resources\n  resources :articles do\n    resources :comments       # /articles/:article_id/comments\n  end\n\n  # API mode: JSON-only routes\n  namespace :api do\n    namespace :v1 do\n      resources :articles\n    end\n  end\nend\n\`\`\`\n\n\`\`\`bash\n# See all routes in your project\nrails routes\n\`\`\`\n\n### Controllers: The Request Handler\n\nControllers are Ruby classes that inherit from <code>ApplicationController</code>, which inherits from <code>ActionController::Base</code>. They define <b>actions</b> (methods) that handle HTTP requests. Each action renders a view or returns data.\n\n\`\`\`ruby\n# app/controllers/articles_controller.rb\nclass ArticlesController < ApplicationController\n  # GET /articles\n  # @articles is available in the view\n  def index\n    @articles = Article.all   # fetch all articles from the database\n  end\n\n  # GET /articles/1\n  def show\n    @article = Article.find(params[:id])  # find by ID from URL params\n  end\n\n  # GET /articles/new\n  def new\n    @article = Article.new    # create an empty article object for the form\n  end\n\n  # GET /articles/1/edit\n  def edit\n    @article = Article.find(params[:id])\n  end\n\n  # POST /articles\n  def create\n    @article = Article.new(article_params)\n\n    if @article.save\n      redirect_to @article, notice: \"Article was successfully created.\"\n    else\n      render :new, status: :unprocessable_entity  # show form with errors\n    end\n  end\n\n  # PATCH/PUT /articles/1\n  def update\n    @article = Article.find(params[:id])\n\n    if @article.update(article_params)\n      redirect_to @article, notice: \"Article was successfully updated.\"\n    else\n      render :edit, status: :unprocessable_entity\n    end\n  end\n\n  # DELETE /articles/1\n  def destroy\n    @article = Article.find(params[:id])\n    @article.destroy\n    redirect_to articles_path, notice: \"Article was successfully destroyed.\"\n  end\n\n  private\n\n  # Strong parameters: whitelist allowed parameters for security\n  def article_params\n    params.require(:article).permit(:title, :body, :published)\n  end\nend\n\`\`\`\n\n### Views: ERB Templates\n\nViews are <b>ERB</b> (Embedded Ruby) files that mix HTML with Ruby code. <code><% %></code> executes Ruby without output, <code><%= %></code> executes Ruby and outputs the result.\n\n\`\`\`erb\n<!-- app/views/articles/index.html.erb -->\n<h1>Articles</h1>\n\n<%= link_to \"New Article\", new_article_path, class: \"btn btn-primary\" %>\n\n<table>\n  <thead>\n    <tr>\n      <th>Title</th>\n      <th>Published</th>\n      <th colspan=\"3\">Actions</th>\n    </tr>\n  </thead>\n\n  <tbody>\n    <% @articles.each do |article| %>\n      <tr>\n        <td><%= article.title %></td>\n        <td><%= article.published ? \"Yes\" : \"No\" %></td>\n        <td><%= link_to \"Show\", article %></td>\n        <td><%= link_to \"Edit\", edit_article_path(article) %></td>\n        <td><%= button_to \"Destroy\", article, method: :delete %></td>\n      </tr>\n    <% end %>\n  </tbody>\n</table>\n\`\`\`\n\n\`\`\`erb\n<!-- app/views/articles/show.html.erb -->\n<h1><%= @article.title %></h1>\n\n<p><%= @article.body %></p>\n\n<%= link_to \"Edit\", edit_article_path(@article) %> |\n<%= link_to \"Back\", articles_path %>\n\`\`\`\n\n\`\`\`erb\n<!-- app/views/articles/new.html.erb -->\n<h1>New Article</h1>\n\n<%= render \"form\", article: @article %>\n<%= link_to \"Back\", articles_path %>\n\`\`\`\n\n\`\`\`erb\n<!-- app/views/articles/_form.html.erb (partial) -->\n<%= form_with model: article do |form| %>\n  <% if article.errors.any? %>\n    <div id=\"error_explanation\">\n      <h2><%= pluralize(article.errors.count, \"error\") %> prohibited this article:</h2>\n      <ul>\n        <% article.errors.each do |error| %>\n          <li><%= error.full_message %></li>\n        <% end %>\n      </ul>\n    </div>\n  <% end %>\n\n  <div>\n    <%= form.label :title %>\n    <%= form.text_field :title %>\n  </div>\n\n  <div>\n    <%= form.label :body %>\n    <%= form.text_area :body, rows: 10 %>\n  </div>\n\n  <div>\n    <%= form.label :published %>\n    <%= form.check_box :published %>\n  </div>\n\n  <div>\n    <%= form.submit %>\n  </div>\n<% end %>\n\`\`\`\n\n### Layouts\n\nLayouts wrap your views in a common HTML structure. The default layout includes the <code><!DOCTYPE html></code>, <code><head></code>, and <code><body></code> tags. The view content is inserted where <code><%= yield %></code> appears.\n\n\`\`\`erb\n<!-- app/views/layouts/application.html.erb -->\n<!DOCTYPE html>\n<html>\n  <head>\n    <title>MyApp</title>\n    <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n    <%= csrf_meta_tags %>\n    <%= csp_meta_tag %>\n    <%= stylesheet_link_tag \"application\", \"data-turbo-track\": \"reload\" %>\n    <%= javascript_importmap_tags %>\n  </head>\n\n  <body>\n    <nav>\n      <%= link_to \"Home\", root_path %>\n      <%= link_to \"Articles\", articles_path %>\n    </nav>\n\n    <% flash.each do |type, msg| %>\n      <div class=\"flash-<%= type %>\"><%= msg %></div>\n    <% end %>\n\n    <main>\n      <%= yield %>   <!-- The current page's content goes here -->\n    </main>\n  </body>\n</html>\n\`\`\`\n\n### The Request Lifecycle\n\nWhen a browser sends an HTTP request to a Rails app, it goes through these steps:\n\n\`\`\`\nBrowser\n  │\n  ▼ HTTP request: GET /articles/1\nRack middleware stack   (session handling, cookie parsing, logging)\n  │\n  ▼\nRouter (config/routes.rb)\n  └─ Matches: GET /articles/:id → ArticlesController#show\n  │\n  ▼\nController Action (ArticlesController#show)\n  ├─ Reads params: { id: \"1\" }\n  ├─ @article = Article.find(1)  →  Model (database query)\n  ├─ @article returns the record\n  └─ Implicitly renders: app/views/articles/show.html.erb\n  │\n  ▼\nView (show.html.erb + application.html.erb)\n  ├─ Layout wraps the view content\n  └─ ERB is evaluated, HTML is generated\n  │\n  ▼\nHTTP Response (HTML)\n  │\n  ▼\nBrowser renders the page\n\`\`\`\n\n### Rails Generators Summary\n\n\`\`\`bash\n# Common generators\nrails generate model Article title:string body:text\nrails generate controller Articles index show\nrails generate migration AddPublishedToArticles published:boolean\nrails generate scaffold Article title:string body:text\nrails generate resource Article title:string  # model + routes + migration (no views)\n\`\`\`\n\n## Wiring It Together\n\nThis example creates a complete blog application with articles and comments, showing the full MVC lifecycle from route to view.\n\n\`\`\`bash\n# Create the project\nrails new blog\ncd blog\n\`\`\`\n\n\`\`\`ruby\n# config/routes.rb\nRails.application.routes.draw do\n  root \"articles#index\"\n\n  resources :articles do\n    resources :comments, only: [:create, :destroy]  # nested under articles\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# app/controllers/articles_controller.rb\nclass ArticlesController < ApplicationController\n  before_action :set_article, only: [:show, :edit, :update, :destroy]\n\n  def index\n    @articles = Article.all.order(created_at: :desc)\n  end\n\n  def show\n    @comment = Comment.new   # for the comment form on the show page\n  end\n\n  def new\n    @article = Article.new\n  end\n\n  def create\n    @article = Article.new(article_params)\n\n    if @article.save\n      redirect_to @article, notice: \"Article created!\"\n    else\n      render :new, status: :unprocessable_entity\n    end\n  end\n\n  private\n\n  def set_article\n    @article = Article.find(params[:id])\n  end\n\n  def article_params\n    params.require(:article).permit(:title, :body, :published)\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# app/controllers/comments_controller.rb\nclass CommentsController < ApplicationController\n  def create\n    @article = Article.find(params[:article_id])\n    @comment = @article.comments.new(comment_params)\n\n    if @comment.save\n      redirect_to @article, notice: \"Comment added!\"\n    else\n      render \"articles/show\", status: :unprocessable_entity\n    end\n  end\n\n  private\n\n  def comment_params\n    params.require(:comment).permit(:author, :body)\n  end\nend\n\`\`\`\n\n\`\`\`erb\n<!-- app/views/articles/show.html.erb -->\n<h1><%= @article.title %></h1>\n\n<p><%= @article.body %></p>\n\n<p><small>Published: <%= @article.published ? \"Yes\" : \"No\" %></small></p>\n\n<h2>Comments</h2>\n\n<% @article.comments.each do |comment| %>\n  <div class=\"comment\">\n    <strong><%= comment.author %></strong> said:\n    <p><%= comment.body %></p>\n  </div>\n<% end %>\n\n<h3>Add a comment:</h3>\n<%= form_with model: [@article, @comment] do |form| %>\n  <div>\n    <%= form.label :author %>\n    <%= form.text_field :author %>\n  </div>\n  <div>\n    <%= form.label :body %>\n    <%= form.text_area :body %>\n  </div>\n  <%= form.submit \"Post Comment\" %>\n<% end %>\n\n<%= link_to \"Back\", articles_path %>\n<%= link_to \"Edit\", edit_article_path(@article) %>\n\`\`\`\n\n\`\`\`erb\n<!-- app/views/articles/index.html.erb -->\n<h1>Blog</h1>\n\n<%= link_to \"New Article\", new_article_path %>\n\n<% @articles.each do |article| %>\n  <article>\n    <h2><%= link_to article.title, article %></h2>\n    <p><%= truncate(article.body, length: 200) %></p>\n    <small><%= pluralize(article.comments.count, \"comment\") %></small>\n  </article>\n<% end %>\n\`\`\`\n`,
+            tags: ["Ruby", "Rails", "MVC", "Web Framework"],
+          },
+          {
+            id: "ns-rb-activerecord",
+            title: "Active Record & Migrations",
+            shortDesc: "Models, associations, validations, callbacks, query interface, and schema migrations.",
+            difficulty: "intermediate",
+            readTimeMin: 17,
+            keyPoints: [
+              "Active Record is Rails' ORM (Object-Relational Mapping): each model class maps to a database table, each instance to a row.",
+              "Convention over configuration: the model 'Article' maps to the 'articles' table automatically by name.",
+              "Associations (belongs_to, has_many, has_one, has_and_belongs_to_many) define relationships between models.",
+              "Validations (presence, uniqueness, numericality, format) ensure data integrity before saving to the database.",
+              "Callbacks (before_save, after_create, before_destroy) hook into the object lifecycle for automatic behavior.",
+              "The query interface provides chainable methods (where, order, includes, joins, group) to build SQL queries without writing SQL.",
+            ],
+            content: `## What's This?\n\nActive Record is the <b>Object-Relational Mapping (ORM)</b> layer in Ruby on Rails. It maps database tables to Ruby classes and rows to objects. The model <code>Article</code> automatically corresponds to the <code>articles</code> database table. You write Ruby code — <code>Article.where(title: "Hello")</code> — and Active Record translates it to SQL — <code>SELECT * FROM articles WHERE title = 'Hello'</code>.\n\nThink of Active Record as a translator between two worlds. The database world speaks SQL: tables, rows, columns. The Ruby world speaks objects: classes, instances, attributes. Active Record handles the translation so you can stay in Ruby. It also provides schema migrations — version-controlled Ruby files that describe database changes, so your schema evolves with your code.\n\nActive Record implements the <b>Active Record pattern</b> (from Martin Fowler's "Patterns of Enterprise Application Architecture"): a model object both holds data AND knows how to save/retrieve itself from the database. This is different from a "repository pattern" where data and persistence are separate.\n\n## The Big Picture\n\nActive Record builds on Ruby classes and metaprogramming. It uses <code>method_missing</code> and <code>define_method</code> to create dynamic query methods (<code>find_by_title</code>) and to map database columns to Ruby attributes.\n\nAfter mastering Active Record, the next topics are: Rails testing (testing models, factories, fixtures), advanced querying (scopes, joins, includes for N+1 prevention), and then deploying Rails applications that use databases.\n\n## Core Ideas\n\n### Convention Over Configuration\n\nActive Record follows strict naming conventions. If you follow them, almost zero configuration is needed.\n\n| Ruby Class | Database Table | Primary Key | Foreign Key |\n|-----------|---------------|-------------|-------------|\n| <code>Article</code> | <code>articles</code> | <code>id</code> | <code>article_id</code> |\n| <code>User</code> | <code>users</code> | <code>id</code> | <code>user_id</code> |\n| <code>UserProfile</code> | <code>user_profiles</code> | <code>id</code> | <code>user_profile_id</code> |\n| <code>Category</code> | <code>categories</code> | <code>id</code> | <code>category_id</code> |\n\nTable name: snake_case plural of the class name. Foreign key: <code>singular_id</code>.\n\n### Models: The Ruby Side\n\n\`\`\`ruby\n# app/models/article.rb\nclass Article < ApplicationRecord\n  # No code needed for basic CRUD! Active Record provides:\n  # Article.all, Article.find(1), Article.where(...)\n  # @article.save, @article.update(...), @article.destroy\n\n  # Associations (see below)\n  belongs_to :author, class_name: \"User\"\n  has_many :comments, dependent: :destroy\n\n  # Validations (see below)\n  validates :title, presence: true, uniqueness: { case_sensitive: false }\n  validates :body, length: { minimum: 10 }\n\n  # Scopes (chainable query methods)\n  scope :published, -> { where(published: true) }\n  scope :recent, -> { order(created_at: :desc).limit(5) }\n\n  # Callbacks (see below)\n  before_save :strip_title\n  after_create :send_notification\n\n  private\n\n  def strip_title\n    self.title = title.strip unless title.nil?\n  end\n\n  def send_notification\n    # In a real app: NotificationsMailer.article_created(self).deliver_later\n  end\nend\n\`\`\`\n\n### Migrations: Schema Evolution\n\nMigrations are version-controlled Ruby files that describe database changes. They allow you to evolve your database schema over time alongside your code.\n\n\`\`\`bash\n# Generate a migration\nrails generate migration CreateArticles title:string body:text published:boolean\n\`\`\`\n\n\`\`\`ruby\n# db/migrate/20240101000001_create_articles.rb\nclass CreateArticles < ActiveRecord::Migration[7.1]\n  def change\n    create_table :articles do |t|\n      t.string :title                  # VARCHAR column\n      t.text :body                     # TEXT column\n      t.boolean :published, default: false  # BOOLEAN, defaults to false\n      t.references :author, foreign_key: { to_table: :users }  # foreign key\n\n      t.timestamps                      # adds created_at and updated_at\n    end\n\n    add_index :articles, :title, unique: true  # database index for performance\n  end\nend\n\`\`\`\n\n\`\`\`bash\n# Run migrations\nrails db:migrate                # apply pending migrations\nrails db:rollback               # undo the last migration\nrails db:migrate:status         # show which migrations have run\n\`\`\`\n\n\`\`\`ruby\n# Common migration methods\nclass AddFieldsToArticles < ActiveRecord::Migration[7.1]\n  def change\n    add_column :articles, :views_count, :integer, default: 0\n    add_column :articles, :slug, :string\n    add_index :articles, :slug, unique: true\n\n    change_column :articles, :body, :text, null: false\n\n    rename_column :articles, :title, :headline\n\n    remove_column :articles, :old_deprecated_field, :string\n  end\nend\n\`\`\`\n\n### Associations\n\nAssociations define relationships between models. They are declared in the model class and generate methods for navigating the relationship.\n\n\`\`\`ruby\n# app/models/user.rb\nclass User < ApplicationRecord\n  has_many :articles, dependent: :destroy       # User has many Articles\n  has_many :comments                             # User has many Comments\nend\n\n# app/models/article.rb\nclass Article < ApplicationRecord\n  belongs_to :author, class_name: \"User\"        # Article belongs to a User (author)\n  has_many :comments, dependent: :destroy        # Article has many Comments\n  has_one :featured_image, class_name: \"Image\"  # Article has one featured image\n\n  # Many-to-many through a join table\n  has_and_belongs_to_many :categories\n  # Requires a categories_articles join table\nend\n\n# app/models/comment.rb\nclass Comment < ApplicationRecord\n  belongs_to :article                            # Comment belongs to an Article\n  belongs_to :user                               # Comment belongs to a User\nend\n\n# app/models/category.rb\nclass Category < ApplicationRecord\n  has_and_belongs_to_many :articles\nend\n\`\`\`\n\n\`\`\`ruby\n# Using associations\nuser = User.find(1)\nuser.articles                    # => [<Article>, <Article>] — SQL: SELECT * FROM articles WHERE author_id = 1\nuser.articles << Article.new(title: \"New\")  # add an article to the user\n\narticle = Article.first\narticle.author                   # => <User> — loads the associated user (lazy)\narticle.comments                # => [<Comment>, <Comment>]\narticle.comments.build(body: \"Great!\")  # build a new comment, not yet saved\narticle.comments.create(body: \"Nice!\")  # build and save\n\`\`\`\n\n### Validations\n\nValidations check data before it is saved to the database. They prevent invalid data from being persisted.\n\n\`\`\`ruby\nclass Article < ApplicationRecord\n  # Presence: field must not be empty\n  validates :title, presence: true\n\n  # Uniqueness: no other record has the same value\n  validates :slug, uniqueness: { case_sensitive: false, message: \"already taken\" }\n\n  # Length: constraints on string/text length\n  validates :body, length: { minimum: 10, maximum: 10_000 }\n\n  # Numericality: value must be a number\n  validates :views_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }\n\n  # Format: regex validation\n  validates :email, format: { with: /\\A[^@\\s]+@[^@\\s]+\\z/, message: \"invalid email\" }\n\n  # Inclusion: value must be in a list\n  validates :status, inclusion: { in: %w[draft published archived] }\n\n  # Custom validation\n  validate :body_cannot_contain_spam\n\n  private\n\n  def body_cannot_contain_spam\n    if body.present? && body.include?(\"buy now\")\n      errors.add(:body, \"cannot contain spam keywords\")\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# Using validations\narticle = Article.new(title: \"\")\narticle.valid?                     # false — runs all validations\narticle.errors.full_messages       # [\"Title can't be blank\"]\narticle.save                       # false (does not save)\narticle.save!                      # ActiveRecord::RecordInvalid (raises exception)\n\`\`\`\n\n### Query Interface\n\nActive Record provides a chainable query API that builds SQL queries without writing SQL.\n\n\`\`\`ruby\n# Basic queries\nArticle.all                        # SELECT * FROM articles\nArticle.first                      # SELECT * FROM articles ORDER BY id LIMIT 1\nArticle.last                       # SELECT * FROM articles ORDER BY id DESC LIMIT 1\nArticle.find(1)                    # SELECT * FROM articles WHERE id = 1\nArticle.find_by(title: \"Hello\")   # SELECT * FROM articles WHERE title = 'Hello' LIMIT 1\n\n# where: filtered queries (chainable)\nArticle.where(published: true)\n# SELECT * FROM articles WHERE published = true\n\nArticle.where(\"views_count > ?\", 100)\n# SELECT * FROM articles WHERE views_count > 100\n\nArticle.where(title: [\"Hello\", \"World\"])\n# SELECT * FROM articles WHERE title IN ('Hello', 'World')\n\n# Chaining\nArticle\n  .where(published: true)\n  .where(\"created_at > ?\", 1.week.ago)\n  .order(views_count: :desc)\n  .limit(10)\n  .includes(:author, :comments)    # eager loading (prevents N+1 queries)\n# SELECT * FROM articles WHERE published = true AND created_at > '...' ORDER BY views_count DESC LIMIT 10\n# SELECT * FROM users WHERE id IN (...)  (eager loaded)\n# SELECT * FROM comments WHERE article_id IN (...)  (eager loaded)\n\n# Aggregations\nArticle.count                      # SELECT COUNT(*) FROM articles\nArticle.group(:status).count       # SELECT status, COUNT(*) FROM articles GROUP BY status\nArticle.average(:views_count)      # SELECT AVG(views_count) FROM articles\n\`\`\`\n\n### Callbacks\n\nCallbacks hook into the Active Record object lifecycle. They let you run code at specific points.\n\n\`\`\`ruby\nclass Article < ApplicationRecord\n  # Order: before_validation -> after_validation -> before_save -> around_save\n  #        -> before_create -> after_create -> around_create -> after_save\n\n  before_validation :normalize_title\n  after_create :increment_user_count\n  before_destroy :ensure_not_featured\n  after_destroy :log_deletion\n\n  private\n\n  def normalize_title\n    self.title = title.strip.capitalize if title.present?\n  end\n\n  def increment_user_count\n    # author.increment!(:articles_count)\n  end\n\n  def ensure_not_featured\n    if featured?\n      errors.add(:base, \"Cannot delete featured article\")\n      throw :abort  # prevents the destroy\n    end\n  end\n\n  def log_deletion\n    Rails.logger.info \"Article #{id} deleted\"\n  end\nend\n\`\`\`\n\n### Scopes\n\nScopes are named query chains that can be reused and combined.\n\n\`\`\`ruby\nclass Article < ApplicationRecord\n  # Scopes are defined as lambdas\n  scope :published, -> { where(published: true) }\n  scope :draft, -> { where(published: false) }\n  scope :recent, -> { order(created_at: :desc).limit(5) }\n  scope :by_author, ->(author_id) { where(author_id: author_id) }\n\n  # Scopes can be chained\n  scope :popular, -> { where(\"views_count > ?\", 100) }\nend\n\n# Using scopes\nArticle.published                    # all published articles\nArticle.published.recent             # 5 most recent published articles\nArticle.by_author(1).draft           # drafts by author 1\nArticle.popular.published.recent     # chain all three\n\`\`\`\n\n## Wiring It Together\n\nThis example shows a complete blogging system with Users, Articles, Comments, and Categories — demonstrating migrations, associations, validations, callbacks, scopes, and the query interface working together.\n\n\`\`\`ruby\n# db/migrate/20240101000001_create_users.rb\nclass CreateUsers < ActiveRecord::Migration[7.1]\n  def change\n    create_table :users do |t|\n      t.string :username, null: false\n      t.string :email, null: false\n      t.timestamps\n    end\n\n    add_index :users, :username, unique: true\n    add_index :users, :email, unique: true\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# db/migrate/20240101000002_create_articles.rb\nclass CreateArticles < ActiveRecord::Migration[7.1]\n  def change\n    create_table :articles do |t|\n      t.string :title, null: false\n      t.text :body\n      t.boolean :published, default: false\n      t.integer :views_count, default: 0\n      t.references :author, null: false, foreign_key: { to_table: :users }\n      t.timestamps\n    end\n\n    add_index :articles, [:author_id, :created_at]\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# db/migrate/20240101000003_create_comments.rb\nclass CreateComments < ActiveRecord::Migration[7.1]\n  def change\n    create_table :comments do |t|\n      t.text :body, null: false\n      t.references :article, null: false, foreign_key: true\n      t.references :user, null: false, foreign_key: true\n      t.timestamps\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# app/models/user.rb\nclass User < ApplicationRecord\n  has_many :articles, foreign_key: :author_id, dependent: :destroy\n  has_many :comments, dependent: :destroy\n\n  validates :username, presence: true,\n    uniqueness: { case_sensitive: false },\n    length: { minimum: 3, maximum: 30 }\n  validates :email, presence: true,\n    uniqueness: true,\n    format: { with: /\\A[^@\\s]+@[^@\\s]+\\z/ }\nend\n\`\`\`\n\n\`\`\`ruby\n# app/models/article.rb\nclass Article < ApplicationRecord\n  belongs_to :author, class_name: \"User\", counter_cache: true\n  has_many :comments, dependent: :destroy\n  has_and_belongs_to_many :categories\n\n  validates :title, presence: true, length: { maximum: 200 }\n  validates :body, presence: true\n\n  scope :published, -> { where(published: true) }\n  scope :unpublished, -> { where(published: false) }\n  scope :recent, -> { order(created_at: :desc) }\n  scope :popular, -> { where(\"views_count > ?\", 100) }\n\n  before_save :generate_slug, if: :title_changed?\n  after_create :increment_author_article_count\n\n  def to_param\n    slug\n  end\n\n  private\n\n  def generate_slug\n    self.slug = title.parameterize\n  end\n\n  def increment_author_article_count\n    author.increment!(:articles_count)\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# app/controllers/articles_controller.rb\nclass ArticlesController < ApplicationController\n  def index\n    @articles = Article.published.recent.includes(:author, :categories)\n  end\n\n  def show\n    @article = Article.find_by!(slug: params[:id])\n    @article.increment!(:views_count)\n  end\n\n  def create\n    @article = current_user.articles.new(article_params)\n\n    if @article.save\n      redirect_to @article, notice: \"Article created!\"\n    else\n      render :new, status: :unprocessable_entity\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# Demonstrating the query interface\nclass DashboardController < ApplicationController\n  def stats\n    # Chain scopes and query methods\n    @popular_published = Article.published.popular.recent.limit(10)\n\n    # Aggregations\n    @articles_per_user = Article.group(:author).count\n\n    # Eager loading with conditions\n    @authors_with_recent = User.includes(:articles)\n      .where(articles: { created_at: 1.week.ago..Time.current })\n\n    # Joins for complex queries\n    @prolific_authors = User\n      .joins(:articles)\n      .group(:id)\n      .having(\"COUNT(articles.id) > ?\", 10)\n      .order(\"COUNT(articles.id) DESC\")\n\n    # Find by associations\n    @recent_comments = Comment\n      .joins(:article)\n      .where(articles: { published: true })\n      .order(created_at: :desc)\n      .limit(20)\n      .includes(:user, :article)\n  end\nend\n\`\`\`\n`,
+            tags: ["Ruby", "Rails", "Active Record", "Database"],
+          },
+          {
+            id: "ns-rb-testing",
+            title: "Testing (RSpec, Minitest)",
+            shortDesc: "describe/it, let, subject, factories (FactoryBot), mocking, and system tests.",
+            difficulty: "advanced",
+            readTimeMin: 17,
+            keyPoints: [
+              "RSpec uses describe/context/it blocks to organize tests; 'expect(...).to' is the assertion syntax with matchers.",
+              "let and let! define memoized, lazy-evaluated test data; subject defines the object under test.",
+              "FactoryBot defines reusable test data factories (blueprints for creating model instances with default values).",
+              "Mocks and stubs (allow, expect, receive) isolate the code under test by replacing real dependencies.",
+              "Rails-specific testing: controller tests (deprecated in favor of request tests), model tests, system tests with Capybara.",
+              "Minitest is Ruby's built-in test framework (simpler than RSpec, preferred by some for its minimal DSL).",
+            ],
+            content: `## What's This?\n\nTesting is the practice of writing code that verifies your application code behaves correctly. Ruby has two major testing frameworks: <b>RSpec</b> (the most popular, with a readable DSL) and <b>Minitest</b> (Ruby's built-in framework, simpler and faster). Both let you write assertions about your code — "when I call this method with these arguments, I expect this result."\n\nThink of tests as an insurance policy for your code. When you write a test, you are saying "this behavior must not break." When you refactor, the tests tell you immediately if something went wrong. A good test suite gives you confidence to change code fearlessly.\n\nRSpec uses a <b>Domain-Specific Language (DSL)</b> that reads almost like English: <code>describe "Calculator" do ... it "adds two numbers" do ... expect(calc.add(1, 2)).to eq(3) ... end ... end</code>. Minitest uses plain Ruby methods: <code>def test_adds_numbers; assert_equal 3, calc.add(1, 2); end</code>. Both are valid choices; RSpec is more common in Rails projects, Minitest is the default in newer Rails versions.\n\n## The Big Picture\n\nTesting builds on everything in Ruby/Rails. Model tests verify validations and associations. Controller/request tests verify HTTP responses. System tests verify browser behavior with Capybara.\n\nAfter mastering testing, the next topics are: test-driven development (TDD — writing tests before code), continuous integration (running tests automatically on every commit), and test coverage metrics.\n\n## Core Ideas\n\n### RSpec Basics: describe, context, it\n\nRSpec tests are organized hierarchically. <code>describe</code> groups tests by class or feature. <code>context</code> groups tests by condition. <code>it</code> defines individual test cases (examples).\n\n\`\`\`ruby\n# calculator_spec.rb\nrequire "rails_helper"\n\nRSpec.describe Calculator do\n  describe "#add" do          # group tests for the add method\n    context "with positive numbers" do  # group by condition\n      it "adds two positive numbers" do  # individual test\n        calc = Calculator.new\n        result = calc.add(2, 3)\n        expect(result).to eq(5)          # assertion\n      end\n\n      it "adds zero correctly" do\n        expect(Calculator.new.add(5, 0)).to eq(5)  # one-liner style\n      end\n    end\n\n    context "with negative numbers" do\n      it "adds a positive and negative number" do\n        expect(Calculator.new.add(5, -3)).to eq(2)\n      end\n    end\n  end\nend\n\`\`\`\n\n### Matchers\n\nMatchers are the assertions in RSpec. They express what you expect in readable language.\n\n\`\`\`ruby\n# Equality and identity\nexpect(actual).to eq(expected)         # ==\nexpect(actual).to eql(expected)        # eql? (same value and type)\nexpect(actual).to equal(expected)      # equal? (same object identity)\nexpect(actual).to be(expected)         # equal? (alias)\n\n# Truthiness\nexpect(actual).to be_truthy            # not nil or false\nexpect(actual).to be_falsy             # nil or false\nexpect(actual).to be_nil               # nil?\n\n# Comparisons\nexpect(actual).to be > 5\nexpect(actual).to be_between(1, 10).inclusive\nexpect(actual).to match(/regex/)\n\n# Collection\nexpect(array).to include(1, 2)\nexpect(array).to be_empty\nexpect(hash).to have_key(:name)\nexpect(string).to start_with("Hello")\n\n# Error\nexpect { divide(1, 0) }.to raise_error(ZeroDivisionError)\nexpect { divide(1, 0) }.to raise_error(\"divided by 0\")\n\n# Change\nexpect { counter.increment }.to change { counter.count }.by(1)\nexpect { create_user }.to change(User, :count).by(1)\n\`\`\`\n\n### let, let!, subject\n\n<code>let</code> defines memoized, lazy-evaluated variables. The value is computed only when first referenced and cached for that test. <code>let!</code> forces eager evaluation before each test. <code>subject</code> defines the object under test.\n\n\`\`\`ruby\nRSpec.describe User do\n  # subject: the object under test (defaults to User.new, but can be customized)\n  subject(:user) { User.new(username: "alice", email: "alice@example.com") }\n\n  # let: lazy, memoized variable\n  let(:article) { Article.create(title: "Test", body: "Content", author: user) }\n\n  # let!: eager evaluation (runs before each test)\n  let!(:admin_user) { User.create(username: "admin", email: "admin@example.com", admin: true) }\n\n  describe "validations" do\n    it "is valid with valid attributes" do\n      expect(user).to be_valid\n    end\n\n    it "requires a username" do\n      user.username = nil\n      expect(user).not_to be_valid\n      expect(user.errors[:username]).to include("can't be blank")\n    end\n  end\n\n  describe "associations" do\n    it "has many articles" do\n      article  # reference to trigger creation\n      expect(user.articles).to include(article)\n    end\n\n    it "has articles_count" do\n      article\n      expect(user.articles_count).to eq(1)\n    end\n  end\nend\n\`\`\`\n\n### FactoryBot: Test Data Factories\n\n<b>FactoryBot</b> (formerly Factory Girl) defines blueprints for creating test data. Unlike fixtures (static YAML data), factories let you customize each instance.\n\n\`\`\`ruby\n# spec/factories/users.rb\nFactoryBot.define do\n  factory :user do\n    username { \"alice\" }\n    email { \"alice@example.com\" }\n    password { \"password123\" }\n\n    # Sequences: auto-incrementing values\n    sequence(:username) { |n| \"user_#{n}\" }\n    sequence(:email) { |n| \"user_#{n}@example.com\" }\n\n    # Traits: variations\n    trait :admin do\n      admin { true }\n    end\n\n    trait :with_articles do\n      after(:create) { |user| create_list(:article, 3, author: user) }\n    end\n\n    factory :admin_user, traits: [:admin]  # combined\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/factories/articles.rb\nFactoryBot.define do\n  factory :article do\n    title { \"Test Article\" }\n    body { \"This is the body of the test article\" }\n    published { false }\n    association :author, factory: :user  # creates an associated user automatically\n\n    trait :published do\n      published { true }\n    end\n\n    trait :with_comments do\n      after(:create) { |article| create_list(:comment, 2, article: article) }\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# Using factories in tests\nRSpec.describe Article do\n  it \"creates a basic article\" do\n    article = create(:article)                           # default factory\n    expect(article.title).to eq(\"Test Article\")\n  end\n\n  it \"creates a published article\" do\n    article = create(:article, :published)               # with trait\n    expect(article).to be_published\n  end\n\n  it \"uses build (not saved to database)\" do\n    article = build(:article)                            # builds but doesn't save\n    expect(article).not_to be_persisted\n  end\n\n  it \"creates with overridden attributes\" do\n    article = create(:article, title: \"Custom Title\")    # override any attribute\n    expect(article.title).to eq(\"Custom Title\")\n  end\n\n  it \"creates associated records\" do\n    article = create(:article, :published, :with_comments)\n    expect(article.comments.count).to eq(2)\n  end\n\n  it \"uses create_list for multiple records\" do\n    articles = create_list(:article, 5, :published)\n    expect(Article.published.count).to eq(5)\n  end\nend\n\`\`\`\n\n### Mocking and Stubbing\n\nMocks and stubs replace real objects with test doubles, isolating the code under test from its dependencies.\n\n\`\`\`ruby\nRSpec.describe ArticlePublisher do\n  let(:article) { create(:article) }\n  let(:mailer) { instance_double(\"NotificationMailer\") }  # double that checks method existence\n\n  describe \"#publish!\" do\n    before do\n      # Stub: replace a method to return a specific value\n      allow(article).to receive(:save).and_return(true)\n\n      # Message expectation: expect this method to be called\n      expect(NotificationMailer).to receive(:article_published).with(article)\n        .and_return(mailer)\n      allow(mailer).to receive(:deliver_later)\n    end\n\n    it \"publishes the article and sends notification\" do\n      publisher = ArticlePublisher.new\n      result = publisher.publish!(article)\n\n      expect(result).to be true\n    end\n  end\n\n  describe \"error handling\" do\n    it \"handles save failure\" do\n      allow(article).to receive(:save).and_return(false)\n\n      publisher = ArticlePublisher.new\n      expect { publisher.publish!(article) }.to raise_error(\"Failed to publish\")\n    end\n  end\nend\n\`\`\`\n\n### Request Specs (Controller Tests)\n\nRails request specs test the entire HTTP stack — route, controller, model, view — without a browser.\n\n\`\`\`ruby\nRSpec.describe \"Articles\", type: :request do\n  let(:user) { create(:user) }\n  let(:article) { create(:article, author: user) }\n\n  describe \"GET /articles\" do\n    it \"returns a successful response\" do\n      get articles_path\n      expect(response).to have_http_status(:success)\n    end\n\n    it \"lists published articles\" do\n      published = create(:article, :published, author: user)\n      draft = create(:article, author: user)\n\n      get articles_path\n      expect(response.body).to include(published.title)\n      expect(response.body).not_to include(draft.title)\n    end\n  end\n\n  describe \"GET /articles/:id\" do\n    it \"shows the article\" do\n      get article_path(article)\n      expect(response.body).to include(article.title)\n    end\n  end\n\n  describe \"POST /articles\" do\n    it \"creates a new article when authenticated\" do\n      sign_in user\n\n      expect {\n        post articles_path, params: {\n          article: { title: \"New\", body: \"Content\" }\n        }\n      }.to change(Article, :count).by(1)\n\n      expect(response).to redirect_to(article_path(Article.last))\n    end\n\n    it \"returns unprocessable_entity with invalid params\" do\n      sign_in user\n\n      post articles_path, params: {\n        article: { title: \"\", body: \"\" }\n      }\n\n      expect(response).to have_http_status(:unprocessable_entity)\n    end\n  end\nend\n\`\`\`\n\n### System Specs (Browser Tests)\n\nSystem specs test the full application through a real browser using Capybara.\n\n\`\`\`ruby\nRSpec.describe \"Articles\", type: :system do\n  let(:user) { create(:user) }\n\n  before do\n    driven_by(:rack_test)        # headless driver (fast)\n    # driven_by(:selenium_chrome)  # real Chrome browser (for JavaScript)\n  end\n\n  it \"creates a new article\" do\n    sign_in user\n\n    visit articles_path\n    click_on \"New Article\"\n\n    fill_in \"Title\", with: \"My New Article\"\n    fill_in \"Body\", with: \"This is the body of my new article.\"\n    click_on \"Create Article\"\n\n    expect(page).to have_content(\"Article created!\")\n    expect(page).to have_content(\"My New Article\")\n  end\n\n  it \"displays validation errors\" do\n    sign_in user\n\n    visit new_article_path\n    click_on \"Create Article\"\n\n    expect(page).to have_content(\"Title can't be blank\")\n  end\nend\n\`\`\`\n\n### Minitest: The Built-in Alternative\n\nMinitest is Ruby's standard testing library. It is simpler, faster, and has no DSL magic.\n\n\`\`\`ruby\n# test/models/article_test.rb\nrequire \"test_helper\"\n\nclass ArticleTest < ActiveSupport::TestCase\n  def setup\n    @article = articles(:one)  # fixtures (static YAML data)\n  end\n\n  test \"should be valid\" do\n    assert @article.valid?\n  end\n\n  test \"title should be present\" do\n    @article.title = \"\"\n    assert_not @article.valid?\n    assert_includes @article.errors[:title], \"can't be blank\"\n  end\n\n  test \"should belong to a user\" do\n    assert_respond_to @article, :author\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# test/controllers/articles_controller_test.rb\nrequire \"test_helper\"\n\nclass ArticlesControllerTest < ActionDispatch::IntegrationTest\n  def setup\n    @user = users(:one)\n    @article = articles(:one)\n  end\n\n  test \"should get index\" do\n    get articles_url\n    assert_response :success\n  end\n\n  test \"should create article\" do\n    sign_in @user\n\n    assert_difference(\"Article.count\", 1) do\n      post articles_url, params: {\n        article: { title: \"New\", body: \"Content\" }\n      }\n    end\n\n    assert_redirected_to article_url(Article.last)\n  end\nend\n\`\`\`\n\n## Wiring It Together\n\nThis comprehensive test suite for a Blog application demonstrates all testing concepts: RSpec, FactoryBot, request specs, system specs, mocks, and stubs.\n\n\`\`\`ruby\n# spec/factories.rb\nFactoryBot.define do\n  factory :user do\n    sequence(:email) { |n| \"user#{n}@example.com\" }\n    password { \"password\" }\n\n    trait :admin do\n      admin { true }\n    end\n  end\n\n  factory :article do\n    title { \"How to Test in Ruby\" }\n    body { \"A comprehensive guide to testing in the Ruby ecosystem.\" }\n    association :author, factory: :user\n\n    trait :published do\n      published { true }\n    end\n  end\n\n  factory :comment do\n    body { \"Great article!\" }\n    association :article\n    association :user\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/models/article_spec.rb\nRSpec.describe Article, type: :model do\n  subject(:article) { build(:article) }\n\n  describe \"validations\" do\n    it { should validate_presence_of(:title) }\n    it { should validate_presence_of(:body) }\n    it { should belong_to(:author).class_name(\"User\") }\n    it { should have_many(:comments).dependent(:destroy) }\n  end\n\n  describe \"scopes\" do\n    let!(:published_article) { create(:article, :published) }\n    let!(:draft_article) { create(:article) }\n\n    it \"includes published articles in published scope\" do\n      expect(Article.published).to include(published_article)\n      expect(Article.published).not_to include(draft_article)\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/requests/articles_spec.rb\nRSpec.describe \"Articles\", type: :request do\n  let(:user) { create(:user) }\n  let(:article) { create(:article, author: user) }\n\n  describe \"GET /articles/:id\" do\n    it \"increments the view count\" do\n      expect {\n        get article_path(article)\n      }.to change { article.reload.views_count }.by(1)\n    end\n  end\n\n  describe \"POST /articles\" do\n    context \"with valid params\" do\n      let(:valid_params) do\n        { article: { title: \"New\", body: \"Content\", author_id: user.id } }\n      end\n\n      it \"creates an article\" do\n        sign_in user\n        expect { post articles_path, params: valid_params }\n          .to change(Article, :count).by(1)\n      end\n\n      it \"sends a notification\" do\n        sign_in user\n        mailer = instance_double(ActionMailer::MessageDelivery)\n        expect(NotificationMailer).to receive(:article_created)\n          .and_return(mailer)\n        expect(mailer).to receive(:deliver_later)\n\n        post articles_path, params: valid_params\n      end\n    end\n\n    context \"with invalid params\" do\n      it \"returns errors\" do\n        sign_in user\n        post articles_path, params: { article: { title: \"\" } }\n        expect(response).to have_http_status(:unprocessable_entity)\n        expect(response.body).to include(\"Title can't be blank\")\n      end\n    end\n  end\nend\n\`\`\`\n\n\`\`\`ruby\n# spec/system/articles_spec.rb\nRSpec.describe \"Articles\", type: :system do\n  let(:user) { create(:user) }\n\n  before { driven_by(:selenium_chrome_headless) }\n\n  it \"allows a user to create, view, and comment on articles\" do\n    # Sign in\n    visit new_user_session_path\n    fill_in \"Email\", with: user.email\n    fill_in \"Password\", with: user.password\n    click_on \"Log in\"\n\n    # Create an article\n    click_on \"New Article\"\n    fill_in \"Title\", with: \"My Test Article\"\n    fill_in \"Body\", with: \"This is the body of my test article.\"\n    click_on \"Create Article\"\n\n    expect(page).to have_content(\"Article created!\")\n    expect(page).to have_content(\"My Test Article\")\n\n    # Add a comment\n    fill_in \"comment_body\", with: \"This is a test comment.\"\n    click_on \"Post Comment\"\n\n    expect(page).to have_content(\"This is a test comment.\")\n  end\nend\n\`\`\`\n`,
+            tags: ["Ruby", "RSpec", "Testing", "Rails"],
+          },
+          {
+            id: "ns-rb-deploy",
+            title: "Deployment & Tooling",
+            shortDesc: "Capistrano, Docker, Render/Heroku, RubyMine, RuboCop, and security (Brakeman).",
+            difficulty: "advanced",
+            readTimeMin: 15,
+            keyPoints: [
+              "Capistrano automates deployment with SSH — it pulls code from Git, runs migrations, restarts the server, and supports rollback.",
+              "Docker containerizes Ruby apps for consistent environments across development, staging, and production.",
+              "Heroku and Render are Platform-as-a-Service (PaaS) options that simplify deployment to zero-configuration.",
+              "RubyMine and VS Code with Solargraph provide IDE features for Ruby development (debugging, autocomplete, refactoring).",
+              "RuboCop enforces style guidelines automatically; Brakeman scans for security vulnerabilities in Rails apps.",
+              "A complete stack includes: version control (Git), CI/CD (GitHub Actions), monitoring (Sentry, Datadog), and logging (lograge).",
+            ],
+            content: `## What's This?\n\nDeployment is the process of making your application available to users on the internet. For Ruby applications, this involves preparing your code, configuring the server environment, managing databases, handling background jobs, and ensuring the app stays running. Tooling includes everything from IDEs (RubyMine, VS Code) to code quality tools (RuboCop) to security scanners (Brakeman) to deployment tools (Capistrano, Docker, Heroku, Render).\n\nThink of deployment as moving day. You have been building furniture (writing code) in a workshop (development). Now you need to move everything to a real house (production) where people will live (use your app). You need to make sure the plumbing works (database), the electricity runs (web server), the heat turns on (background jobs), and the doors lock (security).\n\nModern Ruby deployment has many options. Heroku pioneered "git push to deploy" — you push to a Git remote, and Heroku builds and runs your app. Docker gives you full control over the environment. Capistrano automates multi-server deployment with zero-downtime rolling updates.\n\n## The Big Picture\n\nDeployment builds on everything you have learned: Ruby code, Rails framework, database, gems. All of that code must be packaged, transferred to a server, configured, and started.\n\nAfter mastering deployment, the next topics are: monitoring and observability (APM tools, error tracking, metrics), performance optimization (database query optimization, caching), and scaling strategies (horizontal scaling, load balancing, CDNs).\n\n## Core Ideas\n\n### Environment Configuration\n\nRails uses environment variables to manage configuration across environments. Never hardcode secrets in your code.\n\n\`\`\`ruby\n# config/database.yml\nproduction:\n  adapter: postgresql\n  database: myapp_production\n  username: <%= ENV[\"DB_USERNAME\"] %>   # from environment\n  password: <%= ENV[\"DB_PASSWORD\"] %>   # NEVER commit to Git!\n  host: <%= ENV[\"DB_HOST\"] %>\n  pool: 25\n\`\`\`\n\n\`\`\`ruby\n# credentials.yml.enc — Rails encrypted credentials\n# Edit with: rails credentials:edit\n# Stores API keys, secrets, and tokens encrypted with RAILS_MASTER_KEY\n\n# config/initializers/sentry.rb\nRaven.configure do |config|\n  config.dsn = Rails.application.credentials.sentry_dsn  # from encrypted credentials\nend\n\`\`\`\n\n### Capistrano: Multi-Server Deployment\n\nCapistrano automates deployment over SSH. It pulls the latest code from Git, installs dependencies, runs migrations, precompiles assets, and restarts the server.\n\n\`\`\`ruby\n# Gemfile\ngroup :development do\n  gem "capistrano", require: false\ngem "capistrano-rails\", require: false\ngem \"capistrano-bundler\", require: false\ngem \"capistrano-rbenv\", require: false\ngem \"capistrano-puma\", require: false\nend\n\`\`\`\n\n\`\`\`ruby\n# Capfile — Capistrano configuration\nrequire "capistrano/setup\"\nrequire "capistrano/deploy\"\nrequire "capistrano/rbenv\"\nrequire "capistrano/bundler\"\nrequire "capistrano/rails/assets\"\nrequire "capistrano/rails/migrations\"\nrequire "capistrano/puma\"\n\`\`\`\n\n\`\`\`ruby\n# config/deploy.rb\nlock "~> 3.18\"\n\nset :application, \"my_app\"\nset :repo_url, \"git@github.com:username/my_app.git\"\nset :branch, :main\n\nset :deploy_to, \"/var/www/my_app\"\nset :rbenv_ruby, \"3.2.2\"\n\nset :linked_files, %w[config/master.key config/database.yml]\nset :linked_dirs, %w[log tmp/pids tmp/cache tmp/sockets public/system]\nset :keep_releases, 5\nafter "deploy:published\", \"puma:restart\"\n\`\`\`\n\n\`\`\`ruby\n# config/deploy/production.rb\nserver "api.myapp.com\", user: \"deploy\", roles: %w[app db web]\n\`\`\`\n\n\`\`\`bash\n# Deploy commands\ncap production deploy                    # deploy the main branch\ncap production deploy:rollback           # rollback to previous release\ncap production puma:restart              # restart the web server\ncap production rails:console             # open a Rails console on the server\n\`\`\`\n\n### Docker: Containerized Deployment\n\nDocker packages your application and its dependencies into a portable container.\n\n\`\`\`dockerfile\n# Dockerfile — build the application image\nFROM ruby:3.2.2-slim\n\n# Install system dependencies\nRUN apt-get update -qq && apt-get install -y \\\n  build-essential libpq-dev nodejs postgresql-client\n\n# Set the working directory\nWORKDIR /app\n\n# Install gems (cached unless Gemfile changes)\nCOPY Gemfile Gemfile.lock ./\nRUN bundle install\n\n# Copy the application code\nCOPY . .\n\n# Precompile assets and run migrations\nRUN bundle exec rails assets:precompile\n\n# Expose port and start server\nEXPOSE 3000\nCMD ["bundle", \"exec\", \"puma\", \"-C\", \"config/puma.rb\"]\n\`\`\`\n\n\`\`\`yaml\n# docker-compose.yml — multi-container setup\nversion: "3.8\"\n\nservices:\n  db:\n    image: postgres:16\n    volumes:\n      - postgres_data:/var/lib/postgresql/data\n    environment:\n      POSTGRES_USER: myapp\n      POSTGRES_PASSWORD: myapp_password\n\n  app: &app\n    build: .\n    ports:\n      - "3000:3000\"\n    depends_on:\n      - db\n    environment:\n      DATABASE_URL: postgres://myapp:myapp_password@db:5432/myapp_production\n      RAILS_ENV: production\n      RAILS_MASTER_KEY: \${RAILS_MASTER_KEY}\n\n  sidekiq:\n    <<: *app\n    command: bundle exec sidekiq\n    ports: []\n    depends_on:\n      - db\n      - redis\n\n  redis:\n    image: redis:7\n\nvolumes:\n  postgres_data:\n\`\`\`\n\n\`\`\`bash\n# Build and run with Docker\ndocker compose build\ndocker compose run app rails db:create db:migrate\ndocker compose up -d\n\`\`\`\n\n### Heroku / Render: Platform-as-a-Service\n\nPaaS platforms handle server management, scaling, and monitoring for you.\n\n\`\`\`bash\n# Heroku deployment\nheroku create my-app\nheroku addons:create heroku-postgresql:mini\nheroku config:set RAILS_MASTER_KEY=your_key_here\ngit push heroku main\nheroku run rails db:migrate\n\`\`\`\n\n\`\`\`ruby\n# Config files Heroku looks for automatically:\n# Procfile — tells Heroku what processes to run\nweb: bundle exec puma -C config/puma.rb\nworker: bundle exec sidekiq\nrelease: bundle exec rails db:migrate\n\`\`\`\n\n\`\`\`yaml\n# render.yaml — Render's infrastructure-as-code (Blueprint)\nservices:\n  - type: web\n    name: my-app\n    env: ruby\n    buildCommand: "./bin/render-build.sh\"\n    startCommand: \"bundle exec puma -C config/puma.rb\"\n    envVars:\n      - key: DATABASE_URL\n        fromDatabase:\n          name: my-app-db\n          property: connectionString\n      - key: RAILS_MASTER_KEY\n        sync: false\n\ndatabases:\n  - name: my-app-db\n    plan: starter\n\`\`\`\n\n\`\`\`bash\n# Deploy to Render\ngit push origin main  # Render auto-deploys from Git\n\`\`\`\n\n### RuboCop: Code Quality\n\nRuboCop is a static code analyzer that enforces the Ruby Style Guide. It catches style violations, code smells, and potential bugs.\n\n\`\`\`ruby\n# .rubocop.yml\ninherit_from: .rubo-shrug.yml  # start from Ruby community defaults\n\nAllCops:\n  NewCops: enable\n  Exclude:\n    - \"db/schema.rb\"\n    - \"bin/*\"\n    - \"vendor/**/*\"\n\nLayout/LineLength:\n  Max: 120\n\nStyle/Documentation:\n  Enabled: false  # Rails models don't need comments for every class\n\nMetrics/BlockLength:\n  Exclude:\n    - \"spec/**/*\"\n    - \"config/routes.rb\"\n\`\`\`\n\n\`\`\`bash\n# Run RuboCop\nbundle exec rubocop                    # check all files\nbundle exec rubocop -a                 # auto-correct safe offenses\nbundle exec rubocop -A                 # auto-correct all offenses (including unsafe)\n\`\`\`\n\n### Brakeman: Security Scanner\n\nBrakeman is a static security analyzer for Rails applications. It detects SQL injection, XSS, mass assignment, and other common vulnerabilities.\n\n\`\`\`bash\n# Run Brakeman\nbundle exec brakeman                    # scan the entire application\nbundle exec brakeman -o report.html     # generate HTML report\nbundle exec brakeman -w 2               # only show warnings of medium severity or higher\n\`\`\`\n\n\`\`\`\nExample Brakeman output:\n+SECURITY WARNINGS+\n+------------------+\n| Confidence | Class | Method | Warning Type | Message |\n| High | ArticlesController | create | SQL Injection | Possible SQL injection near line 25 |\n| Medium | User | vulnerable | Mass Assignment | Attribute 'admin' is mass-assignable |\n+------------------+\n\`\`\`\n\n### CI/CD with GitHub Actions\n\nContinuous Integration runs tests on every push. Continuous Deployment deploys automatically after tests pass.\n\n\`\`\`yaml\n# .github/workflows/ci.yml\nname: CI\n\non:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n\n    services:\n      postgres:\n        image: postgres:16\n        env:\n          POSTGRES_USER: runner\n          POSTGRES_PASSWORD: \"\"\n          POSTGRES_DB: myapp_test\n        ports:\n          - 5432:5432\n\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Set up Ruby\n        uses: ruby/setup-ruby@v1\n        with:\n          bundler-cache: true\n\n      - name: Set up database\n        run: |\n          cp config/database.yml.ci config/database.yml\n          bundle exec rails db:create db:schema:load\n\n      - name: Run tests\n        run: bundle exec rspec\n\n      - name: Run RuboCop\n        run: bundle exec rubocop\n\n      - name: Run Brakeman\n        run: bundle exec brakeman --no-pager\n\`\`\`\n\n\`\`\`yaml\n# .github/workflows/deploy.yml\nname: Deploy\n\non:\n  push:\n    branches: [main]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Deploy to Render\n        env:\n          RENDER_DEPLOY_HOOK_URL: \${{ secrets.RENDER_DEPLOY_HOOK_URL }}\n        run: |\n          curl -X POST \"$RENDER_DEPLOY_HOOK_URL\"\n\`\`\`\n\n### Monitoring and Observability\n\nOnce deployed, you need to know what is happening in production.\n\n| Tool | Purpose | Setup |\n|------|---------|-------|\n| <b>Sentry</b> | Error tracking and performance monitoring | <code>gem \"sentry-ruby\"</code> and <code>gem \"sentry-rails\"</code> |\n| <b>Datadog</b> | APM, metrics, logs (all-in-one) | <code>gem \"ddtrace\"</code> with Datadog agent |\n| <b>Lograge</b> | Single-line, structured logging | <code>gem \"lograge\"</code> in production group |\n| <b>Skylight</b> | Rails-specific performance profiler | <code>gem \"skylight\"</code> |\n| <b>Scout</b> | Simple APM with N+1 detection | <code>gem \"scout_apm\"</code> |\n\n\`\`\`ruby\n# config/environments/production.rb — lograge setup\nRails.application.configure do\n  config.lograge.enabled = true\n  config.lograge.formatter = Lograge::Formatters::Logstash.new\n  config.lograge.custom_options = lambda do |event|\n    { params: event.payload[:params].except("controller\", \"action\") }\n  end\nend\n\`\`\`\n\n## Wiring It Together\n\nThis complete example shows the full deployment pipeline for a Rails app: Docker setup, CI/CD with GitHub Actions, Capistrano configuration, code quality checks, and security scanning.\n\n\`\`\`dockerfile\n# Dockerfile.production\nFROM ruby:3.2.2-slim AS build\n\nRUN apt-get update -qq && apt-get install -y build-essential libpq-dev\n\nWORKDIR /app\n\nCOPY Gemfile Gemfile.lock ./\nRUN bundle install --without development test\n\nCOPY . .\n\nRUN SECRET_KEY_BASE_DUMMY=1 bundle exec rails assets:precompile\nRUN rm -rf node_modules spec tmp/cache\n\nFROM ruby:3.2.2-slim\n\nRUN apt-get update -qq && apt-get install -y libpq-dev nodejs\n\nWORKDIR /app\n\nCOPY --from=build /app /app\n\nEXPOSE 3000\n\nCMD ["bundle\", \"exec\", \"puma\", \"-C\", \"config/puma.rb\", \"-e\", \"production\"]\n\`\`\`\n\n\`\`\`yaml\n# .github/workflows/main.yml\nname: Build, Test, and Deploy\n\non:\n  push:\n    branches: [main]\n\njobs:\n  quality:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ruby/setup-ruby@v1\n        with: { bundler-cache: true }\n      - run: bundle exec rubocop\n      - run: bundle exec brakeman --no-pager\n\n  test:\n    needs: quality\n    runs-on: ubuntu-latest\n    services:\n      postgres:\n        image: postgres:16\n        env:\n          POSTGRES_USER: runner\n          POSTGRES_DB: myapp_test\n        ports: [\"5432:5432\"]\n    steps:\n      - uses: actions/checkout@v4\n      - uses: ruby/setup-ruby@v1\n        with: { bundler-cache: true }\n      - run: bundle exec rails db:setup\n      - run: bundle exec rspec\n\n  deploy:\n    needs: test\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n\n      - name: Build Docker image\n        run: |\n          docker build -f Dockerfile.production -t myapp:\${{ github.sha }} .\n\n      - name: Push to registry\n        run: |\n          docker tag myapp:\${{ github.sha }} registry.example.com/myapp:latest\n          docker push registry.example.com/myapp:latest\n\n      - name: Deploy via Capistrano\n        env:\n          SSH_PRIVATE_KEY: \${{ secrets.SSH_PRIVATE_KEY }}\n        run: |\n          bundle exec cap production deploy\n\`\`\`\n\n\`\`\`bash\n# Local development workflow\nbundle install              # install dependencies\nbundle exec rubocop -a      # fix style issues\nbundle exec brakeman        # check for security issues\nbundle exec rspec           # run tests\n\ngit add .\ngit commit -m \"Add feature\"\ngit push origin main        # triggers CI/CD pipeline\n\`\`\`\n`,
+            tags: ["Ruby", "Rails", "Deployment", "DevOps"],
+          },
         ],
       },
       // ── PHP / Laravel ────────────────────────────────────────────────────
