@@ -72949,17 +72949,3112 @@ Actions (on_fail values): <code>'exception'</code> (raise error), <code>'filter'
         title: "Python",
         description: "Python from zero to Django — syntax, data model, OOP, standard library, testing, packaging, and full-stack frameworks.",
         topics: [
-          { id: "ns-py-syntax", title: "Syntax & Basics", shortDesc: "Indentation, variables, comments, I/O, and the Python REPL.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-data-types", title: "Data Types & Structures", shortDesc: "Numbers, strings, lists, tuples, dicts, sets — immutability, mutability, and common operations.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-control-flow", title: "Control Flow & Functions", shortDesc: "if/elif/else, loops, comprehensions, defining functions, scope, and lambda expressions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-modules", title: "Modules & Packages", shortDesc: "import system, __init__.py, absolute vs relative imports, and structuring a Python project.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-file-io", title: "File I/O & Exception Handling", shortDesc: "Reading/writing files, context managers, try/except/finally, and custom exceptions.", difficulty: "foundational", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-oop", title: "Object-Oriented Programming", shortDesc: "Classes, inheritance, polymorphism, dunder methods, properties, descriptors, and metaclasses.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-stdlib", title: "Standard Library Highlights", shortDesc: "datetime, collections, itertools, functools, re, pathlib, subprocess, and more.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-testing", title: "Testing with pytest", shortDesc: "Test discovery, fixtures, parametrization, mocking, and coverage reporting.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-async", title: "Async Python", shortDesc: "asyncio, coroutines, tasks, futures, async context managers, and aiohttp.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-web", title: "Web Frameworks (Django, FastAPI, Flask)", shortDesc: "Routing, middleware, ORM, serialization, dependency injection, and production deployment patterns.", difficulty: "advanced", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
-          { id: "ns-py-tooling", title: "Tooling & Packaging", shortDesc: "pip, venv, poetry, rye, ruff, mypy, pre-commit, and publishing to PyPI.", difficulty: "intermediate", readTimeMin: 0, keyPoints: [], content: "", tags: [] },
+          { id: "ns-py-syntax", title: "Syntax & Basics", shortDesc: "Indentation, variables, comments, I/O, and the Python REPL.", difficulty: "foundational", readTimeMin: 12, keyPoints: [
+              "Python uses indentation (4 spaces by convention) to define block structure — no braces or begin/end keywords.",
+              "Variables are dynamically typed — a name can refer to any type, and types are checked at runtime.",
+              "The REPL (Read-Eval-Print Loop) lets you experiment interactively by typing python3 in your terminal.",
+              "Comments use # for single-line and triple-quoted strings for docstrings; both are ignored by the interpreter.",
+              "Basic I/O: print() outputs to stdout, input() reads a string from the user via stdin.",
+              "Python's design philosophy emphasizes readability: 'Explicit is better than implicit.'",
+            ], content: `## What Is This?
+
+Python is a high-level, general-purpose programming language designed for readability and rapid development. Unlike languages that use braces (<code>{}</code>) or keywords (<code>begin</code>/<code>end</code>) to group statements, Python uses indentation (whitespace at the start of a line) to define blocks of code. This forces every Python program to be visually clean and consistent from the start.
+
+Think of Python as a language that cares about how your code looks, because code is read far more often than it is written. When you write Python, you type instructions in plain English-like syntax, and a program called the interpreter runs them immediately without a separate compilation step.
+
+Python exists because Guido van Rossum wanted a scripting language that was "more readable than Perl and more capable than BASIC." It was first released in 1991 and has grown into one of the most widely used languages in the world, powering everything from tiny scripts to massive web services and machine learning pipelines.
+
+The REPL (Read-Eval-Print Loop) is Python's interactive mode. When you type <code>python3</code> in your terminal, you enter a conversation with the interpreter: you type an expression, it reads it, evaluates it, prints the result, and loops back for more. This is invaluable for learning and experimentation.
+
+## The Big Picture
+
+Python syntax sits at the center of the entire language. Before you can write loops, functions, classes, or import libraries, you must understand how Python structures code through indentation, how names and values work, and how to run code. Everything else builds on these foundations.
+
+Syntax connects to data types (variables hold values of various types), control flow (indented blocks form the bodies of if-statements and loops), functions (def blocks), and classes (class blocks). The REPL is also your gateway to exploring the standard library — you can import a module and experiment with it interactively.
+
+After mastering syntax, you will move to data types and structures, then control flow and functions. Each topic assumes you understand indentation-based blocks, dynamic typing, and the basic I/O functions.
+
+## Core Ideas
+
+### Indentation Defines Blocks
+
+In most languages, braces or keywords mark the start and end of a block. Python uses indentation level (the number of spaces or tabs at the beginning of a line). All lines at the same indentation belong to the same block. This means indentation is not optional — it is part of the syntax.
+
+\`\`\`python
+if True:
+    print("This line is inside the if block")
+    print("This line is also inside")
+print("This line is outside the if block")
+\`\`\`
+
+Line 2 and 3 are indented with 4 spaces, so they belong to the <code>if</code> block. Line 4 is at the same indentation as the <code>if</code>, so it is outside.
+
+**Convention:** Use 4 spaces per indentation level. Never mix tabs and spaces. Most editors can be configured to convert Tab to spaces.
+
+### Variables and Dynamic Typing
+
+A variable is a name that refers to a value. You create a variable by assigning to it with <code>=</code>. Python is dynamically typed — you do not declare the type, and the same variable can hold different types at different times.
+
+\`\`\`python
+name = "Alice"       # name refers to a string
+age = 30             # age refers to an integer
+age = "thirty"       # age now refers to a string (dynamic typing)
+\`\`\`
+
+Line 1 creates a string variable. Line 2 creates an integer variable. Line 3 reassigns the same name to a different type — this is valid because Python checks types at runtime, not ahead of time.
+
+### Naming Rules
+
+Names (identifiers) must start with a letter or underscore, followed by letters, digits, or underscores. Case matters: <code>myVar</code> and <code>myvar</code> are different. By convention, use <code>snake_case</code> for variables and functions, <code>CamelCase</code> for classes, and <code>UPPER_CASE</code> for constants.
+
+### Comments and Docstrings
+
+\`\`\`python
+# This is a single-line comment — ignored by the interpreter
+
+"""
+This is a docstring (triple-quoted string).
+It spans multiple lines.
+When placed at the top of a file, function, or class,
+it becomes that object's documentation.
+"""
+
+def greet(name):
+    """Return a greeting string."""
+    return f"Hello, {name}!"
+\`\`\`
+
+Line 1 shows a single-line comment. Lines 3-7 show a multi-line docstring. Line 10 shows a function docstring — accessible at runtime via <code>help(greet)</code> or <code>greet.__doc__</code>.
+
+### The REPL
+
+The REPL is Python's interactive interpreter. Start it by typing <code>python3</code> in your terminal. You see a prompt (<code>>>></code>), type expressions, and get immediate results.
+
+\`\`\`python
+>>> 2 + 2
+4
+>>> print("hello world")
+hello world
+>>> import math
+>>> math.sqrt(16)
+4.0
+\`\`\`
+
+Line 1: simple arithmetic. Line 3: calling a function. Line 5: importing a module. Line 7: calling a function from the imported module.
+
+### Basic I/O: print and input
+
+<code>print()</code> writes values to the console (standard output). <code>input()</code> reads a line of text from the user (standard input), always returning a string.
+
+\`\`\`python
+print("Hello, world!")                 # Prints: Hello, world!
+print(42)                              # Prints: 42
+print("The answer is", 42)             # Prints: The answer is 42 (space-separated)
+
+name = input("Enter your name: ")      # Shows prompt, waits for user input
+print("Hello,", name)                  # Prints the user's input
+\`\`\`
+
+Line 1: print a string literal. Line 3: print multiple values — <code>print</code> automatically separates them with a space. Line 5: <code>input</code> displays the prompt string, waits for the user to type and press Enter, then returns whatever they typed as a string.
+
+### Python's Philosophy: The Zen
+
+\`\`\`python
+import this
+\`\`\`
+
+This command prints "The Zen of Python" by Tim Peters — 19 guiding principles for writing Pythonic code. Key aphorisms include "Beautiful is better than ugly," "Simple is better than complex," and "Readability counts."
+
+## Wiring It Together
+
+A complete script that demonstrates syntax fundamentals:
+
+\`\`\`python
+#!/usr/bin/env python3
+"""greeter.py — A simple interactive greeting program."""
+
+# Prompt the user for their name
+user_name = input("What is your name? ")          # returns a string
+
+# Prompt for age and convert to integer
+age_str = input("How old are you? ")              # input always returns a string
+user_age = int(age_str)                           # convert string to integer
+
+# Calculate birth year (approximately)
+current_year = 2026                                # integer variable
+birth_year = current_year - user_age               # arithmetic expression
+
+# Print a personalized greeting
+print("Hello, " + user_name + "!")                 # string concatenation with +
+print(f"You were born around {birth_year}.")       # f-string — embeds expression in {}
+\`\`\`
+
+Line 1: shebang — tells the OS to run this with <code>python3</code> on Unix systems. Line 2: module docstring. Line 5: <code>input</code> returns a string. Line 8: convert the string to int. Line 11: integer arithmetic. Line 12: subtraction produces an int. Line 15: string concatenation. Line 16: f-string — <code>{birth_year}</code> evaluates the variable and formats it into the string.
+
+`,
+            tags: ["Basics", "Beginners", "REPL"],
+          },
+          { id: "ns-py-data-types", title: "Data Types & Structures", shortDesc: "Numbers, strings, lists, tuples, dicts, sets — immutability, mutability, and common operations.", difficulty: "foundational", readTimeMin: 16, keyPoints: [
+              "Python has numeric types: int (unbounded), float (64-bit IEEE 754), and complex (a+bj).",
+              "Strings are immutable sequences of Unicode code points; f-strings embed expressions directly.",
+              "Lists are mutable ordered sequences; tuples are immutable ordered sequences — both support indexing and slicing.",
+              "Dicts map unique hashable keys to values (insertion-order preserved from Python 3.7+).",
+              "Sets store unique, unordered elements and support mathematical operations (union, intersection, difference).",
+              "Mutable types (list, dict, set) can be changed in place; immutable types (int, float, str, tuple) cannot.",
+            ], content: `## What Is This?
+
+Every value in Python is an object, and every object has a type. The type determines what operations are valid on that value and how much memory it occupies. Python's built-in data types fall into two broad categories: scalar types (a single value like an integer or a boolean) and collection types (a container of values like a list or a dictionary).
+
+Think of types as different kinds of containers. An integer is like a single Post-it note holding one number. A list is like a tray of numbered slots where you can add, remove, or rearrange items. A tuple is like a sealed envelope with fixed compartments — you can see what is inside, but you cannot change it. A dictionary is like a phonebook where you look up a name and find a phone number.
+
+Understanding types matters because every operation in Python depends on the types of the operands. Adding two integers does arithmetic; adding two strings does concatenation. The type system is the foundation for everything else: control flow operates on booleans, functions return typed values, and classes define new types.
+
+## The Big Picture
+
+Data types are the second thing to learn after syntax because programs process data. The type of a value determines what you can do with it, and choosing the right data structure is a core skill that carries through every Python program.
+
+These types build on variable assignment from Syntax & Basics. They connect forward to control flow (comparing values, iterating over collections), functions (passing and returning values), and classes (defining custom types). The standard library and third-party packages all create and consume these fundamental types.
+
+After this topic, you will understand which data structure to use for which problem: lists for ordered sequences, sets for uniqueness checks, dicts for key-value lookups, and tuples for fixed records.
+
+## Core Ideas
+
+### Numeric Types: int, float, complex
+
+\`\`\`python
+count = 42                            # int — arbitrary precision (no overflow)
+pi = 3.14159                          # float — 64-bit IEEE 754 (double precision)
+temperature = -5                      # int can be negative
+big = 2 ** 1000                       # int can be arbitrarily large
+c = 3 + 4j                            # complex — 3 is real part, 4 is imaginary
+real_part = c.real                    # .real gets the real component (3.0)
+imag_part = c.imag                    # .imag gets the imaginary component (4.0)
+\`\`\`
+
+Line 1: <code>int</code> can hold any integer, no matter how large (limited only by memory). Line 2: <code>float</code> follows the IEEE 754 double-precision standard (~15-17 significant digits). Line 4: integers have no overflow — <code>2 ** 1000</code> is computed exactly. Line 5: <code>complex</code> uses <code>j</code> (not <code>i</code>) for the imaginary unit.
+
+### Type Conversion
+
+\`\`\`python
+int("42")                             # string to int → 42
+float("3.14")                         # string to float → 3.14
+str(100)                              # int to string → "100"
+bool(0)                               # int to bool → False (0 is falsy)
+bool(42)                              # int to bool → True (non-zero is truthy)
+\`\`\`
+
+Empty collections, <code>0</code>, <code>0.0</code>, <code>""</code>, <code>None</code>, and <code>False</code> are all falsy. Everything else is truthy.
+
+### Strings
+
+Strings are immutable sequences of Unicode characters. You create them with single quotes, double quotes, or triple quotes.
+
+\`\`\`python
+s1 = "hello"                          # double quotes
+s2 = 'world'                          # single quotes — both are equivalent
+s3 = """multi                         # triple quotes allow line breaks
+line"""
+s4 = f"value is {2 + 2}"              # f-string — embedded expression evaluates to "4"
+s5 = r"c:\\users\\name"                 # raw string — backslashes are literal, not escapes
+
+s1[0]                                 # indexing → "h"
+s1[1:4]                               # slicing → "ell" [start:stop:step]
+s1.upper()                            # method call → "HELLO" (returns new string)
+len(s1)                               # built-in function → 5
+", ".join(["a", "b", "c"])            # → "a, b, c"
+"hello world".split()                 # → ["hello", "world"]
+\`\`\`
+
+Line 1-2: single and double quotes are interchangeable. Line 5: f-strings evaluate expressions inside <code>{}</code>. Line 6: raw strings treat backslashes as literal characters. Lines 8-13: strings are sequences, so they support indexing (<code>[0]</code>), slicing (<code>[1:4]</code>), and methods like <code>.upper()</code>, <code>.join()</code>, <code>.split()</code>.
+
+### Lists
+
+Lists are mutable ordered sequences. They can hold elements of any (mixed) type.
+
+\`\`\`python
+nums = [1, 2, 3, 4]                   # list literal
+mixed = [1, "two", 3.0, [4, 5]]      # lists can hold any type, including other lists
+empty = []                            # empty list
+
+nums.append(5)                        # add to end → nums is now [1, 2, 3, 4, 5]
+nums.insert(0, 0)                     # insert at index 0 → [0, 1, 2, 3, 4, 5]
+nums.pop()                            # remove and return last element → 5
+nums.pop(0)                           # remove and return element at index 0 → 0
+nums.remove(3)                        # remove first occurrence of value 3
+nums[0] = 99                          # replace element at index 0 → [99, 2, 4]
+nums.sort()                           # sort in place → [2, 4, 99]
+len(nums)                             # length → 3
+\`\`\`
+
+Line 1: list literal with square brackets. Line 4: <code>append</code> adds one element to the end (O(1) amortized). Line 5: <code>insert</code> is O(n) because elements must shift. Line 8: <code>remove</code> removes the first matching value, O(n).
+
+### Tuples
+
+Tuples are immutable ordered sequences. Once created, they cannot be changed.
+
+\`\`\`python
+point = (3, 4)                        # tuple literal
+single = (1,)                         # single-element tuple — comma is required
+empty_tuple = ()                      # empty tuple
+nested = ((1, 2), (3, 4))            # tuple of tuples
+
+point[0]                              # indexing → 3
+x, y = point                          # tuple unpacking → x=3, y=4
+len(point)                            # length → 2
+\`\`\`
+
+Line 1: parentheses are optional in many contexts, but recommended for clarity. Line 2: the trailing comma distinguishes a tuple from a parenthesized expression. Line 6: unpacking assigns each element to a variable in one line.
+
+### Dicts
+
+Dicts (dictionaries) map keys to values. Keys must be hashable (immutable types like strings, numbers, tuples). Python 3.7+ preserves insertion order.
+
+\`\`\`python
+user = {"name": "Alice", "age": 30}   # dict literal
+empty = {}                            # empty dict
+grades = dict(alice=90, bob=85)       # dict() constructor — keys become strings
+
+user["email"] = "alice@example.com"   # add or update key-value pair
+email = user.get("email", "N/A")      # safe lookup — returns "N/A" if missing
+age = user["age"]                     # direct access — raises KeyError if missing
+del user["age"]                       # remove key-value pair
+"name" in user                        # key existence check → True
+list(user.keys())                     # all keys (view converted to list)
+list(user.values())                   # all values
+list(user.items())                    # all (key, value) pairs as tuples
+\`\`\`
+
+Line 1: <code>"name"</code> and <code>"age"</code> are string keys. Line 4: assigning to a new key adds it. Line 5: <code>.get()</code> is safer than direct access. Line 8: <code>in</code> checks key membership, which is O(1) average.
+
+### Sets
+
+Sets store unique, unordered elements. They support fast membership testing and mathematical set operations.
+
+\`\`\`python
+fruits = {"apple", "banana", "cherry"}   # set literal
+empty_set = set()                         # empty set (NOT {} — that's a dict)
+nums = set([1, 2, 2, 3, 3, 3])           # from list → {1, 2, 3} (duplicates removed)
+
+"apple" in fruits                         # membership test → True (O(1))
+fruits.add("date")                        # add element
+fruits.remove("banana")                   # remove element (raises KeyError if missing)
+
+a = {1, 2, 3}
+b = {3, 4, 5}
+a | b                                     # union → {1, 2, 3, 4, 5}
+a & b                                     # intersection → {3}
+a - b                                     # difference → {1, 2}
+a ^ b                                     # symmetric difference → {1, 2, 4, 5}
+\`\`\`
+
+Line 4: membership test on a set is O(1) average (hash-based), compared to O(n) for a list. Lines 9-12: set operators produce new sets without modifying the originals.
+
+### Mutability Summary
+
+| Type | Mutable | Ordered | Key Feature |
+|------|---------|---------|-------------|
+| <code>int</code>, <code>float</code>, <code>bool</code> | No | N/A | Scalar values |
+| <code>str</code> | No | Yes | Unicode text, immutable |
+| <code>list</code> | Yes | Yes | Variable-length sequence |
+| <code>tuple</code> | No | Yes | Fixed-length record |
+| <code>dict</code> | Yes | Yes (3.7+) | Key-value mapping |
+| <code>set</code> | Yes | No | Unique elements, fast membership |
+| <code>frozenset</code> | No | No | Immutable set (hashable) |
+
+### None — The Absence of a Value
+
+\`\`\`python
+result = None                             # stands for "no value"
+if result is None:                        # check with 'is', not '=='
+    print("no result")
+\`\`\`
+
+<code>None</code> is Python's null value. It is a singleton — there is only one <code>None</code> in memory. Use <code>is None</code> to check for it (identity comparison), not <code>== None</code>.
+
+## Wiring It Together
+
+A program that uses multiple data types together:
+
+\`\`\`python
+"""manage_contacts.py — demonstrates core data types and structures."""
+
+# A list of dicts — each dict is one contact
+contacts = [
+    {"name": "Alice", "phone": "555-0101", "tags": ["friend", "work"]},
+    {"name": "Bob",   "phone": "555-0102", "tags": ["family"]},
+    {"name": "Carol", "phone": "555-0103", "tags": ["friend"]},
+]
+
+# Add a new contact
+contacts.append({"name": "Dave", "phone": "555-0104", "tags": []})
+
+# Build a set of all unique tags across all contacts
+all_tags = set()                          # empty set
+for contact in contacts:                  # loop over list
+    for tag in contact["tags"]:           # loop over nested list
+        all_tags.add(tag)                 # set discards duplicates
+
+print("All tags:", all_tags)              # set is printed unordered
+
+# Find contacts tagged as "friend"
+friend_names = [
+    contact["name"]                       # collect just the name
+    for contact in contacts               # iterate over contacts
+    if "friend" in contact["tags"]        # filter — only contacts with "friend"
+]
+
+print("Friends:", ", ".join(friend_names))
+
+# Tuple for a fixed record — (name, phone, added_year)
+entry = ("Eve", "555-0105", 2026)         # tuple — immutable record
+name, phone, year = entry                 # tuple unpacking
+print(f"Added {name} ({phone}) in {year}")
+\`\`\`
+
+Line 5-9: list of dicts — each dict has string keys with values of different types (string, string, list of strings). Line 12: <code>append</code> adds a dict to the list. Line 15: set literal (<code>{}</code> is dict, <code>set()</code> is empty set). Line 18: <code>set.add</code> is O(1). Line 24-28: list comprehension with an <code>if</code> filter. Line 30: <code>", ".join()</code> joins strings with a separator. Line 33: tuple as a fixed, immutable record. Line 34: unpacking into named variables.
+
+`,
+            tags: ["Types", "Data Structures", "Collections"],
+          },
+          { id: "ns-py-control-flow", title: "Control Flow & Functions", shortDesc: "if/elif/else, loops, comprehensions, defining functions, scope, and lambda expressions.", difficulty: "foundational", readTimeMin: 15, keyPoints: [
+              "Conditionals: if/elif/else evaluate boolean expressions and execute the first true branch.",
+              "for loops iterate over any iterable; while loops repeat until a condition becomes false.",
+              "break exits a loop immediately; continue skips to the next iteration; pass is a no-op placeholder.",
+              "Comprehensions provide a concise syntax for building lists, dicts, and sets from iterables.",
+              "def defines a function; parameters can have defaults, *args collects positional extras, **kwargs collects keyword extras.",
+              "LEGB rule governs name resolution: Local, Enclosing, Global, Built-in — inner scopes can read but not reassign outer names.",
+            ], content: `## What Is This?
+
+Control flow determines the order in which statements execute. Without it, every line runs from top to bottom — useful only for the simplest scripts. Conditionals (<code>if</code>), loops (<code>for</code>, <code>while</code>), and function calls let you skip lines, repeat lines, and jump into reusable blocks of code.
+
+Think of control flow as decision points and loops in a recipe. "If the dough is sticky, add more flour" is a conditional. "Knead for 10 minutes" is a loop. "Prepare the frosting" is a function call — you jump to a different part of the recipe and come back when done.
+
+Functions are the primary way to package reusable logic in Python. They take inputs (parameters), perform work, and optionally return outputs. Together with control flow, functions form the backbone of program structure.
+
+## The Big Picture
+
+Control flow and functions are the bridge between simple scripts and real programs. After learning syntax and data types, you know how to write expressions that produce values. Control flow lets you make decisions and repeat work. Functions let you name and reuse logic.
+
+These concepts connect forward to modules (functions are the primary export of a module), OOP (methods are functions attached to a class), and functional programming tools in the standard library (<code>map</code>, <code>filter</code>, <code>functools</code>).
+
+## Core Ideas
+
+### Conditionals: if / elif / else
+
+\`\`\`python
+score = 85
+
+if score >= 90:                           # first condition checked
+    grade = "A"                           # executed only if True
+elif score >= 80:                         # checked only if first was False
+    grade = "B"                           # executed if this is True
+elif score >= 70:
+    grade = "C"
+else:                                     # executed if all above were False
+    grade = "F"
+
+print(f"Grade: {grade}")                  # runs regardless — outside the if-tree
+\`\`\`
+
+Line 2: <code>if</code> evaluates the boolean expression <code>score >= 90</code>. If it is <code>True</code>, the indented block runs. Line 4: <code>elif</code> ("else if") is checked only when the previous condition was <code>False</code>. Line 8: <code>else</code> catches everything that did not match. Zero or one branch executes — never more.
+
+### Truthiness and Boolean Operators
+
+\`\`\`python
+if "hello":                               # truthy — non-empty string
+if "":                                    # falsy — empty string
+if []:                                    # falsy — empty list
+if 0:                                     # falsy — zero
+if None:                                  # falsy — None
+
+if a and b:                               # True only if both a and b are truthy
+if a or b:                                # True if either a or b is truthy
+if not a:                                 # True if a is falsy
+\`\`\`
+
+These operators short-circuit: <code>and</code> stops evaluating at the first falsy operand; <code>or</code> stops at the first truthy operand.
+
+### for Loops
+
+\`\`\`python
+for fruit in ["apple", "banana", "cherry"]:
+    print(fruit)                          # prints each fruit on its own line
+
+for i in range(5):                        # range(5) → 0, 1, 2, 3, 4
+    print(i)
+
+for i, fruit in enumerate(["a", "b"]):    # enumerate yields (index, value) pairs
+    print(i, fruit)
+
+for key, value in {"a": 1, "b": 2}.items():
+    print(key, value)                     # iterate over dict key-value pairs
+\`\`\`
+
+Line 1: <code>for</code> assigns each element of the list to <code>fruit</code> in sequence. Line 4: <code>range(n)</code> produces 0 to n-1. Line 7: <code>enumerate</code> adds a counter. Line 10: <code>.items()</code> yields (key, value) tuples from a dict.
+
+### while Loops
+
+\`\`\`python
+count = 0
+while count < 3:                          # run the block while this is True
+    print(count)
+    count += 1                            # increment — otherwise the loop would run forever
+\`\`\`
+
+<code>while</code> checks the condition before each iteration. If the condition never becomes <code>False</code>, you have an infinite loop — use <code>break</code> to exit.
+
+### break, continue, pass
+
+\`\`\`python
+for n in range(10):
+    if n == 3:
+        continue                          # skip rest of this iteration — n=3 is not printed
+    if n == 7:
+        break                             # exit the loop entirely — n=7,8,9 are never reached
+    print(n)                              # prints: 0, 1, 2, 4, 5, 6
+
+if True:
+    pass                                  # do nothing — placeholder for empty block
+\`\`\`
+
+Line 3: <code>continue</code> jumps to the next iteration. Line 5: <code>break</code> exits the loop. Line 9: <code>pass</code> does nothing — it is a placeholder when syntax requires a statement.
+
+### Comprehensions
+
+Comprehensions build new collections from iterables in a single line.
+
+\`\`\`python
+squares = [x**2 for x in range(5)]        # list comprehension → [0, 1, 4, 9, 16]
+evens = [x for x in range(10) if x % 2 == 0]  # with filter → [0, 2, 4, 6, 8]
+pairs = [(a, b) for a in [1, 2] for b in ["x", "y"]]  # nested loops → [(1,'x'), (1,'y'), (2,'x'), (2,'y')]
+
+square_dict = {x: x**2 for x in range(5)} # dict comprehension → {0:0, 1:1, 2:4, 3:9, 4:16}
+unique = {len(w) for w in ["hi", "hello", "hey"]}  # set comprehension → {2, 3, 5}
+\`\`\`
+
+Line 1: <code>[expression for item in iterable]</code> — the expression is evaluated for each item. Line 2: add <code>if condition</code> to filter. Line 3: multiple <code>for</code> clauses create nested loops (rightmost varies fastest).
+
+### Defining Functions: def
+
+\`\`\`python
+def greet(name):                          # def keyword, function name, parameters in parens
+    """Return a greeting string."""       # docstring — optional but recommended
+    return f"Hello, {name}!"              # return value; None if no return
+
+result = greet("Alice")                   # call the function, capture the return value
+
+def add(a, b=0):                          # b has a default value — optional parameter
+    return a + b
+
+add(5)                                    # b defaults to 0 → 5
+add(5, 3)                                 # b is 3 → 8
+add(b=3, a=5)                             # keyword arguments — order doesn't matter
+\`\`\`
+
+Line 1: <code>def</code> creates a function object and assigns it to the name <code>greet</code>. Line 3: <code>return</code> sends a value back to the caller. Without <code>return</code>, the function returns <code>None</code>. Lines 5, 9-10: call the function by name with arguments. Line 7: default parameter values are evaluated once at definition time.
+
+### *args and **kwargs
+
+\`\`\`python
+def log(message, *args, **kwargs):        # *args collects extra positional args as tuple
+    print(f"[LOG] {message}")             # **kwargs collects extra keyword args as dict
+    for arg in args:
+        print(f"  arg: {arg}")
+    for key, value in kwargs.items():
+        print(f"  {key}: {value}")
+
+log("Server started")                     # no extras
+log("User login", "admin", "127.0.0.1")   # message + two extra positional args
+log("Error", code=500, route="/api")      # message + two extra keyword args
+\`\`\`
+
+Line 1: <code>*args</code> captures any additional positional arguments as a tuple. <code>**kwargs</code> captures any additional keyword arguments as a dict. Line 7: only the required <code>message</code> parameter. Lines 8-9: extras are bundled into <code>args</code> and <code>kwargs</code>.
+
+### Scope and the LEGB Rule
+
+Python resolves names using the LEGB rule: Local, Enclosing, Global, Built-in.
+
+\`\`\`python
+x = "global"                              # G: global scope
+
+def outer():
+    x = "enclosing"                       # E: enclosing function scope
+
+    def inner():
+        x = "local"                       # L: local scope
+        print(x)                          # finds "local" first (LEGB)
+    inner()
+
+outer()                                   # prints "local"
+print(x)                                  # prints "global" — outer didn't change it
+\`\`\`
+
+Line 1: <code>x</code> in the module scope is global. Line 4: <code>x</code> in <code>outer</code> is enclosing (relative to <code>inner</code>). Line 7: <code>x</code> in <code>inner</code> is local. Line 8: name lookup starts at Local, then Enclosing, then Global, then Built-in. To reassign an outer scope variable from within a nested function, use <code>nonlocal</code> (for enclosing) or <code>global</code> (for global).
+
+### Lambda Expressions
+
+A lambda is a small anonymous function — a single expression that evaluates and returns automatically.
+
+\`\`\`python
+square = lambda x: x ** 2                 # lambda: parameters before :, expression after
+square(5)                                 # → 25
+
+pairs = [(1, "b"), (2, "a"), (3, "c")]
+pairs.sort(key=lambda pair: pair[1])       # sort by the second element (string) → [(2,'a'), (1,'b'), (3,'c')]
+\`\`\`
+
+Line 1: <code>lambda x: x ** 2</code> is equivalent to <code>def square(x): return x ** 2</code>. Line 4: lambdas are often used as inline callbacks for <code>sort</code>, <code>map</code>, <code>filter</code>.
+
+### Comparison with Other Languages
+
+| Concept | Python | JavaScript | C |
+|---------|--------|-----------|---|
+| Block delimiter | Indentation | <code>{}</code> | <code>{}</code> |
+| Conditional | <code>if/elif/else</code> | <code>if/else if/else</code> | <code>if/else if/else</code> |
+| Loop over range | <code>for i in range(n)</code> | <code>for (let i=0; i&lt;n; i++)</code> | <code>for (int i=0; i&lt;n; i++)</code> |
+| Anonymous function | <code>lambda</code> | Arrow function <code>=&gt;</code> | Function pointer |
+| Ternary | <code>a if cond else b</code> | <code>cond ? a : b</code> | <code>cond ? a : b</code> |
+
+## Wiring It Together
+
+A program that uses control flow and functions to process data:
+
+\`\`\`python
+"""analyze_scores.py — processes a list of scores with functions and control flow."""
+
+def categorize_score(score):
+    """Return a letter grade and whether the score is passing."""
+    if score < 0 or score > 100:          # guard clause — invalid input
+        return None, False                # return multiple values as a tuple
+    if score >= 70:                       # passing threshold
+        return "P", True
+    else:
+        return "F", False
+
+scores = [85, 92, 47, 103, -5, 73]       # sample data
+
+passing = []                              # collect passing scores
+failing = []                              # collect failing scores
+for score in scores:                      # iterate over the list
+    grade, is_pass = categorize_score(score)  # tuple unpacking of return value
+    if grade is None:                     # invalid score
+        print(f"Skipping invalid score: {score}")
+        continue                          # skip to next iteration
+    if is_pass:
+        passing.append(score)             # add to passing list
+    else:
+        failing.append(score)
+
+# Double each passing score using list comprehension
+bonus = [s * 2 for s in passing]          # comprehension over filtered list
+
+# Sort failing scores in descending order using lambda
+failing.sort(reverse=True)                # in-place sort
+
+print(f"Passing: {passing}")              # [85, 92, 73]
+print(f"Bonus (doubled): {bonus}")        # [170, 184, 146]
+print(f"Failing: {failing}")              # [47] (descending, but only one)
+\`\`\`
+
+Line 3: <code>def</code> defines a function with one parameter. Line 5: guard clause returns early for invalid input. Line 6: returning a tuple implicitly. Line 11: <code>for</code> loop iterates over the list. Line 12: tuple unpacking of the return value. Line 14: <code>continue</code> skips invalid scores. Line 22: list comprehension with <code>for</code> clause. Line 25: <code>sort</code> with <code>reverse=True</code>.
+
+`,
+            tags: ["Control Flow", "Functions", "Scope"],
+          },
+          { id: "ns-py-modules", title: "Modules & Packages", shortDesc: "import system, __init__.py, absolute vs relative imports, and structuring a Python project.", difficulty: "foundational", readTimeMin: 12, keyPoints: [
+              "Any .py file is a module; import runs its top-level code once and makes its names available.",
+              "The import statement has several forms: import X, from X import Y, import X as Z, from X import *.",
+              "A package is a directory with an __init__.py file (possibly empty); it can contain subpackages.",
+              "Absolute imports specify the full path from the project root; relative imports use dots for the current package.",
+              "sys.path lists the directories Python searches for imports; the script's directory is added automatically.",
+              'The if __name__ == "__main__": guard lets a file act as both a reusable module and a runnable script.',
+            ], content: `## What Is This?
+
+A module is any <code>.py</code> file. Its code runs when you <code>import</code> it, and all names defined at the top level become attributes of the module object. A package is a directory containing an <code>__init__.py</code> file — it groups related modules into a single namespace.
+
+Think of modules as chapters in a book. Each chapter covers a specific topic, and you can read (import) any chapter without reading the whole book. A package is like a section of the library with multiple books on related subjects.
+
+The import system exists because real programs are too large for a single file. Splitting code into modules provides organization, reusability, and namespace isolation — the <code>math</code> module's <code>sqrt</code> will not collide with your <code>sqrt</code> function.
+
+## The Big Picture
+
+Modules and packages sit between functions/classes (where you write code) and the application you ship. After you organize code into functions and classes, you group those into modules, and those modules into packages. This is the standard unit of code organization.
+
+Modules connect to the Python path (<code>sys.path</code>), which determines where Python looks for imports. They connect to packaging (you publish packages to PyPI). The <code>__name__ == "__main__"</code> idiom is essential for writing scripts that are also importable.
+
+## Core Ideas
+
+### A Module Is a .py File
+
+\`\`\`python
+# File: greetings.py
+"""Module-level docstring."""
+
+def hello(name):
+    """Say hello."""
+    return f"Hello, {name}!"
+
+PI = 3.14159                              # module-level constant
+\`\`\`
+
+\`\`\`python
+# File: main.py
+import greetings                          # finds greetings.py in same directory
+
+print(greetings.hello("Alice"))           # access via module namespace
+print(greetings.PI)                       # module-level variable
+\`\`\`
+
+<code>import greetings</code> finds <code>greetings.py</code>, runs its top-level code (defines <code>hello</code> and <code>PI</code>), and binds the module object to the name <code>greetings</code>. Attributes are accessed with dot notation.
+
+### Import Variants
+
+\`\`\`python
+import math                               # import the whole module — use math.sqrt
+from math import sqrt                     # import sqrt into current namespace — no math. prefix
+from math import sqrt as square_root      # import with alias
+from math import *                        # import all public names (discouraged — pollutes namespace)
+import math, os                           # import multiple modules in one statement
+\`\`\`
+
+| Form | Usage | Namespace |
+|------|-------|-----------|
+| <code>import X</code> | <code>X.name</code> | Clean — avoids collisions |
+| <code>from X import Y</code> | <code>Y</code> directly | Convenient for frequent use |
+| <code>from X import Y as Z</code> | <code>Z</code> | Rename to avoid conflicts |
+| <code>from X import *</code> | All public names | Pollutes namespace — avoid in production code |
+
+### Packages — Directories with __init__.py
+
+A package is a directory that contains an <code>__init__.py</code> file. This file can be empty or can import specific names to control what the package exposes.
+
+\`\`\`
+project/
+├── main.py
+└── mypackage/
+    ├── __init__.py
+    ├── utils.py
+    └── models.py
+\`\`\`
+
+\`\`\`python
+# __init__.py — can be empty, or:
+from .utils import helper                 # re-export for convenience
+from .models import User
+
+# Now users can do: import mypackage; mypackage.helper()
+\`\`\`
+
+\`\`\`python
+# main.py — using the package
+import mypackage                          # runs __init__.py
+from mypackage.models import User         # import from submodule
+from mypackage.utils import helper        # import from submodule
+\`\`\`
+
+Line 1: importing the package runs <code>__init__.py</code>. Line 2-3: imports from submodules within the package.
+
+### Absolute vs Relative Imports
+
+\`\`\`python
+# Inside mypackage/models.py
+
+# Absolute import — full path from project root
+from mypackage.utils import helper
+
+# Relative import — dots indicate current package
+from .utils import helper                 # single dot: same package
+from ..otherpkg import something          # two dots: parent package
+from . import sibling                     # import sibling module
+\`\`\`
+
+| Import Type | Syntax | Use Case |
+|-------------|--------|----------|
+| Absolute | <code>from mypackage.utils import X</code> | Clear, unambiguous — preferred |
+| Relative | <code>from .utils import X</code> | Within a package, avoids repeating package name |
+
+### sys.path — The Module Search Path
+
+When you <code>import X</code>, Python searches for <code>X.py</code> (or <code>X/__init__.py</code>) in each directory listed in <code>sys.path</code>:
+
+\`\`\`python
+import sys
+print(sys.path)                           # list of directories Python searches
+
+# Typical output (order matters):
+# 1. Directory of the script being run (or current directory in REPL)
+# 2. PYTHONPATH environment variable directories
+# 3. Standard library directories
+# 4. Site-packages (third-party packages installed via pip)
+\`\`\`
+
+You can add directories to <code>sys.path</code> at runtime, but this is fragile — prefer installing packages properly or setting <code>PYTHONPATH</code>.
+
+### The __name__ == "__main__" Guard
+
+Every module has a <code>__name__</code> attribute. When a file is run directly (e.g., <code>python3 script.py</code>), its <code>__name__</code> is <code>"__main__"</code>. When it is imported, <code>__name__</code> is the module's name.
+
+\`\`\`python
+# File: calculator.py
+def add(a, b):
+    return a + b
+
+def subtract(a, b):
+    return a - b
+
+# This block runs ONLY when calculator.py is executed directly
+if __name__ == "__main__":
+    print("Testing calculator:")
+    print(f"add(3, 5) = {add(3, 5)}")       # 8
+    print(f"subtract(10, 4) = {subtract(10, 4)}")  # 6
+\`\`\`
+
+\`\`\`python
+# File: main.py
+import calculator                          # __name__ is "calculator", not "__main__"
+print(calculator.add(2, 3))                # 5 — test code did NOT run
+\`\`\`
+
+Line 15: the <code>if</code> block runs only when executing <code>python3 calculator.py</code> directly. When imported, <code>__name__</code> is <code>"calculator"</code>, so the block is skipped.
+
+### Structuring a Python Project
+
+A typical Python project layout:
+
+\`\`\`
+myproject/
+├── pyproject.toml              # project metadata and dependencies
+├── README.md                   # documentation
+├── src/
+│   └── myproject/              # main package
+│       ├── __init__.py
+│       ├── core.py
+│       ├── models.py
+│       └── utils.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_core.py
+│   └── test_models.py
+└── .gitignore
+\`\`\`
+
+The <code>src/</code> layout keeps your package code separate from project configuration. Tests live in a parallel <code>tests/</code> directory. <code>pyproject.toml</code> is the modern standard for metadata and build configuration.
+
+## Wiring It Together
+
+A small project that demonstrates modules and packages:
+
+\`\`\`
+phonebook/
+├── main.py
+└── phonebook/
+    ├── __init__.py
+    ├── contacts.py
+    └── storage.py
+\`\`\`
+
+\`\`\`python
+# phonebook/contacts.py
+"""Contact data structures."""
+
+class Contact:
+    """A single contact entry."""
+    def __init__(self, name, phone):
+        self.name = name
+        self.phone = phone
+\`\`\`
+
+\`\`\`python
+# phonebook/storage.py
+"""File-based storage for contacts."""
+from .contacts import Contact              # relative import within package
+
+def load(filename):
+    """Load contacts from a file."""
+    contacts = []
+    with open(filename) as f:
+        for line in f:
+            name, phone = line.strip().split(",")
+            contacts.append(Contact(name, phone))
+    return contacts
+
+def save(contacts, filename):
+    """Save contacts to a file."""
+    with open(filename, "w") as f:
+        for c in contacts:
+            f.write(f"{c.name},{c.phone}\n")
+\`\`\`
+
+\`\`\`python
+# phonebook/__init__.py
+"""Phonebook package."""
+from .contacts import Contact              # re-export for convenient access
+from .storage import load, save
+\`\`\`
+
+\`\`\`python
+# main.py — run directly: python3 main.py
+from phonebook import Contact, load, save  # clean imports from package
+
+# Create new contacts
+contacts = [
+    Contact("Alice", "555-0101"),
+    Contact("Bob", "555-0102"),
+]
+
+# Save to file
+save(contacts, "contacts.txt")
+
+# Load from file
+loaded = load("contacts.txt")
+for c in loaded:
+    print(f"{c.name}: {c.phone}")
+\`\`\`
+
+Line 6: relative import <code>from .contacts import Contact</code> — works because <code>storage.py</code> is inside the <code>phonebook</code> package. Line 23: <code>__init__.py</code> re-exports for cleaner public API. Line 30: users import from the package name, not from submodules directly.
+
+`,
+            tags: ["Modules", "Packages", "Imports"],
+          },
+          { id: "ns-py-file-io", title: "File I/O & Exception Handling", shortDesc: "Reading/writing files, context managers, try/except/finally, and custom exceptions.", difficulty: "foundational", readTimeMin: 13, keyPoints: [
+              "open() returns a file object; always use a context manager (with statement) to ensure the file is closed.",
+              "File modes: 'r' (read text), 'w' (write text, truncates), 'a' (append), 'rb'/'wb' (binary), 'r+' (read-write).",
+              "Read methods: .read() (entire file), .readline() (one line), .readlines() (list of lines), iterate directly (line by line).",
+              "try/except catches exceptions; else runs if no exception; finally runs no matter what.",
+              "You can raise built-in or custom exceptions with raise; custom exceptions subclass Exception.",
+              "Exception types form a hierarchy: BaseException → Exception → (ValueError, TypeError, OSError, etc.).",
+            ], content: `## What Is This?
+
+File I/O (input/output) is how Python programs read data from and write data to files on disk. Exception handling is how Python manages errors that occur at runtime — instead of crashing, a program can catch an error, respond to it, and continue.
+
+Think of a file as a long scroll of text. Opening it is like unrolling the scroll to a specific position. You can read from that position (pulling text off the scroll), write at that position (inscribing new text), or both. The <code>with</code> statement is like a responsible librarian who rolls the scroll back up and puts it away when you are done, even if you spilled coffee on it.
+
+Exceptions exist because errors happen in the real world: a file might not exist (someone deleted it), a disk might be full (no space to write), or a user might enter invalid data. Rather than checking for every possible error before every operation (which would clutter code), Python lets you try an operation and handle failures in a separate block.
+
+## The Big Picture
+
+File I/O is how programs persist data beyond a single run. Without it, all data lives in memory and disappears when the program exits. Exception handling is how production code stays robust — it distinguishes between the "happy path" (no errors) and error paths (file missing, network down, bad input).
+
+These concepts connect to every other topic. Modules read configuration files. Web frameworks read request bodies and write responses. Testing frameworks catch test failures as exceptions. Async I/O builds on the same patterns but for non-blocking operations.
+
+## Core Ideas
+
+### Opening Files with open()
+
+\`\`\`python
+file = open("data.txt", "r")              # open for reading (text mode)
+content = file.read()                     # read entire file into a string
+file.close()                              # MUST close — frees OS resources
+\`\`\`
+
+<code>open()</code> returns a file object. You must call <code>.close()</code> when done. Failure to close can lead to resource leaks (the OS limits how many files a process can open simultaneously). This is why the <code>with</code> statement is preferred.
+
+### The with Statement — Context Manager
+
+\`\`\`python
+with open("data.txt", "r") as file:       # opens file, binds to 'file'
+    content = file.read()                 # file is open inside the block
+# file is automatically closed here — even if an exception occurred
+\`\`\`
+
+The <code>with</code> statement calls <code>file.__enter__()</code> on entry and <code>file.__exit__()</code> on exit (even via exception). This guarantees the file is closed.
+
+### File Modes
+
+| Mode | Read | Write | Start Position | Truncates on Open? |
+|------|------|-------|---------------|-------------------|
+| <code>"r"</code> | Yes | No | Beginning | No |
+| <code>"w"</code> | No | Yes | Beginning | Yes |
+| <code>"a"</code> | No | Yes | End | No |
+| <code>"x"</code> | No | Yes | Beginning | No (fails if exists) |
+| <code>"r+"</code> | Yes | Yes | Beginning | No |
+| <code>"w+"</code> | Yes | Yes | Beginning | Yes |
+| <code>"a+"</code> | Yes | Yes | End | No |
+
+Append <code>b</code> for binary mode (<code>"rb"</code>, <code>"wb"</code>). Text mode handles encoding (<code>encoding="utf-8"</code>); binary mode returns/expects <code>bytes</code>.
+
+### Reading Files
+
+\`\`\`python
+with open("data.txt", "r") as f:
+    entire = f.read()                     # read all as one string
+    chunk = f.read(100)                   # read next 100 characters
+
+with open("data.txt", "r") as f:
+    line = f.readline()                   # read one line (including newline)
+    lines = f.readlines()                 # read all lines into a list
+
+with open("data.txt", "r") as f:
+    for line in f:                        # iterate over lines lazily — memory efficient
+        print(line.strip())               # strip() removes trailing newline
+\`\`\`
+
+Line 4: passing a size to <code>read()</code> limits the number of characters read. Line 9: <code>readlines()</code> reads all lines into memory — use the iterator form for large files.
+
+### Writing Files
+
+\`\`\`python
+with open("output.txt", "w") as f:
+    f.write("Hello, world!\n")            # write a string
+    f.writelines(["line1\n", "line2\n"])  # write multiple strings (no auto-newlines)
+
+with open("log.txt", "a") as f:
+    f.write("Appended line\n")            # append to end without truncating
+\`\`\`
+
+Line 1: <code>"w"</code> mode truncates the file if it exists. Line 2: <code>write()</code> does not add a newline automatically. Line 6: <code>"a"</code> mode appends to the existing content.
+
+### try / except / else / finally
+
+\`\`\`python
+try:
+    with open("missing.txt", "r") as f:
+        content = f.read()
+except FileNotFoundError:                 # specific exception type
+    print("File not found. Using default.")
+    content = ""
+except PermissionError:                   # another specific type
+    print("Permission denied.")
+    raise                                 # re-raise the same exception
+else:                                     # runs ONLY if no exception occurred
+    print(f"Read {len(content)} characters")
+finally:                                  # runs ALWAYS (exception or not)
+    print("Cleanup: done.")
+\`\`\`
+
+Line 1: <code>try</code> starts the block where exceptions are monitored. Line 3: <code>except</code> catches specific exception types. Line 8: <code>raise</code> without arguments re-raises the current exception. Line 9: <code>else</code> runs only if no exception was raised in <code>try</code>. Line 11: <code>finally</code> always runs, used for cleanup.
+
+### The Exception Hierarchy
+
+\`\`\`
+BaseException
+├── SystemExit         # sys.exit() — not meant to be caught
+├── KeyboardInterrupt  # Ctrl+C — not meant to be caught
+└── Exception          # catch this for all "normal" errors
+    ├── ValueError     # wrong value (e.g., int("abc"))
+    ├── TypeError      # wrong type (e.g., 1 + "a")
+    ├── OSError        # OS-level error (file not found, permission)
+    ├── KeyError       # dict key not found
+    ├── IndexError     # list index out of range
+    ├── ZeroDivisionError
+    └── ... (many more)
+\`\`\`
+
+Catch <code>Exception</code> to handle all normal errors. Never catch <code>BaseException</code> unless you have a very specific reason — that would swallow <code>SystemExit</code> and <code>KeyboardInterrupt</code>.
+
+### Raising Exceptions
+
+\`\`\`python
+def divide(a, b):
+    if b == 0:
+        raise ValueError("Cannot divide by zero")  # raise with a message
+    return a / b
+
+try:
+    result = divide(10, 0)
+except ValueError as e:                   # 'as e' captures the exception object
+    print(f"Error: {e}")                  # prints the message
+\`\`\`
+
+Line 2: <code>raise</code> creates and throws a <code>ValueError</code>. The message string is passed to the constructor. Line 6: <code>as e</code> binds the exception object so you can inspect it.
+
+### Custom Exceptions
+
+\`\`\`python
+class InsufficientFundsError(Exception):  # subclass Exception
+    """Raised when a withdrawal exceeds the balance."""
+    def __init__(self, balance, amount):
+        self.balance = balance
+        self.amount = amount
+        super().__init__(f"Insufficient funds: balance {balance}, attempted {amount}")
+
+class BankAccount:
+    def __init__(self):
+        self.balance = 0
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            raise InsufficientFundsError(self.balance, amount)
+        self.balance -= amount
+
+try:
+    acc = BankAccount()
+    acc.withdraw(100)
+except InsufficientFundsError as e:
+    print(f"Withdrawal failed: {e}")       # prints the custom message
+\`\`\`
+
+Line 1: custom exceptions subclass <code>Exception</code> (or a more specific built-in). Line 5: <code>super().__init__()</code> sets the message that <code>str(e)</code> returns. Line 14: raise the custom exception with context data.
+
+## Wiring It Together
+
+A data processing script that combines file I/O and exception handling:
+
+\`\`\`python
+"""process_scores.py — reads scores from a file, computes stats, handles errors."""
+
+class DataError(Exception):
+    """Custom exception for data format issues."""
+    pass
+
+def load_scores(filename):
+    """Load numeric scores from a file, one per line. Raises DataError on bad lines."""
+    scores = []
+    with open(filename, "r") as f:          # context manager — auto-closes
+        for line_num, line in enumerate(f, start=1):
+            line = line.strip()             # remove whitespace/newline
+            if not line or line.startswith("#"):  # skip blanks and comments
+                continue
+            try:
+                score = float(line)         # may raise ValueError
+            except ValueError:
+                raise DataError(f"Line {line_num}: invalid number '{line}'")
+            scores.append(score)
+    return scores
+
+def compute_stats(scores):
+    """Return min, max, and average of scores."""
+    if not scores:
+        raise DataError("No scores to compute stats on")
+    return min(scores), max(scores), sum(scores) / len(scores)
+
+# Main program
+filename = "scores.txt"
+try:
+    scores = load_scores(filename)
+    minimum, maximum, average = compute_stats(scores)
+    with open("stats_output.txt", "w") as f:
+        f.write(f"Count: {len(scores)}\n")
+        f.write(f"Min: {minimum}\n")
+        f.write(f"Max: {maximum}\n")
+        f.write(f"Average: {average:.2f}\n")
+    print("Stats written to stats_output.txt")
+except FileNotFoundError:
+    print(f"Error: {filename} not found.")
+except DataError as e:
+    print(f"Data error: {e}")
+except Exception as e:                      # catch-all for unexpected errors
+    print(f"Unexpected error: {e}")
+\`\`\`
+
+Line 3: custom exception for data format errors. Line 8: <code>open</code> within <code>with</code> ensures cleanup. Line 12: <code>enumerate(f, start=1)</code> gives 1-based line numbers. Line 16: <code>float()</code> can raise <code>ValueError</code>. Line 22: validating input — custom exception for business logic. Line 29: writing results to an output file. Line 32-35: specific except handlers for different error types. Line 36: catch-all for unexpected errors.
+
+`,
+            tags: ["File I/O", "Exceptions", "Context Managers"],
+          },
+          { id: "ns-py-oop", title: "Object-Oriented Programming", shortDesc: "Classes, inheritance, polymorphism, dunder methods, properties, descriptors, and metaclasses.", difficulty: "intermediate", readTimeMin: 18, keyPoints: [
+              "A class is a blueprint for objects; __init__ initializes instance state; self refers to the instance.",
+              "Instance methods take self; class methods take cls (@classmethod); static methods take neither (@staticmethod).",
+              "Inheritance: class Child(Parent) inherits all methods; super() calls the parent's version of a method.",
+              "Polymorphism: objects of different classes can be used interchangeably if they share the same interface (duck typing).",
+              "Dunder methods (__str__, __repr__, __len__, __eq__) customize built-in behavior for user-defined classes.",
+              "The @property decorator turns a method into a computed attribute; descriptors and metaclasses enable advanced metaprogramming.",
+            ], content: `## What Is This?
+
+Object-oriented programming (OOP) is a paradigm that organizes code around objects — data structures that contain both state (attributes) and behavior (methods). A class is the blueprint; an object is an instance of that blueprint.
+
+Think of a class as a cookie cutter and objects as the cookies. The cutter defines the shape (what attributes and methods every cookie has), but each cookie is a separate entity with its own state (e.g., different frosting colors). You can stamp out a million cookies from one cutter.
+
+Python is an object-oriented language from the ground up. Everything you have worked with — integers, strings, lists, functions — is an object. Even types are objects (instances of <code>type</code>). OOP in Python is flexible: you are not forced to use classes, but they are there when you want to organize code around data with behavior.
+
+## The Big Picture
+
+OOP builds on functions and data types. Functions operate on data; classes bundle data and functions together. After learning functions, OOP is the next level of organization — it models real-world entities (User, Product, Order) directly in code.
+
+OOP connects to modules (each module typically contains one or more related classes), to the standard library's data model (dunder methods allow your classes to behave like built-in types), and to frameworks (Django models, FastAPI dependency injection, pytest fixtures all use classes).
+
+## Core Ideas
+
+### Defining a Class
+
+\`\`\`python
+class Dog:                                # class keyword, name in PascalCase
+    """A simple dog model."""
+
+    species = "Canis familiaris"          # class attribute — shared by all instances
+
+    def __init__(self, name, age):        # constructor — called when Dog() is invoked
+        self.name = name                  # instance attribute — unique to each instance
+        self.age = age
+
+    def bark(self):                       # instance method — self is the instance
+        return f"{self.name} says woof!"
+
+    @classmethod
+    def get_species(cls):                 # class method — cls is the class
+        return cls.species
+
+    @staticmethod
+    def is_mammal():                      # static method — no self or cls
+        return True
+
+# Creating instances
+fido = Dog("Fido", 3)                     # calls __init__ with self=fido, name="Fido", age=3
+spot = Dog("Spot", 5)                     # separate instance with its own state
+
+print(fido.bark())                        # "Fido says woof!" — self is fido
+print(spot.bark())                        # "Spot says woof!" — self is spot
+print(Dog.get_species())                  # "Canis familiaris" — called on the class
+print(Dog.is_mammal())                    # True — no instance or class needed
+\`\`\`
+
+Line 1: <code>class</code> creates a class object. Line 5: class attribute — shared across all instances (like a default value). Line 7: <code>__init__</code> is the constructor — runs when you call <code>Dog(...)</code>. Line 8: <code>self</code> is the instance being created — instance attributes are prefixed with <code>self.</code>. Line 15: <code>@classmethod</code> receives the class (<code>cls</code>) instead of the instance. Line 19: <code>@staticmethod</code> receives neither — it is just a function namespaced inside the class.
+
+### Instance, Class, and Static Methods
+
+| Method Type | First Parameter | Can Access Instance State? | Can Access Class State? | Use Case |
+|-------------|-----------------|---------------------------|------------------------|----------|
+| Instance | <code>self</code> | Yes | Yes (via <code>self.__class__</code>) | Most methods |
+| Classmethod | <code>cls</code> | No | Yes | Factory methods, alternative constructors |
+| Staticmethod | — | No | No | Utility function related to the class |
+
+### Inheritance
+
+\`\`\`python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        raise NotImplementedError("Subclasses must implement speak()")
+
+class Cat(Animal):                        # Cat inherits from Animal
+    def speak(self):                      # override the parent's speak method
+        return f"{self.name} says meow!"
+
+class Dog(Animal):
+    def speak(self):
+        return f"{self.name} says woof!"
+
+animals = [Cat("Whiskers"), Dog("Fido")]
+for animal in animals:
+    print(animal.speak())                 # polymorphism — same call, different behavior
+\`\`\`
+
+Line 6: <code>raise NotImplementedError</code> is a way to declare an abstract method in Python. Line 9: <code>class Cat(Animal)</code> — Cat inherits from Animal. Line 11: method overriding — Cat's <code>speak</code> replaces Animal's. Line 19-21: polymorphism — a list of different types, same method call works on each.
+
+### super() — Calling the Parent
+
+\`\`\`python
+class Employee:
+    def __init__(self, name, salary):
+        self.name = name
+        self.salary = salary
+
+class Manager(Employee):
+    def __init__(self, name, salary, team_size):
+        super().__init__(name, salary)    # call the parent's __init__
+        self.team_size = team_size
+
+    def __str__(self):
+        return f"Manager {self.name}, team of {self.team_size}"
+
+m = Manager("Alice", 80000, 5)
+print(str(m))                             # "Manager Alice, team of 5"
+print(m.salary)                           # 80000 — set by Employee.__init__
+\`\`\`
+
+Line 8: <code>super().__init__(name, salary)</code> delegates to the parent class's <code>__init__</code>, avoiding code duplication. Without this call, <code>self.name</code> and <code>self.salary</code> would not be set.
+
+### Duck Typing and Polymorphism
+
+"If it walks like a duck and quacks like a duck, it is a duck." Python does not require formal interfaces — any object that has the required methods can be used interchangeably.
+
+\`\`\`python
+class Duck:
+    def quack(self):
+        return "Quack!"
+
+class Person:
+    def quack(self):
+        return "I'm quacking like a duck!"
+
+def make_it_quack(thing):
+    print(thing.quack())                  # works with any object that has .quack()
+
+make_it_quack(Duck())                     # "Quack!"
+make_it_quack(Person())                   # "I'm quacking like a duck!"
+\`\`\`
+
+Line 12-13: <code>make_it_quack</code> does not check the type — it just calls <code>.quack()</code>. Both <code>Duck</code> and <code>Person</code> work because they implement the same method signature. This is polymorphism without inheritance.
+
+### Dunder Methods (Special Methods)
+
+Dunder (double-underscore) methods customize how your objects interact with built-in operations.
+
+\`\`\`python
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __repr__(self):                   # unambiguous representation — for debugging
+        return f"Vector({self.x}, {self.y})"
+
+    def __str__(self):                    # readable string — for print()
+        return f"({self.x}, {self.y})"
+
+    def __add__(self, other):             # customizes + operator
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):              # customizes ==
+        return self.x == other.x and self.y == other.y
+
+    def __len__(self):                    # customizes len()
+        return int((self.x**2 + self.y**2)**0.5)
+
+v1 = Vector(3, 4)
+v2 = Vector(1, 2)
+print(repr(v1))                           # Vector(3, 4) — from __repr__
+print(v1 + v2)                            # (4, 6) — from __add__
+print(v1 == Vector(3, 4))                 # True — from __eq__
+print(len(v1))                            # 5 — from __len__
+\`\`\`
+
+| Method | Trigger | Purpose |
+|--------|---------|---------|
+| <code>__init__</code> | <code>Class()</code> | Constructor |
+| <code>__str__</code> | <code>str(obj)</code>, <code>print(obj)</code> | Human-readable string |
+| <code>__repr__</code> | <code>repr(obj)</code>, debugging | Unambiguous string |
+| <code>__add__</code> | <code>obj + other</code> | Addition |
+| <code>__eq__</code> | <code>obj == other</code> | Equality check |
+| <code>__len__</code> | <code>len(obj)</code> | Length |
+| <code>__getitem__</code> | <code>obj[key]</code> | Indexing |
+| <code>__call__</code> | <code>obj()</code> | Make object callable |
+| <code>__enter__</code>, <code>__exit__</code> | <code>with obj:</code> | Context manager |
+
+### Properties — @property
+
+Properties allow you to define computed attributes that look like plain attributes but run getter/setter logic.
+
+\`\`\`python
+class Temperature:
+    def __init__(self, celsius):
+        self._celsius = celsius           # leading underscore: "internal" convention
+
+    @property
+    def fahrenheit(self):                 # getter — accessed as temp.fahrenheit (no parens)
+        return (self._celsius * 9/5) + 32
+
+    @fahrenheit.setter
+    def fahrenheit(self, value):          # setter — triggered by temp.fahrenheit = 100
+        self._celsius = (value - 32) * 5/9
+
+    @property
+    def celsius(self):                    # read-only property (no setter)
+        return self._celsius
+
+temp = Temperature(25)
+print(temp.fahrenheit)                    # 77.0 — calls the getter
+temp.fahrenheit = 100                     # calls the setter
+print(temp.celsius)                       # ~37.78 — was updated by the setter
+\`\`\`
+
+Line 4: <code>_celsius</code> uses the convention that a leading underscore means "internal use — do not touch directly." Line 6: <code>@property</code> decorates a method; calling <code>temp.fahrenheit</code> invokes it. Line 9: <code>@fahrenheit.setter</code> decorates the setter method triggered by assignment.
+
+### Descriptors (Briefly)
+
+A descriptor is an object that controls attribute access on another class. The <code>@property</code> decorator is implemented using descriptors.
+
+\`\`\`python
+class PositiveNumber:
+    """Descriptor that ensures a value is positive."""
+    def __set_name__(self, owner, name):
+        self._name = name                 # store the attribute name
+
+    def __get__(self, obj, objtype=None):
+        return obj.__dict__.get(self._name, 0)
+
+    def __set__(self, obj, value):
+        if value < 0:
+            raise ValueError(f"{self._name} must be positive")
+        obj.__dict__[self._name] = value
+
+class Order:
+    quantity = PositiveNumber()           # descriptor instance — class attribute
+    price = PositiveNumber()
+
+    def __init__(self, quantity, price):
+        self.quantity = quantity          # triggers PositiveNumber.__set__
+        self.price = price
+
+order = Order(5, 10)
+print(order.quantity)                     # 5 — triggers __get__
+# order.quantity = -1                     # raises ValueError
+\`\`\`
+
+Line 2: a descriptor is any class that implements <code>__get__</code>, <code>__set__</code>, or <code>__delete__</code>. Line 12-13: descriptor instances are class attributes. Line 17: assigning to <code>self.quantity</code> triggers the descriptor's <code>__set__</code>, which validates the value.
+
+### Metaclasses (Overview)
+
+A metaclass is the class of a class. Just as a class defines how instances behave, a metaclass defines how classes behave. The default metaclass is <code>type</code>.
+
+\`\`\`python
+# A metaclass that auto-capitalizes method names
+class CapitalizeMeta(type):
+    def __new__(mcs, name, bases, namespace):
+        capitalized = {}
+        for key, value in namespace.items():
+            if callable(value) and not key.startswith("__"):
+                capitalized[key.capitalize()] = value
+            else:
+                capitalized[key] = value
+        return super().__new__(mcs, name, bases, capitalized)
+
+class MyService(metaclass=CapitalizeMeta):  # uses custom metaclass
+    def run(self):
+        return "running"
+
+s = MyService()
+# s.run()     # AttributeError — name was capitalized to "Run"
+print(s.Run())                             # "running"
+\`\`\`
+
+Line 2: metaclass inherits from <code>type</code>. Line 3: <code>__new__</code> is called when the class is created. Line 5-8: iterate over the class's attributes and capitalize method names. Line 11: specify the metaclass with the <code>metaclass=</code> keyword. Metaclasses are rarely needed — you will see them in frameworks (Django models, SQLAlchemy) and libraries.
+
+## Wiring It Together
+
+A complete OOP example combining classes, inheritance, polymorphism, properties, and duck typing:
+
+\`\`\`python
+"""shapes.py — polymorphic shape area calculator."""
+
+import math
+
+class Shape:
+    """Base class for all shapes."""
+
+    def __init__(self, color="black"):
+        self._color = color
+
+    @property
+    def color(self):
+        return self._color
+
+    @color.setter
+    def color(self, value):
+        allowed = ["red", "green", "blue", "black"]
+        if value not in allowed:
+            raise ValueError(f"Color must be one of {allowed}")
+        self._color = value
+
+    def area(self):                        # abstract — subclasses override
+        raise NotImplementedError
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(color={self.color})"
+
+class Circle(Shape):
+    def __init__(self, radius, color="black"):
+        super().__init__(color)            # call parent constructor
+        self.radius = radius
+
+    def area(self):                        # override
+        return math.pi * self.radius ** 2
+
+class Rectangle(Shape):
+    def __init__(self, width, height, color="black"):
+        super().__init__(color)
+        self.width = width
+        self.height = height
+
+    def area(self):                        # override
+        return self.width * self.height
+
+class Triangle(Shape):
+    def __init__(self, base, height, color="black"):
+        super().__init__(color)
+        self.base = base
+        self.height = height
+
+    def area(self):                        # override
+        return 0.5 * self.base * self.height
+
+# Polymorphic function — works with any Shape subclass
+def print_area(shape):
+    print(f"{shape} area = {shape.area():.2f}")
+
+# Create shapes
+shapes = [
+    Circle(5, "red"),
+    Rectangle(3, 4, "blue"),
+    Triangle(4, 3, "green"),
+]
+
+# Compute and print areas — polymorphic loop
+for shape in shapes:
+    print_area(shape)
+
+# Properties and setters
+c = Circle(2)
+print(c.color)                             # "black" (default)
+c.color = "red"                            # setter validates
+print(c.color)                             # "red"
+\`\`\`
+
+          },
+Line 6: base class defines shared interface. Line 11: property with getter. Line 14-18: property setter with validation. Line 21: base method that subclasses override. Line 41-42: <code>super().__init__(color)</code> — delegates to Shape's constructor. Line 70: <code>print_area</code> accepts any <code>Shape</code> — duck typing at work. Line 73-84: polymorphic loop — same <code>print_area</code> works for Circle, Rectangle, Triangle.
+
+`,
+            tags: ["OOP", "Classes", "Inheritance", "Polymorphism"],
+          },
+          { id: "ns-py-stdlib", title: "Standard Library Highlights", shortDesc: "datetime, collections, itertools, functools, re, pathlib, subprocess, and more.", difficulty: "intermediate", readTimeMin: 18, keyPoints: [
+              "datetime handles dates, times, and time arithmetic; timezone-aware objects require pytz or zoneinfo.",
+              "collections provides specialized containers: namedtuple (lightweight records), Counter (frequency counting), defaultdict (default values), deque (fast appends/pops).",
+              "itertools offers iterator-building tools: chain (flatten), cycle (repeat), count (infinite), groupby (consecutive keys), product (cartesian product).",
+              "functools includes partial (preset arguments), lru_cache (memoization), wraps (preserve metadata in decorators), reduce (accumulate).",
+              "re (regular expressions) provides search, match, findall, sub for pattern-based string operations.",
+              "pathlib offers object-oriented filesystem paths with methods like read_text, write_text, glob, and mkdir.",
+            ], content: `## What Is This?
+
+Python's standard library is a collection of modules included with every Python installation. It provides ready-to-use solutions for common tasks: date/time handling, specialized data structures, functional programming tools, regular expressions, filesystem operations, running subprocesses, and much more. The famous phrase "batteries included" refers to this extensive library.
+
+Think of the standard library as a well-stocked toolbox that comes with every Python installation. When you need to parse a date, read a CSV file, or make an HTTP request, you do not need to install anything extra — the tool is already there. Over 200 modules cover everything from compression to cryptography to web servers.
+
+Built-in modules matter because they represent battle-tested, well-documented, zero-dependency solutions. Before you install a third-party package, always check whether the standard library already solves your problem.
+
+## The Big Picture
+
+The standard library sits between the language core (syntax, built-in types) and third-party packages. It extends what Python can do without external dependencies. After mastering syntax and data types, the standard library is the next layer of capability.
+
+These modules connect to every domain: <code>datetime</code> for logging timestamps, <code>pathlib</code> for file operations, <code>re</code> for text processing, <code>subprocess</code> for running system commands, <code>collections</code> and <code>itertools</code> for data manipulation.
+
+## Core Ideas
+
+### datetime — Dates and Times
+
+\`\`\`python
+from datetime import date, time, datetime, timedelta, timezone
+
+today = date.today()                      # current date → 2026-06-11
+now = datetime.now()                      # current date and time → 2026-06-11 14:30:00
+utc_now = datetime.now(timezone.utc)      # timezone-aware UTC time
+
+# Creating specific dates
+d = date(2026, 12, 25)                    # Christmas 2026
+t = time(14, 30, 0)                       # 2:30 PM
+dt = datetime(2026, 6, 11, 14, 30)        # June 11, 2026 at 2:30 PM
+
+# Arithmetic
+tomorrow = today + timedelta(days=1)      # add one day
+one_week = today + timedelta(weeks=1)     # add one week
+diff = tomorrow - today                   # timedelta(days=1)
+
+# Formatting
+dt_str = dt.strftime("%Y-%m-%d %H:%M")    # format to string → "2026-06-11 14:30"
+parsed = datetime.strptime("2026-06-11", "%Y-%m-%d")  # parse from string
+\`\`\`
+
+Line 1: import specific names from the module. Line 5: <code>timezone.utc</code> creates an aware datetime. Line 13: <code>timedelta</code> represents a duration. Line 16: <code>strftime</code> formats datetime to string. Line 17: <code>strptime</code> parses string to datetime.
+
+### collections — Specialized Containers
+
+\`\`\`python
+from collections import namedtuple, Counter, defaultdict, deque
+
+# namedtuple — immutable, named fields
+Point = namedtuple("Point", ["x", "y"])   # create a Point type
+p = Point(3, 4)                           # p.x = 3, p.y = 4
+
+# Counter — count hashable items
+freq = Counter("hello world")             # {'l': 3, 'o': 2, 'h': 1, 'e': 1, ' ': 1, 'w': 1, 'r': 1, 'd': 1}
+freq.most_common(2)                       # [('l', 3), ('o', 2)]
+
+# defaultdict — provides a default for missing keys
+dd = defaultdict(int)                     # missing keys default to int() → 0
+dd["count"] += 1                          # no KeyError — automatically creates with 0
+
+# deque — double-ended queue (fast appends/pops from both ends)
+dq = deque(["a", "b", "c"])
+dq.appendleft("z")                        # O(1) — left side
+dq.pop()                                  # O(1) — right side
+\`\`\`
+
+| Type | Use Case | Key Feature |
+|------|----------|-------------|
+| <code>namedtuple</code> | Lightweight immutable data records | Attribute access + tuple packing |
+| <code>Counter</code> | Counting frequencies | <code>.most_common()</code> method |
+| <code>defaultdict</code> | Dict with default values | Eliminates key existence checks |
+| <code>deque</code> | Queue or stack from both ends | O(1) append/pop on either end |
+| <code>OrderedDict</code> | Ordered dict (pre 3.7) | Maintains insertion order |
+| <code>ChainMap</code> | Multiple dicts as one | Scoped variable lookup |
+
+### itertools — Iterator Tools
+
+\`\`\`python
+from itertools import chain, cycle, count, groupby, product, permutations
+
+# chain — iterate over multiple iterables sequentially
+list(chain([1, 2], [3, 4]))              # [1, 2, 3, 4]
+
+# cycle — infinite repeating iterator
+colors = cycle(["red", "green", "blue"])
+next(colors)                              # "red"
+next(colors)                              # "green"
+
+# count — infinite counter starting from a value
+for i in count(5):                        # 5, 6, 7, ...
+    if i > 10: break
+
+# groupby — group consecutive elements by key
+data = [("a", 1), ("a", 2), ("b", 3)]
+for key, group in groupby(data, key=lambda x: x[0]):
+    print(key, list(group))               # 'a' [(a,1), (a,2)] then 'b' [(b,3)]
+
+# product — cartesian product
+list(product("AB", [1, 2]))               # [('A',1), ('A',2), ('B',1), ('B',2)]
+
+# permutations — all orderings
+list(permutations("ABC", 2))              # [('A','B'), ('A','C'), ('B','A'), ('B','C'), ('C','A'), ('C','B')]
+\`\`\`
+
+Line 3: <code>chain</code> flattens multiple iterables. Line 6: <code>cycle</code> repeats forever — ensure there is a break condition. Line 14: <code>groupby</code> requires sorted data for meaningful grouping (it only groups consecutive equal keys).
+
+### functools — Functional Tools
+
+\`\`\`python
+from functools import partial, lru_cache, wraps, reduce
+
+# partial — preset function arguments
+def power(base, exponent):
+    return base ** exponent
+
+square = partial(power, exponent=2)       # square(5) → power(5, exponent=2)
+print(square(5))                          # 25
+
+# lru_cache — memoization decorator
+@lru_cache(maxsize=128)
+def fibonacci(n):
+    if n < 2:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+fibonacci(100)                            # fast — cached intermediate results
+
+# reduce — accumulate a value
+reduce(lambda a, b: a * b, [1, 2, 3, 4])  # ((1*2)*3)*4 → 24
+\`\`\`
+
+Line 5: <code>partial(power, exponent=2)</code> creates a new function with <code>exponent</code> already set. Line 9: <code>@lru_cache</code> caches return values based on arguments — dramatic speedup for recursive functions.
+
+### re — Regular Expressions
+
+\`\`\`python
+import re
+
+text = "Contact: alice@example.com, bob@test.org"
+
+# search — find first match anywhere
+match = re.search(r"(\w+)@(\w+\.\w+)", text)
+if match:
+    print(match.group(0))                 # "alice@example.com" (full match)
+    print(match.group(1))                 # "alice" (first capture group)
+    print(match.group(2))                 # "example.com" (second capture group)
+
+# match — match only at the start of the string
+re.match(r"Contact", text)                # Match object (text starts with "Contact")
+
+# findall — find all non-overlapping matches
+emails = re.findall(r"\w+@\w+\.\w+", text)  # ["alice@example.com", "bob@test.org"]
+
+# sub — replace matches
+masked = re.sub(r"\w+@", "***@", text)    # "Contact: ***@example.com, ***@test.org"
+
+# compile — pre-compile for reuse
+pattern = re.compile(r"\d{3}-\d{4}")      # compile once
+pattern.findall("Call 555-0101 or 555-0102")  # ["555-0101", "555-0102"]
+\`\`\`
+
+Line 4: raw string (<code>r"..."</code>) treats backslashes as literal characters — essential for regex. Line 6: <code>.group(0)</code> is the full match; <code>.group(1)</code> is the first capture group (parentheses). Line 17: <code>compile</code> the pattern for reuse when the same regex is used many times.
+
+### pathlib — Object-Oriented File Paths
+
+\`\`\`python
+from pathlib import Path
+
+base = Path("/home/user/projects")        # create a Path object
+readme = base / "README.md"               # use / operator for path joining
+
+readme.exists()                           # True if file exists
+readme.is_file()                          # True if it is a file
+readme.is_dir()                           # True if it is a directory
+readme.suffix                             # ".md"
+readme.stem                               # "README"
+readme.parent                             # Path("/home/user/projects")
+
+# Reading and writing
+content = readme.read_text()              # read entire file as string
+readme.write_text("Updated content")      # write string to file
+
+# Directory operations
+logs = Path("logs")
+logs.mkdir(exist_ok=True)                 # create directory (no error if exists)
+list(logs.iterdir())                      # list contents of directory
+list(logs.glob("*.log"))                  # find all .log files
+\`\`\`
+
+Line 3: <code>/</code> operator joins path components (overloaded from the division operator). Line 10: <code>read_text()</code> and <code>write_text()</code> handle open/read/close in one call. Line 17: <code>glob</code> returns all paths matching the pattern.
+
+### subprocess — Running System Commands
+
+\`\`\`python
+import subprocess
+
+# run a command and capture output
+result = subprocess.run(
+    ["echo", "Hello from Python"],        # command as list of arguments
+    capture_output=True,                  # capture stdout and stderr
+    text=True,                            # return strings (not bytes)
+)
+print(result.stdout)                      # "Hello from Python\n"
+print(result.returncode)                  # 0 — success
+
+# check=True raises CalledProcessError on non-zero exit
+try:
+    subprocess.run(["false"], check=True)  # "false" always returns 1
+except subprocess.CalledProcessError as e:
+    print(f"Command failed with code {e.returncode}")
+\`\`\`
+
+Line 4: pass the command as a list of strings (not a single string) to avoid shell injection. Line 6: <code>capture_output=True</code> captures both stdout and stderr. Line 11: <code>check=True</code> converts a non-zero exit code into an exception.
+
+### Other Essential Modules
+
+| Module | What It Provides | Example |
+|--------|-----------------|---------|
+| <code>os</code> | Operating system interface | <code>os.environ.get("HOME")</code> |
+| <code>sys</code> | Python runtime access | <code>sys.argv</code> (CLI args), <code>sys.exit()</code> |
+| <code>json</code> | JSON encode/decode | <code>json.dumps(data)</code>, <code>json.loads(text)</code> |
+| <code>csv</code> | CSV reading/writing | <code>csv.reader(file)</code>, <code>csv.writer(file)</code> |
+| <code>math</code> | Math functions | <code>math.sqrt(16)</code>, <code>math.pi</code> |
+| <code>random</code> | Random number generation | <code>random.choice(items)</code>, <code>random.randint(1,6)</code> |
+| <code>statistics</code> | Statistical functions | <code>statistics.mean(data)</code>, <code>stdev(data)</code> |
+| <code>hashlib</code> | Cryptographic hashing | <code>hashlib.sha256(data).hexdigest()</code> |
+| <code>logging</code> | Flexible logging system | <code>logging.info("message")</code> |
+| <code>argparse</code> | CLI argument parsing | <code>parser.parse_args()</code> |
+
+## Wiring It Together
+
+A script that combines several standard library modules:
+
+\`\`\`python
+"""report_generator.py — generates a summary report from log files."""
+
+from pathlib import Path
+from collections import Counter, defaultdict
+from datetime import date
+import re
+import json
+
+LOG_DIR = Path("logs")
+REPORT_FILE = Path(f"report_{date.today()}.json")
+
+def parse_log_levels(filepath):
+    """Extract log level counts from a log file."""
+    levels = Counter()                    # Counter starts at 0 for every key
+    pattern = re.compile(r"\[(ERROR|WARN|INFO|DEBUG)\]")  # compile once
+
+    for line in filepath.read_text().splitlines():
+        match = pattern.search(line)
+        if match:
+            levels[match.group(1)] += 1   # increment count for this level
+    return levels
+
+def summarize_logs():
+    """Walk through logs directory and summarize all .log files."""
+    summary = defaultdict(dict)           # outer dict: filename → inner dict
+
+    for log_file in LOG_DIR.glob("*.log"):
+        levels = parse_log_levels(log_file)
+        summary[log_file.stem] = {        # log_file.stem = filename without .log
+            "total": sum(levels.values()),
+            "by_level": dict(levels),     # convert Counter to plain dict
+            "file_size": log_file.stat().st_size,
+        }
+    return summary
+
+def main():
+    if not LOG_DIR.exists():
+        LOG_DIR.mkdir(exist_ok=True)
+        print(f"Created {LOG_DIR} — place .log files in it.")
+        return
+
+    data = summarize_logs()
+    REPORT_FILE.write_text(
+        json.dumps(data, indent=2)        # pretty-print JSON
+    )
+    print(f"Report written to {REPORT_FILE}")
+
+if __name__ == "__main__":
+    main()
+\`\`\`
+          },
+
+Line 6: <code>Path</code> for filesystem operations. Line 15: <code>re.compile</code> — precompile for performance in a loop. Line 18: <code>Counter</code> tracks frequencies of log levels. Line 23: <code>defaultdict(dict)</code> — accessing a missing key creates an empty dict automatically. Line 25: <code>glob("*.log")</code> finds all log files. Line 27: <code>log_file.stem</code> extracts the filename without extension. Line 29: <code>log_file.stat().st_size</code> gets file size in bytes. Line 41: <code>json.dumps</code> serializes the data structure to a JSON string.
+
+`,
+            tags: ["Standard Library", "datetime", "collections", "itertools"],
+          },
+          { id: "ns-py-testing", title: "Testing with pytest", shortDesc: "Test discovery, fixtures, parametrization, mocking, and coverage reporting.", difficulty: "intermediate", readTimeMin: 16, keyPoints: [
+              "pytest discovers tests by filename (test_*.py) and function name (test_*); plain assert statements replace unittest's self.assertEqual.",
+              "Fixtures (test_* functions decorated with @pytest.fixture) provide reusable setup/teardown, injected by parameter name.",
+              "Parametrization (@pytest.mark.parametrize) runs the same test function with multiple input/expected-output pairs.",
+              "Mocking (unittest.mock.patch) replaces real objects during tests to isolate the unit being tested.",
+              "conftest.py shares fixtures across multiple test files in the same directory.",
+              "pytest-cov measures test coverage; run with pytest --cov=src to see which lines tests execute.",
+            ], content: `## What Is This?
+
+Testing is the practice of writing code that verifies your application code behaves correctly. pytest is Python's most popular testing framework — it finds test files and functions automatically, provides a rich fixture system for setup/teardown, and produces detailed failure reports.
+
+Think of tests as an automated safety net. When you change code, you run the tests; if they all pass, you know you did not break anything. Without tests, you must manually check every feature after every change — tedious and unreliable.
+
+pytest exists because manual testing does not scale. As projects grow, the number of things that can break grows faster than your ability to check them manually. Automated tests catch regressions (old bugs that reappear) and give you confidence to refactor.
+
+## The Big Picture
+
+Testing sits at the intersection of development and quality assurance. After you write code (functions, classes, modules), you write tests that prove the code works. This connects forward to CI/CD (tests run automatically on every commit), code coverage (measuring how much code is tested), and test-driven development (writing tests before code).
+
+pytest builds on Python's <code>assert</code> statement and the concept of fixtures (reusable test infrastructure). It integrates with mocking (<code>unittest.mock</code>) to isolate units from their dependencies.
+
+## Core Ideas
+
+### Test Discovery and Basic Assertions
+
+pytest automatically discovers tests in files named <code>test_*.py</code> or <code>*_test.py</code>. Test functions must start with <code>test_</code>. Use plain <code>assert</code> statements — no need for <code>self.assertEqual</code>.
+
+\`\`\`python
+# File: test_calculator.py
+from calculator import add, divide
+
+def test_add_positive():                  # discovered by pytest because of test_ prefix
+    result = add(2, 3)
+    assert result == 5                    # plain assert — no special method needed
+
+def test_add_negative():
+    assert add(-1, -2) == -3
+
+def test_divide_by_zero():
+    with pytest.raises(ValueError):       # expects ValueError to be raised
+        divide(10, 0)
+\`\`\`
+
+Line 1: test file named <code>test_calculator.py</code> — pytest finds it automatically. Line 4: function starts with <code>test_</code>. Line 5: <code>assert result == 5</code> — if False, pytest reports the failure with context. Line 10: <code>pytest.raises</code> asserts that the block raises a specific exception.
+
+### Running Tests
+
+\`\`\`bash
+pytest                                    # run all tests in current directory
+pytest test_calculator.py                 # run tests in a specific file
+pytest -v                                 # verbose mode — show each test name
+pytest -k "add"                           # run tests matching "add" in name
+pytest -x                                 # stop after first failure
+pytest --tb=short                         # shorter traceback format
+\`\`\`
+
+### Fixtures — Reusable Setup
+
+Fixtures provide a way to share setup code across multiple tests. A fixture is a function decorated with <code>@pytest.fixture</code> that returns a value. Test functions receive the fixture value by declaring a parameter with the same name as the fixture.
+
+\`\`\`python
+import pytest
+
+@pytest.fixture
+def sample_data():                        # fixture function
+    """Provide test data for multiple tests."""
+    return {"name": "Alice", "scores": [85, 92, 78]}
+
+def test_average_score(sample_data):      # pytest injects the fixture return value
+    scores = sample_data["scores"]
+    avg = sum(scores) / len(scores)
+    assert avg == 85.0
+
+def test_name(sample_data):               # same fixture, different test
+    assert sample_data["name"] == "Alice"
+\`\`\`
+
+Line 4: <code>@pytest.fixture</code> marks this function as a fixture. Line 5: fixture returns a value. Line 8: parameter name <code>sample_data</code> matches the fixture function name — pytest injects the return value.
+
+### Fixture Scope and Teardown
+
+Fixtures can have different scopes that control how often they are created:
+
+\`\`\`python
+import pytest
+
+@pytest.fixture(scope="module")           # created once per test module
+def db_connection():
+    """Set up database connection (expensive)."""
+    conn = create_database_connection()
+    yield conn                            # yield instead of return enables teardown
+    conn.close()                          # teardown — runs after all tests in the module
+\`\`\`
+
+| Scope | Created When | Destroyed | Use Case |
+|-------|-------------|-----------|----------|
+| <code>function</code> (default) | Before each test | After each test | Cheap setup |
+| <code>class</code> | Before first test in class | After all tests in class | Shared class-level setup |
+| <code>module</code> | Before first test in file | After all tests in file | Database connection |
+| <code>session</code> | Before first test overall | After all tests | Application-wide config |
+
+### conftest.py — Shared Fixtures
+
+A <code>conftest.py</code> file in a test directory makes fixtures available to all test files in that directory (and subdirectories) without importing them explicitly.
+
+\`\`\`python
+# File: tests/conftest.py
+import pytest
+from myapp import create_app
+
+@pytest.fixture
+def app():
+    """Create a fresh application instance for each test."""
+    app = create_app()
+    yield app
+    app.cleanup()
+
+# Now any test file in tests/ can use the 'app' fixture without importing it
+\`\`\`
+
+### Parametrization — Many Inputs, One Test
+
+Use <code>@pytest.mark.parametrize</code> to run the same test function with different inputs.
+
+\`\`\`python
+import pytest
+from calculator import add
+
+@pytest.mark.parametrize("a, b, expected", [
+    (1, 2, 3),
+    (-1, 1, 0),
+    (0, 0, 0),
+    (100, 200, 300),
+])
+def test_add(a, b, expected):
+    assert add(a, b) == expected          # runs 4 times, once per tuple
+\`\`\`
+
+Line 3: <code>@pytest.mark.parametrize("a, b, expected", [...])</code> — the first argument is a comma-separated string of parameter names. The second argument is a list of tuples. Each tuple is one invocation. Line 8: this single test function runs 4 times with the different values.
+
+### Mocking with unittest.mock
+
+Mocking replaces real objects with fake versions so you can test a unit in isolation.
+
+\`\`\`python
+# File: weather.py
+import requests
+
+def get_temperature(city):
+    response = requests.get(f"https://api.weather.com/{city}")
+    data = response.json()
+    return data["temperature"]
+\`\`\`
+
+\`\`\`python
+# File: test_weather.py
+from unittest.mock import patch
+from weather import get_temperature
+
+@patch("weather.requests.get")            # patch replaces requests.get with a mock
+def test_get_temperature(mock_get):
+    # Configure the mock's return value
+    mock_response = mock_get.return_value
+    mock_response.json.return_value = {"temperature": 22}
+
+    result = get_temperature("London")
+    assert result == 22
+
+    # Verify the mock was called correctly
+    mock_get.assert_called_once_with("https://api.weather.com/London")
+\`\`\`
+
+Line 5: <code>@patch("weather.requests.get")</code> — patch the name <code>requests.get</code> in the <code>weather</code> module's namespace. The mock is injected as <code>mock_get</code>. Line 7: configure what <code>.json()</code> returns. Line 10: call the real function — it uses the mock instead of making a real HTTP request. Line 13: assert the mock was called with the expected URL.
+
+### Coverage Reporting with pytest-cov
+
+\`\`\`bash
+pip install pytest-cov
+pytest --cov=src                           # measure coverage of src/ directory
+pytest --cov=src --cov-report=term-missing  # show lines not covered
+pytest --cov=src --cov-report=html          # generate HTML report
+\`\`\`
+
+Coverage reports show which lines of your code were executed during tests. Aim for high coverage on critical logic, but 100% coverage does not guarantee bug-free code.
+
+## Wiring It Together
+
+A complete example with tests, fixtures, parametrization, and mocking:
+
+\`\`\`python
+# File: src/inventory.py
+"""Inventory management module."""
+
+class Inventory:
+    def __init__(self):
+        self._items = {}                  # sku -> quantity
+
+    def add(self, sku, quantity):
+        if quantity <= 0:
+            raise ValueError("Quantity must be positive")
+        self._items[sku] = self._items.get(sku, 0) + quantity
+
+    def remove(self, sku, quantity):
+        if sku not in self._items:
+            raise KeyError(f"SKU {sku} not found")
+        if self._items[sku] < quantity:
+            raise ValueError(f"Insufficient stock for {sku}")
+        self._items[sku] -= quantity
+
+    def check_stock(self, sku):
+        return self._items.get(sku, 0)
+
+    def is_low_stock(self, sku, threshold=10):
+        return self.check_stock(sku) < threshold
+\`\`\`
+
+\`\`\`python
+# File: tests/conftest.py
+import pytest
+from src.inventory import Inventory
+
+@pytest.fixture
+def inventory():                          # shared fixture — fresh Inventory for each test
+    """Return a fresh, empty Inventory."""
+    return Inventory()
+\`\`\`
+
+\`\`\`python
+# File: tests/test_inventory.py
+import pytest
+
+def test_add_item(inventory):             # fixture injected automatically
+    inventory.add("SKU-001", 5)
+    assert inventory.check_stock("SKU-001") == 5
+
+def test_add_twice(inventory):
+    inventory.add("SKU-001", 5)
+    inventory.add("SKU-001", 3)
+    assert inventory.check_stock("SKU-001") == 8
+
+def test_remove_item(inventory):
+    inventory.add("SKU-001", 10)
+    inventory.remove("SKU-001", 3)
+    assert inventory.check_stock("SKU-001") == 7
+
+def test_remove_nonexistent(inventory):
+    with pytest.raises(KeyError, match="SKU-999"):
+        inventory.remove("SKU-999", 1)
+
+@pytest.mark.parametrize("add_qty, remove_qty, expected", [
+    (10, 3, 7),
+    (5, 5, 0),
+    (100, 1, 99),
+])
+def test_add_remove_combinations(inventory, add_qty, remove_qty, expected):
+    inventory.add("SKU-001", add_qty)
+    inventory.remove("SKU-001", remove_qty)
+    assert inventory.check_stock("SKU-001") == expected
+
+def test_low_stock(inventory):
+    inventory.add("SKU-001", 5)
+    assert inventory.is_low_stock("SKU-001") is True    # below default threshold
+    inventory.add("SKU-001", 10)
+    assert inventory.is_low_stock("SKU-001") is False   # now 15 >= 10
+\`\`\`
+
+\`\`\`python
+# File: tests/test_notifier.py
+"""Test module that uses mocking to test code with external dependencies."""
+from unittest.mock import patch
+from src.notifier import send_low_stock_alerts
+
+@patch("src.notifier.send_email")          # prevent actual email sending
+def test_send_low_stock_alerts(mock_send_email, inventory):
+    inventory.add("SKU-001", 3)           # 3 < threshold 10
+    inventory.add("SKU-002", 20)          # 20 >= threshold 10
+
+    send_low_stock_alerts(inventory, threshold=10)
+    mock_send_email.assert_called_once_with("SKU-001", 3)
+
+# Run: pytest --cov=src -v
+          },
+\`\`\`
+
+Line 6: parametrization runs this test with three different add/remove/expected combinations. Line 19: fixture injection — <code>inventory</code> comes from <code>conftest.py</code>. Line 30: mock prevents real email sending during tests. Line 31: assert that the mock was called exactly once with the expected arguments.
+
+`,
+            tags: ["Testing", "pytest", "Mocking", "Coverage"],
+          },
+          { id: "ns-py-async", title: "Async Python", shortDesc: "asyncio, coroutines, tasks, futures, async context managers, and aiohttp.", difficulty: "advanced", readTimeMin: 18, keyPoints: [
+              "Coroutines (async def) are suspendable functions; await suspends the coroutine until the awaited operation completes.",
+              "The event loop (asyncio.run()) orchestrates coroutines, suspending and resuming them as I/O completes.",
+              "Tasks (asyncio.create_task()) run coroutines concurrently; asyncio.gather() waits for multiple tasks to finish.",
+              "async with enters an async context manager (e.g., aiohttp.ClientSession); async for iterates over an async iterable.",
+              "Async code is single-threaded — concurrency comes from cooperative multitasking (await points), not parallelism.",
+              "Use asyncio.Queue for communication between coroutines and asyncio.timeout() for deadlines.",
+            ], content: `## What Is This?
+
+Asynchronous programming in Python lets a single thread handle many I/O-bound tasks concurrently by pausing (suspending) a task when it waits for I/O (network, disk, database) and switching to another task. The <code>asyncio</code> module provides the infrastructure: an event loop, coroutines (<code>async def</code>), and awaitable objects.
+
+Think of async programming as a chef cooking multiple orders. Instead of standing and staring at a pot waiting for water to boil (synchronous), the chef starts the water, moves to chop vegetables for another order, and returns when the water is boiling. The chef (CPU) does not get faster, but the kitchen (program) handles more orders concurrently.
+
+Async Python exists because many programs spend most of their time waiting: waiting for database queries, HTTP responses, file reads, or user input. During that waiting time, the CPU is idle. Async programming lets the CPU work on other tasks during the wait, dramatically improving throughput for I/O-bound applications.
+
+## The Big Picture
+
+Async Python builds on generators and the concept of coroutines. Generators can pause with <code>yield</code>; coroutines pause with <code>await</code>. The event loop is the scheduler that decides which coroutine runs next.
+
+Async connects to web frameworks (FastAPI, aiohttp are async-native), databases (async ORMs like SQLAlchemy async, asyncpg for PostgreSQL), and the standard library (<code>asyncio</code>). It contrasts with threading (preemptive multitasking with race conditions) and multiprocessing (parallelism across CPU cores).
+
+## Core Ideas
+
+### Coroutines — async def
+
+A coroutine is a function defined with <code>async def</code>. Calling it does not execute the body — it returns a coroutine object that must be awaited or scheduled.
+
+\`\`\`python
+async def greet(name):                    # coroutine function — async def
+    return f"Hello, {name}!"
+
+# Calling a coroutine function returns a coroutine object
+coro = greet("Alice")
+print(coro)                               # <coroutine object greet at 0x...>
+
+# To actually run it, you need an event loop
+result = asyncio.run(greet("Alice"))      # "Hello, Alice!"
+\`\`\`
+
+Line 1: <code>async def</code> defines a coroutine. Line 5: calling <code>greet("Alice")</code> does NOT execute the body — it returns a coroutine object. Line 8: <code>asyncio.run()</code> creates an event loop, runs the coroutine to completion, and closes the loop. This is the standard entry point.
+
+### await — Suspending Execution
+
+<code>await</code> suspends the current coroutine until the awaited awaitable completes. During suspension, the event loop runs other coroutines.
+
+\`\`\`python
+import asyncio
+
+async def fetch_data(url):
+    print(f"Starting fetch: {url}")
+    await asyncio.sleep(2)                # simulate network I/O — suspends for 2 seconds
+    print(f"Finished fetch: {url}")
+    return f"Data from {url}"
+
+async def main():
+    # Sequential — takes ~4 seconds
+    result1 = await fetch_data("url1")    # suspend here until done
+    result2 = await fetch_data("url2")    # then start the next one
+    print(result1, result2)
+
+asyncio.run(main())
+\`\`\`
+
+Line 6: <code>await asyncio.sleep(2)</code> does not block the thread — it suspends the coroutine and tells the event loop to resume it after 2 seconds. During that time, the event loop runs other coroutines. Line 10-11: each <code>await</code> waits for the previous coroutine to finish before starting the next — this is sequential, not concurrent.
+
+### Tasks — Concurrent Execution
+
+A task wraps a coroutine and schedules it on the event loop immediately. Tasks run concurrently.
+
+\`\`\`python
+import asyncio
+
+async def fetch_data(url, delay):
+    await asyncio.sleep(delay)            # simulate varying network delay
+    return f"Data from {url}"
+
+async def main():
+    # Create tasks — both start immediately
+    task1 = asyncio.create_task(fetch_data("url1", 3))  # schedules immediately
+    task2 = asyncio.create_task(fetch_data("url2", 1))  # also schedules immediately
+
+    # Wait for both to complete
+    result1 = await task1                 # takes ~3 seconds
+    result2 = await task2                 # already done after ~1 second
+    print(result1, result2)               # total time: ~3 seconds (not 3+1)
+
+asyncio.run(main())
+\`\`\`
+
+Line 7-8: <code>asyncio.create_task()</code> schedules the coroutine on the event loop immediately and returns a <code>Task</code> object. Both tasks start running in the background. Line 11: <code>await task1</code> waits for task1 to finish (3 seconds). Line 12: <code>await task2</code> returns immediately because task2 finished earlier (1 second). Total time is ~3 seconds, not 4.
+
+### asyncio.gather — Wait for Multiple Tasks
+
+<code>asyncio.gather()</code> runs multiple awaitables concurrently and returns their results as a tuple.
+
+\`\`\`python
+import asyncio
+
+async def fetch(url):
+    await asyncio.sleep(1)
+    return f"Result from {url}"
+
+async def main():
+    results = await asyncio.gather(
+        fetch("url1"),                    # runs concurrently
+        fetch("url2"),                    # runs concurrently
+        fetch("url3"),                    # runs concurrently
+    )
+    print(results)                        # all 3 finish in ~1 second total
+
+asyncio.run(main())
+\`\`\`
+
+Line 7: <code>asyncio.gather</code> takes multiple awaitables, runs them concurrently, and returns a list of results in the same order. All three fetches complete in approximately 1 second (the slowest one), not 3 seconds.
+
+### Async Context Managers — async with
+
+Async context managers use <code>__aenter__</code> and <code>__aexit__</code> (both coroutines). Use them with <code>async with</code>.
+
+\`\`\`python
+import aiohttp
+
+async def fetch_url(session, url):
+    async with session.get(url) as response:  # async context manager
+        return await response.text()          # await inside the block
+
+async def main():
+    async with aiohttp.ClientSession() as session:  # session is an async context manager
+        html = await fetch_url(session, "https://example.com")
+        print(len(html))
+
+asyncio.run(main())
+\`\`\`
+
+Line 3: <code>async with session.get(url) as response</code> — <code>session.get()</code> is an async context manager. It awaits the network request on entry and awaits response cleanup on exit. Line 4: <code>await response.text()</code> reads the response body asynchronously.
+
+### Async Iteration — async for
+
+Async iterators produce values asynchronously, pausing between items with <code>await</code>.
+
+\`\`\`python
+async def async_counter(start, end):
+    """Async generator that yields numbers with a delay."""
+    for i in range(start, end):
+        await asyncio.sleep(0.5)          # simulate async work between yields
+        yield i
+
+async def main():
+    async for num in async_counter(1, 5): # async for — awaits the next value
+        print(num)                        # prints 1, 2, 3, 4 with 0.5s gaps
+
+asyncio.run(main())
+\`\`\`
+
+Line 2: an async generator uses both <code>async def</code> and <code>yield</code>. Line 7: <code>async for</code> awaits each value from the async generator.
+
+### Synchronous vs. Async vs. Threading
+
+| Approach | Concurrency Model | Best For | Caveats |
+|----------|-------------------|----------|---------|
+| Synchronous | Sequential | CPU-bound, simple scripts | Blocks on I/O |
+| Async (asyncio) | Cooperative multitasking | I/O-bound, many connections | Single-threaded; one slow coroutine blocks all |
+| Threading | Preemptive multitasking | I/O-bound, blocking libraries | Race conditions, GIL limits CPU parallelism |
+| Multiprocessing | Multiple processes | CPU-bound, heavy computation | High memory, IPC overhead |
+
+### asyncio.Queue — Coroutine Communication
+
+\`\`\`python
+import asyncio
+
+async def producer(queue):
+    for i in range(5):
+        await asyncio.sleep(0.1)
+        await queue.put(i)                # add item to queue
+
+async def consumer(queue):
+    while True:
+        item = await queue.get()           # wait for item (blocks if empty)
+        if item is None:                   # sentinel value to stop
+            break
+        print(f"Processed {item}")
+        queue.task_done()                  # mark item as processed
+
+async def main():
+    queue = asyncio.Queue()
+    # Start producer and consumer concurrently
+    await asyncio.gather(
+        producer(queue),
+        consumer(queue),
+    )
+
+asyncio.run(main())
+\`\`\`
+
+Line 4: <code>await queue.put(i)</code> suspends if the queue is full (bounded queue). Line 8: <code>await queue.get()</code> suspends if the queue is empty. Line 10: <code>None</code> is a sentinel — a special value that signals the consumer to stop.
+
+### Common Pitfalls
+
+\`\`\`python
+# PITFALL 1: Forgetting to await — calling a coroutine without await returns a coroutine object
+async def main():
+    result = fetch_data()                 # WRONG — result is a coroutine object, not the data
+    # result = await fetch_data()         # RIGHT
+
+# PITFALL 2: Blocking the event loop with synchronous I/O
+async def main():
+    import time
+    time.sleep(10)                        # WRONG — blocks the entire event loop for 10s
+    # await asyncio.sleep(10)             # RIGHT — suspends, other coroutines can run
+
+# PITFALL 3: Creating tasks but never awaiting them
+async def main():
+    asyncio.create_task(some_work())      # task starts but may be cancelled on exit
+    # Task must be awaited or keep a reference to prevent garbage collection
+
+# PITFALL 4: Running CPU-bound work in async (defeats the purpose)
+async def fib(n):
+    # Pure CPU computation — no await points, so no other coroutine can run
+    if n < 2: return n
+    return await fib(n-1) + await fib(n-2)  # Fib is still CPU-bound; use run_in_executor instead
+\`\`\`
+
+## Wiring It Together
+
+A real-world async program that fetches multiple URLs concurrently:
+
+\`\`\`python
+"""async_crawler.py — concurrently fetches multiple URLs and reports status."""
+
+import asyncio
+import aiohttp
+from dataclasses import dataclass
+
+@dataclass
+class FetchResult:
+    url: str
+    status: int
+    size: int
+    error: str | None = None
+
+async def fetch_one(session, url, timeout_sec=10):
+    """Fetch a single URL and return a FetchResult."""
+    try:
+        async with asyncio.timeout(timeout_sec):      # timeout guard
+            async with session.get(url) as response:
+                text = await response.text()
+                return FetchResult(
+                    url=url,
+                    status=response.status,
+                    size=len(text),
+                )
+    except asyncio.TimeoutError:
+        return FetchResult(url=url, status=0, size=0, error="timeout")
+    except aiohttp.ClientError as e:
+        return FetchResult(url=url, status=0, size=0, error=str(e))
+
+async def crawl(urls, max_concurrent=5):
+    """Crawl a list of URLs with a concurrency limit."""
+    connector = aiohttp.TCPConnector(limit=max_concurrent)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        # Create a task for each URL and gather results
+        tasks = [fetch_one(session, url) for url in urls]
+        return await asyncio.gather(*tasks)
+
+async def main():
+    urls = [
+        "https://httpbin.org/delay/1",
+        "https://httpbin.org/delay/2",
+        "https://httpbin.org/status/404",
+        "https://nonexistent.example.com",
+    ]
+
+    results = await crawl(urls, max_concurrent=3)
+
+    for r in results:
+        if r.error:
+            print(f"[FAIL] {r.url}: {r.error}")
+        else:
+            print(f"[OK]   {r.url} — status {r.status}, {r.size} bytes")
+
+if __name__ == "__main__":
+          },
+    asyncio.run(main())
+\`\`\`
+
+Line 5: <code>@dataclass</code> auto-generates <code>__init__</code> and <code>__repr__</code>. Line 17: <code>async with asyncio.timeout(timeout_sec)</code> — raises <code>TimeoutError</code> if the block takes too long. Line 18: <code>async with session.get(url)</code> — async context manager for HTTP request. Line 26: <code>TimeoutError</code> from the timeout guard. Line 32: <code>TCPConnector(limit=max_concurrent)</code> limits concurrent connections. Line 34: list comprehension creates tasks. Line 35: <code>asyncio.gather(*tasks)</code> runs all tasks concurrently and returns results as a list. Line 50: <code>asyncio.run(main())</code> — standard entry point.
+
+`,
+            tags: ["Async", "asyncio", "Coroutines", "Concurrency"],
+          },
+          { id: "ns-py-web", title: "Web Frameworks (Django, FastAPI, Flask)", shortDesc: "Routing, middleware, ORM, serialization, dependency injection, and production deployment patterns.", difficulty: "advanced", readTimeMin: 20, keyPoints: [
+              "Django is a full-featured framework with ORM, admin panel, auth, and templating — best for data-driven sites.",
+              "Flask is a minimal microframework — you choose and add components as needed. Great for APIs and small apps.",
+              "FastAPI is an async-native framework with automatic OpenAPI docs and Pydantic-based request validation.",
+              "All three use the WSGI/ASGI protocol: WSGI (sync, Django/Flask), ASGI (async, FastAPI/daphne).",
+              "Routing maps URLs to view functions; middleware wraps request/response processing (auth, logging, CORS).",
+              "Production deploy patterns: Gunicorn (WSGI) or Uvicorn (ASGI) behind Nginx with a process manager.",
+            ], content: `## What Is This?
+
+Web frameworks provide the infrastructure for building web applications and APIs. They handle HTTP request/response processing, URL routing, request parsing, session management, and database integration — letting you focus on your application logic instead of reinventing the web server.
+
+Think of a web framework as a restaurant kitchen. The framework provides the stove, oven, prep stations, and plumbing (request handling, routing, database access). You provide the recipes (your application code). You could build your own kitchen from scratch, but using a professional kitchen is faster, safer, and more reliable.
+
+Each framework takes a different philosophy: Django includes everything you need (batteries-included), Flask gives you the minimum and lets you choose extras, and FastAPI focuses on performance and automatic API documentation.
+
+## The Big Picture
+
+Web frameworks sit at the top of the Python stack — they are the final destination where everything comes together. Syntax, data structures, control flow, OOP, the standard library, async, testing, and packaging all serve the goal of shipping a running web application.
+
+These frameworks connect to deployment (Gunicorn, Uvicorn, Nginx), databases (ORM vs raw SQL), frontend frameworks (Django REST + React, or server-rendered templates), and authentication (session-based in Django, JWT in FastAPI/Flask).
+
+## Core Ideas
+
+### Framework Comparison
+
+| Aspect | Django | Flask | FastAPI |
+|--------|--------|-------|---------|
+| Philosophy | Batteries-included | Microframework | Async-native, standards-based |
+| ORM | Built-in Django ORM | None (use SQLAlchemy) | None (use SQLAlchemy) |
+| Admin Panel | Built-in | None (use Flask-Admin) | None |
+| Async Support | ASGI (3.0+) | Limited | Full async natively |
+| API Docs | DRF (third-party) | Flask-RESTx | Automatic (OpenAPI + Swagger UI) |
+| Request Validation | Manual / DRF serializers | Manual | Pydantic (automatic) |
+| Best For | CMS, e-commerce, data apps | Microservices, prototypes | High-performance APIs |
+| Learning Curve | Steep (lots to learn upfront) | Gentle | Moderate |
+
+### Django — The Full-Featured Framework
+
+Django follows the "batteries-included" philosophy. A single <code>django-admin startproject</code> creates a project with settings, URL configuration, and a management script.
+
+\`\`\`python
+# urls.py — URL routing (maps URLs to views)
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.home, name="home"),               # / → home view
+    path("items/", views.item_list, name="items"),   # /items/ → list view
+    path("items/<int:pk>/", views.item_detail, name="item-detail"),  # /items/5/ → detail
+]
+
+# views.py — request handlers (function-based or class-based)
+from django.shortcuts import render, get_object_or_404
+from .models import Item
+
+def item_list(request):
+    items = Item.objects.all()                        # Django ORM query
+    return render(request, "items/list.html", {"items": items})
+
+def item_detail(request, pk):
+    item = get_object_or_404(Item, pk=pk)             # 404 if not found
+    return render(request, "items/detail.html", {"item": item})
+
+# models.py — database schema definition
+from django.db import models
+
+class Item(models.Model):
+    name = models.CharField(max_length=100)           # VARCHAR
+    price = models.DecimalField(max_digits=8, decimal_places=2)  # DECIMAL
+    created_at = models.DateTimeField(auto_now_add=True)         # auto timestamp
+
+    def __str__(self):
+        return self.name
+\`\`\`
+
+Line 2: <code>path()</code> maps a URL pattern to a view function. Line 6: angle brackets <code>&lt;int:pk&gt;</code> capture URL parameters as integers. Line 14: <code>Item.objects.all()</code> — the ORM generates <code>SELECT * FROM items</code>. Line 15: <code>render()</code> fills a template with context data. Line 18: <code>get_object_or_404</code> returns 404 if the object does not exist. Line 23: models define the database schema with field types.
+
+### Flask — The Minimal Microframework
+
+Flask provides the essentials (routing, request/response, templates) and lets you add components as needed.
+
+\`\`\`python
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)                      # create application instance
+
+@app.route("/")                            # decorator registers a route
+def home():
+    return "Hello, World!"
+
+@app.route("/items", methods=["GET", "POST"])
+def items():
+    if request.method == "POST":
+        data = request.get_json()          # parse JSON body
+        # ... save to database
+        return jsonify({"id": 1, **data}), 201  # return JSON response
+
+    # GET — return list
+    return jsonify([{"id": 1, "name": "Widget"}])
+
+@app.route("/items/<int:item_id>")         # URL parameter
+def get_item(item_id):
+    return jsonify({"id": item_id, "name": "Widget"})
+
+if __name__ == "__main__":
+    app.run(debug=True)                    # development server (not for production)
+\`\`\`
+
+Line 1: import Flask. Line 3: create the app. Line 5: <code>@app.route("/")</code> — a decorator that registers the function as the handler for the root URL. Line 9: <code>methods</code> lists allowed HTTP methods. Line 11: <code>request.get_json()</code> parses the JSON request body. Line 12: <code>jsonify()</code> returns a JSON response with proper Content-Type header. Line 16: URL parameters use <code>&lt;type:name&gt;</code> syntax.
+
+### FastAPI — Async-Native, Auto-Documented
+
+FastAPI leverages Python type hints for request validation and automatic OpenAPI documentation.
+
+\`\`\`python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+app = FastAPI(title="Items API")            # create FastAPI instance
+
+class Item(BaseModel):                      # Pydantic model — defines request/response shape
+    name: str                               # required string
+    price: float                            # required float
+    description: str | None = None          # optional string
+
+# In-memory "database"
+fake_db = {}
+
+@app.get("/")                               # HTTP GET
+async def root():
+    return {"message": "Hello, World!"}
+
+@app.get("/items/{item_id}")                # path parameter
+async def read_item(item_id: int):          # type hint = int → auto-validation
+    if item_id not in fake_db:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return fake_db[item_id]
+
+@app.post("/items/", status_code=201)       # HTTP POST
+async def create_item(item: Item):          # body validated against Item schema
+    item_id = len(fake_db) + 1
+    fake_db[item_id] = item.model_dump()    # convert Pydantic model to dict
+    return {"id": item_id, **item.model_dump()}
+
+# FastAPI automatically generates:
+# - /docs → Swagger UI interactive documentation
+# - /openapi.json → OpenAPI schema
+\`\`\`
+
+Line 1: import FastAPI. Line 4: define Pydantic model with typed fields. Line 13: <code>item_id: int</code> — FastAPI validates that the path parameter is an integer. Line 15: <code>HTTPException</code> returns proper HTTP error responses. Line 19: <code>item: Item</code> — FastAPI parses the request body, validates it against the Item schema, and injects the validated object. Line 22: <code>model_dump()</code> converts the Pydantic model to a dictionary.
+
+### Middleware — Request/Response Pipeline
+
+Middleware is a component that processes every request before it reaches the view and every response before it is sent.
+
+\`\`\`python
+# Django middleware (settings.py)
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",   # HTTPS redirect, HSTS
+    "django.middleware.common.CommonMiddleware",        # APPEND_SLASH, ETags
+    "django.middleware.csrf.CsrfViewMiddleware",        # CSRF protection
+    "django.contrib.auth.middleware.AuthenticationMiddleware",  # attach user to request
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
+
+# FastAPI middleware
+from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],                   # allow all origins (development only)
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Custom middleware in Flask
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.before_request                        # runs before every request
+def before_request():
+    print(f"Request: {request.method} {request.path}")
+
+@app.after_request                         # runs after every request
+def after_request(response):
+    response.headers["X-Server"] = "Flask"
+    return response
+\`\`\`
+
+### ORM — Object-Relational Mapping
+
+An ORM maps Python classes to database tables. Django has a built-in ORM; Flask and FastAPI commonly use SQLAlchemy.
+
+\`\`\`python
+# Django ORM — model definition and queries
+from django.db import models
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    in_stock = models.BooleanField(default=True)
+
+# Common ORM queries
+Product.objects.all()                      # SELECT * FROM products
+Product.objects.filter(price__lt=100)       # SELECT * WHERE price < 100
+Product.objects.get(id=5)                  # SELECT * WHERE id = 5 (raises if not found)
+Product.objects.create(name="New", price=9.99)  # INSERT
+
+# SQLAlchemy (with FastAPI or Flask)
+from sqlalchemy import Column, Integer, String, Float, Boolean
+from sqlalchemy.orm import declarative_base
+
+Base = declarative_base()
+
+class Product(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200), nullable=False)
+    price = Column(Float, nullable=False)
+    in_stock = Column(Boolean, default=True)
+\`\`\`
+
+### Dependency Injection (FastAPI)
+
+FastAPI's dependency injection system provides reusable components to route handlers.
+
+\`\`\`python
+from fastapi import FastAPI, Depends
+
+app = FastAPI()
+
+async def common_params(q: str | None = None, skip: int = 0, limit: int = 100):
+    """Dependency that provides common query parameters."""
+    return {"q": q, "skip": skip, "limit": limit}
+
+@app.get("/items/")
+async def read_items(params: dict = Depends(common_params)):
+    # params is the return value of common_params()
+    return params
+
+@app.get("/users/")
+async def read_users(params: dict = Depends(common_params)):
+    # Same dependency reused
+    return params
+\`\`\`
+
+Line 4: a dependency is a callable (often a function) that returns a value. Line 8: <code>Depends(common_params)</code> tells FastAPI to call <code>common_params</code> and inject the result as <code>params</code>. Dependencies can themselves have dependencies, forming a tree.
+
+### Production Deployment
+
+\`\`\`bash
+# Django — WSGI with Gunicorn
+pip install gunicorn
+gunicorn myproject.wsgi:application --workers 4 --bind 0.0.0.0:8000
+
+# Flask — WSGI with Gunicorn
+gunicorn app:app --workers 4 --bind 0.0.0.0:8000
+
+# FastAPI — ASGI with Uvicorn
+uvicorn main:app --workers 4 --host 0.0.0.0 --port 8000
+
+# Behind Nginx reverse proxy
+# /etc/nginx/sites-available/myapp:
+# server {
+#     listen 80;
+#     location / {
+#         proxy_pass http://127.0.0.1:8000;
+#         proxy_set_header Host $host;
+#     }
+# }
+\`\`\`
+
+| Component | Role | Example |
+|-----------|------|---------|
+| Application server | Runs your Python code | Gunicorn, Uvicorn |
+| Reverse proxy | TLS termination, static files, load balancing | Nginx, Caddy |
+| Process manager | Keeps the server running | systemd, supervisor |
+| Database | Persistent storage | PostgreSQL, MySQL, SQLite |
+| Cache | In-memory speed | Redis, Memcached |
+
+## Wiring It Together
+
+A complete FastAPI application with CRUD endpoints, Pydantic validation, dependency injection, and SQLAlchemy:
+
+\`\`\`python
+"""app.py — FastAPI CRUD API for products."""
+
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy.orm import declarative_base, Session, sessionmaker
+
+# ── Database setup
+DATABASE_URL = "sqlite:///./products.db"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
+
+class ProductDB(Base):                     # SQLAlchemy model (database)
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+
+Base.metadata.create_all(bind=engine)      # create tables
+
+# ── Pydantic schemas
+class ProductCreate(BaseModel):            # request schema
+    name: str
+    price: float
+
+class ProductResponse(BaseModel):          # response schema
+    id: int
+    name: str
+    price: float
+
+# ── Dependency
+def get_db():                              # provides a database session
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# ── FastAPI app
+app = FastAPI(title="Products API")
+
+@app.post("/products/", response_model=ProductResponse, status_code=201)
+def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+    db_product = ProductDB(name=product.name, price=product.price)
+    db.add(db_product)
+    db.commit()                            # persist to database
+    db.refresh(db_product)                 # load generated ID
+    return db_product
+
+@app.get("/products/", response_model=list[ProductResponse])
+def list_products(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    products = db.query(ProductDB).offset(skip).limit(limit).all()
+    return products
+
+@app.get("/products/{product_id}", response_model=ProductResponse)
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+          },
+
+# Run with: uvicorn app:app --reload
+\`\`\`
+
+Line 10: SQLAlchemy engine and session setup. Line 13-17: database model — maps to the <code>products</code> table. Line 22-26: Pydantic schemas for request/response validation. Line 29-33: dependency that provides a database session and closes it after the request. Line 38: <code>response_model=ProductResponse</code> — FastAPI validates and filters the response automatically. Line 39: <code>Depends(get_db)</code> injects the database session. Line 44: <code>skip</code> and <code>limit</code> query parameters for pagination. Line 49: <code>filter()</code> with <code>.first()</code> — returns None if not found.
+
+`,
+            tags: ["Web", "Django", "Flask", "FastAPI"],
+          },
+          { id: "ns-py-tooling", title: "Tooling & Packaging", shortDesc: "pip, venv, poetry, rye, ruff, mypy, pre-commit, and publishing to PyPI.", difficulty: "intermediate", readTimeMin: 17, keyPoints: [
+              "venv creates isolated Python environments; always use one per project to avoid dependency conflicts.",
+              "pip installs packages; requirements.txt lists dependencies; pip freeze captures the current environment state.",
+              "pyproject.toml is the modern standard for project metadata, dependencies, and tool configuration.",
+              "Poetry and Rye are next-generation package managers that replace pip + venv + build with a single tool.",
+              "ruff is a fast linter/formatter (replaces flake8 + isort + black); mypy performs static type checking.",
+              "pre-commit runs automated checks (lint, format, type-check) before every commit; publish to PyPI via twine.",
+            ], content: `## What Is This?
+
+Python tooling and packaging is the ecosystem of tools that help you manage dependencies, ensure code quality, and distribute your code. The core tool is <code>pip</code> (package installer for Python), which downloads and installs packages from the Python Package Index (PyPI). Virtual environments (<code>venv</code>) isolate each project's dependencies so they do not conflict.
+
+Think of tooling as the infrastructure of a construction site. pip is the supply truck that delivers materials (packages). venv is a separate workshop for each project so sawdust from project A does not get into project B's paint. pyproject.toml is the blueprint that lists what materials are needed. Ruff is a quality inspector who checks your work for defects. Mypy is a second inspector who checks that all the pipes and wires (types) are connected correctly.
+
+The packaging ecosystem exists because real projects depend on third-party libraries, and those libraries depend on other libraries. Managing these dependency chains, ensuring they are compatible, and distributing your own package to others is the job of the packaging toolchain.
+
+## The Big Picture
+
+Tooling and packaging is the final layer that makes a project shareable and maintainable. After you write code (syntax, data types, functions, classes, modules) and test it (pytest), you need to package it so others can install it.
+
+This connects to everything: linting ensures code style consistency across a team, type checking catches bugs before runtime, virtual environments prevent "works on my machine" problems, and publishing puts your work on PyPI for the world to use.
+
+## Core Ideas
+
+### Virtual Environments — venv
+
+A virtual environment is an isolated directory containing its own Python interpreter and package installations.
+
+\`\`\`bash
+# Create a virtual environment
+python3 -m venv .venv                      # creates .venv/ directory
+
+# Activate it (Unix/Mac)
+source .venv/bin/activate                  # shell prompt changes to show (.venv)
+
+# Activate it (Windows)
+.venv\Scripts\activate
+
+# Deactivate
+deactivate                                 # returns to system Python
+\`\`\`
+
+Line 1: <code>python3 -m venv .venv</code> creates a virtual environment in the <code>.venv</code> directory (conventional name). Line 4: activating prepends <code>.venv/bin</code> to your <code>PATH</code> so <code>python3</code> and <code>pip</code> use the isolated environment. Always add <code>.venv/</code> to <code>.gitignore</code>.
+
+### pip — Package Installer
+
+\`\`\`bash
+# Install a package
+pip install requests                       # installs latest version
+pip install requests==2.31.0               # installs specific version
+pip install "requests>=2.0,<3.0"          # version range
+
+# Install from requirements file
+pip install -r requirements.txt
+
+# List installed packages and versions
+pip list
+pip freeze                                 # output in requirements.txt format
+
+# Uninstall
+pip uninstall requests
+\`\`\`
+
+### requirements.txt
+
+\`\`\`txt
+# requirements.txt
+requests==2.31.0
+pytest>=7.0
+fastapi>=0.100.0
+sqlalchemy>=2.0
+\`\`\`
+
+\`\`\`bash
+# Freeze current environment to a file
+pip freeze > requirements.txt
+
+# Install from that file
+pip install -r requirements.txt
+\`\`\`
+
+<code>pip freeze</code> outputs all installed packages with exact versions. Use this to reproduce environments. The downside: it lists every package (including transitive dependencies), making upgrades harder. This is where <code>pyproject.toml</code> with Poetry or pip-tools improves.
+
+### pyproject.toml — Modern Project Metadata
+
+<code>pyproject.toml</code> (PEP 621) is the unified configuration file for Python projects. It replaces <code>setup.py</code>, <code>setup.cfg</code>, <code>requirements.txt</code>, and tool-specific config files.
+
+\`\`\`toml
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]            # build system requirements
+build-backend = "setuptools.build_meta"    # build backend
+
+[project]
+name = "my-package"
+version = "0.1.0"
+description = "A useful Python package"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+dependencies = [                           # your package's dependencies
+    "requests>=2.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+dev = [                                    # development-only dependencies
+    "pytest>=7.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0",
+]
+
+[tool.ruff]                                # ruff configuration
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+\`\`\`
+
+### Poetry — Next-Generation Package Manager
+
+Poetry handles virtual environments, dependencies, building, and publishing in one tool.
+
+\`\`\`bash
+# Install Poetry
+curl -sSL https://install.python-poetry.org | python3 -
+
+# Create a new project
+poetry new my-project                      # creates project structure
+poetry init                                # interactive setup in existing project
+
+# Add dependencies
+poetry add requests                        # installs and adds to pyproject.toml
+poetry add --dev pytest                    # dev-only dependency
+
+# Install from existing pyproject.toml
+poetry install
+
+# Build and publish
+poetry build                               # creates .tar.gz and .whl in dist/
+poetry publish                             # uploads to PyPI (requires token)
+
+# Create and activate virtual environment
+poetry env use python3                     # creates .venv in project
+poetry shell                               # activates the venv
+\`\`\`
+
+\`\`\`toml
+# pyproject.toml (Poetry format)
+[tool.poetry]
+name = "my-package"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.31"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+\`\`\`
+
+### Rye — All-in-One Tool
+
+Rye (by Armin Ronacher) is an even more integrated tool that manages Python versions, virtual environments, dependencies, and builds.
+
+\`\`\`bash
+# Install Rye
+curl -sSL https://rye-up.com/get | bash
+
+# Create a new project
+rye init my-project
+cd my-project
+
+# Pin a Python version and create venv
+rye pin 3.12
+rye sync                                  # creates .venv and installs deps
+
+# Add dependencies
+rye add requests
+rye add --dev pytest
+
+# Run commands in the venv
+rye run python script.py
+rye run pytest
+\`\`\`
+
+| Feature | pip + venv | Poetry | Rye |
+|---------|-----------|--------|-----|
+| Virtual env management | Manual (venv) | Automatic | Automatic |
+| Dependency resolution | Linear (pip) | SAT solver | SAT solver (via uv) |
+| Lock file | Not built-in | poetry.lock | requirements.lock |
+| Build/publish | + build + twine | Built-in | Built-in |
+| Python version management | No | No | Yes |
+
+### Ruff — Fast Linter and Formatter
+
+Ruff is a Rust-based linter that replaces flake8 (with plugins), isort, and black — all in a single, fast tool.
+
+\`\`\`bash
+# Install
+pip install ruff
+
+# Check for issues
+ruff check .                               # lint all files in current directory
+
+# Auto-fix issues
+ruff check --fix .                         # automatically fixes many issues
+
+# Format code
+ruff format .                              # formats Python files (like black)
+
+# pyproject.toml configuration
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N"]             # error, pyflakes, isort, naming
+ignore = ["E501"]                          # ignore line-too-long
+
+[tool.ruff.format]
+quote-style = "double"
+\`\`\`
+
+### mypy — Static Type Checking
+
+mypy checks your Python code against type hints and catches type errors before runtime.
+
+\`\`\`python
+# mypy_demo.py
+def greet(name: str) -> str:               # type-annotated function
+    return f"Hello, {name}!"
+
+greet("Alice")                             # OK
+greet(42)                                  # mypy error: Argument 1 to "greet" has incompatible type "int"
+\`\`\`
+
+\`\`\`bash
+pip install mypy
+mypy mypy_demo.py                          # reports the int argument error
+mypy .                                     # check entire project
+mypy --strict .                            # strict mode — enables all checks
+\`\`\`
+
+\`\`\`toml
+# pyproject.toml mypy config
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true              # third-party packages without stubs
+\`\`\`
+
+### pre-commit — Automated Quality Gates
+
+pre-commit runs configured checks (linters, formatters, type checkers) before every <code>git commit</code>. If any check fails, the commit is blocked.
+
+\`\`\`yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.0
+    hooks:
+      - id: mypy
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0
+    hooks:
+      - id: trailing-whitespace             # removes trailing whitespace
+      - id: end-of-file-fixer               # ensures file ends with newline
+      - id: check-yaml                      # validates YAML files
+\`\`\`
+
+\`\`\`bash
+# Install pre-commit (once per project)
+pip install pre-commit
+pre-commit install                         # installs git hook scripts
+
+# Run manually on all files
+pre-commit run --all-files
+
+# Run on changed files (auto-triggered on git commit)
+git commit -m "message"                    # triggers pre-commit hooks
+\`\`\`
+
+### Publishing to PyPI
+
+\`\`\`bash
+# Build your package
+pip install build
+python -m build                            # creates dist/*.tar.gz and dist/*.whl
+
+# Publish with twine
+pip install twine
+twine upload dist/*                         # prompts for PyPI credentials
+
+# Using API token (recommended for CI)
+twine upload dist/* -u __token__ -p pypi-xxxx
+
+# Test PyPI (for experimentation)
+twine upload --repository testpypi dist/*
+\`\`\`
+
+\`\`\`bash
+# Or with Poetry (single command)
+poetry publish                              # builds and uploads in one step
+\`\`\`
+
+## Wiring It Together
+
+A complete project setup from scratch:
+
+\`\`\`bash
+# 1. Create project directory
+mkdir myproject && cd myproject
+
+# 2. Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 3. Install core tools
+pip install ruff mypy pre-commit
+
+# 4. Create pyproject.toml — project metadata and tool config
+\`\`\`
+
+\`\`\`toml
+# pyproject.toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myproject"
+version = "0.1.0"
+description = "A well-tooled Python project"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+\`\`\`
+
+\`\`\`yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.7.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.10.0
+    hooks:
+      - id: mypy
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+\`\`\`
+
+\`\`\`python
+# src/myproject/core.py
+"""Core module."""
+
+def add(a: int, b: int) -> int:
+    """Add two integers."""
+    return a + b
+\`\`\`
+
+\`\`\`bash
+# 5. Install dev dependencies
+pip install -e ".[dev]"                    # editable install with dev deps
+
+# 6. Set up pre-commit
+pre-commit install
+
+# 7. Run checks
+ruff check src/                            # lint
+ruff format src/                           # format
+mypy src/                                  # type check
+pytest                                     # run tests
+
+          },
+# 8. Make a change and commit — pre-commit runs automatically
+git add .
+git commit -m "Initial setup"
+\`\`\`
+
+Line 29: <code>pip install -e ".[dev]"</code> installs the project in editable mode (changes to <code>src/</code> take effect immediately) along with dev dependencies. Line 32: <code>pre-commit install</code> installs the git hook. Lines 34-38: run tools manually to verify. Line 41: pre-commit hooks run automatically on <code>git commit</code>.
+
+`,
+            tags: ["Tooling", "Packaging", "pip", "pyproject.toml"],
+          },
         ],
       },
       // ── JavaScript ──────────────────────────────────────────────────────
