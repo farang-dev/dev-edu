@@ -1869,7 +1869,7 @@ This article covers every major browser security mechanism: Same-Origin Policy (
 
 ### What Is an Origin?
 
-An <b>origin</b> is defined by three components: \`scheme + host + port\`. Two URLs have the same origin only if all three match:
+An **origin** is defined by three components: \`scheme + host + port\`. Two URLs have the same origin only if all three match:
 
 | URL | Origin | Same Origin as \`https://example.com\`? |
 |-----|--------|--------------------------------------------------|
@@ -1882,8 +1882,8 @@ An <b>origin</b> is defined by three components: \`scheme + host + port\`. Two U
 
 SOP is the browser's most fundamental security rule:
 
-- Documents from origin A <b>can embed</b> resources from origin B (images, scripts, iframes)
-- Documents from origin A <b>cannot read</b> the response of a cross-origin request
+- Documents from origin A **can embed** resources from origin B (images, scripts, iframes)
+- Documents from origin A **cannot read** the response of a cross-origin request
 
 A page can load an image from any origin (\`<img src="https://other-site.com/photo.jpg">\`), but JavaScript cannot read the pixels of that image. Similarly, a page can \`fetch()\` any URL, but cannot read the response unless the server allows it via CORS.
 
@@ -1901,7 +1901,7 @@ SOP does not block writing data to another origin (form POST), embedding resourc
 
 ### Why CORS Exists
 
-SOP is too restrictive for legitimate cross-origin requests. If your frontend runs at \`https://app.example.com\` and your API at \`https://api.example.com\`, they have different origins. CORS is a <b>server-opt-in</b> mechanism: the server tells the browser which origins are allowed to read its responses.
+SOP is too restrictive for legitimate cross-origin requests. If your frontend runs at \`https://app.example.com\` and your API at \`https://api.example.com\`, they have different origins. CORS is a **server-opt-in** mechanism: the server tells the browser which origins are allowed to read its responses.
 
 ### How CORS Works
 
@@ -1927,9 +1927,9 @@ For non-simple requests (PUT, DELETE, custom headers), the browser sends an \`OP
 
 ### Common CORS Misconfigurations
 
-1. <b>Reflecting the Origin header</b>: Setting \`Access-Control-Allow-Origin: {Origin}\` allows any origin — the worst security practice
-2. <b>Wildcard with credentials</b>: \`Access-Control-Allow-Origin: *\` cannot be used with credentials
-3. <b>Missing Vary header</b>: Include \`Vary: Origin\` so CDNs cache correctly per origin
+1. **Reflecting the Origin header**: Setting \`Access-Control-Allow-Origin: {Origin}\` allows any origin — the worst security practice
+2. **Wildcard with credentials**: \`Access-Control-Allow-Origin: *\` cannot be used with credentials
+3. **Missing Vary header**: Include \`Vary: Origin\` so CDNs cache correctly per origin
 
 ---
 
@@ -1963,8 +1963,8 @@ SOP controls cross-origin reading, but not injection. If an attacker injects a \
 
 By default, CSP blocks all inline scripts. To allow them, use:
 
-1. <b>Nonces</b>: \`script-src 'nonce-r4nd0m'\` with \`nonce="r4nd0m"\` on each script tag
-2. <b>Hashes</b>: \`script-src 'sha256-ABC123...'\` with the hash of the script content
+1. **Nonces**: \`script-src 'nonce-r4nd0m'\` with \`nonce="r4nd0m"\` on each script tag
+2. **Hashes**: \`script-src 'sha256-ABC123...'\` with the hash of the script content
 
 Avoid \`'unsafe-inline'\` — it completely disables CSP's XSS protection.
 
@@ -1974,31 +1974,31 @@ Avoid \`'unsafe-inline'\` — it completely disables CSP's XSS protection.
 
 ### XSS (Cross-Site Scripting)
 
-<b>What it is</b>: Injecting malicious JavaScript into a page that other users visit.
+**What it is**: Injecting malicious JavaScript into a page that other users visit.
 
 Types:
 
 | Type | Description | Example |
 |------|-------------|---------|
-| <b>Stored</b> | Malicious script saved on the server, served to all visitors | Comment with unsanitized HTML |
-| <b>Reflected</b> | Malicious script in the URL, reflected back | Search page echoing the query |
-| <b>DOM-based</b> | Injected via client-side code using URL fragments | \`innerHTML\` with location.hash |
+| **Stored** | Malicious script saved on the server, served to all visitors | Comment with unsanitized HTML |
+| **Reflected** | Malicious script in the URL, reflected back | Search page echoing the query |
+| **DOM-based** | Injected via client-side code using URL fragments | \`innerHTML\` with location.hash |
 
-<b>Prevention</b>: Output encoding (React JSX, Vue templates, DOMPurify), CSP to block inline scripts, \`HttpOnly\` cookies to protect session tokens.
+**Prevention**: Output encoding (React JSX, Vue templates, DOMPurify), CSP to block inline scripts, \`HttpOnly\` cookies to protect session tokens.
 
 ### CSRF (Cross-Site Request Forgery)
 
-<b>What it is</b>: Tricking a logged-in user's browser into making an unintended request to an authenticated site.
+**What it is**: Tricking a logged-in user's browser into making an unintended request to an authenticated site.
 
 An attacker hosts \`<img src="https://bank.com/transfer?to=attacker&amount=10000">\` on their page. The user's browser sends cookies along with the request, and the server processes the transfer.
 
-<b>Prevention</b>: \`SameSite=Strict\` cookies, anti-CSRF tokens, custom headers (\`X-Requested-By: app\`).
+**Prevention**: \`SameSite=Strict\` cookies, anti-CSRF tokens, custom headers (\`X-Requested-By: app\`).
 
 ### Clickjacking
 
-<b>What it is</b>: Embedding the victim site in an invisible iframe and tricking the user into clicking on UI elements.
+**What it is**: Embedding the victim site in an invisible iframe and tricking the user into clicking on UI elements.
 
-<b>Prevention</b>: \`X-Frame-Options: DENY\` or CSP's \`frame-ancestors\` directive.
+**Prevention**: \`X-Frame-Options: DENY\` or CSP's \`frame-ancestors\` directive.
 
 ---
 
@@ -2018,29 +2018,29 @@ An attacker hosts \`<img src="https://bank.com/transfer?to=attacker&amount=10000
 
 ## Practice Questions
 
-1. <b>Q:</b> What three components define a browser origin?
-   <b>A:</b> Scheme (protocol), host (domain), and port. All three must match.
+1. **Q:** What three components define a browser origin?
+   **A:** Scheme (protocol), host (domain), and port. All three must match.
 
-2. <b>Q:</b> What is the difference between what SOP blocks and what CORS allows?
-   <b>A:</b> SOP blocks reading cross-origin responses but allows embedding and writing. CORS is a server-side opt-in that selectively relaxes SOP for specific origins.
+2. **Q:** What is the difference between what SOP blocks and what CORS allows?
+   **A:** SOP blocks reading cross-origin responses but allows embedding and writing. CORS is a server-side opt-in that selectively relaxes SOP for specific origins.
 
-3. <b>Q:</b> How does a preflight request protect the server?
-   <b>A:</b> The browser sends an OPTIONS request before non-simple requests. The server responds with allowed origins, methods, and headers. The actual request proceeds only if preflight succeeds.
+3. **Q:** How does a preflight request protect the server?
+   **A:** The browser sends an OPTIONS request before non-simple requests. The server responds with allowed origins, methods, and headers. The actual request proceeds only if preflight succeeds.
 
-4. <b>Q:</b> Why does CSP block inline scripts by default?
-   <b>A:</b> Because the browser cannot verify their origin. Use nonces (random values in both the CSP header and script tag) or hashes to allow them safely.
+4. **Q:** Why does CSP block inline scripts by default?
+   **A:** Because the browser cannot verify their origin. Use nonces (random values in both the CSP header and script tag) or hashes to allow them safely.
 
-5. <b>Q:</b> What is the key difference between XSS and CSRF?
-   <b>A:</b> XSS injects malicious code into your page that runs in the user's browser. CSRF tricks the user's browser into sending a legitimate-looking request to another site where the user is authenticated.
+5. **Q:** What is the key difference between XSS and CSRF?
+   **A:** XSS injects malicious code into your page that runs in the user's browser. CSRF tricks the user's browser into sending a legitimate-looking request to another site where the user is authenticated.
 
-6. <b>Q:</b> What is a CSP nonce and how does it work?
-   <b>A:</b> A nonce is a cryptographically random value generated per request, included both in the CSP header (\`script-src 'nonce-r4nd0m'\`) and as an attribute on allowed \`<script>\` tags (\`nonce="r4nd0m"\`). The browser only executes scripts whose nonce matches the header value. Since an attacker cannot guess the nonce, injected scripts are blocked.
+6. **Q:** What is a CSP nonce and how does it work?
+   **A:** A nonce is a cryptographically random value generated per request, included both in the CSP header (\`script-src 'nonce-r4nd0m'\`) and as an attribute on allowed \`<script>\` tags (\`nonce="r4nd0m"\`). The browser only executes scripts whose nonce matches the header value. Since an attacker cannot guess the nonce, injected scripts are blocked.
 
-7. <b>Q:</b> How does the \`SameSite\` cookie attribute prevent CSRF?
-   <b>A:</b> \`SameSite=Strict\` prevents the browser from sending the cookie with any cross-site request, including when a user clicks a link from another site. \`SameSite=Lax\` allows cookies for top-level navigation (link clicks) but blocks them for subresource requests (images, iframes, fetch), which covers the most common CSRF attack vectors.
+7. **Q:** How does the \`SameSite\` cookie attribute prevent CSRF?
+   **A:** \`SameSite=Strict\` prevents the browser from sending the cookie with any cross-site request, including when a user clicks a link from another site. \`SameSite=Lax\` allows cookies for top-level navigation (link clicks) but blocks them for subresource requests (images, iframes, fetch), which covers the most common CSRF attack vectors.
 
-8. <b>Q:</b> What is the purpose of a CORS preflight request?
-   <b>A:</b> A preflight request (HTTP OPTIONS) is sent by the browser before non-simple cross-origin requests (PUT, DELETE, custom headers, non-standard content types). The server responds with allowed origins, methods, and headers. The browser only sends the actual request if the preflight succeeds. This protects servers that were written before CORS existed from receiving unexpected cross-origin requests.
+8. **Q:** What is the purpose of a CORS preflight request?
+   **A:** A preflight request (HTTP OPTIONS) is sent by the browser before non-simple cross-origin requests (PUT, DELETE, custom headers, non-standard content types). The server responds with allowed origins, methods, and headers. The browser only sends the actual request if the preflight succeeds. This protects servers that were written before CORS existed from receiving unexpected cross-origin requests.
 
 ---
 
@@ -2115,16 +2115,16 @@ For a CTO or senior engineer, Wasm represents a strategic capability: you can re
 
 ## What Is WebAssembly?
 
-WebAssembly is a <b>low-level binary instruction format</b> that serves as a compilation target for languages like C, C++, Rust, and Go. It runs inside a <b>sandboxed virtual machine</b> (VM) provided by the browser or a standalone runtime.
+WebAssembly is a **low-level binary instruction format** that serves as a compilation target for languages like C, C++, Rust, and Go. It runs inside a **sandboxed virtual machine** (VM) provided by the browser or a standalone runtime.
 
 Key properties:
 
 | Property | Description |
 |----------|-------------|
-| <b>Safe</b> | Runs in a sandbox — no access to the file system, network, or system calls unless explicitly provided |
-| <b>Fast</b> | Near-native execution speed — the VM compiles to machine code ahead of time (AOT) or just in time (JIT) |
-| <b>Portable</b> | The same binary runs on any platform that implements the Wasm spec — x86, ARM, mobile, embedded |
-| <b>Compact</b> | Wasm modules are typically 50-80% smaller than equivalent JavaScript bundles |
+| **Safe** | Runs in a sandbox — no access to the file system, network, or system calls unless explicitly provided |
+| **Fast** | Near-native execution speed — the VM compiles to machine code ahead of time (AOT) or just in time (JIT) |
+| **Portable** | The same binary runs on any platform that implements the Wasm spec — x86, ARM, mobile, embedded |
+| **Compact** | Wasm modules are typically 50-80% smaller than equivalent JavaScript bundles |
 
 ### How Wasm Differs from JavaScript
 
@@ -2161,13 +2161,13 @@ A Wasm module is a binary format with several sections:
 
 ### Key Components
 
-<b>Typed Functions</b>: Every Wasm function has a fixed signature like \`(i32, i32) -> i32\`. The VM validates types at load time — many bugs are caught before execution.
+**Typed Functions**: Every Wasm function has a fixed signature like \`(i32, i32) -> i32\`. The VM validates types at load time — many bugs are caught before execution.
 
-<b>Linear Memory</b>: A contiguous, resizable array of bytes. Wasm instructions read and write to this memory using integer offsets. There is no garbage collector in Wasm itself (though the Wasm GC proposal adds one). Memory management is either manual (C's \`malloc/free\`) or handled by a language runtime (Rust's allocator, Go's GC compiled into the module).
+**Linear Memory**: A contiguous, resizable array of bytes. Wasm instructions read and write to this memory using integer offsets. There is no garbage collector in Wasm itself (though the Wasm GC proposal adds one). Memory management is either manual (C's \`malloc/free\`) or handled by a language runtime (Rust's allocator, Go's GC compiled into the module).
 
-<b>Function Table</b>: An array of function references used for indirect calls (C function pointers, C++ virtual methods, Rust trait objects).
+**Function Table**: An array of function references used for indirect calls (C function pointers, C++ virtual methods, Rust trait objects).
 
-<b>Globals</b>: Mutable or immutable variables shared between Wasm and the host.
+**Globals**: Mutable or immutable variables shared between Wasm and the host.
 
 ---
 
@@ -2234,7 +2234,7 @@ JavaScript continues
 
 ## Streaming Instantiation
 
-Wasm modules can be compiled <b>while they download</b>, saving significant time:
+Wasm modules can be compiled **while they download**, saving significant time:
 
 \`\`\`javascript
 // BAD: Wait for full download, then compile
@@ -2297,29 +2297,29 @@ Major WASI runtimes: Wasmtime, Wasmer, WasmEdge, and browser-like environments (
 
 ## Practice Questions
 
-1. <b>Q:</b> What are the key components of a Wasm module?
-   <b>A:</b> Typed functions (fixed signatures), linear memory (contiguous byte array), function table (indirect calls), globals (mutable/immutable), and imports/exports for JS interop.
+1. **Q:** What are the key components of a Wasm module?
+   **A:** Typed functions (fixed signatures), linear memory (contiguous byte array), function table (indirect calls), globals (mutable/immutable), and imports/exports for JS interop.
 
-2. <b>Q:</b> How does linear memory differ from JavaScript's heap memory?
-   <b>A:</b> Linear memory is a contiguous byte array with no built-in GC. Memory is managed manually (malloc/free via compiled language runtime). JavaScript accesses it as an ArrayBuffer.
+2. **Q:** How does linear memory differ from JavaScript's heap memory?
+   **A:** Linear memory is a contiguous byte array with no built-in GC. Memory is managed manually (malloc/free via compiled language runtime). JavaScript accesses it as an ArrayBuffer.
 
-3. <b>Q:</b> How does streaming instantiation improve performance?
-   <b>A:</b> \`WebAssembly.instantiateStreaming()\` starts compiling the module as bytes arrive from the network, overlapping download and compilation. Without streaming, the full download must complete before compilation begins.
+3. **Q:** How does streaming instantiation improve performance?
+   **A:** \`WebAssembly.instantiateStreaming()\` starts compiling the module as bytes arrive from the network, overlapping download and compilation. Without streaming, the full download must complete before compilation begins.
 
-4. <b>Q:</b> What problem does the Wasm GC proposal solve?
-   <b>A:</b> It allows languages with managed runtimes (Kotlin, Dart, .NET, Java) to compile to Wasm without bundling their own GC. It also enables seamless sharing of GC objects between Wasm and JavaScript.
+4. **Q:** What problem does the Wasm GC proposal solve?
+   **A:** It allows languages with managed runtimes (Kotlin, Dart, .NET, Java) to compile to Wasm without bundling their own GC. It also enables seamless sharing of GC objects between Wasm and JavaScript.
 
-5. <b>Q:</b> What does WASI provide that raw Wasm does not?
-   <b>A:</b> WASI provides a POSIX-like system interface — file I/O, networking, clocks, random numbers — that Wasm modules cannot access in their default sandboxed state. This makes Wasm useful as a portable runtime on servers and edge.
+5. **Q:** What does WASI provide that raw Wasm does not?
+   **A:** WASI provides a POSIX-like system interface — file I/O, networking, clocks, random numbers — that Wasm modules cannot access in their default sandboxed state. This makes Wasm useful as a portable runtime on servers and edge.
 
-6. <b>Q:</b> What is a function table in Wasm and why is it needed?
-   <b>A:</b> A function table is an array of function references indexed by integer. It enables indirect function calls (function pointers), which are required for dynamic dispatch, virtual method calls, and callbacks. Without it, Wasm could only make direct calls to statically-known functions.
+6. **Q:** What is a function table in Wasm and why is it needed?
+   **A:** A function table is an array of function references indexed by integer. It enables indirect function calls (function pointers), which are required for dynamic dispatch, virtual method calls, and callbacks. Without it, Wasm could only make direct calls to statically-known functions.
 
-7. <b>Q:</b> Why does Wasm have no built-in \`console.log\`?
-   <b>A:</b> Wasm is designed as a sandboxed instruction format with no I/O capabilities — it does not assume a browser or an operating system. All I/O (logging, file access, networking) must be explicitly provided by the host through the imports mechanism, preserving portability and security.
+7. **Q:** Why does Wasm have no built-in \`console.log\`?
+   **A:** Wasm is designed as a sandboxed instruction format with no I/O capabilities — it does not assume a browser or an operating system. All I/O (logging, file access, networking) must be explicitly provided by the host through the imports mechanism, preserving portability and security.
 
-8. <b>Q:</b> What happens if \`Cross-Origin-Opener-Policy\` and \`Cross-Origin-Embedder-Policy\` are not set correctly for Wasm threads?
-   <b>A:</b> Browsers require both COOP and COEP headers to enable \`SharedArrayBuffer\`, which is needed for Wasm thread shared memory. Without them, \`WebAssembly.Memory\` cannot be shared, and threaded Wasm code will either fail to instantiate or run single-threaded. This is a common deployment pitfall.
+8. **Q:** What happens if \`Cross-Origin-Opener-Policy\` and \`Cross-Origin-Embedder-Policy\` are not set correctly for Wasm threads?
+   **A:** Browsers require both COOP and COEP headers to enable \`SharedArrayBuffer\`, which is needed for Wasm thread shared memory. Without them, \`WebAssembly.Memory\` cannot be shared, and threaded Wasm code will either fail to instantiate or run single-threaded. This is a common deployment pitfall.
 
 ---
 
@@ -2404,11 +2404,11 @@ Understanding closures means understanding how JavaScript resolves variables at 
 
 ## Execution Context — The Runtime Container
 
-Every time a function is called, JavaScript creates an <b>Execution Context</b>. This is a runtime container that holds:
+Every time a function is called, JavaScript creates an **Execution Context**. This is a runtime container that holds:
 
-1. A <b>Lexical Environment</b> — the mapping of variable names to values within this scope
-2. A reference to the <b>outer environment</b> — the scope in which this function was defined
-3. The <b>\`this\` binding</b> — the value of \`this\` for this invocation
+1. A **Lexical Environment** — the mapping of variable names to values within this scope
+2. A reference to the **outer environment** — the scope in which this function was defined
+3. The **\`this\` binding** — the value of \`this\` for this invocation
 
 ### Execution Context Stack
 
@@ -2431,13 +2431,13 @@ Only global EC remains
 
 ### The Global Execution Context
 
-When any JavaScript program starts, the engine creates the <b>Global Execution Context</b>. This is the outermost scope and the only one that exists without a function call. Variables declared with \`var\` at the top level become properties of the global object (\`window\` in browsers, \`global\` in Node.js).
+When any JavaScript program starts, the engine creates the **Global Execution Context**. This is the outermost scope and the only one that exists without a function call. Variables declared with \`var\` at the top level become properties of the global object (\`window\` in browsers, \`global\` in Node.js).
 
 ---
 
 ## Lexical Environment — Where Variables Live
 
-A <b>Lexical Environment</b> is a specification type (not something you can access directly) that maps identifiers to values. It is structured as a linked list:
+A **Lexical Environment** is a specification type (not something you can access directly) that maps identifiers to values. It is structured as a linked list:
 
 \`\`\`typescript
 // Simplified internal representation
@@ -2485,7 +2485,7 @@ Inner EC:
 
 ## Scope Chain — How Variable Lookup Works
 
-The <b>Scope Chain</b> is the linked list of Lexical Environments. When JavaScript encounters a variable reference, it walks this chain:
+The **Scope Chain** is the linked list of Lexical Environments. When JavaScript encounters a variable reference, it walks this chain:
 
 1. Check the current environment's record
 2. If not found, follow the \`outer\` reference
@@ -2494,7 +2494,7 @@ The <b>Scope Chain</b> is the linked list of Lexical Environments. When JavaScri
 
 ### Lexical (Static) Scoping
 
-JavaScript uses <b>lexical scoping</b> (also called <b>static scoping</b>): the scope chain is determined by where the code is written, not where it is called from.
+JavaScript uses **lexical scoping** (also called **static scoping**): the scope chain is determined by where the code is written, not where it is called from.
 
 \`\`\`javascript
 const x = "global";
@@ -2512,7 +2512,7 @@ function outer() {
 outer();
 \`\`\`
 
-Compare to <b>dynamic scoping</b> (used by Bash, some Lisps), where the scope chain depends on the call stack at runtime. Lexical scoping means you can determine variable visibility just by reading the source code — no need to trace the runtime call path.
+Compare to **dynamic scoping** (used by Bash, some Lisps), where the scope chain depends on the call stack at runtime. Lexical scoping means you can determine variable visibility just by reading the source code — no need to trace the runtime call path.
 
 ---
 
@@ -2520,7 +2520,7 @@ Compare to <b>dynamic scoping</b> (used by Bash, some Lisps), where the scope ch
 
 ### What Is a Closure?
 
-A <b>closure</b> is a function that captures references to variables from its defining lexical environment, allowing those variables to remain accessible even after the outer function has returned.
+A **closure** is a function that captures references to variables from its defining lexical environment, allowing those variables to remain accessible even after the outer function has returned.
 
 ### Why This Matters
 
@@ -2556,7 +2556,7 @@ What happens step by step:
 
 ### Closure in Real-World Patterns
 
-<b>React Hooks:</b>
+**React Hooks:**
 
 \`\`\`javascript
 function Timer() {
@@ -2574,7 +2574,7 @@ function Timer() {
 
 This is the classic stale closure problem. The fix is either including \`count\` in the dependency array or using a functional updater (\`setCount(c => c + 1)\`).
 
-<b>Module Pattern:</b>
+**Module Pattern:**
 
 \`\`\`javascript
 function createStore(initialState) {
@@ -2601,7 +2601,7 @@ function createStore(initialState) {
 
 ## Memory Implications
 
-The most important practical consequence of closures: <b>variables captured by a closure cannot be garbage collected as long as the closure is reachable</b>.
+The most important practical consequence of closures: **variables captured by a closure cannot be garbage collected as long as the closure is reachable**.
 
 ### Common Closure Memory Leak
 
@@ -2618,7 +2618,7 @@ function setupHandler() {
 // 'largeData' lives forever -- the event listener is never removed
 \`\`\`
 
-<b>Fix 1: Only capture what you need</b>
+**Fix 1: Only capture what you need**
 
 \`\`\`javascript
 function setupHandler() {
@@ -2633,7 +2633,7 @@ function setupHandler() {
 // and the closure captures the entire outer environment
 \`\`\`
 
-<b>Fix 2: Explicit nullification</b>
+**Fix 2: Explicit nullification**
 
 \`\`\`javascript
 function setupHandler() {
@@ -2675,29 +2675,29 @@ Modern JavaScript engines (V8, SpiderMonkey) can detect that \`largeData\` is ne
 
 ## Practice Questions
 
-1. <b>Q:</b> What is the difference between lexical scoping and dynamic scoping?
-   <b>A:</b> Lexical scoping determines variable visibility by where code is written (static position in source). Dynamic scoping determines it by the runtime call stack. JavaScript uses lexical scoping.
+1. **Q:** What is the difference between lexical scoping and dynamic scoping?
+   **A:** Lexical scoping determines variable visibility by where code is written (static position in source). Dynamic scoping determines it by the runtime call stack. JavaScript uses lexical scoping.
 
-2. <b>Q:</b> What is a closure and what conditions create one?
-   <b>A:</b> A closure is a function that captures references to variables from its outer lexical environment. It is created whenever an inner function references variables from an outer function that persists after the outer function returns.
+2. **Q:** What is a closure and what conditions create one?
+   **A:** A closure is a function that captures references to variables from its outer lexical environment. It is created whenever an inner function references variables from an outer function that persists after the outer function returns.
 
-3. <b>Q:</b> Why does the classic React stale closure bug occur with \`useEffect\` and empty deps?
-   <b>A:</b> The effect callback captures the value of \`count\` at the time the effect was created (mount). Since the dependency array is empty, the effect never re-runs, so the captured \`count\` is always the initial value (0).
+3. **Q:** Why does the classic React stale closure bug occur with \`useEffect\` and empty deps?
+   **A:** The effect callback captures the value of \`count\` at the time the effect was created (mount). Since the dependency array is empty, the effect never re-runs, so the captured \`count\` is always the initial value (0).
 
-4. <b>Q:</b> How can closures cause memory leaks?
-   <b>A:</b> If a closure captures a large object (e.g., an array with millions of elements), the object cannot be GC'd as long as the closure is reachable. If the closure persists (e.g., an event listener never removed), the memory is permanently held.
+4. **Q:** How can closures cause memory leaks?
+   **A:** If a closure captures a large object (e.g., an array with millions of elements), the object cannot be GC'd as long as the closure is reachable. If the closure persists (e.g., an event listener never removed), the memory is permanently held.
 
-5. <b>Q:</b> What is the scope chain and how does it relate to execution contexts?
-   <b>A:</b> The scope chain is the linked list of Lexical Environments from the current context to the global context. Variable lookup walks this chain sequentially. Each execution context has an \`outer\` reference pointing to its parent context.
+5. **Q:** What is the scope chain and how does it relate to execution contexts?
+   **A:** The scope chain is the linked list of Lexical Environments from the current context to the global context. Variable lookup walks this chain sequentially. Each execution context has an \`outer\` reference pointing to its parent context.
 
-6. <b>Q:</b> What is the "loop closure problem" and how does \`let\` fix it?
-   <b>A:</b> In \`for (var i = 0; i < 5; i++) { ... }\`, there is only one \`i\` binding shared across all iterations. All closures created in the loop see the final value of \`i\` (5). With \`let\`, each iteration creates a new binding, so each closure captures the correct per-iteration value.
+6. **Q:** What is the "loop closure problem" and how does \`let\` fix it?
+   **A:** In \`for (var i = 0; i < 5; i++) { ... }\`, there is only one \`i\` binding shared across all iterations. All closures created in the loop see the final value of \`i\` (5). With \`let\`, each iteration creates a new binding, so each closure captures the correct per-iteration value.
 
-7. <b>Q:</b> How can you manually create a closure without a function returning a function?
-   <b>A:</b> Closures are created whenever an inner function references an outer function's variables, regardless of how or when the inner function is called. For example, assigning an inner function to a global variable, adding it as an event listener, or passing it as a callback all create closures — the key is that the inner function outlives the outer function's execution.
+7. **Q:** How can you manually create a closure without a function returning a function?
+   **A:** Closures are created whenever an inner function references an outer function's variables, regardless of how or when the inner function is called. For example, assigning an inner function to a global variable, adding it as an event listener, or passing it as a callback all create closures — the key is that the inner function outlives the outer function's execution.
 
-8. <b>Q:</b> What is the relationship between an Execution Context and a Lexical Environment?
-   <b>A:</b> An Execution Context is created on every function call and contains the Lexical Environment, the \`this\` binding, and the \`outer\` reference. The Lexical Environment maps variable names to values. Multiple Execution Contexts can share the same Lexical Environment (e.g., closures created in the same function share the same outer environment).
+8. **Q:** What is the relationship between an Execution Context and a Lexical Environment?
+   **A:** An Execution Context is created on every function call and contains the Lexical Environment, the \`this\` binding, and the \`outer\` reference. The Lexical Environment maps variable names to values. Multiple Execution Contexts can share the same Lexical Environment (e.g., closures created in the same function share the same outer environment).
 
 ---
 
@@ -2779,7 +2779,7 @@ The entire JavaScript standard library is built on prototypes. Array methods lik
 
 ## Why This Matters (Read This First)
 
-If you have worked with a classical inheritance language like Java or C++, you learned that a class defines a blueprint and objects are instances of that blueprint. JavaScript looks similar with the \`class\` keyword, but underneath it is fundamentally different: JavaScript uses <b>prototypal inheritance</b>, where objects inherit directly from other objects.
+If you have worked with a classical inheritance language like Java or C++, you learned that a class defines a blueprint and objects are instances of that blueprint. JavaScript looks similar with the \`class\` keyword, but underneath it is fundamentally different: JavaScript uses **prototypal inheritance**, where objects inherit directly from other objects.
 
 This is not an academic detail. The prototype chain affects how property lookup works, how memory is shared between objects, how \`instanceof\` evaluates, and how frameworks like React implement synthetic events. Misunderstanding prototypes leads to bugs like accidentally mutating shared state on the prototype, unexpected \`instanceof\` results, and confusion about why \`this\` behaves the way it does.
 
@@ -2789,9 +2789,9 @@ By the end of this article, you will understand exactly how the prototype chain 
 
 ## Prototypal Inheritance — A Different Model
 
-In <b>classical inheritance</b>, a class defines a blueprint. Objects are instances of that blueprint. Inheritance means a subclass extends a superclass.
+In **classical inheritance**, a class defines a blueprint. Objects are instances of that blueprint. Inheritance means a subclass extends a superclass.
 
-In <b>prototypal inheritance</b>, there are no classes in the traditional sense. Instead:
+In **prototypal inheritance**, there are no classes in the traditional sense. Instead:
 
 1. You create objects directly
 2. You link objects to other objects via the prototype chain
@@ -2841,7 +2841,7 @@ const dog = new Animal("Rex");
 
 When you access a property on an object, JavaScript follows this algorithm:
 
-1. Check the object's <b>own properties</b> (properties directly on the object, returned by \`hasOwnProperty\`)
+1. Check the object's **own properties** (properties directly on the object, returned by \`hasOwnProperty\`)
 2. If not found, follow the \`[[Prototype]]\` reference and check there
 3. Repeat until either found or the chain ends at \`null\`
 4. If \`null\` is reached, return \`undefined\`
@@ -2878,7 +2878,7 @@ console.log("inherited" in child);  // true
 
 ### Setting vs Reading Properties
 
-<b>Reading</b> walks the prototype chain. <b>Setting</b> a property always creates or updates an <b>own property</b> on the target object — it never modifies the prototype.
+**Reading** walks the prototype chain. **Setting** a property always creates or updates an **own property** on the target object — it never modifies the prototype.
 
 \`\`\`javascript
 const parent = { value: 1 };
@@ -3042,29 +3042,29 @@ V8 optimizes repeated property lookups on objects with the same "shape" (hidden 
 
 ## Practice Questions
 
-1. <b>Q:</b> What is the difference between \`[[Prototype]]\` and \`.prototype\`?
-   <b>A:</b> \`[[Prototype]]\` is an internal slot on every object instance, pointing to its prototype. \`.prototype\` is a property on constructor functions — it becomes the \`[[Prototype]]\` of instances created with \`new\`.
+1. **Q:** What is the difference between \`[[Prototype]]\` and \`.prototype\`?
+   **A:** \`[[Prototype]]\` is an internal slot on every object instance, pointing to its prototype. \`.prototype\` is a property on constructor functions — it becomes the \`[[Prototype]]\` of instances created with \`new\`.
 
-2. <b>Q:</b> Does setting a property on an object ever modify the prototype?
-   <b>A:</b> No. Setting a property always creates or updates an own property on the target object. Reading walks the prototype chain; writing does not.
+2. **Q:** Does setting a property on an object ever modify the prototype?
+   **A:** No. Setting a property always creates or updates an own property on the target object. Reading walks the prototype chain; writing does not.
 
-3. <b>Q:</b> How does the prototype chain look for a class created with \`extends\`?
-   <b>A:</b> \`ChildClass.prototype.[[Prototype]]\` points to \`ParentClass.prototype\`. Instances of ChildClass have their \`[[Prototype]]\` pointing to \`ChildClass.prototype\`.
+3. **Q:** How does the prototype chain look for a class created with \`extends\`?
+   **A:** \`ChildClass.prototype.[[Prototype]]\` points to \`ParentClass.prototype\`. Instances of ChildClass have their \`[[Prototype]]\` pointing to \`ChildClass.prototype\`.
 
-4. <b>Q:</b> What is the \`in\` operator vs \`hasOwnProperty\`?
-   <b>A:</b> \`"prop" in obj\` returns true if the property exists anywhere on the prototype chain. \`obj.hasOwnProperty("prop")\` returns true only if it is a direct property of the object.
+4. **Q:** What is the \`in\` operator vs \`hasOwnProperty\`?
+   **A:** \`"prop" in obj\` returns true if the property exists anywhere on the prototype chain. \`obj.hasOwnProperty("prop")\` returns true only if it is a direct property of the object.
 
-5. <b>Q:</b> What happens if you mutate an array or object that exists on the prototype?
-   <b>A:</b> All objects sharing that prototype see the mutation — because the array/object is shared by reference. This is a common source of bugs. Replace the entire property to create an own property instead.
+5. **Q:** What happens if you mutate an array or object that exists on the prototype?
+   **A:** All objects sharing that prototype see the mutation — because the array/object is shared by reference. This is a common source of bugs. Replace the entire property to create an own property instead.
 
-6. <b>Q:</b> What does \`instanceof\` check?
-   <b>A:</b> \`obj instanceof Constructor\` checks whether \`Constructor.prototype\` exists anywhere in \`obj\`'s prototype chain. It does <b>not</b> check if \`obj\` was created by that constructor. This means \`obj instanceof Object\` is true for almost any object, and cross-realm objects (e.g., from an iframe) fail \`instanceof\` checks.
+6. **Q:** What does \`instanceof\` check?
+   **A:** \`obj instanceof Constructor\` checks whether \`Constructor.prototype\` exists anywhere in \`obj\`'s prototype chain. It does **not** check if \`obj\` was created by that constructor. This means \`obj instanceof Object\` is true for almost any object, and cross-realm objects (e.g., from an iframe) fail \`instanceof\` checks.
 
-7. <b>Q:</b> Why is \`Object.create(null)\` useful?
-   <b>A:</b> It creates an object with no prototype chain (\`[[Prototype]]\` is \`null\`). This eliminates all inherited properties (\`toString\`, \`hasOwnProperty\`, etc.), making it a pure dictionary safe for any key, including \`"toString"\`. It also speeds up property lookups because there is no chain to walk.
+7. **Q:** Why is \`Object.create(null)\` useful?
+   **A:** It creates an object with no prototype chain (\`[[Prototype]]\` is \`null\`). This eliminates all inherited properties (\`toString\`, \`hasOwnProperty\`, etc.), making it a pure dictionary safe for any key, including \`"toString"\`. It also speeds up property lookups because there is no chain to walk.
 
-8. <b>Q:</b> How does property shadowing work in the prototype chain?
-   <b>A:</b> If an object has an own property with the same name as a property on its prototype, the own property "shadows" (takes precedence over) the prototype property. Reading \`obj.prop\` returns the own value. Deleting the own property with \`delete obj.prop\` reveals the prototype property again.
+8. **Q:** How does property shadowing work in the prototype chain?
+   **A:** If an object has an own property with the same name as a property on its prototype, the own property "shadows" (takes precedence over) the prototype property. Reading \`obj.prop\` returns the own value. Deleting the own property with \`delete obj.prop\` reveals the prototype property again.
 
 ---
 
@@ -3148,7 +3148,7 @@ Understanding this evolution is essential because all three patterns are still i
 
 ### What Is a Callback?
 
-A <b>callback</b> is a function passed as an argument to another function, to be executed later when an operation completes.
+A **callback** is a function passed as an argument to another function, to be executed later when an operation completes.
 
 \`\`\`javascript
 function fetchUser(id, callback) {
@@ -3185,9 +3185,9 @@ fetchUser(1, (err, user) => {
 \`\`\`
 
 This "pyramid of doom" has three problems:
-1. <b>Readability</b>: The code reads right-to-left, not top-to-bottom
-2. <b>Error handling</b>: Each level must manually propagate errors
-3. <b>Composability</b>: Combining multiple async results is awkward
+1. **Readability**: The code reads right-to-left, not top-to-bottom
+2. **Error handling**: Each level must manually propagate errors
+3. **Composability**: Combining multiple async results is awkward
 
 ---
 
@@ -3195,7 +3195,7 @@ This "pyramid of doom" has three problems:
 
 ### What Is a Promise?
 
-A <b>Promise</b> is an object representing the eventual result of an asynchronous operation. It is in one of three states:
+A **Promise** is an object representing the eventual result of an asynchronous operation. It is in one of three states:
 
 \`\`\`
 Promise Lifecycle:
@@ -3409,29 +3409,29 @@ async function loadParallel() {
 
 ## Practice Questions
 
-1. <b>Q:</b> What are the three states of a Promise?
-   <b>A:</b> Pending (initial state), fulfilled (resolved successfully), rejected (encountered an error). Transitions are one-way and irreversible.
+1. **Q:** What are the three states of a Promise?
+   **A:** Pending (initial state), fulfilled (resolved successfully), rejected (encountered an error). Transitions are one-way and irreversible.
 
-2. <b>Q:</b> What does \`Promise.all\` do when one of its promises rejects?
-   <b>A:</b> \`Promise.all\` rejects immediately with that error — the other promises continue executing but their results are ignored. Use \`Promise.allSettled\` if you need all results regardless.
+2. **Q:** What does \`Promise.all\` do when one of its promises rejects?
+   **A:** \`Promise.all\` rejects immediately with that error — the other promises continue executing but their results are ignored. Use \`Promise.allSettled\` if you need all results regardless.
 
-3. <b>Q:</b> What does \`await\` actually do?
-   <b>A:</b> \`await\` pauses execution of the async function until the Promise settles, then unwraps the fulfilled value or throws on rejection. It does not block the main thread — other code can run while the async function is suspended.
+3. **Q:** What does \`await\` actually do?
+   **A:** \`await\` pauses execution of the async function until the Promise settles, then unwraps the fulfilled value or throws on rejection. It does not block the main thread — other code can run while the async function is suspended.
 
-4. <b>Q:</b> What is callback hell and how do Promises solve it?
-   <b>A:</b> Callback hell is deeply nested callbacks with manual error propagation. Promises solve it by returning values that can be chained with \`.then()\`, allowing flat sequences instead of nested pyramids, and automatic error propagation via \`.catch()\`.
+4. **Q:** What is callback hell and how do Promises solve it?
+   **A:** Callback hell is deeply nested callbacks with manual error propagation. Promises solve it by returning values that can be chained with \`.then()\`, allowing flat sequences instead of nested pyramids, and automatic error propagation via \`.catch()\`.
 
-5. <b>Q:</b> What is the difference between \`Promise.all\` and \`Promise.race\`?
-   <b>A:</b> \`Promise.all\` waits for ALL promises to settle and returns an array of results. \`Promise.race\` settles with the first promise that settles (fulfilled or rejected) — useful for timeouts.
+5. **Q:** What is the difference between \`Promise.all\` and \`Promise.race\`?
+   **A:** \`Promise.all\` waits for ALL promises to settle and returns an array of results. \`Promise.race\` settles with the first promise that settles (fulfilled or rejected) — useful for timeouts.
 
-6. <b>Q:</b> What happens if you \`await\` a non-Promise value?
-   <b>A:</b> \`await\` wraps non-Promise values in \`Promise.resolve()\` automatically. \`await 42\` becomes \`await Promise.resolve(42)\`, which resolves to \`42\` in the next microtask tick. This is useful for normalizing async/sync APIs.
+6. **Q:** What happens if you \`await\` a non-Promise value?
+   **A:** \`await\` wraps non-Promise values in \`Promise.resolve()\` automatically. \`await 42\` becomes \`await Promise.resolve(42)\`, which resolves to \`42\` in the next microtask tick. This is useful for normalizing async/sync APIs.
 
-7. <b>Q:</b> How can you run promises in sequence (one after another)?
-   <b>A:</b> Use a \`for...of\` loop with \`await\` inside: \`for (const item of items) { const result = await process(item); }\`. Each iteration waits for the previous promise to settle before starting the next. Do <b>not</b> use \`forEach\` with \`async\` callbacks — \`forEach\` does not await them, so all promises fire in parallel.
+7. **Q:** How can you run promises in sequence (one after another)?
+   **A:** Use a \`for...of\` loop with \`await\` inside: \`for (const item of items) { const result = await process(item); }\`. Each iteration waits for the previous promise to settle before starting the next. Do **not** use \`forEach\` with \`async\` callbacks — \`forEach\` does not await them, so all promises fire in parallel.
 
-8. <b>Q:</b> What is the Promise resolution (microtask) timing relative to synchronous code and macrotasks?
-   <b>A:</b> Callbacks registered with \`.then()\` run as microtasks, which execute after the current synchronous code completes and before the next macrotask (e.g., \`setTimeout\`). This means \`Promise.resolve().then(fn)\` runs before \`setTimeout(fn, 0)\`, even though both are deferred.
+8. **Q:** What is the Promise resolution (microtask) timing relative to synchronous code and macrotasks?
+   **A:** Callbacks registered with \`.then()\` run as microtasks, which execute after the current synchronous code completes and before the next macrotask (e.g., \`setTimeout\`). This means \`Promise.resolve().then(fn)\` runs before \`setTimeout(fn, 0)\`, even though both are deferred.
 
 ---
 
@@ -3500,7 +3500,7 @@ Node.js applications use either CJS (default before Node 16) or ESM (newer proje
 
 ## Why This Matters (Read This First)
 
-JavaScript has two competing module systems: <b>CommonJS (CJS)</b> and <b>ES Modules (ESM)</b>. They are incompatible by design, yet they coexist in nearly every real-world project. Your dependencies use one, your application uses another, your build tool translates between them, and understanding this translation layer is essential for debugging import errors, optimizing bundle size, and structuring modern JavaScript projects.
+JavaScript has two competing module systems: **CommonJS (CJS)** and **ES Modules (ESM)**. They are incompatible by design, yet they coexist in nearly every real-world project. Your dependencies use one, your application uses another, your build tool translates between them, and understanding this translation layer is essential for debugging import errors, optimizing bundle size, and structuring modern JavaScript projects.
 
 The difference between CJS and ESM is not just syntax — it reflects fundamentally different philosophies: synchronous vs asynchronous, runtime vs compile-time, dynamic vs static. These differences affect everything from tree-shaking to dead code elimination to runtime performance.
 
@@ -3556,11 +3556,11 @@ The \`require()\` function:
 
 | Characteristic | Implication |
 |----------------|-------------|
-| <b>Synchronous</b> | \`require()\` blocks until the module is loaded and executed |
-| <b>Runtime resolution</b> | Module paths and exports are resolved at runtime — you can \`require()\` inside conditionals |
-| <b>Copy of exports</b> | The imported value is a copy of \`module.exports\` at the time of \`require()\` |
-| <b>Cached</b> | Subsequent \`require()\` calls return the cached export — modules are singletons |
-| <b>Dynamic</b> | You can use variables in require paths |
+| **Synchronous** | \`require()\` blocks until the module is loaded and executed |
+| **Runtime resolution** | Module paths and exports are resolved at runtime — you can \`require()\` inside conditionals |
+| **Copy of exports** | The imported value is a copy of \`module.exports\` at the time of \`require()\` |
+| **Cached** | Subsequent \`require()\` calls return the cached export — modules are singletons |
+| **Dynamic** | You can use variables in require paths |
 
 ### Why CJS Cannot Be Tree-Shaken
 
@@ -3601,11 +3601,11 @@ import multiply from "./math.js";
 
 | Characteristic | Implication |
 |----------------|-------------|
-| <b>Static</b> | \`import\` and \`export\` statements are resolved at parse time, before execution |
-| <b>Asynchronous</b> | Modules are fetched and parsed before execution — critical for browser loading |
-| <b>Live bindings</b> | Imports are live references to the exported values, not copies |
-| <b>Strict mode</b> | ESM modules are always in strict mode — no opt-out |
-| <b>Top-level await</b> | ESM modules can use \`await\` at the top level |
+| **Static** | \`import\` and \`export\` statements are resolved at parse time, before execution |
+| **Asynchronous** | Modules are fetched and parsed before execution — critical for browser loading |
+| **Live bindings** | Imports are live references to the exported values, not copies |
+| **Strict mode** | ESM modules are always in strict mode — no opt-out |
+| **Top-level await** | ESM modules can use \`await\` at the top level |
 
 ### Static Structure Enables Optimizations
 
@@ -3629,7 +3629,7 @@ The bundler knows:
 
 ### Live Bindings — A Critical Difference
 
-In ESM, imports are <b>live read-only bindings</b>, not copies:
+In ESM, imports are **live read-only bindings**, not copies:
 
 \`\`\`javascript
 // counter.js
@@ -3668,7 +3668,7 @@ console.log(count);  // 0 -- still 0! The import was a copy, not a live referenc
 
 ## Tree-Shaking — Why ESM Wins
 
-<b>Tree-shaking</b> is the process of eliminating unused exports ("dead code elimination"). It is only possible with ESM because the static structure allows the bundler to trace which exports are actually used:
+**Tree-shaking** is the process of eliminating unused exports ("dead code elimination"). It is only possible with ESM because the static structure allows the bundler to trace which exports are actually used:
 
 \`\`\`
 ESM:  app.js -> import { Button } from "./components/Button.js"
@@ -3722,7 +3722,7 @@ Node.js creates a synthetic default export from the CJS \`module.exports\` value
 
 ### CJS Requiring ESM
 
-CJS <b>cannot</b> \`require()\` ESM modules. This is a hard restriction:
+CJS **cannot** \`require()\` ESM modules. This is a hard restriction:
 
 \`\`\`javascript
 const myModule = require("./esm-module.mjs");
@@ -3751,29 +3751,29 @@ Bundlers (Webpack, Rollup, Vite, esbuild) handle interop automatically by wrappi
 
 ## Practice Questions
 
-1. <b>Q:</b> What is the fundamental difference in timing between CJS and ESM resolution?
-   <b>A:</b> CJS resolves modules at runtime (\`require()\` is a function call). ESM resolves modules at parse time (\`import\` is a language statement). This is why ESM enables static analysis and tree-shaking.
+1. **Q:** What is the fundamental difference in timing between CJS and ESM resolution?
+   **A:** CJS resolves modules at runtime (\`require()\` is a function call). ESM resolves modules at parse time (\`import\` is a language statement). This is why ESM enables static analysis and tree-shaking.
 
-2. <b>Q:</b> What are live bindings in ESM?
-   <b>A:</b> Live bindings mean that ESM imports are read-only references to the exported values, not copies. If the exported value changes, all importers see the updated value. CJS imports are copies taken at the time of \`require()\`.
+2. **Q:** What are live bindings in ESM?
+   **A:** Live bindings mean that ESM imports are read-only references to the exported values, not copies. If the exported value changes, all importers see the updated value. CJS imports are copies taken at the time of \`require()\`.
 
-3. <b>Q:</b> Why can CJS not be tree-shaken?
-   <b>A:</b> Because \`require()\` is a function call that happens at runtime and can be conditional. A bundler cannot statically determine which exports are used without executing the code.
+3. **Q:** Why can CJS not be tree-shaken?
+   **A:** Because \`require()\` is a function call that happens at runtime and can be conditional. A bundler cannot statically determine which exports are used without executing the code.
 
-4. <b>Q:</b> Can CJS modules import ESM modules?
-   <b>A:</b> No. CJS cannot \`require()\` ESM modules. ESM can import CJS modules (as default imports). This asymmetry is a common migration challenge.
+4. **Q:** Can CJS modules import ESM modules?
+   **A:** No. CJS cannot \`require()\` ESM modules. ESM can import CJS modules (as default imports). This asymmetry is a common migration challenge.
 
-5. <b>Q:</b> What is the "exports" field in \`package.json\` used for?
-   <b>A:</b> It allows a package to provide different entry points for CJS and ESM consumers. The bundler or Node.js selects the appropriate file based on whether the package is being \`require()\`'d or \`import\`'d.
+5. **Q:** What is the "exports" field in \`package.json\` used for?
+   **A:** It allows a package to provide different entry points for CJS and ESM consumers. The bundler or Node.js selects the appropriate file based on whether the package is being \`require()\`'d or \`import\`'d.
 
-6. <b>Q:</b> What happens when you directly reassign \`exports\` in a CJS module?
-   <b>A:</b> \`exports\` is a local variable that initially references \`module.exports\`. Reassigning it (\`exports = { foo }\`) breaks that reference, so \`module.exports\` remains the original empty object. Always assign to \`module.exports\` instead.
+6. **Q:** What happens when you directly reassign \`exports\` in a CJS module?
+   **A:** \`exports\` is a local variable that initially references \`module.exports\`. Reassigning it (\`exports = { foo }\`) breaks that reference, so \`module.exports\` remains the original empty object. Always assign to \`module.exports\` instead.
 
-7. <b>Q:</b> Why does ESM require file extensions in import paths?
-   <b>A:</b> The ESM specification requires explicit file extensions to make module resolution fully deterministic and compatible with browser loading (where the URL must be exact). The extension tells the loader exactly what kind of resource to fetch. Bundlers often relax this rule for developer convenience, but Node.js ESM enforces it.
+7. **Q:** Why does ESM require file extensions in import paths?
+   **A:** The ESM specification requires explicit file extensions to make module resolution fully deterministic and compatible with browser loading (where the URL must be exact). The extension tells the loader exactly what kind of resource to fetch. Bundlers often relax this rule for developer convenience, but Node.js ESM enforces it.
 
-8. <b>Q:</b> What is the difference between a named export and a default export in ESM?
-   <b>A:</b> A named export (\`export const foo\`) must be imported using the exact name in curly braces (\`import { foo }\`). A default export (\`export default foo\`) can be imported with any name (\`import myName from "./module"\`). A module can have many named exports but only one default export.
+8. **Q:** What is the difference between a named export and a default export in ESM?
+   **A:** A named export (\`export const foo\`) must be imported using the exact name in curly braces (\`import { foo }\`). A default export (\`export default foo\`) can be imported with any name (\`import myName from "./module"\`). A module can have many named exports but only one default export.
 
 ---
 
@@ -3851,7 +3851,7 @@ TypeScript's type system is the primary tool for catching bugs before they reach
 
 TypeScript is used by the majority of large-scale JavaScript projects. Microsoft (VS Code, Teams), Google (Angular), Airbnb, Shopify, Slack, and Asana all use TypeScript in production. The npm ecosystem's most downloaded packages increasingly ship with TypeScript type definitions. Tools like ts-prune find unused code, and zod/io-ts use TypeScript types for runtime validation.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 TypeScript's type system is the most powerful in widespread use today -- it's structurally typed, Turing-complete at the type level (meaning you can compute arbitrary transformations at compile time, just like a programming language), and capable of expressing relationships that in most languages would require runtime checks. Understanding structural typing, assignability, and the type hierarchy is not academic: it directly determines how you design APIs, refactor code, and catch bugs. For a CTO, it determines whether the team's TypeScript codebase is a safety net or a productivity drag.
 
@@ -4077,7 +4077,7 @@ Generics eliminate boilerplate and prevent bugs in reusable code. Without generi
 
 Array methods like \`map\`, \`filter\`, and \`reduce\` use generics to preserve element types. React's \`useState<T>\` generic infers state type from the initial value. API client libraries use generics to type responses: \`get<User>(url)\` returns \`Promise<User>\`. Utility types like \`Pick<T, K>\`, \`Omit<T, K>\`, and \`Record<K, V>\` are generic. Every modern TypeScript codebase uses generics daily.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Generics are the mechanism that makes TypeScript's type system *useful* rather than merely *correct*. Without generics, every reusable utility, collection, or abstraction would require either \`any\` (losing type safety) or duplicated definitions for every type. Generics let you write code once and have it type-check correctly for every usage — catching bugs at compile time that would otherwise surface as runtime crashes.
 
@@ -4366,7 +4366,7 @@ Advanced types let you encode business rules and API contracts directly in the t
 
 Prisma's generated types use mapped types to create database model types. tRPC uses conditional types to infer input and output types from router definitions. Zod's type inference uses advanced types to derive static types from runtime schemas. React's ComponentProps utility type uses mapped types. Redux Toolkit's createSlice uses advanced types to infer action creators and reducer types.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 TypeScript's type system is **Turing-complete** — you can compute arbitrary transformations at compile time. Conditional types, mapped types, and template literal types let you encode business rules, API shapes, and data validation at the type level, eliminating entire categories of runtime errors. While advanced type programming can be overdone (creating unreadable "type gymnastics"), the patterns in this section are the ones that appear in every production TypeScript codebase — and understanding them is essential for building type-safe libraries, API clients, and utility types.
 
@@ -4660,7 +4660,7 @@ tsconfig.json flags have real engineering consequences. \`strict: true\` catches
 
 All TypeScript projects use tsc or a compatible tool. CI pipelines run tsc --noEmit for type checking before tests. Application builds use tsc or alternative compilers (esbuild, swc). Library publishers configure declaration files, source maps, and module output format. Monorepo tools (Turborepo, Nx) integrate tsc into their build caching.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 The TypeScript compiler (\`tsc\`) is more than a type checker — it is a full compilation pipeline that determines how fast your CI runs, whether your production code contains dead code, and how much of your team's time is spent debugging type errors. The \`tsconfig.json\` flags you choose directly impact developer experience, runtime correctness, and build performance. As a CTO or lead engineer, understanding the compiler means you can make informed trade-offs between strictness and productivity.
 
@@ -4915,7 +4915,7 @@ Understanding Virtual DOM reconciliation is essential for diagnosing React perfo
 
 React uses the Virtual DOM as its core rendering model. Preact, a lighter alternative to React, uses a similar Virtual DOM with a simpler diff algorithm. The concept has also influenced Vue's rendering system and served as the dominant UI paradigm for a decade until fine-grained reactivity (Signals) emerged as an alternative.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 The Virtual DOM is React's most famous innovation — and its most misunderstood. Many developers think "Virtual DOM means React is fast." The truth is more nuanced: the Virtual DOM is an *abstraction* that makes declarative UI programming possible, with the reconciliation algorithm serving as the bridge between your declarative code and the imperative DOM. Understanding how reconciliation actually works is essential for debugging performance issues, structuring component trees, and knowing when to reach for keys, memoization, or refactoring.
 
@@ -5202,7 +5202,7 @@ Hooks are the standard way to build React components, and their behavior is fund
 
 Every React application built after 2019 uses hooks. The most common hooks -- useState, useEffect, useContext, useRef, useMemo, useCallback -- appear in virtually every React component. Custom hooks encapsulate reusable logic: useLocalStorage, useDebounce, useIntersectionObserver. The React documentation and community best practices are built around hooks. Frameworks like Next.js and Remix use hooks extensively.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 React Hooks transformed how the React ecosystem builds components, but their mental model is fundamentally different from class components -- and from most other programming paradigms. Hooks are not magic; they are a linked list attached to a fiber node, with strict rules about ordering and execution. Misunderstanding this model is the #1 source of bugs in modern React apps: stale closures, infinite re-render loops, and effects that run at the wrong time. Mastering hooks means understanding the fiber render cycle, closure capture, and the lifecycle of a React component's state.
 
@@ -5519,7 +5519,7 @@ Signals represent the direction the frontend industry is heading. Frameworks tha
 
 Solid.js uses signals as its core reactivity primitive. Vue 3's ref() and reactive() are signal-based. Svelte 5 runes ($state, $derived, $effect) implement a signal system. Preact Signals is an add-on library. Angular 17+ uses signals as its new reactive primitive. The pattern is also used outside the browser: MobX uses observable values similar to signals, and Knockout.js used observable properties a decade before the current resurgence.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 For nearly a decade, the Virtual DOM with its diff-and-patch cycle was considered the state of the art for UI frameworks. But a new generation of frameworks -- Solid.js, Vue 3, Svelte 5, Preact Signals, Angular 17+ -- has popularized an alternative: **fine-grained reactivity** based on signals. Signals eliminate the Virtual DOM overhead entirely by tracking exactly which parts of the UI depend on which pieces of state. When a signal changes, only the specific DOM nodes that depend on it are updated. No diffing, no component re-rendering, no reconciliation. Understanding this model is essential for making informed framework choices and for understanding where the industry is heading.
 
@@ -5753,7 +5753,7 @@ Choosing the wrong state management pattern is one of the most expensive archite
 
 Redux is used by large-scale applications like Twitter, Pinterest, and Discord. Zustand is popular in smaller to medium-sized projects for its simplicity. TanStack Query (formerly React Query) is used for server state in most new React applications. Jotai is gaining traction in projects that want atomic state with fine-grained updates. React Context (built-in) is used for theme, locale, and auth state in virtually all React apps.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 State management is the single most debated topic in frontend architecture. The reason is simple: as applications grow, the complexity of keeping UI in sync with state grows quadratically. Every pattern -- from Redux to Zustand to Jotai to TanStack Query -- represents a different answer to the same question: "Where should this piece of data live, and how should changes propagate?" Choosing the wrong pattern leads to prop drilling, synchronization bugs, unnecessary re-renders, and code that's hard to refactor. Choosing the right pattern (or combination of patterns) is the difference between a codebase that scales and one that collapses under its own weight.
 
@@ -6049,7 +6049,7 @@ The rendering strategy you choose determines your application's performance prof
 
 Next.js supports all four strategies, letting developers choose per page or per component. Gatsby is SSG-focused. Remix uses SSR by default. Nuxt 3 supports SSR, SSG, and CSR. Astro uses SSG by default with on-demand SSR. VitePress and Docusaurus are SSG-focused. Most modern meta-frameworks support multiple strategies and let developers choose based on the needs of each route.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Every web application must answer the same question: where should the HTML be generated? The answer determines your Time to First Byte (TTFB), First Contentful Paint (FCP), Time to Interactive (TTI), SEO capabilities, and infrastructure costs. Choosing the wrong rendering strategy for your use case is the single most impactful performance mistake you can make -- it determines the entire architecture of your application. Understanding CSR, SSR, SSG, and ISR means you can make an intentional, data-driven choice rather than following the framework default.
 
@@ -6273,7 +6273,7 @@ RSC eliminates the largest category of performance waste in React applications: 
 
 Next.js (App Router) is the primary production implementation of RSC. The pattern is influencing other frameworks: Remix is exploring similar concepts. RSC is used in production by companies like Vercel (vercel.com), Linear (linear.app), and Netflix. Understanding RSC is a prerequisite for working with modern Next.js.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 React Server Components (RSC) represent the most significant shift in React architecture since Hooks. RSC fundamentally changes the boundary between server and client: instead of "render everything on the server" (SSR) or "render everything on the client" (CSR), RSC lets you decide on a component-by-component basis what runs where. This eliminates the largest category of frontend performance problems -- sending JavaScript to the client that never needed to be there. For CTOs evaluating Next.js or any RSC-compatible framework, understanding the RSC model is essential to making informed decisions about architecture, caching, and data fetching.
 
@@ -6528,7 +6528,7 @@ Hydration is often the bottleneck between a fast-looking page and a fast-feeling
 
 React has used hydration since the introduction of SSR in React 16. Next.js, Remix, and Gatsby all hydrate server-rendered React components. The concept of hydration applies to any framework that renders on the server and becomes interactive on the client: Vue's createSSRApp hydrates, Svelte's hydrate option does the same. Qwik's resumability model is an alternative to hydration that serializes application state and skips the re-execution step.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Hydration is the hidden cost of server-rendered React. The browser receives fully-formed HTML and paints it immediately -- but the page is not interactive until React hydrates it. This gap between FCP and TTI is where users perceive your app as "broken": they can see content but clicking does nothing. The cost is proportional to the amount of JavaScript that must be downloaded, parsed, and executed. Understanding hydration -- and the alternatives to it -- is essential for delivering fast, interactive experiences on real-world network conditions.
 
@@ -6755,7 +6755,7 @@ Core Web Vitals directly affect business outcomes. Google uses them as search ra
 
 Google Search Console reports Core Web Vitals for every indexed page. PageSpeed Insights and Lighthouse measure them during audits. Real User Monitoring (RUM) tools like Web Vitals library, Sentry, Datadog, and New Relic track them in production. Chrome DevTools surfaces them in the Performance panel. Companies like Amazon, eBay, and The New York Times publicly track and optimize their Web Vitals scores.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Google's Core Web Vitals are not just metrics -- they are ranking signals that directly affect your site's search visibility, user engagement, and conversion rates. Since the 2021 Page Experience update, Google uses LCP, INP (replacing FID in March 2024), and CLS as ranking factors. Beyond SEO, these metrics measure what users actually experience: how fast your page loads, how quickly it responds to interaction, and whether the layout jumps around while loading. For engineering leaders, Core Web Vitals provide a data-driven framework for prioritizing performance work -- replacing gut feelings with measurable targets.
 
@@ -7024,7 +7024,7 @@ Build tool configuration and debugging consume a significant portion of a fronte
 
 Webpack is used by Create React App, Next.js (legacy), and many enterprise projects. Vite is the default for new Vue, Svelte, and increasingly React projects. Rollup is used by library authors for its clean ES module output. Parcel is used in smaller projects that want zero configuration. Turbopack is used by newer Next.js versions as an incremental compilation engine. esbuild is used internally by Vite and as a standalone tool for fast builds.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Every JavaScript project -- from a simple landing page to a massive enterprise app -- goes through a bundler. Understanding what bundlers actually do (parse imports, construct a dependency graph, split into chunks, eliminate dead code) is the foundation for debugging build issues, optimizing bundle size, and choosing the right tool. The landscape has shifted dramatically: Webpack's dominance has been challenged by Vite's dev-speed revolution, but the underlying concepts remain the same. Whether you're using Webpack, Vite, Rollup, Turbopack, or Parcel, the mental model of module graphs and code splitting is universal.
 
@@ -7277,7 +7277,7 @@ The monorepo decision is one of the most impactful architectural choices for gro
 
 Turborepo is used by Vercel, Netflix, and AWS. Nx is used by large enterprises for its advanced dependency graph analysis and code generation. pnpm workspaces is used as the package manager layer in many monorepos. The most prominent open-source monorepos include Babel, Next.js, React, and Angular. Virtually every large frontend organization uses some form of monorepo.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 As your codebase grows from a single app to multiple applications sharing shared packages, the monorepo becomes an organizational necessity. The alternative -- separate repositories for each package -- creates versioning nightmares, duplicate code, and coordination overhead. But a poorly configured monorepo can be worse than no monorepo: slow installs, broken dependency links, and CI pipelines that rebuild everything on every change. Understanding pnpm workspaces and Turborepo's task orchestration is the difference between a monorepo that accelerates your team and one that slows it down.
 
@@ -7506,7 +7506,7 @@ Runtime choice directly impacts developer experience, application performance, a
 
 Node.js powers the majority of server-side JavaScript applications, including Express, NestJS, and Next.js production deployments. Deno is used by companies like Netlify (Edge Functions), Supabase, and Slack for specific services. Bun is increasingly used for development tooling (running tests, building packages) and as a production runtime for new projects. All three runtimes are used in cloud platforms: AWS Lambda supports Node.js, Deno Deploy hosts Deno, and Bun is supported by Railway and Fly.io.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 For over a decade, Node.js was the only viable server-side JavaScript runtime. Bun and Deno have challenged this monopoly with fundamentally different design philosophies: Deno doubles down on web standards (fetch, WebSocket, Web Crypto as built-ins), while Bun optimizes for raw performance (JavaScriptCore engine, 4x faster startup, built-in bundler). Understanding these alternatives is important not because you'll necessarily switch, but because their innovations are shaping Node.js's roadmap -- and because choosing the right runtime for a new project can save significant infrastructure costs.
 
@@ -7722,7 +7722,7 @@ Vite is the default build tool for React, Vue, Svelte, and many other frameworks
 
 Vite is the default build tool for create-vue, create-svelte, Astro, and Nuxt 3. It is increasingly used as the build tool for React (via create-vite). Vitest (testing framework) shares Vite's configuration and transform pipeline. Storybook has official Vite support. Large projects like Vue, Svelte, and Laravel use Vite as their build system of choice.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Vite has become the de facto standard build tool for new frontend projects -- and for good reason. Its architecture represents a fundamental shift: instead of bundling everything in development, Vite serves native ESM directly to the browser and uses esbuild and Rollup only where they add value. Understanding how Vite works under the hood -- the pre-bundling, the plugin pipeline, the HMR protocol, and the production build -- is essential for debugging issues, writing custom plugins, and making informed decisions about your build configuration.
 
@@ -8014,7 +8014,7 @@ Micro-frontends address a real organizational scaling problem, but they also int
 
 IKEA, Zalando, DAZN, and Spotify use micro-frontend architectures for their customer-facing applications. Webpack Module Federation is used by companies needing runtime integration of independently deployed apps. Qiankun is used by Chinese tech companies (Alibaba, ByteDance) for micro-frontend orchestration. Single-SPA is another popular framework. Edge-side composition is used by e-commerce platforms that assemble pages from microservices at the CDN level.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Micro-frontends address a real organizational problem: how do you scale frontend development across multiple teams without creating a distributed monolith? The promise is independent deployments, technology diversity, and team autonomy. The reality is more complex -- shared dependencies, version conflicts, performance overhead, and coordination costs. Understanding the trade-offs of Module Federation, Web Components, iframes, and edge-side composition is essential for CTOs evaluating whether micro-frontends are right for their organization -- and for architects designing the integration strategy.
 
@@ -8277,7 +8277,7 @@ Vitest is the default testing tool for Vite-based projects, which includes most 
 
 Vitest is used by Vue, Svelte, Astro, and increasingly React projects (via create-vite). It is the recommended test runner for TanStack libraries (React Query, React Table, React Router). Storybook uses Vitest for component testing. Nuxt 3 uses Vitest as its test runner. The majority of new frontend projects that use Vite adopt Vitest for testing.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Frontend testing is in a golden age. Vitest gives you near-instant test startup by sharing Vite's transform pipeline, and Playwright provides reliable cross-browser automation without flaky sleeps. But the fundamental challenge remains: **what should you test, and at what level?** Most teams either over-invest in brittle E2E tests or under-invest in unit tests that miss real user-facing bugs. Understanding the modern testing pyramid -- with Vitest for unit/component tests, Playwright for E2E, and accessibility checks integrated throughout -- is essential for building a testing strategy that catches bugs without slowing development.
 
@@ -8579,7 +8579,7 @@ E2E testing is the most reliable way to catch user-facing bugs that unit and int
 
 Playwright is used by Microsoft (DevTools, VS Code), Google (Chrome DevTools), and thousands of open-source projects. It is the recommended E2E testing tool for Next.js, Astro, and SvelteKit. It is used for web scraping at scale, visual regression testing (via screenshot comparison), and monitoring production sites for regressions. Its codegen tool lets developers record test scripts by interacting with the browser.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Playwright is the de facto standard for browser automation -- not just for testing, but for scraping, monitoring, and scripting. Its key advantage over Cypress and Puppeteer is **cross-browser support** (Chromium, Firefox, WebKit) with a single API, **auto-waiting** (eliminating arbitrary timeouts), and **network interception** at the browser protocol level. For teams building reliable E2E tests, Playwright's design philosophy -- treat the browser as a programmable environment, not a black box -- makes tests faster to write and more reliable to run.
 
@@ -8825,7 +8825,7 @@ Accessibility is both an ethical responsibility and a legal requirement. Compani
 
 All public-facing websites should be accessible. Government websites must comply with accessibility standards (Section 508 in the US). E-commerce sites like Amazon and Target have been sued for accessibility violations. Social media platforms provide image alt text for screen readers. Video platforms use captions. Design systems include accessible components (modals with focus trapping, accessible forms with error announcements). Automated testing tools (axe, Lighthouse) integrate accessibility checks into CI pipelines.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Accessibility is not a feature -- it's a fundamental property of good software. Approximately 15% of the global population has some form of disability, and inaccessible web applications exclude them from participating in modern life. Beyond the ethical imperative, accessibility is also a legal requirement (ADA, Section 508, EN 301 549) and a business advantage: accessible sites rank better in search, reach a wider audience, and are typically more usable for everyone (curb-cut effect). Understanding WCAG criteria, ARIA patterns, and how to integrate accessibility into your development workflow is essential for engineering leaders who want to ship software that works for everyone.
 
@@ -9128,7 +9128,7 @@ Next.js is the most widely-used React meta-framework, adopted by companies of al
 
 Next.js powers vercel.com, tiktok.com, hulu.com, patreon.com, roblox.com, and thousands of other production applications. It is the recommended framework for new React projects by Vercel and is used as the foundation for many SaaS platforms, e-commerce sites, and content websites. The App Router is the default in all new Next.js projects and the recommended migration target for existing Pages Router projects.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Next.js has evolved from a simple SSR framework to a full-stack platform that redefines how React applications are built. The App Router (introduced in Next.js 13, now the default) represents a fundamental shift: Server Components by default, file-system routing with nested layouts, and Server Actions that eliminate the need for API routes. Understanding these patterns is essential for any team building production React applications -- whether you use Next.js or not, its architectural decisions are shaping the entire React ecosystem.
 
@@ -9384,7 +9384,7 @@ Astro achieves the best possible performance for content-driven websites by elim
 
 Astro is used by the Astro documentation site, the Google Chrome Developer Relations team, the WordPress documentation site, and many company blogs and marketing sites. It is particularly popular for documentation sites (it powers starlight.astro.build), marketing pages, portfolio sites, and e-commerce product pages where good SEO and fast Core Web Vitals are critical.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Astro occupies a unique niche in the framework landscape: it delivers **zero JavaScript by default**, making it the fastest option for content-driven websites. Its "Islands Architecture" -- where interactive components are independent, lazily-loaded widgets in a sea of static HTML -- directly addresses the hydration tax problem that plagues traditional SSR frameworks. For marketing sites, documentation, blogs, and e-commerce product pages, Astro often delivers the best Core Web Vitals scores with the least developer effort.
 
@@ -9614,7 +9614,7 @@ AI features are becoming a standard expectation in web applications. Users expec
 
 The Vercel AI SDK is used by thousands of applications for AI chat and completion features. ChatGPT, Claude, and Perplexity are standalone AI applications. GitHub Copilot integrates AI into code editors. Notion AI provides writing assistance within documents. Intercom and Zendesk use AI for customer support chatbots. AI-powered search is integrated into e-commerce sites, documentation portals, and enterprise applications.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 AI integration is rapidly becoming a standard feature of web applications -- not just standalone chatbots, but embedded copilots, AI-powered search, content generation, and intelligent form filling. The frontend patterns for AI integration are different from traditional data fetching: they involve streaming token-by-token output, managing conversation state, and maintaining user trust with citations and transparency. Understanding these patterns -- especially the Vercel AI SDK, which has become the de facto standard -- is essential for frontend teams building AI-enhanced experiences.
 
@@ -9885,7 +9885,7 @@ Svelte produces the smallest JavaScript bundles of any major framework, making i
 
 Svelte is used by Apple (for certain internal tools), The New York Times (for interactive data visualizations), Spotify (for parts of their web app), and GoDaddy (for website builder). SvelteKit is used for full-stack applications that need SSR, static generation, or a combination. The Svelte documentation site itself is built with SvelteKit. It is particularly popular for data dashboards, interactive visualizations, and mobile web applications where bundle size directly impacts user experience.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Svelte challenges the fundamental assumption that a UI framework needs a runtime. By compiling components to vanilla JavaScript at build time, Svelte eliminates the Virtual DOM, the diffing algorithm, and the framework runtime -- producing the smallest bundles of any major framework. Svelte 5's "runes" API ($state, $derived, $effect) makes reactivity explicit and fine-grained, while SvelteKit provides a full-stack meta-framework with file-system routing, form actions, and server-side rendering. For teams building interactive apps where bundle size is critical (dashboards, tools, mobile web), Svelte offers unmatched performance characteristics.
 
@@ -10131,7 +10131,7 @@ Vue is one of the three dominant frontend frameworks (along with React and Angul
 
 Vue is used by Adobe (Creative Cloud), Nintendo (Switch Online), GitLab (UI components), Alibaba (core e-commerce), Xiaomi, and Baidu. Nuxt is used for full-stack Vue applications, powering sites like the Vue.js documentation, and is popular in the Laravel community (Laravel's official frontend setup is Vue). Vue is particularly dominant in Chinese tech companies and European startups.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Vue 3 represents a mature middle ground between React and Svelte: it offers a reactive system similar to signals, a flexible Composition API, and an officially maintained meta-framework (Nuxt 3) that rivals Next.js. Vue's key advantage is its **progressive adoption** -- you can add Vue to an existing page incrementally, use it as a simple view layer, or scale it to a full-stack application with Nuxt. For teams that prefer HTML-in-template (rather than JSX) and want a framework with strong official libraries (router, state management, build tool), Vue is an excellent choice.
 
@@ -10365,7 +10365,7 @@ Tailwind has been adopted by the majority of new frontend projects. Understandin
 
 Tailwind is used by the majority of new SaaS products, marketing sites, and dashboards. It powers Tailwind UI (paid component library), shadcn/ui (React component library), and DaisyUI (free component library). Companies like OpenAI, Meta (for some marketing sites), Netflix (for internal tools), and GitHub (for parts of their UI) use Tailwind. It is the default styling approach for many React, Vue, and Astro projects.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Tailwind CSS has fundamentally changed how the frontend ecosystem approaches styling. Its utility-first approach -- composing UI from hundreds of single-purpose classes rather than writing custom CSS -- has been adopted by the majority of new projects. The debate is no longer "should we use Tailwind?" but "how should we configure and extend it for our team?" Understanding Tailwind's trade-offs, customization patterns, and where it fits in the broader CSS ecosystem is essential for teams that want consistent, maintainable, and performant styles.
 
@@ -10625,7 +10625,7 @@ The CSS landscape has shifted decisively away from runtime CSS-in-JS toward zero
 
 CSS Modules are built into Vite and Webpack and are used in many existing codebases including some Microsoft and Meta products. styled-components is used by large legacy applications like The New York Times and Bloomberg. Vanilla Extract is used by Seek, Canva, and Culture Amp. StyleX is used by Meta (Facebook, Instagram, WhatsApp web). Panda CSS is used by Chakra UI and in the Chakra ecosystem. The trend across the industry is toward zero-runtime solutions for new projects.
 
-## Why This Matters
+## Why This Matters (Read This First)
 
 Not every project uses Tailwind. Legacy codebases, design-system-heavy applications, and teams that prefer runtime styling need alternatives. Understanding the full CSS landscape -- CSS Modules for scoping, CSS-in-JS for dynamic styles, and design tokens for cross-platform consistency -- ensures you can make an informed choice for your specific context. The industry has moved away from runtime CSS-in-JS (styled-components) toward zero-runtime solutions (Vanilla Extract, StyleX, Panda CSS) that provide the developer experience of CSS-in-JS without the performance cost.
 
@@ -22687,6 +22687,14 @@ Concrete problems this knowledge solves: deciding between ext4 and XFS for a dat
 
 MySQL and PostgreSQL bypass the page cache for database files using direct I/O to avoid double caching. Docker uses overlayfs (a layered union file system) to implement efficient container images with shared read-only layers. The Linux tmpfs file system is used by Kubernetes for in-memory ephemeral volumes, /dev/shm for shared memory, and by containers as a RAM-backed scratch space.
 
+## Why This Matters (Read This First)
+
+Imagine you are on-call at 2 AM. A disk alert fires: the production database volume is at 100%. You delete a 50 GB log file with \`rm\` — and \`df -h\` still shows the disk full. You delete more files. Still full. The database keeps writing, and in twenty minutes it crashes. If you do not know that Linux keeps a file alive on disk until every process holding it open closes it (the inode reference count), you will never find the ghost — and this is a real, common incident, not a trivia question.
+
+Everything a server does touches the file system: every \`git clone\`, every Docker image layer, every database write, every log line passes through the Virtual File System, lands in an inode, and usually sits in the page cache before it ever reaches physical storage. Understanding these layers explains why \`du\` and \`df\` disagree, why reading a "cold" file can be hundreds of times slower than a warm one, why a crashed server now reboots in seconds instead of hours of fsck, and what tmpfs is actually for.
+
+By the end of this article, you will know exactly what the kernel does when you call \`open()\`, \`read()\`, and \`write()\`, how journaling survives a power cut, and how to diagnose "disk full but nothing to delete" in minutes.
+
 ---
 
 ## VFS — Virtual File System
@@ -24261,6 +24269,14 @@ Concrete problems this knowledge solves: understanding how Cilium replaces kube-
 
 Cilium uses eBPF to provide Kubernetes networking, load balancing, and network policies with better performance than iptables-based solutions. Meta uses eBPF for load balancing, DDoS protection, and performance monitoring across their fleet. Netflix uses eBPF for their network observability platform, tracing millions of packets per second per host.
 
+## Why This Matters (Read This First)
+
+Your p99 latency doubles in production — only for requests hitting one Kubernetes node. No metric explains it, no log line hints at it, no stack trace exists. Your classic options are crude: attach \`strace\` and watch throughput collapse, run \`tcpdump\` and drown in packets, or rebuild with instrumentation and pray the spike reproduces. All of them observe the wrong layer: the problem lives inside the kernel's network stack, below anything user-space tools can see.
+
+eBPF fixes this by letting you load small, verifier-checked programs into the Linux kernel itself — attached to tracepoints, syscall entries, or even the network driver — where they observe (and can rewrite) events in real time, without rebooting or compiling a custom kernel. Before eBPF, this required out-of-tree kernel modules where one bug meant a panic on production hardware. This is not niche tooling: Cilium builds Kubernetes networking on it, Falco detects runtime threats with it, Pixie auto-instruments pods with it, and \`bpftrace\` gives you awk-style one-liners for questions only the kernel can answer.
+
+By the end of this article, you will understand how a program travels from C source through the verifier to a kernel hook, read a real XDP drop program line by line, and know when eBPF beats bolting on another sidecar.
+
 ---
 
 ## eBPF Architecture
@@ -24502,6 +24518,14 @@ Concrete problems this knowledge solves: implementing canary deployments by grad
 
 Istio is the most widely adopted service mesh, used by companies like Airbnb, Etsy, and Splunk for traffic management and security. Linkerd, the lighter-weight alternative, is used by companies like Microsoft, Crunchbase, and eBay. Consul Connect provides service mesh capabilities integrated with HashiCorp's service discovery and key-value store.
 
+## Why This Matters (Read This First)
+
+You run 80 microservices owned by 12 teams. Checkout needs a canary release at 5% traffic. Every service pair needs retries, timeouts, and mutual TLS — which means implementing and keeping identical retry logic alive in Java, Go, Python, and Node, across 12 teams, forever. One team forgets; certificates expire on a long weekend; the outage postmortem writes itself.
+
+A service mesh moves all of that out of application code into a transparent infrastructure layer: a small proxy sidecar next to every pod intercepts every connection and applies retries, timeouts, load balancing, mTLS encryption, and telemetry uniformly — configured from one control plane, with zero changes to application code. Canary splitting becomes a YAML declaration instead of a cross-team negotiation. That is why Buoyant built Linkerd and Google/IBM built Istio, and why meshes now run some of the largest service fleets on earth.
+
+By the end of this article, you will know exactly how a request flows through two sidecars, how a canary split is declared and verified, what mTLS actually protects against, and when a mesh earns its operational cost — versus when plain Kubernetes is enough.
+
 ---
 
 ## Istio Architecture
@@ -24724,6 +24748,14 @@ Concrete problems this knowledge solves: debugging network connectivity between 
 
 Docker creates namespaces for every container it starts. Kubernetes runs containers inside pods, where the pause container holds the namespaces for the pod. systemd-nspawn and LXC (Linux Containers) use namespaces directly without Docker. Cloud providers use namespaces to isolate tenant workloads on shared infrastructure.
 
+## Why This Matters (Read This First)
+
+Run \`docker run -it ubuntu bash\` and type \`ps aux\`. You see a tiny process tree; PID 1 is your shell. No init system, no other users, none of the host's processes. Did Docker boot an entire virtual machine in 300 milliseconds? No. Your shell is an ordinary Linux process running on the host kernel — wearing a mask. The kernel gives it a private view of process IDs, mount points, network interfaces, and hostnames. That mask is called a namespace.
+
+Namespaces are why containers exist at all: not Docker magic, not virtualization, but seven kernel features rolled out between 2002 and 2016 that let ONE kernel serve many isolated views of itself. Once you understand them, container-escape advisories stop being mysterious, rootless containers make sense, and "why can't my container see the network?" becomes debuggable. In this article you go beyond theory and build a working container by hand with \`unshare\` and chroot — no Docker involved.
+
+By the end, you will know which resources each namespace type isolates, how every container gets its own PID 1, and why a "hidden" container process remains fully visible from the host.
+
 ---
 
 ## The 7 Linux Namespaces
@@ -24901,6 +24933,14 @@ Concrete problems this knowledge solves: choosing between VMs and containers bas
 ## Where Is This Used?
 
 AWS EC2 uses the Nitro hypervisor, combining KVM-based virtualization with dedicated hardware for networking and storage virtualization. VMware ESXi (Type-1) is the dominant hypervisor in enterprise data centers. AWS Lambda uses Firecracker, a microVM hypervisor written in Rust, designed specifically for serverless workloads with fast startup times and strong isolation.
+
+## Why This Matters (Read This First)
+
+When you launch an EC2 instance, AWS does not hand you a computer. It carves one physical machine — shared with other customers — into many perfect illusions of separate hardware, each running its own kernel, convinced it owns real CPUs and RAM. The software performing that trick is the hypervisor, and the entire cloud industry stands on it. Done wrong, one customer's workload could read another's memory; done right, one host safely runs hundreds of "machines."
+
+This machinery explains distinctions you hit constantly in practice. Why does a container start in 300 ms while a VM takes 30 seconds? Why does Lambda isolate every function inside a Firecracker microVM instead of trusting a plain container? Why did AWS migrate EC2 from Xen to KVM? Each answer changes how you size workloads, which threats isolation actually defends against, and what "near-bare-metal performance" means in cycle counts rather than marketing slides.
+
+By the end of this article, you will know how Type-1 and Type-2 hypervisors differ, how hardware-assisted virtualization (VT-x/AMD-V) traps privileged instructions, why Firecracker boots in ~125 ms, and when a VM beats a container — and vice versa.
 
 ---
 
@@ -25162,6 +25202,14 @@ Concrete problems this knowledge solves: writing policies that grant minimum nec
 
 AWS IAM controls access to every AWS service, with over 10,000 possible action permissions. Google Cloud's IAM uses a hierarchy (organization, folder, project, resource) with role inheritance. Azure's RBAC integrates with Azure Active Directory for enterprise identity management. Kubernetes RBAC applies similar principles for controlling access to cluster resources.
 
+## Why This Matters (Read This First)
+
+Automated bots scan every public GitHub commit within minutes, hunting for hardcoded cloud credentials. A leaked AWS access key with broad permissions has cost companies six figures over a single weekend in crypto-mining charges — and far worse when the key could read databases. Almost every major cloud compromise starts the same way: nobody breaks IAM; they find the one key, role, or policy somebody left wide open.
+
+IAM is the front door of your cloud. Every single API call — reading an S3 object, stopping an instance, writing to a queue — first asks two questions: who are you, and may you do this? Answering well means least-privilege policies instead of admin-for-everyone, roles assumed at runtime instead of long-lived keys pasted into config files, and federated CI/CD pipelines that hold no static secrets at all.
+
+By the end of this article, you will be able to read any IAM policy line by line, explain precisely what a role is (and why services should never store credentials), and wire up OIDC federation so GitHub Actions deploys to your account without a single stored secret.
+
 ---
 
 ## AWS IAM — Core Concepts
@@ -25406,6 +25454,14 @@ Concrete problems this knowledge solves: designing public and private subnets to
 
 Every AWS account has a default VPC. Amazon's internal network uses a massively scaled version of VPC concepts. Google Cloud's VPC is global (not regional), allowing resources in different regions to communicate using private IPs. Azure Virtual Network provides equivalent functionality with hub-and-spoke topology using Azure Virtual WAN.
 
+## Why This Matters (Read This First)
+
+In 2019, security researchers found hundreds of millions of records exposed by databases sitting in public subnets with no authentication. Nobody "hacked" anything — the network was simply laid out so the entire internet could reach resources that should never have been reachable. VPC misconfiguration remains one of the most common causes of cloud breaches, and nearly every incident traces back to someone not fully understanding subnets, route tables, or security groups.
+
+A VPC is your private slice of the provider's network: you define the IP ranges, decide which subnets are public or private, gate every packet with security groups and NACLs, and can reach S3 or a database without touching the public internet via VPC endpoints. Get the design right once, and compliance audits, hybrid connectivity, and blast-radius containment become straightforward. Get it wrong, and you are one console click from a headline.
+
+By the end of this article, you will be able to draw a production-grade VPC from memory: public/private subnet layout, NAT gateways, route tables, security groups versus NACLs, and when a PrivateLink endpoint justifies its price.
+
 ---
 
 ## VPC Architecture
@@ -25642,6 +25698,14 @@ Concrete problems this knowledge solves: designing multi-AZ deployments that sur
 
 AWS RDS Multi-AZ automatically replicates databases across Availability Zones with synchronous standby. Cloudflare's global network routes traffic away from failed PoPs. GitHub, after a major outage in 2018, redesigned their architecture for multi-region resilience. Financial exchanges require five-nines availability with redundant data centers in different geographic regions.
 
+## Why This Matters (Read This First)
+
+At 4 AM a fiber cut — or a bad config push, or a storm — takes an entire cloud region offline. Some companies are down for hours; their competitors fail over in minutes and post uptime screenshots. The difference was decided months earlier in architecture reviews: who replicated data across availability zones, who rehearsed regional failover, and who assumed "the cloud is always up." Availability is not something you buy — it is something you design, practice, and pay for, because every redundant component costs money and complexity.
+
+This article gives you the vocabulary and arithmetic behind those decisions. What does five nines actually permit (about 5 minutes of downtime per year)? Why is Multi-AZ cheap resilience while Multi-Region is a program? What really separates backup-and-restore, pilot light, warm standby, and active-active — in recovery time objective, recovery point objective, and dollars?
+
+By the end, you will map any workload onto the right availability pattern, configure health checks so single-instance failures heal automatically, and know which managed services fail over transparently versus which ones make YOU do the work.
+
 ---
 
 ## Multi-AZ vs Multi-Region
@@ -25863,6 +25927,14 @@ Concrete problems this knowledge solves: implementing KMS-based encryption for d
 ## Where Is This Used?
 
 AWS KMS processes millions of encryption key operations per second across all AWS services. Cloudflare WAF protects over 25 million internet properties. HashiCorp Vault is the leading open-source secrets management solution, used by major enterprises for secrets rotation and dynamic secrets. SOC 2 compliance is a standard requirement for B2B SaaS companies serving enterprise customers.
+
+## Why This Matters (Read This First)
+
+In 2019, one misconfigured web application firewall let an attacker impersonate a trusted session inside Capital One's AWS account and download personal data of about 100 million people. No exotic zero-day: an SSRF bug reached instance metadata credentials, and overly broad permissions did the rest. The penalty was $190 million. Cloud incidents rarely involve broken encryption — they involve missing guardrails: an over-permissive role, a secret committed to git, an audit trail nobody watched.
+
+Cloud security also works differently from data center security. The provider secures the building; you secure everything you put IN it — the shared responsibility model, and regulators hold you to your half. This article walks the four pillars you will actually operate: encrypting data with KMS (and controlling who can decrypt), keeping secrets out of source with Secrets Manager, answering "who did what, when?" with CloudTrail, and mapping controls to SOC 2, ISO 27001, and PCI-DSS so audits stop being terrifying.
+
+By the end, you will know which service protects against which failure mode, and how to prove — to an auditor or a court — that your controls existed and worked.
 
 ---
 
@@ -26102,6 +26174,14 @@ Concrete problems this knowledge solves: setting up cost allocation tags to trac
 
 The FinOps Foundation has over 10,000 members from companies like Netflix, Atlassian, and Goldman Sachs. AWS Cost Explorer and GCP Cost Management provide built-in tools for FinOps practices. CloudHealth (VMware) and Vantage are third-party FinOps platforms used by enterprises to manage multi-cloud costs at scale.
 
+## Why This Matters (Read This First)
+
+A startup raises funding and grows fast — until finance forwards engineering a cloud bill that doubled in two months. Nobody spun up anything big on purpose. The waste hides in defaults: an oversized RDS instance chosen "to be safe," terabytes of logs nobody reads sitting in hot storage, a load balancer orphaned by a killed experiment, snapshots accumulating since day one. The cloud bills per hour with no ceiling — and engineering decisions ARE spending decisions, made daily by people who never see the invoice.
+
+FinOps is the discipline that fixes this without killing velocity, in three phases: inform (visibility into who spends what), optimize (right-sizing, storage tiering, commitments), and operate (continuous guardrails and automation). Teams that practice it routinely cut 20-30% of spend — often purely through scheduling dev environments off overnight and buying reserved capacity for steady-state load.
+
+By the end of this article, you will know how to attribute spend to teams with tags, spot the ten most common sources of cloud waste, decide between spot, reserved, and savings plans for a given workload, and treat cost as a first-class engineering metric alongside latency and uptime.
+
 ---
 
 ## The FinOps Lifecycle
@@ -26328,6 +26408,14 @@ Concrete problems this knowledge solves: replacing VPN-based access with identit
 ## Where Is This Used?
 
 Google's BeyondCorp has been in production since 2011, eliminating VPNs for all Google employees. Cloudflare Zero Trust provides a global identity-aware proxy with 50ms median access time. Zscaler, with a market cap of over $30 billion, provides Zero Trust network access to thousands of enterprises. The US Federal Government mandates Zero Trust architecture for all agencies by 2027.
+
+## Why This Matters (Read This First)
+
+The classic corporate network is a castle with a moat: connect over VPN once, and you can reach everything inside. Attackers love this design. One phished laptop — and ransomware quietly walks laterally from a workstation to file servers to databases, because nothing inside the perimeter ever asked "should YOU be talking to THIS?" Most headline breaches of the past decade spread laterally across networks that trusted them merely for being inside.
+
+Zero Trust deletes that assumption. Never trust, always verify: every request is authenticated and authorized based on user identity, device health, and the sensitivity of the specific application — regardless of network location. Google proved the model at scale with BeyondCorp after Operation Aurora exploited exactly the moat's weakness; identity-aware proxies replaced VPN access for hundreds of thousands of employees, and ZTNA products now do the same for everyone else.
+
+By the end of this article, you will understand Zero Trust's core principles, how an Identity-Aware Proxy replaces network-level access with per-application checks, what microsegmentation does to lateral movement, and where ZTNA genuinely replaces a VPN — and what breaks when you try.
 
 ---
 
@@ -26558,6 +26646,14 @@ Concrete problems this knowledge solves: designing stateless handler functions t
 ## Where Is This Used?
 
 AWS Lambda runs over 1 trillion invocations per month for customers including Netflix, Lyft, and iRobot. Cloudflare Workers runs serverless functions at the edge in 330+ cities with sub-50ms cold starts. Google Cloud Run is used by Shopify for running containerized services without managing infrastructure, automatically scaling to zero when not in use.
+
+## Why This Matters (Read This First)
+
+Your product launches on morning television. Traffic jumps from 10 requests per minute to 40,000 within the hour. With servers, someone is frantically scaling autoscaling groups and hoping images pull fast enough; with serverless, nobody gets paged — the platform runs your function thousands of times concurrently, then scales back to zero tonight, billing you only for what actually ran. That combination — no servers to operate plus scale-to-zero economics — is why serverless exploded after Lambda launched in 2014.
+
+But serverless is not a free lunch. Cold starts add seconds to the first request after idle. Timeout and memory limits reshape your architecture. State must live outside the function. And a busy 24/7 workload can cost more on FaaS than on two modest VMs. Knowing where the cliffs are separates serverless-as-superpower from serverless-as-surprise-bill.
+
+By the end of this article, you will know how Lambda executes your code under the hood, what actually happens during a cold start (and how to shrink it), when Fargate or Cloud Run beat functions, and which workloads should never go serverless at all.
 
 ---
 
@@ -26804,6 +26900,14 @@ Concrete problems this knowledge solves: deciding between AWS Lambda and GCP Clo
 
 Netflix runs almost entirely on AWS but uses GCP for data analytics with BigQuery. Snapchat runs primarily on GCP but uses AWS for specific ML workloads. Microsoft runs GitHub on Azure. Most large enterprises use two or three cloud providers (multi-cloud) to leverage each for its strengths and avoid vendor lock-in.
 
+## Why This Matters (Read This First)
+
+Pick the wrong cloud early and you live with the consequences for years: hiring pools, pricing models, managed-service maturity, and where data physically resides all lock in. Yet most comparisons online are tribal — "AWS is biggest," "Azure is for enterprises," "GCP invented Kubernetes." Meanwhile you face a real decision with real trade-offs: a data-heavy ML startup weighs BigQuery and TPUs heavily; a Microsoft-centric enterprise weighs Active Directory integration and hybrid; a general SaaS startup mostly wants the broadest catalog and hiring pool.
+
+The honest picture: all three providers are excellent at compute, storage, and networking, and they differ meaningfully in naming, pricing structure, regional coverage, and flagship strengths — AWS breadth and ecosystem, GCP data and networking pedigree, Azure enterprise and hybrid story. Deep knowledge of one provider transfers roughly 70% to another; learning the explicit service mappings transfers even faster.
+
+By the end of this article, you will have a side-by-side comparison of core compute, storage, and data services, a concrete decision framework for new projects, and the judgment to commit to one cloud — or mix several — with eyes open.
+
 ---
 
 ## Compute Comparison
@@ -27008,6 +27112,14 @@ Concrete problems this knowledge solves: choosing between RDS and DynamoDB based
 ## Where Is This Used?
 
 Netflix uses DynamoDB for their subscriber data store at 100+ billion requests per day. Spotify uses Google Cloud Pub/Sub for event streaming across their microservice architecture. Airbnb uses RDS for transactional data but SQS for async task processing. Managed services power the backends of most modern SaaS applications.
+
+## Why This Matters (Read This First)
+
+It is 3 AM and the replica-lag alarm fires for a PostgreSQL cluster YOU installed, tuned, patched, and backed up by hand. Meanwhile a competitor's on-call engineer sleeps through their failover, because RDS handled it automatically. Multiply that night across every Redis, Kafka, and Elasticsearch you self-host, and you see the true price of "we'll just run it ourselves": senior engineering hours spent on undifferentiated plumbing instead of product.
+
+Managed services flip that trade. You consume a database, queue, or event stream through an API; the provider owns patching, replication, backups, and failure domains. DynamoDB serves single-digit-millisecond reads at any scale with zero servers to babysit; BigQuery scans terabytes without a cluster; SQS absorbs bursts that would melt a hand-run RabbitMQ. But "managed" never means "worry-free": you still design schemas, choose partition keys, watch costs, and must understand exactly what each service trades away — otherwise lock-in regret follows.
+
+By the end of this article, you will know when to reach for managed relational versus NoSQL versus queuing versus streaming offerings, what "managed" does and does not take off your plate, and how real teams balance convenience against control.
 
 ---
 
